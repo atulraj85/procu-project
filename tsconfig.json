@@ -38,7 +38,7 @@
     "./src/**/*.js",
     ".next/types/**/*.ts",
     "middleware.ts"
-  ],
+, "@trpc/next-layout/localStorage.ts"  ],
   "exclude": [
     "node_modules"
   ]
