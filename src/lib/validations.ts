@@ -1,7 +1,7 @@
 import * as z from "zod";
 
 const CreateUserInputValidation = z.object({
-  full_name: z
+  name: z
     .string()
     .min(3, {
       message: "Full name must be at least 3 characters.",

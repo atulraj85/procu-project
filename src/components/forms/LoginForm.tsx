@@ -49,33 +49,41 @@ function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    try {
-      setLoading(true);
+ async function onSubmit(data: z.infer<typeof FormSchema>) {
+   try {
+     setLoading(true);
 
-      const response = await makeApiCallService<ILoginUserResponse>(
-        "/api/login",
-        {
-          method: "POST",
-          body: data,
-        }
-      );
+     const response = await makeApiCallService<ILoginUserResponse>(
+       "/api/login",
+       {
+         method: "POST",
+         body: data,
+       }
+     );
 
-      if (response?.response?.meta?.success) {
-        localStorage.setItem("TOKEN", response?.response?.data?.token);
-        toast({
-          title: "🎉 Login success",
-          description: response?.response?.meta?.message,
-        });
+     if (response?.response?.meta?.success) {
+       // Store the token and role in local storage
+       localStorage.setItem("TOKEN", response?.response?.data?.token);
+       localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
 
-        router.push("/home");
-      }
+       toast({
+         title: "🎉 Login success",
+         description: response?.response?.meta?.message,
+       });
 
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
-  }
+       router.push("/dashboard");
+     }
+
+     setLoading(false);
+   } catch (err) {
+     setLoading(false);
+     toast({
+       title: "Error",
+       description: "An error occurred during login.",
+     });
+   }
+ }
+
 
   return (
     

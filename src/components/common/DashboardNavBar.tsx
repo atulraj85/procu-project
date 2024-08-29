@@ -39,9 +39,12 @@ function DashboardNavBar({ loading, userProfile }: IProps) {
             ) : (
               <div>
                 <Avatar className="w-[2.07463rem] h-[2.07463rem]">
-                  <AvatarImage src="" className="object-cover" />
+                  <AvatarImage
+                    src="/images/user_alt_icon.png"
+                    className="object-cover"
+                  />
                   <AvatarFallback>
-                    {getInitials(userProfile?.response?.data?.full_name || "")}
+                    {getInitials(userProfile?.response?.data?.name || "")}
                   </AvatarFallback>
                 </Avatar>
               </div>
