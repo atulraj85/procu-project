@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { email, full_name, password } = body;
+    const { email, name, password } = body;
 
     const inputValidation = CreateUserInputValidation.safeParse(body);
 
@@ -35,10 +35,8 @@ export async function POST(req: Request) {
     const newUser = await db.user.create({
       data: {
         email,
-        full_name,
-        is_verified: false,
+        name,
         password: hashedUserPassword,
-        randomize_channel: generateRandomNumber(),
       },
     });
 

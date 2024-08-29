@@ -22,10 +22,8 @@ function DashboardContentSection({ loading, userProfile, refreshKey }: IProps) {
     null
   );
 
-  const [
-    usersListing,
-    setUsersListing,
-  ] = useState<IUsersListingResponse | null>(null);
+  const [usersListing, setUsersListing] =
+    useState<IUsersListingResponse | null>(null);
 
   const userMetric = [
     {
@@ -48,17 +46,21 @@ function DashboardContentSection({ loading, userProfile, refreshKey }: IProps) {
   useEffect(() => {
     async function fetch() {
       try {
-        const usersMetricResponse = await makeApiCallService<
-          IUsersMetricResponse
-        >("/api/dashboard/users-metric", {
-          method: "GET",
-        });
+        const usersMetricResponse =
+          await makeApiCallService<IUsersMetricResponse>(
+            "/api/dashboard/users-metric",
+            {
+              method: "GET",
+            }
+          );
 
-        const usersListingResponse = await makeApiCallService<
-          IUsersListingResponse
-        >("/api/dashboard/users-listing", {
-          method: "GET",
-        });
+        const usersListingResponse =
+          await makeApiCallService<IUsersListingResponse>(
+            "/api/dashboard/users-listing",
+            {
+              method: "GET",
+            }
+          );
 
         setUsersMetric(usersMetricResponse as IUsersMetricResponse);
 
@@ -82,21 +84,12 @@ function DashboardContentSection({ loading, userProfile, refreshKey }: IProps) {
             <Skeleton className="w-[10rem] h-[2rem]" />
           ) : (
             <span className="text-[#2B3A4B]">
-              {userProfile?.response?.data?.full_name},
+              {userProfile?.response?.data?.name},
             </span>
           )}
         </div>
         <div className="text-[#858C94] mt-4 md:text-[1.5rem] flex gap-4">
-          It&apos;s nice to see you back. Channel{" "}
-          <strong>
-            {loading ? (
-              <Skeleton className="w-[5rem] h-[2rem]" />
-            ) : (
-              <span className="text-[#2B3A4B]">
-                ({userProfile?.response?.data?.randomize_channel})
-              </span>
-            )}
-          </strong>
+          It&apos;s nice to see you back. Channel <strong></strong>
         </div>
       </div>
       <div className="flex flex-col md:flex-row justify-between gap-16 mt-[3.69rem] mb-[5.44rem]">

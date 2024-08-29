@@ -7,10 +7,14 @@ export interface ICreateUserResponse {
 
 export interface ILoginUserResponse {
   response: {
-    meta: Meta;
-    data: LoginUserResponseData;
+    meta: Meta,
+    data: {
+      token: string;
+      role: string; // Ensure this is a string
+    };
   };
 }
+
 
 export interface IUserProfileResponse {
   response: {
@@ -40,14 +44,14 @@ export interface IUsersMetricResponse {
 interface IUserProfileResponseData {
   id: number;
   email: string;
-  full_name: string;
-  is_verified: boolean;
-  randomize_channel: number;
+  name: string;
+  role: string;
   created_at: Date;
   updated_at: Date;
 }
 
 interface LoginUserResponseData {
+  role(arg0: string, role: any): unknown;
   userId: string;
   token: string;
 }
@@ -55,8 +59,7 @@ interface LoginUserResponseData {
 interface CreateUserResponseData {
   id: number;
   email: string;
-  full_name: string;
-  is_verified: boolean;
+  name: string;
   password: string;
   randomize_channel: number;
   created_at: Date;

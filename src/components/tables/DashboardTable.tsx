@@ -16,9 +16,8 @@ function DashboardTable({
   const users = usersListing?.response?.data?.map((user) => {
     return {
       id: user.id,
-      name: user.full_name,
+      name: user.name,
       joinedOn: user.created_at?.toString(),
-      verified: user.is_verified,
     };
   });
 
@@ -36,13 +35,7 @@ function DashboardTable({
           <TableRow key={user.id}>
             <TableCell className="font-medium">{user.name}</TableCell>
             <TableCell>{user.joinedOn}</TableCell>
-            <TableCell>
-              {user.verified ? (
-                <span className="text-[#369F3A]">Yes</span>
-              ) : (
-                <span className="text-[#EF0A0A]">No</span>
-              )}
-            </TableCell>
+           
           </TableRow>
         ))}
       </TableBody>
