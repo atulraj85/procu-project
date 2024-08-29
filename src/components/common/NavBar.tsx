@@ -23,12 +23,13 @@ function NavBar() {
       {/* DESKTOP */}
       <div className=" hidden lg:block animate-in fade-in zoom-in  p-4">
         <div className="flex justify-between mx-[41px] items-center">
-          <div>
-            <img
+          <div className="cursor-pointer">
+            <h1 className="font-bold text-[20px]">Pr<span className="text-[#03B300]">o</span>cu</h1>
+            {/* <img
               src="/images/procu_logo.png"
               alt="logo"
               className="w-[6.8rem]"
-            />
+            /> */}
           </div>
           <div className="flex gap-[20px] xl:gap-[50px] text-[16px] items-center select-none">
             <p
@@ -46,11 +47,11 @@ function NavBar() {
             >
               FAQ
             </p>
-            <p
+            {/* <p
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               Blog
-            </p>
+            </p> */}
             <p
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >

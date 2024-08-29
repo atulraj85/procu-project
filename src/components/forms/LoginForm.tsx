@@ -78,9 +78,10 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem]">
+    
+    <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
       <div className="self-start">
-        <p className="text-[#333] text-[1.625rem] font-[700]">Hello Again!</p>
+        <p className="text-[#333] text-[1.625rem] font-[700]">Pr<span className="text-[#03B300]">o</span>cu</p>
         <p className="text-[#333] text-[1.125rem]">Welcome Back</p>
       </div>
       <Form {...form}>
@@ -134,12 +135,13 @@ function LoginForm() {
             isLoading={loading}
           />
 
-          <div className="flex justify-end text-[#191A15] mt-4">
+          <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
             <Link href="/register">Register Instead?</Link>
           </div>
         </form>
       </Form>
     </div>
+  
   );
 }
 

@@ -63,7 +63,7 @@ function RegisterForm() {
   }
 
   return (
-    <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem]">
+    <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
       <div className="self-start">
         <p className="text-[#333] text-[1.625rem] font-[700]">Hello!</p>
         <p className="text-[#333] text-[1.125rem]">Sign Up to Get Started</p>
@@ -136,7 +136,7 @@ function RegisterForm() {
             isLoading={loading}
           />
 
-          <div className="flex justify-end text-[#191A15] mt-4">
+          <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
             <Link href="/login">Login Instead?</Link>
           </div>
         </form>

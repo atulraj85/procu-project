@@ -10,6 +10,7 @@ function HeroSection() {
     router.push("/register");
   };
   return (
+    <div className="w-full">
     <section className="flex flex-col gap-8 md:flex-row justify-between">
       <div className="z-10">
         <p className="mb-[1.87rem] text-3xl lg:text-[5rem] text-dark lg:leading-[5.625rem] font-[700]">
@@ -35,7 +36,10 @@ function HeroSection() {
       <div className="z-10">
         <img src="/images/guy_credit.png" alt="guy with credits" />
       </div>
+     
     </section>
+    
+     </div>
   );
 }
 
