@@ -24,7 +24,7 @@ export default function Home() {
       </div> */}
 
       {/* <FooterSection /> */}
-      <div className=" mt-6 w-full  bg-slate-900 h-32"></div>
+      <div className=" mt-6 w-full  bg-primary h-32"></div>
     </main>
   );
 }
