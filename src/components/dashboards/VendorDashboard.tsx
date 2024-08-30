@@ -4,6 +4,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Vendor from "../../app/dashboard/page"
 
 export default function VendorDashboard() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function VendorDashboard() {
   return (
     <div>
       <h1>Vendor Dashboard</h1>
+      <Vendor/>
     </div>
   );
 }

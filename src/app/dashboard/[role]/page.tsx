@@ -8,7 +8,8 @@ import DashboardNavBar from "@/components/common/DashboardNavBar";
 import makeApiCallService from "@/service/apiService";
 import { IUserProfileResponse } from "@/types";
 import AdminDashboard from "@/components/dashboards/AdminDashoard";
-import ManagerDashboard from "@/components/dashboards/ManagerDashboard";
+import Dashboardfinance from "@/components/finance/Dashboard";
+import DashboardManager from "@/components/manager/Dashboard";
 import AccountantDashboard from "@/components/dashboards/AccountantDashboard";
 import VendorDashboard from "@/components/dashboards/VendorDashboard";
 
@@ -61,7 +62,7 @@ export default function RoleDashboard({ params }: RoleDashboardProps) {
       case "admin":
         return <AdminDashboard />;
       case "manager":
-        return <ManagerDashboard />; // Replace with actual ManagerDashboard component
+        return <Dashboardfinance/>; // Replace with actual ManagerDashboard component
       case "accountant":
         return <AccountantDashboard />; // Replace with actual AccountantDashboard component
       case "vendor":
@@ -72,7 +73,7 @@ export default function RoleDashboard({ params }: RoleDashboardProps) {
   };
 
   return (
-    <div className="mx-4 md:mx-16 mt-4 pb-16">
+    <div className="mx-4  mt-4 pb-16">
       <DashboardNavBar  userProfile={userProfile} loading={false} />
       <p>Welcome to the {role} dashboard!</p>
       {renderDashboardContent()}
