@@ -1,22 +1,32 @@
-// prisma/schema.prisma
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String?
-  role      Role     @default(VENDOR)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String            @id @default(cuid())
+  email            String            @unique
+  password         String
+  name             String?
+  role             Role              @default(VENDOR)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  prManager        PRManager?
+  financeManager   FinanceManager?
+  qualityAssurance QualityAssurance?
+  vendor           Vendor?
 }
 
 enum Role {
@@ -24,4 +34,115 @@ enum Role {
   MANAGER
   ACCOUNTANT
   VENDOR
+}
+
+model Payment {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  invoiceId String  @db.Uuid
+}
+
+model ProductCategory {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+  vendors  Vendor[]
+  rfps     RFP[]
+}
+
+model PO {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation        Quotation      @relation(fields: [quotationId], references: [id])
+  quotationId      String         @unique @db.Uuid
+  financeManager   FinanceManager @relation(fields: [financeManagerId], references: [id])
+  financeManagerId String         @db.Uuid
+  invoice          Invoice?
+}
+
+model GoodStatus {
+  id                       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoice                  Invoice          @relation(fields: [invoiceId], references: [id])
+  invoiceId                String           @unique @db.Uuid
+  deliveryStatus           Boolean
+  qualityAssurance         Boolean
+  qualityAssuranceLeader   QualityAssurance @relation(fields: [qualityAssuranceLeaderId], references: [id])
+  qualityAssuranceLeaderId String           @db.Uuid
+}
+
+model FinanceManager {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+  po     PO[]
+}
+
+model Vendor {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user              User            @relation(fields: [userId], references: [id])
+  userId            String          @unique
+  gstNo             String          @unique
+  msmeNo            String          @unique
+  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryId Int
+  companyName       String
+  companyLocation   String
+  quotations        Quotation[]
+}
+
+model Product {
+  id                Int             @id @default(autoincrement())
+  name              String
+  modelNo           String
+  specification     String
+  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryId Int
+  rfps              RFP[]
+}
+
+model Invoice {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  po         PO          @relation(fields: [poId], references: [id])
+  poId       String      @unique @db.Uuid
+  payments   Payment[]
+  goodStatus GoodStatus?
+}
+
+model PRManager {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+  rfp    RFP[]
+}
+
+model Quotation {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp        RFP     @relation(fields: [rfpId], references: [id])
+  rfpId      String  @unique @db.Uuid
+  vendor     Vendor  @relation(fields: [vendorId], references: [id])
+  vendorId   String  @db.Uuid
+  billAmount Decimal @db.Decimal(10, 2)
+  po         PO?
+}
+
+model QualityAssurance {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user         User         @relation(fields: [userId], references: [id])
+  userId       String       @unique
+  goodStatuses GoodStatus[]
+}
+
+model RFP {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requirementType   String
+  dateOfOrdering    DateTime
+  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryId Int
+  product           Product         @relation(fields: [productId], references: [id])
+  productId         Int
+  deliveryLocation  String
+  deliveryByDate    DateTime
+  lastDateToRespond DateTime
+  prManager         PRManager       @relation(fields: [prManagerId], references: [id])
+  prManagerId       String          @db.Uuid
+  quotation         Quotation?
 }

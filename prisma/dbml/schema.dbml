@@ -1,0 +1,169 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  id String [pk]
+  email String [unique, not null]
+  password String [not null]
+  name String
+  role Role [not null, default: 'VENDOR']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  prManager PRManager
+  financeManager FinanceManager
+  qualityAssurance QualityAssurance
+  vendor Vendor
+}
+
+Table Payment {
+  id String [pk]
+  invoice Invoice [not null]
+  invoiceId String [not null]
+}
+
+Table ProductCategory {
+  id Int [pk, increment]
+  name String [unique, not null]
+  products Product [not null]
+  vendors Vendor [not null]
+  rfps RFP [not null]
+}
+
+Table PO {
+  id String [pk]
+  quotation Quotation [not null]
+  quotationId String [unique, not null]
+  financeManager FinanceManager [not null]
+  financeManagerId String [not null]
+  invoice Invoice
+}
+
+Table GoodStatus {
+  id String [pk]
+  invoice Invoice [not null]
+  invoiceId String [unique, not null]
+  deliveryStatus Boolean [not null]
+  qualityAssurance Boolean [not null]
+  qualityAssuranceLeader QualityAssurance [not null]
+  qualityAssuranceLeaderId String [not null]
+}
+
+Table FinanceManager {
+  id String [pk]
+  user User [not null]
+  userId String [unique, not null]
+  po PO [not null]
+}
+
+Table Vendor {
+  id String [pk]
+  user User [not null]
+  userId String [unique, not null]
+  gstNo String [unique, not null]
+  msmeNo String [unique, not null]
+  productCategory ProductCategory [not null]
+  productCategoryId Int [not null]
+  companyName String [not null]
+  companyLocation String [not null]
+  quotations Quotation [not null]
+}
+
+Table Product {
+  id Int [pk, increment]
+  name String [not null]
+  modelNo String [not null]
+  specification String [not null]
+  productCategory ProductCategory [not null]
+  productCategoryId Int [not null]
+  rfps RFP [not null]
+}
+
+Table Invoice {
+  id String [pk]
+  po PO [not null]
+  poId String [unique, not null]
+  payments Payment [not null]
+  goodStatus GoodStatus
+}
+
+Table PRManager {
+  id String [pk]
+  user User [not null]
+  userId String [unique, not null]
+  rfp RFP [not null]
+}
+
+Table Quotation {
+  id String [pk]
+  rfp RFP [not null]
+  rfpId String [unique, not null]
+  vendor Vendor [not null]
+  vendorId String [not null]
+  billAmount Decimal [not null]
+  po PO
+}
+
+Table QualityAssurance {
+  id String [pk]
+  user User [not null]
+  userId String [unique, not null]
+  goodStatuses GoodStatus [not null]
+}
+
+Table RFP {
+  id String [pk]
+  requirementType String [not null]
+  dateOfOrdering DateTime [not null]
+  productCategory ProductCategory [not null]
+  productCategoryId Int [not null]
+  product Product [not null]
+  productId Int [not null]
+  deliveryLocation String [not null]
+  deliveryByDate DateTime [not null]
+  lastDateToRespond DateTime [not null]
+  prManager PRManager [not null]
+  prManagerId String [not null]
+  quotation Quotation
+}
+
+Enum Role {
+  ADMIN
+  MANAGER
+  ACCOUNTANT
+  VENDOR
+}
+
+Ref: Payment.invoiceId > Invoice.id
+
+Ref: PO.quotationId - Quotation.id
+
+Ref: PO.financeManagerId > FinanceManager.id
+
+Ref: GoodStatus.invoiceId - Invoice.id
+
+Ref: GoodStatus.qualityAssuranceLeaderId > QualityAssurance.id
+
+Ref: FinanceManager.userId - User.id
+
+Ref: Vendor.userId - User.id
+
+Ref: Vendor.productCategoryId > ProductCategory.id
+
+Ref: Product.productCategoryId > ProductCategory.id
+
+Ref: Invoice.poId - PO.id
+
+Ref: PRManager.userId - User.id
+
+Ref: Quotation.rfpId - RFP.id
+
+Ref: Quotation.vendorId > Vendor.id
+
+Ref: QualityAssurance.userId - User.id
+
+Ref: RFP.productCategoryId > ProductCategory.id
+
+Ref: RFP.productId > Product.id
+
+Ref: RFP.prManagerId > PRManager.id
