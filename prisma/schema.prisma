@@ -9,7 +9,6 @@ generator dbml {
   provider = "prisma-dbml-generator"
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -47,7 +46,6 @@ model ProductCategory {
   name     String    @unique
   products Product[]
   vendors  Vendor[]
-  rfps     RFP[]
 }
 
 model PO {
@@ -96,7 +94,7 @@ model Product {
   specification     String
   productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
   productCategoryId Int
-  rfps              RFP[]
+  rfpProducts       RFPProduct[]
 }
 
 model Invoice {
@@ -135,14 +133,43 @@ model RFP {
   id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   requirementType   String
   dateOfOrdering    DateTime
-  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
-  productCategoryId Int
-  product           Product         @relation(fields: [productId], references: [id])
-  productId         Int
   deliveryLocation  String
   deliveryByDate    DateTime
   lastDateToRespond DateTime
   prManager         PRManager       @relation(fields: [prManagerId], references: [id])
   prManagerId       String          @db.Uuid
   quotation         Quotation?
+  approversList     ApproversList[]
+  rfpProducts       RFPProduct[]
+}
+
+model RFPProduct {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp       RFP    @relation(fields: [rfpId], references: [id])
+  rfpId     String @db.Uuid
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+
+  @@unique([rfpId, productId])
+}
+
+model Approver {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String
+  email          String          @unique
+  phone          String
+  approversList  ApproversList[]
+}
+
+model ApproversList {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp        RFP      @relation(fields: [rfpId], references: [id])
+  rfpId      String   @db.Uuid
+  approver   Approver @relation(fields: [approverId], references: [id])
+  approverId String   @db.Uuid
+  approved   Boolean  @default(false)
+  approvedAt DateTime?
+
+  @@unique([rfpId, approverId])
 }
