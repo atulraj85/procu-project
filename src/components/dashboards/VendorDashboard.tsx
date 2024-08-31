@@ -5,8 +5,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Vendor from "../../app/dashboard/page"
+import { SidebarItem } from "@/app/types/types";
+import Sidebar from "../shared/Sidebar";
 
-export default function VendorDashboard() {
+interface SidebarOneProps {
+  list: SidebarItem[];
+}
+
+export default function VendorDashboard({list}:SidebarOneProps) {
   const router = useRouter();
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
@@ -21,6 +27,9 @@ export default function VendorDashboard() {
 
   return (
     <div>
+       <div className="fixed top-0 left-0">
+      <Sidebar items={list} />
+    </div>
       <h1>Vendor Dashboard</h1>
       <Vendor/>
     </div>

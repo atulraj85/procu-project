@@ -4,8 +4,12 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { SidebarItem } from "@/app/types/types";
 
-export default function AccountantDashboard() {
+interface SidebarOneProps {
+  list: SidebarItem[];
+}
+export default function AccountantDashboard({list}:SidebarOneProps) {
   const router = useRouter();
 
   useEffect(() => {

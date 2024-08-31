@@ -15,13 +15,13 @@ export const financeList = [
     value: "productForm",
     label: "Product Form",
     imgUrl: "/svgs/productForm.svg", // Update with correct path
-    route: "product-form",
+    route: "requestproduct",
   },
   {
     value: "productRequest",
     label: "Product Request",
     imgUrl: "/svgs/productRequest.svg", // Update with correct path
-    route: "/company/request-product",
+    route: "requestproduct",
   },
   {
     value: "billOfQuantity",
@@ -60,6 +60,17 @@ export const financeList = [
     route: "/company/logout",
   },
 ];
+
+export const Admin =[
+  
+    {
+      value: "Users",
+      label: "Users",
+      imgUrl: "/svgs/dashboard.svg", // Update with correct path
+      route: "/dashboards/Admin",
+    },
+  
+]
 
 export const vendorList = [
   {

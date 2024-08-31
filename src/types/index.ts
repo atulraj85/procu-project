@@ -12,6 +12,7 @@ export interface SidebarItem {
   route: string;
 }
 
+
 export interface InfoItem {
   value: string;
   total: number;

@@ -2,14 +2,20 @@
 
 "use client";
 
-import {useEffect } from "react";
+import {useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 // import Dashboard from "@/app/dashboard/page";
 import Sidebar from "../shared/Sidebar";
 import Dashboard from "../manager/Dashboard"
 import { vendorList } from "@/lib/sidebarLinks";
+import { SidebarItem } from "@/app/types/types";
 
-export default function ManagerDashboard() {
+interface SidebarOneProps {
+  list: SidebarItem[];
+}
+export default function ManagerDashboard({list}:SidebarOneProps) {
+  // const [activeComponent, setActiveComponent] = useState("service");
+
   const router = useRouter();
 
   useEffect(() => {
@@ -26,9 +32,8 @@ export default function ManagerDashboard() {
   return (
     <div>
        <div className="fixed top-0 left-0">
-        {/* <Sidebar items={vendorList} /> */}
-        
-      </div>
+      <Sidebar items={list} />
+    </div>
       
     </div>
   );
