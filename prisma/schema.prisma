@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your updated Prisma schema file with consistent ID types
 
 generator client {
   provider = "prisma-client-js"
@@ -14,25 +13,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Company {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  address   String?
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model User {
-  id               String            @id @default(cuid())
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email            String            @unique
   password         String
   name             String?
-  role             Role              @default(VENDOR)
+  role             Role
+  company          Company           @relation(fields: [companyId], references: [id])
+  companyId        String            @db.Uuid
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  prManager        PRManager?
-  financeManager   FinanceManager?
   qualityAssurance QualityAssurance?
-  vendor           Vendor?
+  pos              PO[]
+  rfps             RFP[]
 }
 
 enum Role {
   ADMIN
-  MANAGER
+  PR_MANAGER
+  FINANCE_MANAGER
   ACCOUNTANT
-  VENDOR
+  QUALITY_ASSURANCE
+}
+
+model Vendor {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerCode      String?
+  primaryName       String
+  companyName       String
+  contactDisplayName String
+  email             String?
+  workPhone         String?
+  mobile            String?
+  website           String?
+  openingBalance    String?
+  gstin             String?
+  msmeNo            String?
+  address           String?
+  currency          String          @default("INR")
+  customerTerms     String?
+  customerState     String?
+  customerCity      String?
+  country           String          @default("India")
+  zip               String?
+  fax               String?
+  dlNumber          String?
+  remarks           String?
+  openingType       String?
+  pan               String?
+  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryId Int
+  quotations        Quotation[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model Payment {
@@ -49,12 +91,12 @@ model ProductCategory {
 }
 
 model PO {
-  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  quotation        Quotation      @relation(fields: [quotationId], references: [id])
-  quotationId      String         @unique @db.Uuid
-  financeManager   FinanceManager @relation(fields: [financeManagerId], references: [id])
-  financeManagerId String         @db.Uuid
-  invoice          Invoice?
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation   Quotation @relation(fields: [quotationId], references: [id])
+  quotationId String    @unique @db.Uuid
+  user        User      @relation(fields: [userId], references: [id])
+  userId      String    @db.Uuid
+  invoice     Invoice?
 }
 
 model GoodStatus {
@@ -65,26 +107,6 @@ model GoodStatus {
   qualityAssurance         Boolean
   qualityAssuranceLeader   QualityAssurance @relation(fields: [qualityAssuranceLeaderId], references: [id])
   qualityAssuranceLeaderId String           @db.Uuid
-}
-
-model FinanceManager {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique
-  po     PO[]
-}
-
-model Vendor {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user              User            @relation(fields: [userId], references: [id])
-  userId            String          @unique
-  gstNo             String          @unique
-  msmeNo            String          @unique
-  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
-  productCategoryId Int
-  companyName       String
-  companyLocation   String
-  quotations        Quotation[]
 }
 
 model Product {
@@ -105,13 +127,6 @@ model Invoice {
   goodStatus GoodStatus?
 }
 
-model PRManager {
-  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user   User   @relation(fields: [userId], references: [id])
-  userId String @unique
-  rfp    RFP[]
-}
-
 model Quotation {
   id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   rfp        RFP     @relation(fields: [rfpId], references: [id])
@@ -125,7 +140,7 @@ model Quotation {
 model QualityAssurance {
   id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   user         User         @relation(fields: [userId], references: [id])
-  userId       String       @unique
+  userId       String       @unique @db.Uuid
   goodStatuses GoodStatus[]
 }
 
@@ -136,17 +151,17 @@ model RFP {
   deliveryLocation  String
   deliveryByDate    DateTime
   lastDateToRespond DateTime
-  prManager         PRManager       @relation(fields: [prManagerId], references: [id])
-  prManagerId       String          @db.Uuid
+  user              User            @relation(fields: [userId], references: [id])
+  userId            String          @db.Uuid
   quotation         Quotation?
   approversList     ApproversList[]
   rfpProducts       RFPProduct[]
 }
 
 model RFPProduct {
-  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp       RFP    @relation(fields: [rfpId], references: [id])
-  rfpId     String @db.Uuid
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp       RFP     @relation(fields: [rfpId], references: [id])
+  rfpId     String  @db.Uuid
   product   Product @relation(fields: [productId], references: [id])
   productId Int
   quantity  Int
@@ -163,12 +178,12 @@ model Approver {
 }
 
 model ApproversList {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp        RFP      @relation(fields: [rfpId], references: [id])
-  rfpId      String   @db.Uuid
-  approver   Approver @relation(fields: [approverId], references: [id])
-  approverId String   @db.Uuid
-  approved   Boolean  @default(false)
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp        RFP       @relation(fields: [rfpId], references: [id])
+  rfpId      String    @db.Uuid
+  approver   Approver  @relation(fields: [approverId], references: [id])
+  approverId String    @db.Uuid
+  approved   Boolean   @default(false)
   approvedAt DateTime?
 
   @@unique([rfpId, approverId])

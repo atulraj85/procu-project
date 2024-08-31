@@ -2,18 +2,60 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
+Table Company {
+  id String [pk]
+  name String [not null]
+  address String
+  users User [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
 Table User {
   id String [pk]
   email String [unique, not null]
   password String [not null]
   name String
-  role Role [not null, default: 'VENDOR']
+  role Role [not null]
+  company Company [not null]
+  companyId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [not null]
-  prManager PRManager
-  financeManager FinanceManager
   qualityAssurance QualityAssurance
-  vendor Vendor
+  pos PO [not null]
+  rfps RFP [not null]
+}
+
+Table Vendor {
+  id String [pk]
+  customerCode String
+  primaryName String [not null]
+  companyName String [not null]
+  contactDisplayName String [not null]
+  email String
+  workPhone String
+  mobile String
+  website String
+  openingBalance String
+  gstin String
+  msmeNo String
+  address String
+  currency String [not null, default: 'INR']
+  customerTerms String
+  customerState String
+  customerCity String
+  country String [not null, default: 'India']
+  zip String
+  fax String
+  dlNumber String
+  remarks String
+  openingType String
+  pan String
+  productCategory ProductCategory [not null]
+  productCategoryId Int [not null]
+  quotations Quotation [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
 }
 
 Table Payment {
@@ -33,8 +75,8 @@ Table PO {
   id String [pk]
   quotation Quotation [not null]
   quotationId String [unique, not null]
-  financeManager FinanceManager [not null]
-  financeManagerId String [not null]
+  user User [not null]
+  userId String [not null]
   invoice Invoice
 }
 
@@ -46,26 +88,6 @@ Table GoodStatus {
   qualityAssurance Boolean [not null]
   qualityAssuranceLeader QualityAssurance [not null]
   qualityAssuranceLeaderId String [not null]
-}
-
-Table FinanceManager {
-  id String [pk]
-  user User [not null]
-  userId String [unique, not null]
-  po PO [not null]
-}
-
-Table Vendor {
-  id String [pk]
-  user User [not null]
-  userId String [unique, not null]
-  gstNo String [unique, not null]
-  msmeNo String [unique, not null]
-  productCategory ProductCategory [not null]
-  productCategoryId Int [not null]
-  companyName String [not null]
-  companyLocation String [not null]
-  quotations Quotation [not null]
 }
 
 Table Product {
@@ -84,13 +106,6 @@ Table Invoice {
   poId String [unique, not null]
   payments Payment [not null]
   goodStatus GoodStatus
-}
-
-Table PRManager {
-  id String [pk]
-  user User [not null]
-  userId String [unique, not null]
-  rfp RFP [not null]
 }
 
 Table Quotation {
@@ -117,8 +132,8 @@ Table RFP {
   deliveryLocation String [not null]
   deliveryByDate DateTime [not null]
   lastDateToRespond DateTime [not null]
-  prManager PRManager [not null]
-  prManagerId String [not null]
+  user User [not null]
+  userId String [not null]
   quotation Quotation
   approversList ApproversList [not null]
   rfpProducts RFPProduct [not null]
@@ -161,32 +176,29 @@ Table ApproversList {
 
 Enum Role {
   ADMIN
-  MANAGER
+  PR_MANAGER
+  FINANCE_MANAGER
   ACCOUNTANT
-  VENDOR
+  QUALITY_ASSURANCE
 }
+
+Ref: User.companyId > Company.id
+
+Ref: Vendor.productCategoryId > ProductCategory.id
 
 Ref: Payment.invoiceId > Invoice.id
 
 Ref: PO.quotationId - Quotation.id
 
-Ref: PO.financeManagerId > FinanceManager.id
+Ref: PO.userId > User.id
 
 Ref: GoodStatus.invoiceId - Invoice.id
 
 Ref: GoodStatus.qualityAssuranceLeaderId > QualityAssurance.id
 
-Ref: FinanceManager.userId - User.id
-
-Ref: Vendor.userId - User.id
-
-Ref: Vendor.productCategoryId > ProductCategory.id
-
 Ref: Product.productCategoryId > ProductCategory.id
 
 Ref: Invoice.poId - PO.id
-
-Ref: PRManager.userId - User.id
 
 Ref: Quotation.rfpId - RFP.id
 
@@ -194,7 +206,7 @@ Ref: Quotation.vendorId > Vendor.id
 
 Ref: QualityAssurance.userId - User.id
 
-Ref: RFP.prManagerId > PRManager.id
+Ref: RFP.userId > User.id
 
 Ref: RFPProduct.rfpId > RFP.id
 
