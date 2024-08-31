@@ -7,8 +7,8 @@ Table Company {
   name String [not null]
   address String
   users User [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table User {
@@ -16,11 +16,11 @@ Table User {
   email String [unique, not null]
   password String [not null]
   name String
-  role Role [not null]
+  role Role [not null, default: 'USER']
   company Company [not null]
   companyId String [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
   qualityAssurance QualityAssurance
   pos PO [not null]
   rfps RFP [not null]
@@ -54,14 +54,16 @@ Table Vendor {
   productCategory ProductCategory [not null]
   productCategoryId Int [not null]
   quotations Quotation [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table Payment {
   id String [pk]
   invoice Invoice [not null]
   invoiceId String [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table ProductCategory {
@@ -69,6 +71,8 @@ Table ProductCategory {
   name String [unique, not null]
   products Product [not null]
   vendors Vendor [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table PO {
@@ -78,6 +82,8 @@ Table PO {
   user User [not null]
   userId String [not null]
   invoice Invoice
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table GoodStatus {
@@ -88,6 +94,8 @@ Table GoodStatus {
   qualityAssurance Boolean [not null]
   qualityAssuranceLeader QualityAssurance [not null]
   qualityAssuranceLeaderId String [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table Product {
@@ -98,6 +106,8 @@ Table Product {
   productCategory ProductCategory [not null]
   productCategoryId Int [not null]
   rfpProducts RFPProduct [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table Invoice {
@@ -106,6 +116,8 @@ Table Invoice {
   poId String [unique, not null]
   payments Payment [not null]
   goodStatus GoodStatus
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table Quotation {
@@ -116,6 +128,8 @@ Table Quotation {
   vendorId String [not null]
   billAmount Decimal [not null]
   po PO
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table QualityAssurance {
@@ -123,6 +137,8 @@ Table QualityAssurance {
   user User [not null]
   userId String [unique, not null]
   goodStatuses GoodStatus [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table RFP {
@@ -137,6 +153,8 @@ Table RFP {
   quotation Quotation
   approversList ApproversList [not null]
   rfpProducts RFPProduct [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table RFPProduct {
@@ -146,6 +164,8 @@ Table RFPProduct {
   product Product [not null]
   productId Int [not null]
   quantity Int [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 
   indexes {
     (rfpId, productId) [unique]
@@ -158,6 +178,8 @@ Table Approver {
   email String [unique, not null]
   phone String [not null]
   approversList ApproversList [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 }
 
 Table ApproversList {
@@ -168,6 +190,8 @@ Table ApproversList {
   approverId String [not null]
   approved Boolean [not null, default: false]
   approvedAt DateTime
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 
   indexes {
     (rfpId, approverId) [unique]
@@ -180,6 +204,7 @@ Enum Role {
   FINANCE_MANAGER
   ACCOUNTANT
   QUALITY_ASSURANCE
+  USER
 }
 
 Ref: User.companyId > Company.id

@@ -1,5 +1,3 @@
-// This is your updated Prisma schema file with consistent ID types
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,12 +12,12 @@ datasource db {
 }
 
 model Company {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
-  address   String?
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  address    String?
+  users      User[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model User {
@@ -27,11 +25,11 @@ model User {
   email            String            @unique
   password         String
   name             String?
-  role             Role
+  role             Role              @default(USER)
   company          Company           @relation(fields: [companyId], references: [id])
   companyId        String            @db.Uuid
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @updatedAt
   qualityAssurance QualityAssurance?
   pos              PO[]
   rfps             RFP[]
@@ -43,51 +41,56 @@ enum Role {
   FINANCE_MANAGER
   ACCOUNTANT
   QUALITY_ASSURANCE
+  USER
 }
 
 model Vendor {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerCode      String?
-  primaryName       String
-  companyName       String
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerCode       String?
+  primaryName        String
+  companyName        String
   contactDisplayName String
-  email             String?
-  workPhone         String?
-  mobile            String?
-  website           String?
-  openingBalance    String?
-  gstin             String?
-  msmeNo            String?
-  address           String?
-  currency          String          @default("INR")
-  customerTerms     String?
-  customerState     String?
-  customerCity      String?
-  country           String          @default("India")
-  zip               String?
-  fax               String?
-  dlNumber          String?
-  remarks           String?
-  openingType       String?
-  pan               String?
-  productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
-  productCategoryId Int
-  quotations        Quotation[]
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  email              String?
+  workPhone          String?
+  mobile             String?
+  website            String?
+  openingBalance     String?
+  gstin              String?
+  msmeNo             String?
+  address            String?
+  currency           String          @default("INR")
+  customerTerms      String?
+  customerState      String?
+  customerCity       String?
+  country            String          @default("India")
+  zip                String?
+  fax                String?
+  dlNumber           String?
+  remarks            String?
+  openingType        String?
+  pan                String?
+  productCategory    ProductCategory @relation(fields: [productCategoryId], references: [id])
+  productCategoryId  Int
+  quotations         Quotation[]
+  created_at         DateTime        @default(now())
+  updated_at         DateTime        @updatedAt
 }
 
 model Payment {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  invoice   Invoice @relation(fields: [invoiceId], references: [id])
-  invoiceId String  @db.Uuid
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoice    Invoice  @relation(fields: [invoiceId], references: [id])
+  invoiceId  String   @db.Uuid
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model ProductCategory {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  products Product[]
-  vendors  Vendor[]
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  products   Product[]
+  vendors    Vendor[]
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
 }
 
 model PO {
@@ -97,6 +100,8 @@ model PO {
   user        User      @relation(fields: [userId], references: [id])
   userId      String    @db.Uuid
   invoice     Invoice?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 }
 
 model GoodStatus {
@@ -107,6 +112,8 @@ model GoodStatus {
   qualityAssurance         Boolean
   qualityAssuranceLeader   QualityAssurance @relation(fields: [qualityAssuranceLeaderId], references: [id])
   qualityAssuranceLeaderId String           @db.Uuid
+  created_at               DateTime         @default(now())
+  updated_at               DateTime         @updatedAt
 }
 
 model Product {
@@ -117,6 +124,8 @@ model Product {
   productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
   productCategoryId Int
   rfpProducts       RFPProduct[]
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
 }
 
 model Invoice {
@@ -125,16 +134,20 @@ model Invoice {
   poId       String      @unique @db.Uuid
   payments   Payment[]
   goodStatus GoodStatus?
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
 }
 
 model Quotation {
-  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp        RFP     @relation(fields: [rfpId], references: [id])
-  rfpId      String  @unique @db.Uuid
-  vendor     Vendor  @relation(fields: [vendorId], references: [id])
-  vendorId   String  @db.Uuid
-  billAmount Decimal @db.Decimal(10, 2)
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp        RFP      @relation(fields: [rfpId], references: [id])
+  rfpId      String   @unique @db.Uuid
+  vendor     Vendor   @relation(fields: [vendorId], references: [id])
+  vendorId   String   @db.Uuid
+  billAmount Decimal  @db.Decimal(10, 2)
   po         PO?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model QualityAssurance {
@@ -142,6 +155,8 @@ model QualityAssurance {
   user         User         @relation(fields: [userId], references: [id])
   userId       String       @unique @db.Uuid
   goodStatuses GoodStatus[]
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
 }
 
 model RFP {
@@ -156,6 +171,8 @@ model RFP {
   quotation         Quotation?
   approversList     ApproversList[]
   rfpProducts       RFPProduct[]
+  created_at        DateTime        @default(now())
+  updated_at        DateTime        @updatedAt
 }
 
 model RFPProduct {
@@ -166,15 +183,20 @@ model RFPProduct {
   productId Int
   quantity  Int
 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
   @@unique([rfpId, productId])
 }
 
 model Approver {
-  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name           String
-  email          String          @unique
-  phone          String
-  approversList  ApproversList[]
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String          @unique
+  phone         String
+  approversList ApproversList[]
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
 }
 
 model ApproversList {
@@ -185,6 +207,9 @@ model ApproversList {
   approverId String    @db.Uuid
   approved   Boolean   @default(false)
   approvedAt DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@unique([rfpId, approverId])
 }
