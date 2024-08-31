@@ -9,6 +9,15 @@ const CreateUserInputValidation = z.object({
     .max(50, {
       message: "Full name must be at most 50 characters.",
     }),
+    company: z
+    .string()
+    .email({
+      message: "Enter a valid Company name",
+    })
+    .min(2, {
+      message: "Company must be at least 2 characters.",
+    }),
+
   email: z
     .string()
     .email({
