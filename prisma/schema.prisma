@@ -168,11 +168,21 @@ model RFP {
   lastDateToRespond DateTime
   user              User            @relation(fields: [userId], references: [id])
   userId            String          @db.Uuid
+  rfpStatus            RFPStatus // Enum type for status
   quotation         Quotation?
   approversList     ApproversList[]
   rfpProducts       RFPProduct[]
   created_at        DateTime        @default(now())
   updated_at        DateTime        @updatedAt
+}
+
+enum RFPStatus {
+  PENDING
+  IN_PROGRESS
+  GRN_NOT_RECEIVED
+  INVOICE_NOT_RECEIVED
+  PAYMENT_NOT_DONE
+  COMPLETED
 }
 
 model RFPProduct {

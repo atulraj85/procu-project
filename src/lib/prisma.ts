@@ -10,20 +10,20 @@ export const modelMap: Record<string, any> = {
     model: prisma.company,
     attributes: ["id", "name", "address", "created_at", "updated_at"],
   },
-  user: {
-    model: prisma.user,
-    attributes: [
-      "id",
-      "email",
-      "password",
-      "name",
-      "role",
-      "companyId",
-      "created_at",
-      "updated_at",
-      "qualityAssurance",
-    ],
-  },
+  // user: {
+  //   model: prisma.user,
+  //   attributes: [
+  //     "id",
+  //     "email",
+  //     "password",
+  //     "name",
+  //     "role",
+  //     "companyId",
+  //     "created_at",
+  //     "updated_at",
+  //     "qualityAssurance",
+  //   ],
+  // },
   vendor: {
     model: prisma.vendor,
     attributes: [
@@ -111,20 +111,21 @@ export const modelMap: Record<string, any> = {
     model: prisma.qualityAssurance,
     attributes: ["id", "userId", "created_at", "updated_at"],
   },
-  rfp: {
-    model: prisma.rFP,
-    attributes: [
-      "id",
-      "requirementType",
-      "dateOfOrdering",
-      "deliveryLocation",
-      "deliveryByDate",
-      "lastDateToRespond",
-      "userId",
-      "created_at",
-      "updated_at",
-    ],
-  },
+  // rfp: {
+  //   model: prisma.rFP,
+  //   attributes: [
+  //     "id",
+  //     "requirementType",
+  //     "dateOfOrdering",
+  //     "deliveryLocation",
+  //     "deliveryByDate",
+  //     "lastDateToRespond",
+  //     "rfpStatus",
+  //     "userId",
+  //     "created_at",
+  //     "updated_at",
+  //   ],
+  // },
   rfpProduct: {
     model: prisma.rFPProduct,
     attributes: [

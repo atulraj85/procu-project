@@ -150,6 +150,7 @@ Table RFP {
   lastDateToRespond DateTime [not null]
   user User [not null]
   userId String [not null]
+  rfpStatus RFPStatus [not null]
   quotation Quotation
   approversList ApproversList [not null]
   rfpProducts RFPProduct [not null]
@@ -205,6 +206,15 @@ Enum Role {
   ACCOUNTANT
   QUALITY_ASSURANCE
   USER
+}
+
+Enum RFPStatus {
+  PENDING
+  IN_PROGRESS
+  GRN_NOT_RECEIVED
+  INVOICE_NOT_RECEIVED
+  PAYMENT_NOT_DONE
+  COMPLETED
 }
 
 Ref: User.companyId > Company.id

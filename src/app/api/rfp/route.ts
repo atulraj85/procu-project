@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { modelMap } from "@/lib/prisma";
+import { serializePrismaModel } from "../[tablename]/route";
 
 const prisma = new PrismaClient();
 
@@ -17,6 +19,15 @@ interface Approver {
   phone: string;
 }
 
+enum RFPStatus {
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
+  INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
+  PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
+  COMPLETED = "COMPLETED",
+}
+
 interface RequestBody {
   requirementType: string;
   dateOfOrdering: string;
@@ -24,9 +35,26 @@ interface RequestBody {
   deliveryByDate: string;
   lastDateToRespond: string;
   userId: string;
+  rfpStatus: RFPStatus; // Use the enum here
   rfpProducts: RFPProduct[];
   approvers: Approver[];
 }
+
+const rfp = {
+  model: prisma.rFP,
+  attributes: [
+    "id",
+    "requirementType",
+    "dateOfOrdering",
+    "deliveryLocation",
+    "deliveryByDate",
+    "lastDateToRespond",
+    "rfpStatus",
+    "userId",
+    "created_at",
+    "updated_at",
+  ],
+};
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +67,7 @@ export async function POST(request: Request) {
       userId,
       rfpProducts,
       approvers,
+      rfpStatus,
     }: RequestBody = await request.json();
 
     // Check if the user exists
@@ -50,6 +79,14 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "User does not exist" },
         { status: 404 }
+      );
+    }
+
+    // Validate the status
+    if (!Object.values(RFPStatus).includes(rfpStatus)) {
+      return NextResponse.json(
+        { error: `Invalid status value: ${rfpStatus}` },
+        { status: 400 }
       );
     }
 
@@ -120,6 +157,7 @@ export async function POST(request: Request) {
           deliveryByDate: new Date(deliveryByDate),
           lastDateToRespond: new Date(lastDateToRespond),
           userId,
+          rfpStatus,
           rfpProducts: {
             create: productsData.map((data) => ({
               productId: data.product.id,
@@ -162,39 +200,60 @@ export async function POST(request: Request) {
   }
 }
 
-// {
-//   "requirementType": "Procurement",
-//   "dateOfOrdering": "2023-05-01T00:00:00.000Z",
-//   "deliveryLocation": "New Delhi, India",
-//   "deliveryByDate": "2023-06-01T00:00:00.000Z",
-//   "lastDateToRespond": "2023-05-15T00:00:00.000Z",
-//   "userId": "user-id-123",
-//   "rfpProducts": [
-//     {
-//       "productName": "Product A",
-//       "modelNo": "A001",
-//       "specification": "High-quality product",
-//       "productCategory": "Electronics",
-//       "quantity": 10
-//     },
-//     {
-//       "productName": "Product B",
-//       "modelNo": "B002",
-//       "specification": "Durable product",
-//       "productCategory": "Hardware",
-//       "quantity": 20
-//     }
-//   ],
-//   "approvers": [
-//     {
-//       "name": "Approver 1",
-//       "email": "approver1@example.com",
-//       "phone": "1234567890"
-//     },
-//     {
-//       "name": "Approver 2",
-//       "email": "approver2@example.com",
-//       "phone": "0987654321"
-//     }
-//   ]
-// }
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+
+    const whereClause: Record<string, any> = {};
+    const orderByClause: Record<string, "asc" | "desc"> = {};
+    const validAttributes = rfp.attributes;
+
+    searchParams.forEach((value, key) => {
+      if (validAttributes.includes(key)) {
+        if (key === "orderBy") {
+          const [orderByField, orderByDirection] = value.split(",");
+          if (validAttributes.includes(orderByField)) {
+            orderByClause[orderByField] =
+              orderByDirection === "asc" ? "asc" : "desc";
+          }
+        } else if (key === "id") {
+          const ids = value.split(",").map((id) => parseInt(id, 10));
+          whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
+        } else if (key === "state_id") {
+          const stateIds = value.split(",").map((id) => parseInt(id, 10));
+          whereClause.state_id =
+            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
+        } else {
+          whereClause[key] = value;
+        }
+      } else {
+        return NextResponse.json(
+          { error: `Invalid attribute: ${key}` },
+          { status: 400 }
+        );
+      }
+    });
+
+    // console.log("Where clause:", whereClause);
+
+    const records = await rfp.model.findMany({
+      where: whereClause,
+      orderBy: orderByClause,
+    });
+
+    if (Object.keys(whereClause).length > 0 && records.length === 0) {
+      return NextResponse.json(
+        { error: `Not found matching the criteria` },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(serializePrismaModel(records));
+  } catch (error: unknown) {
+    console.error("Detailed error:", error);
+    return NextResponse.json(
+      { error: "Error fetching records", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}

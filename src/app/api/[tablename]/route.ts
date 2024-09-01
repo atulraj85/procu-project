@@ -5,7 +5,7 @@ import { modelMap } from "@/lib/prisma";
 
 // Mapping of table names to Prisma model methods
 
-function serializePrismaModel<T>(model: T): T {
+export function serializePrismaModel<T>(model: T): T {
   return JSON.parse(
     JSON.stringify(model, (key, value) =>
       typeof value === "bigint" ? value.toString() : value
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
     // console.log("Where clause:", whereClause);
 
     const records = await modelMap[tableName].model.findMany({
-      where: whereClause,
-      orderBy: orderByClause,
+      // where: whereClause,
+      // orderBy: orderByClause,
     });
 
     if (Object.keys(whereClause).length > 0 && records.length === 0) {
@@ -78,7 +78,6 @@ export async function POST(request: NextRequest) {
   try {
     const { pathname } = request.nextUrl;
     const tableName = pathname.split("/").pop(); // Get the last part of the URL as tableName
-    const id = request.nextUrl.searchParams.get("id");
 
     if (!tableName || !modelMap[tableName]) {
       return NextResponse.json(
@@ -87,23 +86,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // if (!id) {
-    //   return NextResponse.json(
-    //     { error: "ID is required for updating a record" },
-    //     { status: 400 }
-    //   );
-    // }
-
-    const formData = await request.formData();
-    const data: { [key: string]: any } = Object.fromEntries(formData);
-    const files: { [key: string]: File } = {};
-
-    for (const [key, value] of Object.entries(data)) {
-      if (value instanceof File) {
-        files[key] = value;
-        delete data[key];
-      }
-    }
+    // Parse the JSON body
+    const data = await request.json();
 
     // Validate incoming data against the model's attributes
     const validAttributes = modelMap[tableName].attributes;
@@ -117,26 +101,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save files to the public/assets/ directory
-    for (const [key, file] of Object.entries(files)) {
-      const filePath = path.join("public", "assets", file.name);
-      const fileBuffer = Buffer.from(await file.arrayBuffer());
+    // If you need to handle file uploads, you can do it here
+    // For example, if you have a field for a logo URL
+    if (data.logo) {
+      const filePath = path.join("public", "assets", data.logo.name);
+      const fileBuffer = Buffer.from(await data.logo.arrayBuffer());
       await fs.promises.writeFile(filePath, fileBuffer);
-      data.logo_url = `/assets/${file.name}`;
+      data.logo_url = `/assets/${data.logo.name}`;
+      delete data.logo; // Remove the logo field from data if it's not needed in the database
     }
 
-    const updatedRecord = await modelMap[tableName].model.create({
-      // where: { id: BigInt(id) },
+    const createdRecord = await modelMap[tableName].model.create({
       data,
     });
 
-    return NextResponse.json(serializePrismaModel(updatedRecord), {
-      status: 200,
+    return NextResponse.json(serializePrismaModel(createdRecord), {
+      status: 201, // Use 201 for resource creation
     });
   } catch (error: any) {
     console.error("Detailed error:", error);
     return NextResponse.json(
-      { error: "Error updating record", details: error.message },
+      { error: "Error creating record", details: error.message },
       { status: 500 }
     );
   }
