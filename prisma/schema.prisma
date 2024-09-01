@@ -161,6 +161,7 @@ model QualityAssurance {
 
 model RFP {
   id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+    rfpId     String   @unique
   requirementType   String
   dateOfOrdering    DateTime
   deliveryLocation  String

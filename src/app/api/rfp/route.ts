@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { modelMap } from "@/lib/prisma";
 import { serializePrismaModel } from "../[tablename]/route";
 
 const prisma = new PrismaClient();
@@ -40,21 +39,34 @@ interface RequestBody {
   approvers: Approver[];
 }
 
-const rfp = {
-  model: prisma.rFP,
-  attributes: [
-    "id",
-    "requirementType",
-    "dateOfOrdering",
-    "deliveryLocation",
-    "deliveryByDate",
-    "lastDateToRespond",
-    "rfpStatus",
-    "userId",
-    "created_at",
-    "updated_at",
-  ],
-};
+async function generateRFPId() {
+  const today = new Date();
+  const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
+  const prefix = `RFP-${dateString}-`;
+
+  // Get the last RFP_ID for today
+  const lastRFP = await prisma.rFP.findFirst({
+    where: {
+      rfpId: {
+        startsWith: prefix,
+      },
+    },
+    orderBy: {
+      rfpId: "desc",
+    },
+  });
+
+  let nextNumber = 0;
+  if (lastRFP && lastRFP.rfpId) {
+    const lastId = lastRFP.rfpId;
+    const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
+    nextNumber = lastNumber + 1;
+  }
+
+  // Format the next number to be 4 digits
+  const formattedNumber = String(nextNumber).padStart(4, "0");
+  return `${prefix}${formattedNumber}`;
+}
 
 export async function POST(request: Request) {
   try {
@@ -89,6 +101,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Generate RFP ID
+    const rfpId = await generateRFPId();
 
     // Create RFP with all related data in a single transaction
     const newRFP = await prisma.$transaction(async (prisma) => {
@@ -151,6 +166,7 @@ export async function POST(request: Request) {
       // Create RFP
       return prisma.rFP.create({
         data: {
+          rfpId, // Use the generated RFP ID
           requirementType,
           dateOfOrdering: new Date(dateOfOrdering),
           deliveryLocation,
@@ -206,7 +222,19 @@ export async function GET(request: NextRequest) {
 
     const whereClause: Record<string, any> = {};
     const orderByClause: Record<string, "asc" | "desc"> = {};
-    const validAttributes = rfp.attributes;
+    const validAttributes = [
+      "id",
+      "requirementType",
+      "dateOfOrdering",
+      "deliveryLocation",
+      "deliveryByDate",
+      "lastDateToRespond",
+      "rfpStatus",
+      "userId",
+      "created_at",
+      "updated_at",
+      "rfpId", // Include rfpId in valid attributes
+    ];
 
     searchParams.forEach((value, key) => {
       if (validAttributes.includes(key)) {
@@ -219,10 +247,8 @@ export async function GET(request: NextRequest) {
         } else if (key === "id") {
           const ids = value.split(",").map((id) => parseInt(id, 10));
           whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
-        } else if (key === "state_id") {
-          const stateIds = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.state_id =
-            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
+        } else if (key === "rfpId") {
+          whereClause.rfpId = value; // Handle rfpId search
         } else {
           whereClause[key] = value;
         }
@@ -234,9 +260,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // console.log("Where clause:", whereClause);
-
-    const records = await rfp.model.findMany({
+    const records = await prisma.rFP.findMany({
       where: whereClause,
       orderBy: orderByClause,
     });

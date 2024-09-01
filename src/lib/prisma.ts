@@ -154,3 +154,33 @@ export const modelMap: Record<string, any> = {
     ],
   },
 };
+
+export async function generateRFPId() {
+  const today = new Date();
+  const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
+  const prefix = `RFP-${dateString}-`;
+
+  // Get the last RFP_ID for today
+  const lastRFP = await prisma.rFP.findFirst({
+    where: {
+      rfpId: {
+        startsWith: prefix,
+      },
+    },
+    orderBy: {
+      rfpId: "desc",
+    },
+  });
+
+  let nextNumber = 0;
+  if (lastRFP && lastRFP.rfpId) {
+    // Check if lastRFP is defined and has rfpId
+    const lastId = lastRFP.rfpId;
+    const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
+    nextNumber = lastNumber + 1;
+  }
+
+  // Format the next number to be 4 digits
+  const formattedNumber = String(nextNumber).padStart(4, "0");
+  return `${prefix}${formattedNumber}`;
+}

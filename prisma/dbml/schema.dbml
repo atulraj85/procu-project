@@ -143,6 +143,7 @@ Table QualityAssurance {
 
 Table RFP {
   id String [pk]
+  rfpId String [unique, not null]
   requirementType String [not null]
   dateOfOrdering DateTime [not null]
   deliveryLocation String [not null]
