@@ -29,20 +29,20 @@ interface RequestBody {
 }
 
 export async function POST(request: Request) {
-  const {
-    requirementType,
-    dateOfOrdering,
-    deliveryLocation,
-    deliveryByDate,
-    lastDateToRespond,
-    userId,
-    rfpProducts,
-    approvers,
-  }: RequestBody = await request.json();
-
   try {
+    const {
+      requirementType,
+      dateOfOrdering,
+      deliveryLocation,
+      deliveryByDate,
+      lastDateToRespond,
+      userId,
+      rfpProducts,
+      approvers,
+    }: RequestBody = await request.json();
+
     // Check if the user exists
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findUnique({
       where: { id: userId },
     });
 
@@ -53,106 +53,110 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create product categories and products if they don't exist
-    const products = await Promise.all(
-      rfpProducts.map(async (rFProduct) => {
-        const productCategory = await prisma.productCategory.findFirst({
-          where: { name: rFProduct.productCategory },
-        });
-        if (!productCategory) {
-          const newProductCategory = await prisma.productCategory.create({
-            data: { name: rFProduct.productCategory },
+    // Create RFP with all related data in a single transaction
+    const newRFP = await prisma.$transaction(async (prisma) => {
+      // Create product categories and products if they don't exist
+      const productsData = await Promise.all(
+        rfpProducts.map(async (rfpProduct) => {
+          let productCategory = await prisma.productCategory.findUnique({
+            where: { name: rfpProduct.productCategory },
           });
-          return {
-            productCategory: newProductCategory,
-            product: await prisma.product.create({
-              data: {
-                name: rFProduct.productName,
-                modelNo: rFProduct.modelNo,
-                specification: rFProduct.specification,
-                productCategoryId: newProductCategory.id,
-              },
-            }),
-          };
-        } else {
-          const product = await prisma.product.findFirst({
-            where: { name: rFProduct.productName },
-          });
-          if (!product) {
-            return {
-              productCategory,
-              product: await prisma.product.create({
-                data: {
-                  name: rFProduct.productName,
-                  modelNo: rFProduct.modelNo,
-                  specification: rFProduct.specification,
-                  productCategoryId: productCategory.id,
-                },
-              }),
-            };
-          } else {
-            return { productCategory, product };
-          }
-        }
-      })
-    );
 
-    // Create approvers if they don't exist
-    const approversList = await Promise.all(
-      approvers.map(async (approver) => {
-        const existingApprover = await prisma.approver.findFirst({
-          where: { email: approver.email },
-        });
-        if (!existingApprover) {
-          return await prisma.approver.create({
-            data: {
-              name: approver.name,
-              email: approver.email,
-              phone: approver.phone,
+          if (!productCategory) {
+            productCategory = await prisma.productCategory.create({
+              data: { name: rfpProduct.productCategory },
+            });
+          }
+
+          let product = await prisma.product.findFirst({
+            where: {
+              name: rfpProduct.productName,
+              productCategoryId: productCategory.id,
             },
           });
-        } else {
+
+          if (!product) {
+            product = await prisma.product.create({
+              data: {
+                name: rfpProduct.productName,
+                modelNo: rfpProduct.modelNo,
+                specification: rfpProduct.specification,
+                productCategoryId: productCategory.id,
+              },
+            });
+          }
+
+          return { product, quantity: rfpProduct.quantity };
+        })
+      );
+
+      // Create approvers if they don't exist
+      const approversData = await Promise.all(
+        approvers.map(async (approver) => {
+          let existingApprover = await prisma.approver.findUnique({
+            where: { email: approver.email },
+          });
+
+          if (!existingApprover) {
+            existingApprover = await prisma.approver.create({
+              data: {
+                name: approver.name,
+                email: approver.email,
+                phone: approver.phone,
+              },
+            });
+          }
+
           return existingApprover;
-        }
-      })
-    );
+        })
+      );
 
-    // Create RFP products
-    const rfpProductData = products.map((product) => ({
-      productId: product.product.id,
-      quantity:
-        rfpProducts.find((p) => p.productName === product.product.name)
-          ?.quantity || 0, // Use optional chaining to handle undefined values
-    }));
-
-    // Create RFP
-    const newRFP = await prisma.rFP.create({
-      data: {
-        requirementType,
-        dateOfOrdering,
-        deliveryLocation,
-        deliveryByDate,
-        lastDateToRespond,
-        userId: userId,
-        rfpProducts: {
-          create: rfpProductData,
+      // Create RFP
+      return prisma.rFP.create({
+        data: {
+          requirementType,
+          dateOfOrdering: new Date(dateOfOrdering),
+          deliveryLocation,
+          deliveryByDate: new Date(deliveryByDate),
+          lastDateToRespond: new Date(lastDateToRespond),
+          userId,
+          rfpProducts: {
+            create: productsData.map((data) => ({
+              productId: data.product.id,
+              quantity: data.quantity,
+            })),
+          },
+          approversList: {
+            create: approversData.map((approver) => ({
+              approverId: approver.id,
+              approved: false,
+            })),
+          },
         },
-
-        approversList: {
-          create: approversList.map((approver) => ({
-            approverId: approver.id,
-            approved: false,
-          })),
+        include: {
+          rfpProducts: {
+            include: {
+              product: {
+                include: {
+                  productCategory: true,
+                },
+              },
+            },
+          },
+          approversList: {
+            include: {
+              approver: true,
+            },
+          },
         },
-      },
+      });
     });
 
-    return NextResponse.json({ response: { data: newRFP } }, { status: 201 });
+    return NextResponse.json({ data: newRFP }, { status: 201 });
   } catch (error: any) {
+    console.error("Error creating RFP:", error);
     return NextResponse.json(
-      {
-        error: `Failed to create RFP, Error: ${error.message}`,
-      },
+      { error: `Failed to create RFP: ${error.message}` },
       { status: 500 }
     );
   }
