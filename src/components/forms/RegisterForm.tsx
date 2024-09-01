@@ -30,6 +30,7 @@ function RegisterForm() {
     resolver: zodResolver(FormSchema),
     defaultValues: {
       name: "",
+      company:"",
       email: "",
       password: "",
     },
@@ -81,6 +82,24 @@ function RegisterForm() {
                 <FormControl>
                   <Input
                     placeholder="Full name"
+                    {...field}
+                    className="h-[3.75rem] w-full rounded-large"
+                    startIcon="user"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        
+        <FormField
+            control={form.control}
+            name="company"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="Company"
                     {...field}
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="user"

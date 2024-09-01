@@ -1,5 +1,3 @@
-// src/app/dashboard/admin/page.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,9 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"; // Assuming these are your table components
-import { IUsersListingResponse } from "@/types";
+import { IUsersListingResponse, SidebarItem } from "@/types";
+import Sidebar from "../shared/Sidebar";
 
-export default function AdminDashboard() {
+interface SidebarOneProps {
+  list: SidebarItem[];
+}
+// const Sidebar: React.FC<SidebarOneProps> = ({ items }) => {
+export default function AdminDashboard({ list }:SidebarOneProps) {
+  console.log("Received list prop:", list);
+ 
+  
+
   const router = useRouter();
   const [usersListing, setUsersListing] =
     useState<IUsersListingResponse | null>(null);
@@ -43,7 +50,7 @@ export default function AdminDashboard() {
 
   if (!usersListing) {
     return <div>Loading...</div>;
-  }
+  } 
 
   const users = usersListing.response.data.map((user) => ({
     id: user.id,
@@ -53,8 +60,15 @@ export default function AdminDashboard() {
   }));
 
   return (
+    <>
+    <div>
+    <div className="fixed top-0 left-0">
+      <Sidebar items={list} />
+    </div>
+      </div>
     <div>
       <h1>Admin Dashboard</h1>
+      {/* <p>List content: {JSON.stringify(list)}</p> Display the received list prop */}
       <Table>
         <TableHeader>
           <TableRow>
@@ -62,7 +76,7 @@ export default function AdminDashboard() {
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
           </TableRow>
-        </TableHeader>
+        </TableHeader>  
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
@@ -74,5 +88,6 @@ export default function AdminDashboard() {
         </TableBody>
       </Table>
     </div>
+    </>
   );
 }

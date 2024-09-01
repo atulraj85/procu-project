@@ -12,6 +12,7 @@ export interface SidebarItem {
   route: string;
 }
 
+
 export interface InfoItem {
   value: string;
   total: number;
@@ -87,6 +88,7 @@ interface LoginUserResponseData {
 interface CreateUserResponseData {
   id: number;
   email: string;
+  company:string;
   name: string;
   password: string;
   randomize_channel: number;

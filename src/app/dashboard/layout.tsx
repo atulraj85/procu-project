@@ -12,9 +12,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
   }
   return (
     <div className="">
-    <div className="fixed top-0 left-0">
-      <Sidebar items={list} />
-    </div>
+    
     <div className="relative ml-64 flex flex-col">
       <TopBar />
       {children}
