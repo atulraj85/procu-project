@@ -25,7 +25,7 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Product Details</h2>
         </button>
-        {activeAccordion === "product" && (
+        {activeAccordion !== "product" && (
           <div className="p-4 bg-gray-100 border border-gray-300">
             <ProductDetails />
           </div>
@@ -59,9 +59,6 @@ const RequestForProduct: React.FC = () => {
           </div>
         )}
       </div>
-    
-
-     
     </div>
   );
 };

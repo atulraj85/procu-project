@@ -6,7 +6,7 @@ import Sidebar from "../shared/Sidebar";
 import { SidebarItem } from "@/app/types/types";
 import { Table } from "@/components/dashboards/Admin/Table";
 import { Table2 } from "@/components/dashboards/Admin/Table2";
-import Dashboard from "../finance/Dashboard";
+import Page from "../vendor/dashboard/page";
 import ProductDetails from "../manager/ProductDetails";
 import RequestForProduct from "../manager/RequestForProduct";
 
@@ -23,11 +23,11 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
-    const role = localStorage.getItem("USER_ROLE")?.toLowerCase();
+    const role = localStorage.getItem("USER_ROLE")
 
     if (!token) {
       router.push("/login");
-    } else if (role !== "manager") {
+    } else if (role !== "PR_MANAGER") {
       router.push("/dashboard");
     }
   }, [router]);
@@ -42,7 +42,7 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
         />
       </div>
       <div>
-        {activeComponent === "dashboard" && < Dashboard/>}
+        {activeComponent === "dashboard" && < Page/>}
         {activeComponent === "productCatalog" && <RequestForProduct/>}
       </div>
     </div>

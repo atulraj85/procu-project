@@ -24,7 +24,7 @@ export default function Dashboard() {
       case "ADMIN":
         router.push("/dashboard/admin");
         break;
-      case "MANAGER":
+      case "PR_MANAGER":
         router.push("/dashboard/manager");
         break;
       case "ACCOUNTANT":

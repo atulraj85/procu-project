@@ -1,11 +1,6 @@
 "use client";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import {
-  validateEmail,
-  validateIndianPhoneNumber,
-  validateUsername,
-} from "@/lib/Validation";
 import PDFuploader from "../shared/PDFuploader";
 
 interface VendorData {
@@ -51,34 +46,6 @@ const VendorDetails: React.FC = () => {
       return;
     }
 
-    const vd = vendorArray.find(
-      (vendor) =>
-        vendor.vendor_email == vendorData.vendor_email ||
-        vendor.vendor_number === vendorData.vendor_number
-    );
-
-    if (isEditing === false && vd !== undefined) {
-      toast.error(`${vendorData.vendor_email} is already present`);
-      return;
-    }
-
-    const nameValidation = validateUsername(vendorData.vendor_name);
-    const emailValidation = validateEmail(vendorData.vendor_email);
-    const phoneValidation = validateIndianPhoneNumber(vendorData.vendor_number);
-
-    if (!nameValidation.isValid) {
-      toast.error(nameValidation.message, { theme: "light" });
-      return;
-    }
-    if (!emailValidation.isValid) {
-      toast.error(emailValidation.message);
-      return;
-    }
-    if (!phoneValidation.isValid) {
-      toast.error(phoneValidation.message);
-      return;
-    }
-
     if (isEditing && editIndex !== null) {
       const updatedVendors = [...vendorArray];
       updatedVendors[editIndex] = vendorData;
@@ -108,6 +75,7 @@ const VendorDetails: React.FC = () => {
     setVendorToDelete(null);
     toast.success("Delete Vendor Details Successfully!");
   };
+
   const handleRemoveVendor = (email: string) => {
     setOpenDailogBox(true);
     setVendorToDelete(email);
@@ -131,6 +99,7 @@ const VendorDetails: React.FC = () => {
     updatedVendors[index].file = file;
     setVendorArray(updatedVendors);
   };
+
   return (
     <div className="">
       {openDialogBox && (
@@ -224,7 +193,7 @@ const VendorDetails: React.FC = () => {
             <tbody>
               {vendorArray.map((data: VendorData, index) => (
                 <tr key={index}>
-                  <td className=" p-2 flex justify-center items-center">
+                  <td className="p-2 flex justify-center items-center">
                     <input
                       type="checkbox"
                       checked={radioIndex === index}
@@ -284,8 +253,10 @@ const VendorDetails: React.FC = () => {
                         className="lucide lucide-trash"
                       >
                         <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M15 6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v1h6z" />
                       </svg>
                     </button>
                   </td>
@@ -293,11 +264,6 @@ const VendorDetails: React.FC = () => {
               ))}
             </tbody>
           </table>
-        )}
-        {vendorArray.length !== 0 && (
-          <button className="bg-green-700 hover:bg-blue-400 border py-2 px-2 text-white text-base my-5 rounded-md">
-            Submit Details of Vendor
-          </button>
         )}
       </div>
     </div>

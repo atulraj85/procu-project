@@ -73,9 +73,10 @@ const ProductDetails = () => {
   };
 
   const handleSubmit = (e: FormEvent) => {
+
     e.preventDefault();
 
-    if (validate()) {
+    if (true) {
       if (editIndex !== null) {
         const updatedProducts = [...products];
         updatedProducts[editIndex] = productData;
@@ -178,7 +179,7 @@ const ProductDetails = () => {
             className="outline-none border-b-2 border-gray-600"
           />
         </div>
-        <div className="flex flex-col gap-3 w-80 text-base">
+        {/* <div className="flex flex-col gap-3 w-80 text-base">
           <label htmlFor="unitPrice">Unit Price</label>
           <input
             type="text"
@@ -187,7 +188,7 @@ const ProductDetails = () => {
             onChange={handleChange}
             className="outline-none border-b-2 border-gray-600"
           />
-        </div>
+        </div> */}
         <div className="flex flex-col gap-3 w-64 text-base">
           <label htmlFor="quantity">Quantity</label>
           <input
@@ -198,7 +199,7 @@ const ProductDetails = () => {
             className="outline-none border-b-2 border-gray-600"
           />
         </div>
-        <div className="flex flex-col gap-3 w-56 text-base">
+        {/* <div className="flex flex-col gap-3 w-56 text-base">
           <label htmlFor="gst">GST (%)</label>
           <input
             type="text"
@@ -207,7 +208,7 @@ const ProductDetails = () => {
             onChange={handleChange}
             className="outline-none border-b-2 border-gray-600"
           />
-        </div>
+        </div> */}
         <div className="flex flex-col justify-end">
           <button
             type="submit"
@@ -224,9 +225,9 @@ const ProductDetails = () => {
               <tr>
                 <th className="border border-gray-300 p-2">Product Name</th>
                 <th className="border border-gray-300 p-2">Description</th>
-                <th className="border border-gray-300 p-2">Unit Price</th>
+                {/* <th className="border border-gray-300 p-2">Unit Price</th> */}
                 <th className="border border-gray-300 p-2">Quantity</th>
-                <th className="border border-gray-300 p-2">GST (%)</th>
+                {/* <th className="border border-gray-300 p-2">GST (%)</th> */}
                 <th className="border border-gray-300 p-2">Total Price</th>
                 <th className="border border-gray-300 p-2">Actions</th>
               </tr>
@@ -236,9 +237,9 @@ const ProductDetails = () => {
                 <tr key={index}>
                   <td className="border border-gray-300 px-2">{product.productName}</td>
                   <td className="border border-gray-300 px-2">{product.description}</td>
-                  <td className="border border-gray-300 px-2">{product.unitPrice}</td>
+                  {/* <td className="border border-gray-300 px-2">{product.unitPrice}</td> */}
                   <td className="border border-gray-300 px-2">{product.quantity}</td>
-                  <td className="border border-gray-300 px-2">{product.gst}</td>
+                  {/* <td className="border border-gray-300 px-2">{product.gst}</td> */}
                   <td className="border border-gray-300 px-2">
                     {Number(
                       parseFloat(product.unitPrice) *
