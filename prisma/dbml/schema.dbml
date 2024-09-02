@@ -24,6 +24,7 @@ Table User {
   qualityAssurance QualityAssurance
   pos PO [not null]
   rfps RFP [not null]
+  Vendor Vendor [not null]
 }
 
 Table Vendor {
@@ -56,6 +57,8 @@ Table Vendor {
   quotations Quotation [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
+  verifiedById String
+  verifiedBy User
 }
 
 Table Payment {
@@ -221,6 +224,8 @@ Enum RFPStatus {
 Ref: User.companyId > Company.id
 
 Ref: Vendor.productCategoryId > ProductCategory.id
+
+Ref: Vendor.verifiedById > User.id
 
 Ref: Payment.invoiceId > Invoice.id
 

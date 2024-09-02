@@ -33,6 +33,7 @@ model User {
   qualityAssurance QualityAssurance?
   pos              PO[]
   rfps             RFP[]
+  Vendor           Vendor[]
 }
 
 enum Role {
@@ -74,6 +75,8 @@ model Vendor {
   quotations         Quotation[]
   created_at         DateTime        @default(now())
   updated_at         DateTime        @updatedAt
+  verifiedById       String?         @db.Uuid
+  verifiedBy         User?           @relation(fields: [verifiedById], references: [id])
 }
 
 model Payment {
@@ -161,7 +164,7 @@ model QualityAssurance {
 
 model RFP {
   id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    rfpId     String   @unique
+  rfpId             String          @unique
   requirementType   String
   dateOfOrdering    DateTime
   deliveryLocation  String
@@ -169,7 +172,7 @@ model RFP {
   lastDateToRespond DateTime
   user              User            @relation(fields: [userId], references: [id])
   userId            String          @db.Uuid
-  rfpStatus            RFPStatus // Enum type for status
+  rfpStatus         RFPStatus // Enum type for status
   quotation         Quotation?
   approversList     ApproversList[]
   rfpProducts       RFPProduct[]
