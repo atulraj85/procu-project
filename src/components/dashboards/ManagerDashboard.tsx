@@ -1,40 +1,50 @@
-// src/app/dashboard/admin/page.tsx
-
 "use client";
 
-import {useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-// import Dashboard from "@/app/dashboard/page";
 import Sidebar from "../shared/Sidebar";
-import Dashboard from "../manager/Dashboard"
-import { vendorList } from "@/lib/sidebarLinks";
 import { SidebarItem } from "@/app/types/types";
+import { Table } from "@/components/dashboards/Admin/Table";
+import { Table2 } from "@/components/dashboards/Admin/Table2";
+import Dashboard from "../finance/Dashboard";
+import ProductDetails from "../manager/ProductDetails";
+import RequestForProduct from "../manager/RequestForProduct";
 
-interface SidebarOneProps {
+interface ManagerDashboardProps {
   list: SidebarItem[];
+  
 }
-export default function ManagerDashboard({list}:SidebarOneProps) {
-  // const [activeComponent, setActiveComponent] = useState("service");
+
+export default function ManagerDashboard({ list }: ManagerDashboardProps) {
+  // Use TypeScript to explicitly set the type for activeComponent
+  const [activeComponent, setActiveComponent] = useState<"dashboard" | string>("dashboard");
 
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
-    const role = localStorage.getItem("USER_ROLE");
+    const role = localStorage.getItem("USER_ROLE")?.toLowerCase();
 
     if (!token) {
       router.push("/login");
-    } else if (role?.toLowerCase() !== "manager") {
+    } else if (role !== "manager") {
       router.push("/dashboard");
     }
   }, [router]);
 
   return (
     <div>
-       <div className="fixed top-0 left-0">
-      <Sidebar items={list} />
-    </div>
-      
+      <div className="fixed top-0 left-0">
+        <Sidebar
+          items={list}
+          activeComponent={activeComponent}
+          setActiveComponent={setActiveComponent}
+        />
+      </div>
+      <div>
+        {activeComponent === "dashboard" && < Dashboard/>}
+        {activeComponent === "productCatalog" && <RequestForProduct/>}
+      </div>
     </div>
   );
 }

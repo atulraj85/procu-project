@@ -26,49 +26,38 @@ const VendorDetails: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [openDialogBox, setOpenDialogBox] = useState<boolean>(false);
+  const [openDialogBox, setOpenDailogBox] = useState<boolean>(false);
   const [vendorToDelete, setVendorToDelete] = useState<string | null>(null);
   const [radioIndex, setRadioIndex] = useState<number>(-1);
-
-  // Logging state values to console
-  useEffect(() => {
-    console.log("Vendor Array:", vendorArray);
-    console.log("Vendor Data:", vendorData);
-    console.log("Is Editing:", isEditing);
-    console.log("Edit Index:", editIndex);
-    console.log("Open Dialog Box:", openDialogBox);
-    console.log("Vendor to Delete:", vendorToDelete);
-    console.log("Radio Index:", radioIndex);
-  }, [vendorArray, vendorData, isEditing, editIndex, openDialogBox, vendorToDelete, radioIndex]);
 
   const handleChangeVendorDetails = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setVendorData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const onSubmitVendorDetails = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmitVendorDetails = (e: any) => {
     e.preventDefault();
 
-    if (!vendorData.vendor_name) {
+    if (vendorData.vendor_name == "") {
       toast.error("Name field is Empty.");
       return;
     }
-    if (!vendorData.vendor_email) {
+    if (vendorData.vendor_email == "") {
       toast.error("Email field is Empty.");
       return;
     }
-    if (!vendorData.vendor_number) {
+    if (vendorData.vendor_number == "") {
       toast.error("Phone Number is Empty");
       return;
     }
 
-    const existingVendor = vendorArray.find(
+    const vd = vendorArray.find(
       (vendor) =>
-        vendor.vendor_email === vendorData.vendor_email ||
+        vendor.vendor_email == vendorData.vendor_email ||
         vendor.vendor_number === vendorData.vendor_number
     );
 
-    if (!isEditing && existingVendor) {
+    if (isEditing === false && vd !== undefined) {
       toast.error(`${vendorData.vendor_email} is already present`);
       return;
     }
@@ -94,6 +83,8 @@ const VendorDetails: React.FC = () => {
       const updatedVendors = [...vendorArray];
       updatedVendors[editIndex] = vendorData;
       setVendorArray(updatedVendors);
+      setIsEditing(false);
+      setEditIndex(null);
       toast.success("Vendor Details Updated");
     } else {
       setVendorArray((prevData) => [...prevData, vendorData]);
@@ -106,24 +97,19 @@ const VendorDetails: React.FC = () => {
       vendor_number: "",
       file: null,
     });
-    setIsEditing(false);
-    setEditIndex(null);
   };
 
   const handleConfirmDelete = () => {
-    if (vendorToDelete) {
-      setVendorArray((prevData) =>
-        prevData.filter((data) => data.vendor_email !== vendorToDelete)
-      );
-      toast.success("Delete Vendor Details Successfully!");
-    }
+    setVendorArray((prevData) =>
+      prevData.filter((data) => data.vendor_email !== vendorToDelete)
+    );
 
-    setOpenDialogBox(false);
+    setOpenDailogBox(false);
     setVendorToDelete(null);
+    toast.success("Delete Vendor Details Successfully!");
   };
-
   const handleRemoveVendor = (email: string) => {
-    setOpenDialogBox(true);
+    setOpenDailogBox(true);
     setVendorToDelete(email);
   };
 
@@ -138,32 +124,36 @@ const VendorDetails: React.FC = () => {
     toast.success(`${vendorArray[index].vendor_email} marked for preference.`);
   };
 
+  useEffect(() => {}, [vendorData]);
+
   const handleFileUpload = (index: number, file: File | null) => {
     const updatedVendors = [...vendorArray];
     updatedVendors[index].file = file;
     setVendorArray(updatedVendors);
   };
-
   return (
-    <div className="p-5">
+    <div className="">
       {openDialogBox && (
         <>
-          <div className="fixed inset-0 bg-black opacity-50 z-20"></div>
+          <div className="fixed inset-0 bg-black opacity-50 z-20 pointer-events-none"></div>
           <div className="fixed inset-0 flex items-center justify-center z-30">
             <div className="bg-white p-6 rounded shadow-md text-center">
               <div className="mb-4">
-                Are you sure you want to delete this vendor&apos;s details?
+                Are you sure you want to delete this vendor's details?
               </div>
               <div className="flex justify-center space-x-4">
                 <button
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
-                  onClick={handleConfirmDelete}
+                  onClick={() => {
+                    handleConfirmDelete();
+                    setOpenDailogBox(false);
+                  }}
                 >
                   Yes
                 </button>
                 <button
                   className="bg-red-400 text-white px-4 py-2 rounded hover:bg-red-300"
-                  onClick={() => setOpenDialogBox(false)}
+                  onClick={() => setOpenDailogBox(false)}
                 >
                   No
                 </button>
@@ -173,9 +163,9 @@ const VendorDetails: React.FC = () => {
         </>
       )}
       <div className="text-gray-800 text-xl mt-5">
-        <form onSubmit={onSubmitVendorDetails} className="flex space-x-4">
+        <div className="flex space-x-4">
           <div className="flex flex-col gap-3 w-72 text-base">
-            <label htmlFor="vendor_name">Vendor Name</label>
+            <label htmlFor="name">Vendor Name</label>
             <input
               type="text"
               name="vendor_name"
@@ -185,7 +175,7 @@ const VendorDetails: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-3 w-72 text-base">
-            <label htmlFor="vendor_email">Vendor Email</label>
+            <label htmlFor="email">Vendor Email</label>
             <input
               type="email"
               name="vendor_email"
@@ -195,7 +185,7 @@ const VendorDetails: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-3 w-72 text-base">
-            <label htmlFor="vendor_number">Vendor Phone</label>
+            <label htmlFor="phone">Vendor Phone</label>
             <input
               type="text"
               name="vendor_number"
@@ -207,20 +197,20 @@ const VendorDetails: React.FC = () => {
 
           <div className="flex items-end justify-center space-x-3 text-base">
             <button
-              type="submit"
-              className="bg-blue-700 hover:bg-blue-400 py-2 px-4 text-white rounded-md"
+              className="bg-blue-700 hover:bg-blue-400 py-2 px-2 text-white rounded-md"
+              onClick={onSubmitVendorDetails}
             >
               {isEditing ? "Update Vendor" : "Add Vendor"}
             </button>
           </div>
-        </form>
+        </div>
       </div>
 
       <div className="w-full py-2 my-5">
         <h6 className="text-[9px]">
-          <i>*Also mark for preferred vendor.</i>
+          <i>*Also mark for prefered vendor.</i>
         </h6>
-        {vendorArray.length > 0 && (
+        {vendorArray.length !== 0 && (
           <table className="w-full border-collapse border border-gray-300 text-left">
             <thead>
               <tr>
@@ -228,14 +218,13 @@ const VendorDetails: React.FC = () => {
                 <th className="border border-gray-300 p-2">Vendor Name</th>
                 <th className="border border-gray-300 p-2">Vendor Email</th>
                 <th className="border border-gray-300 p-2">Vendor Number</th>
-                <th className="border border-gray-300 p-2">File</th>
                 <th className="border border-gray-300 p-2">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {vendorArray.map((data, index) => (
+              {vendorArray.map((data: VendorData, index) => (
                 <tr key={index}>
-                  <td className="p-2 flex justify-center items-center">
+                  <td className=" p-2 flex justify-center items-center">
                     <input
                       type="checkbox"
                       checked={radioIndex === index}
@@ -259,7 +248,7 @@ const VendorDetails: React.FC = () => {
                   </td>
                   <td className="border border-gray-300 p-2 flex items-center justify-center space-x-4">
                     <button
-                      className="text-blue-600"
+                      className=" text-blue-600"
                       onClick={() => handleEditVendor(index)}
                     >
                       <svg
@@ -279,7 +268,7 @@ const VendorDetails: React.FC = () => {
                       </svg>
                     </button>
                     <button
-                      className="text-red-900"
+                      className=" text-red-900 "
                       onClick={() => handleRemoveVendor(data.vendor_email)}
                     >
                       <svg
@@ -305,8 +294,8 @@ const VendorDetails: React.FC = () => {
             </tbody>
           </table>
         )}
-        {vendorArray.length > 0 && (
-          <button className="bg-green-700 hover:bg-green-500 border py-2 px-4 text-white text-base my-5 rounded-md">
+        {vendorArray.length !== 0 && (
+          <button className="bg-green-700 hover:bg-blue-400 border py-2 px-2 text-white text-base my-5 rounded-md">
             Submit Details of Vendor
           </button>
         )}

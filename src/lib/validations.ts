@@ -11,7 +11,7 @@ const CreateUserInputValidation = z.object({
     }),
     company: z
     .string()
-    .email({
+    .max(100,{
       message: "Enter a valid Company name",
     })
     .min(2, {

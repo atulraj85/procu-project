@@ -146,7 +146,7 @@ export const managerList = [
     value: "productCatalog",
     label: "Product Catalog",
     imgUrl: "/svgs/productCatalog.png", // Update with correct path
-    route: "/company/product-catalog",
+    route: "/dashboard/manager",
   },
   {
     value: "orderManagement",

@@ -8,7 +8,7 @@ interface SidebarOneProps {
   items: SidebarItem[];
 }
 
-const Sidebar: React.FC<SidebarOneProps> = ({ items }) => {
+const Sidebar: React.FC<SidebarOneProps> = ({ items , activeComponent, setActiveComponent }) => {
   
   return (
     <aside className="flex h-screen w-64 flex-col overflow-y-auto border-r bg-white px-5 py-8">
@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarOneProps> = ({ items }) => {
               <Link
                 className="flex transform items-center rounded-lg px-3 py-2 text-gray-600 transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700"
                 href={item.route}
+                onClick={() => setActiveComponent(item.value)}
               >
                 <Image
                   src={item.imgUrl}
