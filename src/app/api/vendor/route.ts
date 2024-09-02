@@ -29,25 +29,48 @@ interface VendorRequestBody {
   openingType?: string;
   pan?: string;
   productCategoryId: number; // Assuming this is required
-  verifiedById?: string; // Optional field for the user who verified the vendor
 }
 
 export async function POST(request: Request) {
   try {
     const vendorData: VendorRequestBody = await request.json();
 
+    // Validate required fields
+    // Validate required fields
+    const requiredFields: (keyof VendorRequestBody)[] = [
+      "primaryName",
+      "companyName",
+      "contactDisplayName",
+    ];
+    for (const field of requiredFields) {
+      if (!vendorData[field]) {
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create a new vendor
     const newVendor = await prisma.vendor.create({
       data: {
         ...vendorData,
-        created_at: new Date(),
-        updated_at: new Date(),
+        // No need to set created_at and updated_at as they are handled by Prisma
       },
     });
 
     return NextResponse.json({ data: newVendor }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating vendor:", error);
+
+    // Check if the error is a Prisma error
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "A vendor with this unique field already exists." },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: `Failed to create vendor: ${error.message}` },
       { status: 500 }
@@ -87,7 +110,6 @@ export async function GET(request: NextRequest) {
       "openingType",
       "pan",
       "productCategoryId",
-      "verifiedById", // Include verifiedById in valid attributes
       "created_at",
       "updated_at",
     ];

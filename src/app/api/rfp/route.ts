@@ -4,20 +4,6 @@ import { serializePrismaModel } from "../[tablename]/route";
 
 const prisma = new PrismaClient();
 
-interface RFPProduct {
-  productName: string;
-  modelNo: string;
-  specification: string;
-  productCategory: string;
-  quantity: number;
-}
-
-interface Approver {
-  name: string;
-  email: string;
-  phone: string;
-}
-
 enum RFPStatus {
   PENDING = "PENDING",
   IN_PROGRESS = "IN_PROGRESS",
@@ -35,8 +21,9 @@ interface RequestBody {
   lastDateToRespond: string;
   userId: string;
   rfpStatus: RFPStatus; // Use the enum here
-  rfpProducts: RFPProduct[];
-  approvers: Approver[];
+  rfpProducts: { productId: string; quantity: number }[]; // Array of product IDs and quantities
+  approvers: { approverId: string }[]; // Array of approver IDs
+  vendorId: string; // Vendor ID
 }
 
 async function generateRFPId() {
@@ -80,6 +67,7 @@ export async function POST(request: Request) {
       rfpProducts,
       approvers,
       rfpStatus,
+      vendorId,
     }: RequestBody = await request.json();
 
     // Check if the user exists
@@ -105,65 +93,8 @@ export async function POST(request: Request) {
     // Generate RFP ID
     const rfpId = await generateRFPId();
 
-    // Create RFP with all related data in a single transaction
-    const newRFP = await prisma.$transaction(async (prisma) => {
-      // Create product categories and products if they don't exist
-      const productsData = await Promise.all(
-        rfpProducts.map(async (rfpProduct) => {
-          let productCategory = await prisma.productCategory.findUnique({
-            where: { name: rfpProduct.productCategory },
-          });
-
-          if (!productCategory) {
-            productCategory = await prisma.productCategory.create({
-              data: { name: rfpProduct.productCategory },
-            });
-          }
-
-          let product = await prisma.product.findFirst({
-            where: {
-              name: rfpProduct.productName,
-              productCategoryId: productCategory.id,
-            },
-          });
-
-          if (!product) {
-            product = await prisma.product.create({
-              data: {
-                name: rfpProduct.productName,
-                modelNo: rfpProduct.modelNo,
-                specification: rfpProduct.specification,
-                productCategoryId: productCategory.id,
-              },
-            });
-          }
-
-          return { product, quantity: rfpProduct.quantity };
-        })
-      );
-
-      // Create approvers if they don't exist
-      const approversData = await Promise.all(
-        approvers.map(async (approver) => {
-          let existingApprover = await prisma.approver.findUnique({
-            where: { email: approver.email },
-          });
-
-          if (!existingApprover) {
-            existingApprover = await prisma.approver.create({
-              data: {
-                name: approver.name,
-                email: approver.email,
-                phone: approver.phone,
-              },
-            });
-          }
-
-          return existingApprover;
-        })
-      );
-
-      // Create RFP
+    // Create RFP inside the transaction
+    const newRFP = await prisma.$transaction(async () => {
       return prisma.rFP.create({
         data: {
           rfpId, // Use the generated RFP ID
@@ -175,14 +106,16 @@ export async function POST(request: Request) {
           userId,
           rfpStatus,
           rfpProducts: {
-            create: productsData.map((data) => ({
-              productId: data.product.id,
-              quantity: data.quantity,
+            create: rfpProducts.map((rfpProduct) => ({
+              quantity: rfpProduct.quantity,
+              product: {
+                connect: { id: parseInt(rfpProduct.productId, 10) }, // Convert productId to number
+              },
             })),
           },
           approversList: {
-            create: approversData.map((approver) => ({
-              approverId: approver.id,
+            create: approvers.map((approver) => ({
+              userId: approver.approverId, // Use the userId directly
               approved: false,
             })),
           },
@@ -199,13 +132,12 @@ export async function POST(request: Request) {
           },
           approversList: {
             include: {
-              approver: true,
+              user: true, // Change to user to include the User model
             },
           },
         },
       });
     });
-
     return NextResponse.json({ data: newRFP }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating RFP:", error);
@@ -215,6 +147,7 @@ export async function POST(request: Request) {
     );
   }
 }
+
 
 export async function GET(request: NextRequest) {
   try {

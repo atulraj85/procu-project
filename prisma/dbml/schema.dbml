@@ -25,6 +25,7 @@ Table User {
   pos PO [not null]
   rfps RFP [not null]
   Vendor Vendor [not null]
+  approversList ApproversList [not null]
 }
 
 Table Vendor {
@@ -52,8 +53,8 @@ Table Vendor {
   remarks String
   openingType String
   pan String
-  productCategory ProductCategory [not null]
-  productCategoryId Int [not null]
+  productCategory ProductCategory
+  productCategoryId Int
   quotations Quotation [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
@@ -126,22 +127,14 @@ Table Invoice {
 Table Quotation {
   id String [pk]
   rfp RFP [not null]
-  rfpId String [unique, not null]
+  rfpId String [not null]
   vendor Vendor [not null]
   vendorId String [not null]
   billAmount Decimal [not null]
   po PO
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
-}
-
-Table QualityAssurance {
-  id String [pk]
-  user User [not null]
-  userId String [unique, not null]
-  goodStatuses GoodStatus [not null]
-  created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
+  RFP RFP [not null]
 }
 
 Table RFP {
@@ -155,11 +148,13 @@ Table RFP {
   user User [not null]
   userId String [not null]
   rfpStatus RFPStatus [not null]
-  quotation Quotation
+  preferredQuotationId String
+  quotations Quotation [not null]
   approversList ApproversList [not null]
   rfpProducts RFPProduct [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
+  Quotation Quotation [not null]
 }
 
 Table RFPProduct {
@@ -170,37 +165,41 @@ Table RFPProduct {
   productId Int [not null]
   quantity Int [not null]
   created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
+  updated_at DateTime [default: `now()`, not null]
 
   indexes {
     (rfpId, productId) [unique]
   }
 }
 
-Table Approver {
-  id String [pk]
-  name String [not null]
-  email String [unique, not null]
-  phone String [not null]
-  approversList ApproversList [not null]
-  created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
-}
-
 Table ApproversList {
   id String [pk]
   rfp RFP [not null]
   rfpId String [not null]
-  approver Approver [not null]
-  approverId String [not null]
+  user User [not null]
+  userId String [not null]
   approved Boolean [not null, default: false]
   approvedAt DateTime
   created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
+  updated_at DateTime [default: `now()`, not null]
 
   indexes {
-    (rfpId, approverId) [unique]
+    (rfpId, userId) [unique]
   }
+}
+
+Table QualityAssurance {
+  id String [pk]
+  user User [not null]
+  userId String [unique, not null]
+  goodStatuses GoodStatus [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [default: `now()`, not null]
+}
+
+Table RFPQuotations {
+  rfpId String [ref: > RFP.id]
+  quotationsId String [ref: > Quotation.id]
 }
 
 Enum Role {
@@ -241,11 +240,9 @@ Ref: Product.productCategoryId > ProductCategory.id
 
 Ref: Invoice.poId - PO.id
 
-Ref: Quotation.rfpId - RFP.id
+Ref: Quotation.rfpId > RFP.id
 
 Ref: Quotation.vendorId > Vendor.id
-
-Ref: QualityAssurance.userId - User.id
 
 Ref: RFP.userId > User.id
 
@@ -255,4 +252,6 @@ Ref: RFPProduct.productId > Product.id
 
 Ref: ApproversList.rfpId > RFP.id
 
-Ref: ApproversList.approverId > Approver.id
+Ref: ApproversList.userId > User.id
+
+Ref: QualityAssurance.userId - User.id
