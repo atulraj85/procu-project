@@ -1,11 +1,35 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import VendorDetails from "./VendorDetails";
 import ProductDetails from "./ProductDetails";
 import ApproverDetails from "./ApproverDetails";
 
 const RequestForProduct: React.FC = () => {
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
+  const [rfpId, setRfpId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRfpId = async () => {
+      try {
+        const response = await fetch("/api/rfp/rfpid");
+        if (!response.ok) {
+          throw new Error("Failed to fetch RFP ID");
+        }
+        const data = await response.json();
+        setRfpId(data);
+        console.log(data);
+      } catch (err) {
+        setError("Error fetching RFP ID. Please try again later.");
+        console.error("Error fetching RFP ID:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRfpId();
+  }, []);
 
   const toggleAccordion = (accordionName: string) => {
     setActiveAccordion(
@@ -13,11 +37,20 @@ const RequestForProduct: React.FC = () => {
     );
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
   return (
     <div className="p-4">
       <h1 className="text-gray-800 text-2xl mb-4">
         Request of Product/Services
       </h1>
+      {rfpId && <p className="text-gray-600 mb-4">RFP ID: {rfpId}</p>}
       <div>
         <button
           onClick={() => toggleAccordion("product")}
@@ -25,7 +58,7 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Product Details</h2>
         </button>
-        {activeAccordion !== "product" && (
+        {activeAccordion === "product" && (
           <div className="p-4 bg-gray-100 border border-gray-300">
             <ProductDetails />
           </div>

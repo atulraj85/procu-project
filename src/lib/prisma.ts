@@ -108,10 +108,6 @@ export const modelMap: Record<string, any> = {
       "updated_at",
     ],
   },
-  approver: {
-    model: prisma.approver,
-    attributes: ["id", "name", "email", "phone", "created_at", "updated_at"],
-  },
   approversList: {
     model: prisma.approversList,
     attributes: [
@@ -145,7 +141,6 @@ export async function generateRFPId() {
 
   let nextNumber = 0;
   if (lastRFP && lastRFP.rfpId) {
-    // Check if lastRFP is defined and has rfpId
     const lastId = lastRFP.rfpId;
     const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
     nextNumber = lastNumber + 1;
