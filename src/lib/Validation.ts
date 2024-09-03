@@ -39,6 +39,14 @@ export function validateEmail(email: string) {
   return { isValid: true, message: "Email is valid." };
 }
 
+
+
+export const validateGstn = (gstn: string) => {
+  const isValid = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/.test(gstn);
+  return { isValid };
+};
+
+
 export function validateIndianPhoneNumber(phoneNumber: number | string) {
   const phoneStr = phoneNumber.toString();
 

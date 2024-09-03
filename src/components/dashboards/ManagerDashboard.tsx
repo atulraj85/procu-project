@@ -9,6 +9,8 @@ import { Table2 } from "@/components/dashboards/Admin/Table2";
 import Page from "../vendor/dashboard/page";
 import ProductDetails from "../manager/ProductDetails";
 import RequestForProduct from "../manager/RequestForProduct";
+import Dashboard from "../manager/Dashboard";
+import Addvender from "../manager/Addvender";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
@@ -42,8 +44,10 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
         />
       </div>
       <div>
-        {activeComponent === "dashboard" && < Page/>}
+        {activeComponent === "dashboard" && < Dashboard/>}
         {activeComponent === "productCatalog" && <RequestForProduct/>}
+        {activeComponent === "Addvendor" && <Addvender/>}
+        
       </div>
     </div>
   );

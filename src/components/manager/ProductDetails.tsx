@@ -228,7 +228,7 @@ const ProductDetails = () => {
                 {/* <th className="border border-gray-300 p-2">Unit Price</th> */}
                 <th className="border border-gray-300 p-2">Quantity</th>
                 {/* <th className="border border-gray-300 p-2">GST (%)</th> */}
-                <th className="border border-gray-300 p-2">Total Price</th>
+                {/* <th className="border border-gray-300 p-2">Total Price</th> */}
                 <th className="border border-gray-300 p-2">Actions</th>
               </tr>
             </thead>
@@ -240,13 +240,13 @@ const ProductDetails = () => {
                   {/* <td className="border border-gray-300 px-2">{product.unitPrice}</td> */}
                   <td className="border border-gray-300 px-2">{product.quantity}</td>
                   {/* <td className="border border-gray-300 px-2">{product.gst}</td> */}
-                  <td className="border border-gray-300 px-2">
+                  {/* <td className="border border-gray-300 px-2">
                     {Number(
                       parseFloat(product.unitPrice) *
                       parseFloat(product.quantity) *
                       (1 + parseFloat(product.gst) / 100)
                     ).toFixed(2)}
-                  </td>
+                  </td> */}
                   <td className="border border-gray-300 p-2 flex items-center justify-center">
                     <button
                       className="py-1 px-4 text-blue-600 text-sm ml-2 hover:cursor-pointer"
@@ -296,7 +296,7 @@ const ProductDetails = () => {
           </table>
         )}
       </div>
-      <div className="flex items-end mt-4">
+      {/* <div className="flex items-end mt-4">
         <label htmlFor="otherCharges" className="mr-3">Other Charges</label>
         <input
           type="number"
@@ -309,7 +309,7 @@ const ProductDetails = () => {
         <div className="ml-5 font-bold">
           <h2>Grand Total: {grandTotal.toFixed(2)}</h2>
         </div>
-      </div>
+      </div> */}
       <div className="text-gray-800 text-xl flex items-end">
         <div className="flex flex-col gap-3 w-2/3 text-base mt-10">
           <label htmlFor="address" className="text-xl">

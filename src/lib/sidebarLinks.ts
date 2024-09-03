@@ -149,10 +149,10 @@ export const managerList = [
     route: "/dashboard/manager",
   },
   {
-    value: "orderManagement",
-    label: "Order Management",
+    value: "Addvendor",
+    label: "Add Vendor",
     imgUrl: "/svgs/orderManagement.png", // Update with correct path
-    route: "/company/order-management",
+    route: "/dashboard/manager",
   },
   {
     value: "reports",
