@@ -218,6 +218,46 @@ const VendorDetails: React.FC = () => {
   return (
     <div className="text-gray-800 text-xl p-5">
       <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap gap-5">
+      <div className="flex flex-col gap-3 w-72 text-base relative">
+          <label htmlFor="gst_number">GST Number</label>
+          <div className="relative">
+            <input
+              type="text"
+              name="gst_number"
+              value={vendorData.gst_number}
+              onChange={handleChangeVendorDetails}
+              className={`outline-none border-b-2 ${errors.gst_number ? "border-red-600" : "border-gray-600"} pr-10`}
+            />
+            <svg
+              className="absolute right-2 top-0 h-6 w-10 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-4.35-4.35M16.65 11A4.65 4.65 0 0112 15a4.65 4.65 0 01-4.65-4.65A4.65 4.65 0 0112 6.7a4.65 4.65 0 014.65 4.65z"
+              />
+            </svg>
+          </div>
+          {errors.gst_number && <p className="text-red-600 text-sm">{errors.gst_number}</p>}
+          {gstSuggestions.length > 0 && (
+            <ul className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-auto z-10">
+              {gstSuggestions.map((gst) => (
+                <li
+                  key={gst.gstin}
+                  onClick={() => handleGstSuggestionClick(gst)}
+                  className="p-2 cursor-pointer hover:bg-gray-200"
+                >
+                  {gst.primaryName} - {gst.gstin}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <div className="flex flex-col gap-3 w-72 text-base">
           <label htmlFor="vendor_name">Vendor Name</label>
           <input
@@ -251,46 +291,7 @@ const VendorDetails: React.FC = () => {
           />
           {errors.vendor_number && <p className="text-red-600 text-sm">{errors.vendor_number}</p>}
         </div>
-        <div className="flex flex-col gap-3 w-72 text-base relative">
-          <label htmlFor="gst_number">GST Number</label>
-          <div className="relative">
-            <input
-              type="text"
-              name="gst_number"
-              value={vendorData.gst_number}
-              onChange={handleChangeVendorDetails}
-              className={`outline-none border-b-2 ${errors.gst_number ? "border-red-600" : "border-gray-600"} pr-10`}
-            />
-            <svg
-              className="absolute right-2 top-2 h-5 w-5 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-4.35-4.35M16.65 11A4.65 4.65 0 0112 15a4.65 4.65 0 01-4.65-4.65A4.65 4.65 0 0112 6.7a4.65 4.65 0 014.65 4.65z"
-              />
-            </svg>
-          </div>
-          {errors.gst_number && <p className="text-red-600 text-sm">{errors.gst_number}</p>}
-          {gstSuggestions.length > 0 && (
-            <ul className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-auto z-10">
-              {gstSuggestions.map((gst) => (
-                <li
-                  key={gst.gstin}
-                  onClick={() => handleGstSuggestionClick(gst)}
-                  className="p-2 cursor-pointer hover:bg-gray-200"
-                >
-                  {gst.primaryName} - {gst.gstin}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+       
 
         <div className="flex items-end justify-center space-x-3 text-base">
           <button
