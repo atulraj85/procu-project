@@ -6,9 +6,16 @@ Table Company {
   id String [pk]
   name String [not null]
   address String
+  email String [unique]
+  phone String
+  website String
+  industry String
+  foundedDate DateTime
+  status String
   users User [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
+  PO PO [not null]
 }
 
 Table User {
@@ -75,10 +82,13 @@ Table ProductCategory {
 
 Table PO {
   id String [pk]
+  poId String [unique, not null]
   quotation Quotation [not null]
   quotationId String [unique, not null]
   user User [not null]
   userId String [not null]
+  companyId String [not null]
+  company Company [not null]
   invoice Invoice
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
@@ -225,6 +235,8 @@ Ref: Payment.invoiceId > Invoice.id
 Ref: PO.quotationId - Quotation.id
 
 Ref: PO.userId > User.id
+
+Ref: PO.companyId > Company.id
 
 Ref: GoodStatus.invoiceId - Invoice.id
 

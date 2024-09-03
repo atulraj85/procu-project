@@ -1,34 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { generateRFPId, modelMap } from "@/lib/prisma";
 import { serializePrismaModel } from "../[tablename]/route";
-import { generateRFPId } from "@/lib/prisma";
+import { RequestBody, RFPStatus } from "@/types";
 
 const prisma = new PrismaClient();
 
-enum RFPStatus {
-  PENDING = "PENDING",
-  IN_PROGRESS = "IN_PROGRESS",
-  GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
-  INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
-  PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
-  COMPLETED = "COMPLETED",
-}
-
-interface RequestBody {
-  requirementType: string;
-  dateOfOrdering: string;
-  deliveryLocation: string;
-  deliveryByDate: string;
-  lastDateToRespond: string;
-  userId: string;
-  rfpStatus: RFPStatus; // Use the enum here
-  rfpProducts: { productId: string; quantity: number }[]; // Array of product IDs and quantities
-  approvers: { approverId: string }[]; // Array of approver IDs
-  vendorId: string; // Vendor ID
-}
-
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const {
       requirementType,
@@ -40,7 +18,8 @@ export async function POST(request: Request) {
       rfpProducts,
       approvers,
       rfpStatus,
-      vendorId,
+      quotations,
+      preferredVendorId,
     }: RequestBody = await request.json();
 
     // Check if the user exists
@@ -67,10 +46,11 @@ export async function POST(request: Request) {
     const rfpId = await generateRFPId();
 
     // Create RFP inside the transaction
-    const newRFP = await prisma.$transaction(async () => {
-      return prisma.rFP.create({
+    const newRFP = await prisma.$transaction(async (prisma) => {
+      // Create the RFP first
+      const createdRFP = await prisma.rFP.create({
         data: {
-          rfpId, // Use the generated RFP ID
+          rfpId,
           requirementType,
           dateOfOrdering: new Date(dateOfOrdering),
           deliveryLocation,
@@ -78,39 +58,57 @@ export async function POST(request: Request) {
           lastDateToRespond: new Date(lastDateToRespond),
           userId,
           rfpStatus,
-          rfpProducts: {
-            create: rfpProducts.map((rfpProduct) => ({
-              quantity: rfpProduct.quantity,
-              product: {
-                connect: { id: parseInt(rfpProduct.productId, 10) }, // Convert productId to number
-              },
-            })),
-          },
-          approversList: {
-            create: approvers.map((approver) => ({
-              userId: approver.approverId, // Use the userId directly
-              approved: false,
-            })),
-          },
-        },
-        include: {
-          rfpProducts: {
-            include: {
-              product: {
-                include: {
-                  productCategory: true,
-                },
-              },
-            },
-          },
-          approversList: {
-            include: {
-              user: true, // Change to user to include the User model
-            },
-          },
         },
       });
+
+      // Create related records using the createdRFP.id
+      const createdQuotations = await prisma.quotation.createMany({
+        data: quotations.map((quotation) => ({
+          rfpId: createdRFP.id, // Use the ID of the created RFP
+          billAmount: quotation.billAmount,
+          vendorId: quotation.vendorId,
+        })),
+      });
+
+      // Determine the preferredQuotationId based on the preferredVendorId
+      const preferredQuotation = await prisma.quotation.findFirst({
+        where: {
+          vendorId: preferredVendorId,
+          rfpId: createdRFP.id, // Ensure this is the correct RFP ID
+        },
+      });
+
+      const preferredQuotationId = preferredQuotation
+        ? preferredQuotation.id
+        : null;
+
+      // Create RFP products and approvers
+      await Promise.all([
+        prisma.rFPProduct.createMany({
+          data: rfpProducts.map((rfpProduct) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            quantity: rfpProduct.quantity,
+            productId: parseInt(rfpProduct.productId, 10), // Ensure this is the correct type
+          })),
+        }),
+        prisma.approversList.createMany({
+          data: approvers.map((approver) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            userId: approver.approverId,
+            approved: false,
+          })),
+        }),
+      ]);
+
+      // Update the RFP with the preferredQuotationId
+      await prisma.rFP.update({
+        where: { id: createdRFP.id },
+        data: { preferredQuotationId },
+      });
+
+      return createdRFP;
     });
+
     return NextResponse.json({ data: newRFP }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating RFP:", error);
@@ -121,26 +119,13 @@ export async function POST(request: Request) {
   }
 }
 
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
     const whereClause: Record<string, any> = {};
     const orderByClause: Record<string, "asc" | "desc"> = {};
-    const validAttributes = [
-      "id",
-      "requirementType",
-      "dateOfOrdering",
-      "deliveryLocation",
-      "deliveryByDate",
-      "lastDateToRespond",
-      "rfpStatus",
-      "userId",
-      "created_at",
-      "updated_at",
-      "rfpId", // Include rfpId in valid attributes
-    ];
+    const validAttributes = rfpModel.attributes;
 
     searchParams.forEach((value, key) => {
       if (validAttributes.includes(key)) {
@@ -153,18 +138,17 @@ export async function GET(request: NextRequest) {
         } else if (key === "id") {
           const ids = value.split(",").map((id) => parseInt(id, 10));
           whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
-        } else if (key === "rfpId") {
-          whereClause.rfpId = value; // Handle rfpId search
+        } else if (key === "state_id") {
+          const stateIds = value.split(",").map((id) => parseInt(id, 10));
+          whereClause.state_id =
+            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
         } else {
           whereClause[key] = value;
         }
-      } else {
-        return NextResponse.json(
-          { error: `Invalid attribute: ${key}` },
-          { status: 400 }
-        );
       }
     });
+
+    // console.log("Where clause:", whereClause);
 
     const records = await prisma.rFP.findMany({
       where: whereClause,
@@ -173,7 +157,7 @@ export async function GET(request: NextRequest) {
 
     if (Object.keys(whereClause).length > 0 && records.length === 0) {
       return NextResponse.json(
-        { error: `Not found matching the criteria` },
+        { error: `No found matching the criteria` },
         { status: 404 }
       );
     }
@@ -187,3 +171,21 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+const rfpModel = {
+  model: prisma.rFP,
+  attributes: [
+    "id",
+    "rfpId",
+    "requirementType",
+    "dateOfOrdering",
+    "deliveryLocation",
+    "deliveryByDate",
+    "lastDateToRespond",
+    "userId",
+    "rfpStatus",
+    "preferredQuotationId",
+    "created_at",
+    "updated_at",
+  ],
+};

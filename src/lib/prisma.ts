@@ -10,38 +10,38 @@ export const modelMap: Record<string, any> = {
     model: prisma.company,
     attributes: ["id", "name", "address", "created_at", "updated_at"],
   },
-  vendor: {
-    model: prisma.vendor,
-    attributes: [
-      "id",
-      "customerCode",
-      "primaryName",
-      "companyName",
-      "contactDisplayName",
-      "email",
-      "workPhone",
-      "mobile",
-      "website",
-      "openingBalance",
-      "gstin",
-      "msmeNo",
-      "address",
-      "currency",
-      "customerTerms",
-      "customerState",
-      "customerCity",
-      "country",
-      "zip",
-      "fax",
-      "dlNumber",
-      "remarks",
-      "openingType",
-      "pan",
-      "productCategoryId",
-      "created_at",
-      "updated_at",
-    ],
-  },
+  // vendor: {
+  //   model: prisma.vendor,
+  //   attributes: [
+  //     "id",
+  //     "customerCode",
+  //     "primaryName",
+  //     "companyName",
+  //     "contactDisplayName",
+  //     "email",
+  //     "workPhone",
+  //     "mobile",
+  //     "website",
+  //     "openingBalance",
+  //     "gstin",
+  //     "msmeNo",
+  //     "address",
+  //     "currency",
+  //     "customerTerms",
+  //     "customerState",
+  //     "customerCity",
+  //     "country",
+  //     "zip",
+  //     "fax",
+  //     "dlNumber",
+  //     "remarks",
+  //     "openingType",
+  //     "pan",
+  //     "productCategoryId",
+  //     "created_at",
+  //     "updated_at",
+  //   ],
+  // },
   payment: {
     model: prisma.payment,
     attributes: ["id", "invoiceId", "created_at", "updated_at"],
@@ -142,6 +142,36 @@ export async function generateRFPId() {
   let nextNumber = 0;
   if (lastRFP && lastRFP.rfpId) {
     const lastId = lastRFP.rfpId;
+    const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
+    nextNumber = lastNumber + 1;
+  }
+
+  // Format the next number to be 4 digits
+  const formattedNumber = String(nextNumber).padStart(4, "0");
+  return `${prefix}${formattedNumber}`;
+}
+
+
+export async function generatePOId() {
+  const today = new Date();
+  const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
+  const prefix = `PO-${dateString}-`;
+
+  // Get the last RFP_ID for today
+  const lastPO = await prisma.pO.findFirst({
+    where: {
+      poId: {
+        startsWith: prefix,
+      },
+    },
+    orderBy: {
+      poId: "desc",
+    },
+  });
+
+  let nextNumber = 0;
+  if (lastPO && lastPO.poId) {
+    const lastId = lastPO.poId;
     const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
     nextNumber = lastNumber + 1;
   }

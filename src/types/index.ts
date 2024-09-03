@@ -100,3 +100,28 @@ interface Meta {
   success: boolean;
   message: string;
 }
+
+
+export enum RFPStatus {
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
+  INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
+  PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
+  COMPLETED = "COMPLETED",
+}
+
+
+export interface RequestBody {
+  requirementType: string;
+  dateOfOrdering: string;
+  deliveryLocation: string;
+  deliveryByDate: string;
+  lastDateToRespond: string;
+  userId: string;
+  rfpStatus: RFPStatus;
+  preferredVendorId: string;
+  rfpProducts: { productId: string; quantity: number }[];
+  approvers: { approverId: string }[];
+  quotations: { vendorId: string; billAmount: number }[]; // New field for quotations
+}
