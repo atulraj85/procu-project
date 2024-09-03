@@ -56,28 +56,22 @@ model Vendor {
   workPhone          String?
   mobile             String?
   website            String?
-  openingBalance     String?
   gstin              String?
   msmeNo             String?
   address            String?
-  currency           String           @default("INR")
-  customerTerms      String?
   customerState      String?
   customerCity       String?
-  country            String           @default("India")
+  country            String?
   zip                String?
-  fax                String?
-  dlNumber           String?
   remarks            String?
-  openingType        String?
   pan                String?
-  productCategory    ProductCategory? @relation(fields: [productCategoryId], references: [id])
-  productCategoryId  Int?
-  quotations         Quotation[]
-  created_at         DateTime         @default(now())
-  updated_at         DateTime         @updatedAt
   verifiedById       String?          @db.Uuid
   verifiedBy         User?            @relation(fields: [verifiedById], references: [id])
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+  ProductCategory    ProductCategory? @relation(fields: [productCategoryId], references: [id])
+  productCategoryId  Int?
+  Quotation          Quotation[]
 }
 
 model Payment {
@@ -202,8 +196,8 @@ model RFPProduct {
 
 model ApproversList {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp        RFP       @relation(fields: [rfpId], references: [id])
   rfpId      String    @db.Uuid
+  rfp        RFP       @relation(fields: [rfpId], references: [id])
   user       User      @relation(fields: [userId], references: [id]) // Change to User
   userId     String    @db.Uuid // Change to userId
   approved   Boolean   @default(false)

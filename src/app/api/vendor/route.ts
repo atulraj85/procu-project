@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { serializePrismaModel } from "../[tablename]/route"; // Adjust the import path as necessary
 
 const prisma = new PrismaClient();
 
@@ -13,29 +12,22 @@ interface VendorRequestBody {
   workPhone?: string;
   mobile?: string;
   website?: string;
-  openingBalance?: string;
   gstin?: string;
   msmeNo?: string;
   address?: string;
-  currency?: string;
-  customerTerms?: string;
   customerState?: string;
   customerCity?: string;
   country?: string;
   zip?: string;
-  fax?: string;
-  dlNumber?: string;
   remarks?: string;
-  openingType?: string;
   pan?: string;
-  productCategoryId: number; // Assuming this is required
+  verifiedById?: string;
 }
 
 export async function POST(request: Request) {
   try {
     const vendorData: VendorRequestBody = await request.json();
 
-    // Validate required fields
     // Validate required fields
     const requiredFields: (keyof VendorRequestBody)[] = [
       "primaryName",
@@ -53,17 +45,13 @@ export async function POST(request: Request) {
 
     // Create a new vendor
     const newVendor = await prisma.vendor.create({
-      data: {
-        ...vendorData,
-        // No need to set created_at and updated_at as they are handled by Prisma
-      },
+      data: vendorData,
     });
 
     return NextResponse.json({ data: newVendor }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating vendor:", error);
 
-    // Check if the error is a Prisma error
     if (error.code === "P2002") {
       return NextResponse.json(
         { error: "A vendor with this unique field already exists." },
@@ -94,22 +82,16 @@ export async function GET(request: NextRequest) {
       "workPhone",
       "mobile",
       "website",
-      "openingBalance",
       "gstin",
       "msmeNo",
       "address",
-      "currency",
-      "customerTerms",
       "customerState",
       "customerCity",
       "country",
       "zip",
-      "fax",
-      "dlNumber",
       "remarks",
-      "openingType",
       "pan",
-      "productCategoryId",
+      "verifiedById",
       "created_at",
       "updated_at",
     ];
@@ -122,9 +104,9 @@ export async function GET(request: NextRequest) {
             orderByClause[orderByField] =
               orderByDirection === "asc" ? "asc" : "desc";
           }
-        } else if (key === "id") {
+        } else if (key === "id" || key === "verifiedById") {
           const ids = value.split(",").map((id) => id);
-          whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
+          whereClause[key] = ids.length > 1 ? { in: ids } : ids[0];
         } else {
           whereClause[key] = value;
         }
@@ -148,7 +130,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(serializePrismaModel(records));
+    return NextResponse.json(records);
   } catch (error: unknown) {
     console.error("Detailed error:", error);
     return NextResponse.json(
