@@ -2,31 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { generateRFPId, modelMap } from "@/lib/prisma";
 import { serializePrismaModel } from "../[tablename]/route";
+import { RequestBody, RFPStatus } from "@/types";
 
 const prisma = new PrismaClient();
-
-enum RFPStatus {
-  PENDING = "PENDING",
-  IN_PROGRESS = "IN_PROGRESS",
-  GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
-  INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
-  PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
-  COMPLETED = "COMPLETED",
-}
-
-interface RequestBody {
-  requirementType: string;
-  dateOfOrdering: string;
-  deliveryLocation: string;
-  deliveryByDate: string;
-  lastDateToRespond: string;
-  userId: string;
-  rfpStatus: RFPStatus;
-  preferredVendorId: string;
-  rfpProducts: { productId: string; quantity: number }[];
-  approvers: { approverId: string }[];
-  quotations: { vendorId: string; billAmount: number }[]; // New field for quotations
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +19,7 @@ export async function POST(request: NextRequest) {
       approvers,
       rfpStatus,
       quotations,
-      preferredVendorId, // Get preferredVendorId from the request
+      preferredVendorId,
     }: RequestBody = await request.json();
 
     // Check if the user exists
@@ -141,24 +119,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-const rfpModel = {
-  model: prisma.rFP,
-  attributes: [
-    "id",
-    "rfpId",
-    "requirementType",
-    "dateOfOrdering",
-    "deliveryLocation",
-    "deliveryByDate",
-    "lastDateToRespond",
-    "userId",
-    "rfpStatus",
-    "preferredQuotationId",
-    "created_at",
-    "updated_at",
-  ],
-};
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -211,3 +171,21 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+const rfpModel = {
+  model: prisma.rFP,
+  attributes: [
+    "id",
+    "rfpId",
+    "requirementType",
+    "dateOfOrdering",
+    "deliveryLocation",
+    "deliveryByDate",
+    "lastDateToRespond",
+    "userId",
+    "rfpStatus",
+    "preferredQuotationId",
+    "created_at",
+    "updated_at",
+  ],
+};
