@@ -65,6 +65,9 @@ function LoginForm() {
        // Store the token and role in local storage
        localStorage.setItem("TOKEN", response?.response?.data?.token);
        localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
+       localStorage.setItem("USER_ID", response?.response?.data?.userId);
+      //  console.log(userId);
+       
 
        toast({
          title: "🎉 Login success",
