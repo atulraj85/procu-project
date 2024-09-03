@@ -22,7 +22,13 @@ const searchConfigs: Record<string, SearchConfig> = {
   },
   vendors: {
     model: prisma.vendor,
-    searchFields: ["primaryName", "companyName", "contactDisplayName", "email"],
+    searchFields: [
+      "primaryName",
+      "companyName",
+      "contactDisplayName",
+      "email",
+      "gstin",
+    ],
     returnFields: {
       id: true,
       primaryName: true,

@@ -12,12 +12,19 @@ datasource db {
 }
 
 model Company {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  address    String?
-  users      User[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  address     String?
+  email       String?  @unique // Optional and unique email address
+  phone       String?  // Optional phone number
+  website     String?  // Optional website URL
+  industry    String?  // Optional industry type
+  foundedDate DateTime? // Optional founded date
+  status      String?  // Optional status (e.g., "active", "inactive")
+  users       User[]
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  PO PO[]
 }
 
 model User {
@@ -99,6 +106,10 @@ model PO {
   user        User      @relation(fields: [userId], references: [id])
   userId      String    @db.Uuid
   invoice     Invoice?
+  companyId   String    @db.Uuid // Field for company ID
+  company     Company   @relation(fields: [companyId], references: [id]) // Relation to Company
+  rfpId       String    @unique @db.Uuid // New field for RFP ID
+  rfp         RFP       @relation(fields: [rfpId], references: [id]) // One-to-one relation to RFP
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 }
@@ -169,14 +180,17 @@ model RFP {
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
 
+  po                   PO?             @relation // One-to-one relation to PO
+
   Quotation Quotation[]
 }
+
 
 enum RFPStatus {
   PENDING
   IN_PROGRESS
-  GRN_NOT_RECEIVED
   INVOICE_NOT_RECEIVED
+  GRN_NOT_RECEIVED
   PAYMENT_NOT_DONE
   COMPLETED
 }
