@@ -1,4 +1,3 @@
-// app/api/search/[entity]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -60,22 +59,25 @@ export async function GET(
     return NextResponse.json({ error: "Invalid entity" }, { status: 400 });
   }
 
-  // Extract query parameters
-  const whereClause: Record<string, any> = {};
-  for (const field of config.searchFields) {
-    const value = request.nextUrl.searchParams.get(field);
-    if (value) {
-      whereClause[field] = { contains: value, mode: "insensitive" };
-    }
-  }
+  // Extract the search term from the query parameters
+  const searchTerm = request.nextUrl.searchParams.get("q");
 
-  // If no valid query parameters are provided, return an error
-  if (Object.keys(whereClause).length === 0) {
+  if (!searchTerm) {
     return NextResponse.json(
-      { error: "At least one valid query parameter is required" },
+      { error: "Search term 'q' is required" },
       { status: 400 }
     );
   }
+
+  // Construct the where clause for searching across multiple fields
+  const whereClause = {
+    OR: config.searchFields.map((field) => ({
+      [field]: {
+        contains: searchTerm,
+        mode: "insensitive",
+      },
+    })),
+  };
 
   try {
     const results = await config.model.findMany({
