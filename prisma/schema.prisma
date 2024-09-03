@@ -33,6 +33,8 @@ model User {
   qualityAssurance QualityAssurance?
   pos              PO[]
   rfps             RFP[]
+  Vendor           Vendor[]
+  approversList    ApproversList[] // Add this line to reference ApproversList
 }
 
 enum Role {
@@ -45,7 +47,7 @@ enum Role {
 }
 
 model Vendor {
-  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   customerCode       String?
   primaryName        String
   companyName        String
@@ -54,26 +56,22 @@ model Vendor {
   workPhone          String?
   mobile             String?
   website            String?
-  openingBalance     String?
   gstin              String?
   msmeNo             String?
   address            String?
-  currency           String          @default("INR")
-  customerTerms      String?
   customerState      String?
   customerCity       String?
-  country            String          @default("India")
+  country            String?
   zip                String?
-  fax                String?
-  dlNumber           String?
   remarks            String?
-  openingType        String?
   pan                String?
-  productCategory    ProductCategory @relation(fields: [productCategoryId], references: [id])
-  productCategoryId  Int
-  quotations         Quotation[]
-  created_at         DateTime        @default(now())
-  updated_at         DateTime        @updatedAt
+  verifiedById       String?          @db.Uuid
+  verifiedBy         User?            @relation(fields: [verifiedById], references: [id])
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+  ProductCategory    ProductCategory? @relation(fields: [productCategoryId], references: [id])
+  productCategoryId  Int?
+  Quotation          Quotation[]
 }
 
 model Payment {
@@ -141,40 +139,36 @@ model Invoice {
 model Quotation {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   rfp        RFP      @relation(fields: [rfpId], references: [id])
-  rfpId      String   @unique @db.Uuid
+  rfpId      String   @db.Uuid
   vendor     Vendor   @relation(fields: [vendorId], references: [id])
   vendorId   String   @db.Uuid
   billAmount Decimal  @db.Decimal(10, 2)
   po         PO?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-}
 
-model QualityAssurance {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user         User         @relation(fields: [userId], references: [id])
-  userId       String       @unique @db.Uuid
-  goodStatuses GoodStatus[]
-  created_at   DateTime     @default(now())
-  updated_at   DateTime     @updatedAt
+  RFP RFP[] @relation("RFPQuotations")
 }
 
 model RFP {
-  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-    rfpId     String   @unique
-  requirementType   String
-  dateOfOrdering    DateTime
-  deliveryLocation  String
-  deliveryByDate    DateTime
-  lastDateToRespond DateTime
-  user              User            @relation(fields: [userId], references: [id])
-  userId            String          @db.Uuid
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfpId                String          @unique
+  requirementType      String
+  dateOfOrdering       DateTime
+  deliveryLocation     String
+  deliveryByDate       DateTime
+  lastDateToRespond    DateTime
+  user                 User            @relation(fields: [userId], references: [id])
+  userId               String          @db.Uuid
   rfpStatus            RFPStatus // Enum type for status
-  quotation         Quotation?
-  approversList     ApproversList[]
-  rfpProducts       RFPProduct[]
-  created_at        DateTime        @default(now())
-  updated_at        DateTime        @updatedAt
+  preferredQuotationId String?         @db.Uuid // New field for preferred quotation
+  quotations           Quotation[]     @relation("RFPQuotations")
+  approversList        ApproversList[]
+  rfpProducts          RFPProduct[]
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+
+  Quotation Quotation[]
 }
 
 enum RFPStatus {
@@ -195,32 +189,31 @@ model RFPProduct {
   quantity  Int
 
   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  updated_at DateTime @default(now())
 
   @@unique([rfpId, productId])
 }
 
-model Approver {
-  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name          String
-  email         String          @unique
-  phone         String
-  approversList ApproversList[]
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updatedAt
-}
-
 model ApproversList {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp        RFP       @relation(fields: [rfpId], references: [id])
   rfpId      String    @db.Uuid
-  approver   Approver  @relation(fields: [approverId], references: [id])
-  approverId String    @db.Uuid
+  rfp        RFP       @relation(fields: [rfpId], references: [id])
+  user       User      @relation(fields: [userId], references: [id]) // Change to User
+  userId     String    @db.Uuid // Change to userId
   approved   Boolean   @default(false)
   approvedAt DateTime?
 
   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  updated_at DateTime @default(now())
 
-  @@unique([rfpId, approverId])
+  @@unique([rfpId, userId]) // Change to userId
+}
+
+model QualityAssurance {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user         User         @relation(fields: [userId], references: [id])
+  userId       String       @unique @db.Uuid
+  goodStatuses GoodStatus[]
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @default(now())
 }
