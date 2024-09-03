@@ -35,6 +35,7 @@ const searchConfigs: Record<string, SearchConfig> = {
       companyName: true,
       contactDisplayName: true,
       email: true,
+      mobile: true
     },
   },
   products: {
