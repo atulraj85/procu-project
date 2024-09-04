@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { generateRFPId, modelMap } from "@/lib/prisma";
-import { serializePrismaModel } from "../[tablename]/route";
-import { RequestBody, RFPStatus } from "@/types";
+import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 
 const prisma = new PrismaClient();
 
@@ -18,8 +17,6 @@ export async function POST(request: NextRequest) {
       rfpProducts,
       approvers,
       rfpStatus,
-      quotations,
-      preferredVendorId,
     }: RequestBody = await request.json();
 
     // Check if the user exists
@@ -61,27 +58,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create related records using the createdRFP.id
-      const createdQuotations = await prisma.quotation.createMany({
-        data: quotations.map((quotation) => ({
-          rfpId: createdRFP.id, // Use the ID of the created RFP
-          billAmount: quotation.billAmount,
-          vendorId: quotation.vendorId,
-        })),
-      });
-
-      // Determine the preferredQuotationId based on the preferredVendorId
-      const preferredQuotation = await prisma.quotation.findFirst({
-        where: {
-          vendorId: preferredVendorId,
-          rfpId: createdRFP.id, // Ensure this is the correct RFP ID
-        },
-      });
-
-      const preferredQuotationId = preferredQuotation
-        ? preferredQuotation.id
-        : null;
-
       // Create RFP products and approvers
       await Promise.all([
         prisma.rFPProduct.createMany({
@@ -99,12 +75,6 @@ export async function POST(request: NextRequest) {
           })),
         }),
       ]);
-
-      // Update the RFP with the preferredQuotationId
-      await prisma.rFP.update({
-        where: { id: createdRFP.id },
-        data: { preferredQuotationId },
-      });
 
       return createdRFP;
     });
@@ -172,7 +142,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-const rfpModel = {
+export const rfpModel = {
   model: prisma.rFP,
   attributes: [
     "id",
@@ -184,8 +154,58 @@ const rfpModel = {
     "lastDateToRespond",
     "userId",
     "rfpStatus",
+    "quotations",
+    "preferredVendorId",
     "preferredQuotationId",
     "created_at",
     "updated_at",
   ],
 };
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required for updating a record" },
+        { status: 400 }
+      );
+    }
+
+    const data = await request.json();
+
+    // Define valid attributes for the RFP model
+    const validAttributes = rfpModel.attributes; // Assuming rfpModel is defined similarly to vendorModel
+    const invalidKeys = Object.keys(data).filter(
+      (key) => !validAttributes.includes(key)
+    );
+
+    if (invalidKeys.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid attributes in data: ${invalidKeys.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Add the updated_at field to the data
+    data.updated_at = new Date(); // Set to the current date and time
+
+    // Update the record
+    const updatedRecord = await rfpModel.model.update({
+      where: { id: id }, // Ensure id is the correct type (string or number based on your schema)
+      data,
+    });
+
+    return NextResponse.json(serializePrismaModel(updatedRecord), {
+      status: 200,
+    });
+  } catch (error: unknown) {
+    console.error("Error updating RFP:", error);
+    return NextResponse.json(
+      { error: "Error updating record", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}

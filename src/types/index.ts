@@ -103,12 +103,22 @@ interface Meta {
 
 
 export enum RFPStatus {
+  DRAFT = "DRAFT",
   PENDING = "PENDING",
   IN_PROGRESS = "IN_PROGRESS",
   GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
   INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
   PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
   COMPLETED = "COMPLETED",
+}
+
+
+export function serializePrismaModel<T>(model: T): T {
+  return JSON.parse(
+    JSON.stringify(model, (key, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
 }
 
 
