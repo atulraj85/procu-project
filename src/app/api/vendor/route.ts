@@ -34,31 +34,46 @@ const vendorModel = {
 
 export async function POST(request: Request) {
   try {
-    const vendorData: VendorRequestBody = await request.json();
+    const vendorDataArray: VendorRequestBody[] = await request.json();
 
-    // Validate required fields
+    // Validate that the body is an array
+    if (!Array.isArray(vendorDataArray)) {
+      return NextResponse.json(
+        { error: "Request body must be an array of vendor data." },
+        { status: 400 }
+      );
+    }
+
+    // Validate required fields for each vendor
     const requiredFields: (keyof VendorRequestBody)[] = [
       "primaryName",
       "companyName",
       "contactDisplayName",
     ];
-    for (const field of requiredFields) {
-      if (!vendorData[field]) {
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        );
+
+    const createdVendors = [];
+
+    for (const vendorData of vendorDataArray) {
+      for (const field of requiredFields) {
+        if (!vendorData[field]) {
+          return NextResponse.json(
+            { error: `Missing required field: ${field}` },
+            { status: 400 }
+          );
+        }
       }
+
+      // Create a new vendor
+      const newVendor = await prisma.vendor.create({
+        data: vendorData,
+      });
+
+      createdVendors.push(newVendor);
     }
 
-    // Create a new vendor
-    const newVendor = await prisma.vendor.create({
-      data: vendorData,
-    });
-
-    return NextResponse.json({ data: newVendor }, { status: 201 });
+    return NextResponse.json({ data: createdVendors }, { status: 201 });
   } catch (error: any) {
-    console.error("Error creating vendor:", error);
+    console.error("Error creating vendors:", error);
 
     if (error.code === "P2002") {
       return NextResponse.json(
@@ -68,7 +83,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { error: `Failed to create vendor: ${error.message}` },
+      { error: `Failed to create vendors: ${error.message}` },
       { status: 500 }
     );
   }
@@ -148,7 +163,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -194,4 +208,3 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-

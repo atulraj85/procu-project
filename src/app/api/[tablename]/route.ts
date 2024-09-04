@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { modelMap } from "@/lib/prisma";
+import { serializePrismaModel } from "@/types";
 
 // Mapping of table names to Prisma model methods
 
-export function serializePrismaModel<T>(model: T): T {
-  return JSON.parse(
-    JSON.stringify(model, (key, value) =>
-      typeof value === "bigint" ? value.toString() : value
-    )
-  );
-}
 
 //new GET
 export async function GET(request: NextRequest) {
