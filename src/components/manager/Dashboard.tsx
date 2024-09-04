@@ -14,7 +14,7 @@ interface TableRow {
 }
 
 const Dashboard = () => {
-  const [complete, setComplete] = useState(true);
+  const [status, setStatus] = useState<'OPEN' | 'COMPLETED' | 'DRAFT'>('OPEN');
   const [content, setContent] = useState<TableRow[]>([]);
   const [title, setTitle] = useState("OPEN RFPs");
   const [loading, setLoading] = useState(true); // Loading state
@@ -47,9 +47,12 @@ const Dashboard = () => {
         rfpStatus: item.rfpStatus,
       }));
 
-      // Filter based on `complete` state
+      // Filter based on `status` state
       const filteredData = formattedData.filter(item =>
-        complete ? item.rfpStatus === 'PENDING' : item.rfpStatus === 'COMPLETED'
+        status === 'OPEN' ? item.rfpStatus === 'PENDING' :
+        status === 'COMPLETED' ? item.rfpStatus === 'COMPLETED' :
+        status === 'DRAFT' ? item.rfpStatus === 'DRAFT' :
+        false
       );
 
       setContent(filteredData);
@@ -62,15 +65,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     setData();
-  }, [complete]);
+  }, [status]);
 
   const setData = () => {
-    fetchData(); // Fetch data when the component mounts or when `complete` changes
+    fetchData(); // Fetch data when the component mounts or when `status` changes
 
-    if (complete) {
-      setTitle("OPEN RFPs");
-    } else {
-      setTitle("COMPLETED RFPs");
+    switch (status) {
+      case 'OPEN':
+        setTitle("OPEN RFPs");
+        break;
+      case 'COMPLETED':
+        setTitle("COMPLETED RFPs");
+        break;
+      case 'DRAFT':
+        setTitle("DRAFT RFPs");
+        break;
     }
   };
 
@@ -79,31 +88,40 @@ const Dashboard = () => {
       <div className="flex items-center justify-evenly w-full">
         <div className="flex justify-between w-full px-10 py-5">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <Link
+          {/* <Link
             href={`/company/request-product`}
             className="bg-blue-700 hover:bg-blue-400 py-2 px-4 text-white"
           >
             Create RFP
-          </Link>
+          </Link> */}
         </div>
       </div>
       <div className="flex px-10 py-5 gap-4">
-        <div
-          onClick={() => setComplete(true)}
+      <div
+          onClick={() => setStatus('DRAFT')}
           className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
-            complete === true && "bg-blue-800 text-white"
+            status === 'DRAFT' && "bg-blue-800 text-white"
+          }`}
+        >
+          Draft RFPs
+        </div>
+        <div
+          onClick={() => setStatus('OPEN')}
+          className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
+            status === 'OPEN' && "bg-blue-800 text-white"
           }`}
         >
           Open RFPs
         </div>
         <div
-          onClick={() => setComplete(false)}
-          className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
-            complete === false && "bg-blue-800 text-white"
+          onClick={() => setStatus('COMPLETED')}
+          className={`px-3 py-2 border-2 rounded-lg hover:bg-green-600 hover:text-white cursor-pointer ${
+            status === 'COMPLETED' && "bg-green-700 text-white"
           }`}
         >
           Completed RFPs
         </div>
+       
       </div>
       <hr />
 

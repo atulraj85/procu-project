@@ -1,6 +1,9 @@
 "use client"
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { MdModeEdit } from "react-icons/md";
+import { IoIosSearch } from "react-icons/io";
+import { IoMdClose } from "react-icons/io";
 import {
   validateEmail,
   validateIndianPhoneNumber,
@@ -317,9 +320,9 @@ const VendorDetails: React.FC = () => {
       <div className="flex justify-end">
       <button
         onClick={() => setShowForm((prev) => !prev)}
-        className="bg-green-500  text-white py-2 px-4 rounded mb-5"
+        className="bg-green-500   text-white py-2 px-4 rounded mb-5"
       >
-        {showForm ? "Hide Form" : "Add Vendor"}
+        {showForm ? < IoMdClose/> : "Add Vendor"}
       </button>
       </div>
 
@@ -338,9 +341,9 @@ const VendorDetails: React.FC = () => {
             <button
               type="button"
               onClick={handleSearchGSTN}
-              className="absolute right-0 top-14 transform -translate-y-1/2 bg-blue-500 text-white px-1 py-1 rounded"
+              className="absolute right-0 top-14 transform -translate-y-1/2  px-1 py-1 rounded"
             >
-              Search
+              <IoIosSearch />
             </button>
             {errors.gstn && <p className="text-red-500">{errors.gstn}</p>}
           </div>
@@ -541,16 +544,16 @@ const VendorDetails: React.FC = () => {
                 <td className="border p-2">
                   <button
                     onClick={() => handleEditVendor(index)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
+                    className="  px-2 py-1 rounded mr-2"
                   >
-                    Edit
+                   <MdModeEdit />
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => handleRemoveVendor(vendor.email)}
                     className="bg-red-500 text-white px-2 py-1 rounded"
                   >
                     Remove
-                  </button>
+                  </button> */}
                 </td>
               </tr>
             ))
