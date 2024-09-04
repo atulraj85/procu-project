@@ -125,3 +125,24 @@ export interface RequestBody {
   approvers: { approverId: string }[];
   quotations: { vendorId: string; billAmount: number }[]; // New field for quotations
 }
+
+export interface VendorRequestBody {
+  customerCode?: string;
+  primaryName: string;
+  companyName: string;
+  contactDisplayName: string;
+  email?: string;
+  workPhone?: string;
+  mobile?: string;
+  website?: string;
+  gstin?: string;
+  msmeNo?: string;
+  address?: string;
+  customerState?: string;
+  customerCity?: string;
+  country?: string;
+  zip?: string;
+  remarks?: string;
+  pan?: string;
+  verifiedById?: string;
+}
