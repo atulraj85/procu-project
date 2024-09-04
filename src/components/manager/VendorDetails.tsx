@@ -129,7 +129,7 @@ const VendorDetails: React.FC = () => {
     setVendorData({
       vendor_name: gst.primaryName,
       vendor_email: gst.email,
-      vendor_number: gst.workPhone,
+      vendor_number: gst.mobile,
       gst_number: gst.gstin,
       file: null,
     });

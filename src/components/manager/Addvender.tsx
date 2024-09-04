@@ -1,22 +1,22 @@
-import { ChangeEvent, FormEvent, useState } from "react";
+"use client"
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
-
 import {
   validateEmail,
   validateIndianPhoneNumber,
   validatePinCode,
   validateGstn,
   validatePanCard,
-} from "@/lib/Validation"; // Ensure these validation functions are available
+} from "@/lib/Validation";
 
 const states = [
-  { value: '', label: 'Select State' },
   { value: 'state1', label: 'State 1' },
   { value: 'state2', label: 'State 2' },
   // Add more states as needed
 ];
 
 interface VendorData {
+  primaryName: ReactNode;
   vendor_gstn: string;
   company_name: string;
   contact_no: string;
@@ -32,6 +32,8 @@ interface VendorData {
 
 const VendorDetails: React.FC = () => {
   const [vendorArray, setVendorArray] = useState<VendorData[]>([]);
+  console.log(vendorArray);
+  
   const [vendorData, setVendorData] = useState<VendorData>({
     vendor_gstn: "",
     company_name: "",
@@ -48,6 +50,7 @@ const VendorDetails: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState<boolean>(false);
 
   const [errors, setErrors] = useState({
     gstn: "",
@@ -84,38 +87,36 @@ const VendorDetails: React.FC = () => {
       isValid = false;
     }
 
-    if (vendorData.company_name.trim() === "") {
-      newErrors.company = "Company name is required.";
-      isValid = false;
-    }
+    // if (vendorData.company_name.trim() === "") {
+    //   newErrors.company = "Company name is required.";
+    //   isValid = false;
+    // }
 
-    if (!validateIndianPhoneNumber(vendorData.contact_no).isValid) {
-      newErrors.contact = "Invalid contact number.";
-      isValid = false;
-    }
+    // if (!validateIndianPhoneNumber(vendorData.contact_no).isValid) {
+    //   newErrors.contact = "Invalid contact number.";
+    //   isValid = false;
+    // }
 
     if (vendorData.state === "") {
       newErrors.state = "State is required.";
       isValid = false;
     }
 
-    // Commented out pin code validation
-    // if (!validatePinCode(vendorData.pin_code).isValid) {
-    //   newErrors.pin = "Invalid pin code.";
+    // if (vendorData.person_name.trim() === "") {
+    //   newErrors.person = "Person name is required.";
     //   isValid = false;
     // }
-
-    if (vendorData.person_name.trim() === "") {
-      newErrors.person = "Person name is required.";
-      isValid = false;
-    }
 
     if (!validateEmail(vendorData.email).isValid) {
       newErrors.email = "Invalid email address.";
       isValid = false;
     }
 
-    // Commented out PAN card validation
+    // if (!validatePinCode(vendorData.pin_code).isValid) {
+    //   newErrors.pin = "Invalid pin code.";
+    //   isValid = false;
+    // }
+
     // if (!validatePanCard(vendorData.pan_card).isValid) {
     //   newErrors.pan = "Invalid PAN card.";
     //   isValid = false;
@@ -139,12 +140,12 @@ const VendorDetails: React.FC = () => {
         const data = result.data;
         setVendorData({
           ...vendorData,
-          company_name: data.lgnm || "",
-          state: data.pradr.addr.stcd || "",
-          pin_code: data.pradr.addr.pncd || "",
-          address: data.pradr.adr || "",
-          city: data.pradr.addr.city || "",
-          pan_card: data.nba.join(", ") || "",
+          company_name: data.companyName || "",
+          state: data.customerState || "",
+          pin_code: data.zip || "",
+          address: data.address || "",
+          city: data.customerCity || "",
+          pan_card: data.pan || "",
         });
       } else {
         toast.error(result.message || "Failed to fetch vendor details.");
@@ -180,13 +181,13 @@ const VendorDetails: React.FC = () => {
       mobile: vendorData.contact_no,
       website: vendorData.website,
       gstin: vendorData.vendor_gstn,
-      msmeNo: "MSME123456", // This value might need to come from the form if applicable
+      msmeNo: "MSME123456",
       address: vendorData.address,
       customerState: vendorData.state,
       customerCity: vendorData.city,
-      country: "India", // Adjust if necessary
+      country: "India",
       pan: vendorData.pan_card,
-      verifiedById: "acb43a4a-8e5e-41e5-8ebb-1c075fc3d41e" // This should be dynamically set if possible
+      verifiedById: "ded94860-af4c-4b45-a151-3d0d9babd7e0"
     };
 
     try {
@@ -200,7 +201,6 @@ const VendorDetails: React.FC = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Assuming the API returns the added vendor in the response
         setVendorArray((prevData) => [...prevData, result.vendor]);
         toast.success("Vendor added successfully.");
       } else {
@@ -210,7 +210,6 @@ const VendorDetails: React.FC = () => {
       toast.error("An error occurred while adding the vendor.");
     }
 
-    // Clear the form
     setVendorData({
       vendor_gstn: "",
       company_name: "",
@@ -239,6 +238,7 @@ const VendorDetails: React.FC = () => {
     });
     setIsEditing(false);
     setEditIndex(null);
+    setShowForm(false);
   };
 
   const handleRemoveVendor = (email: string) => {
@@ -251,6 +251,7 @@ const VendorDetails: React.FC = () => {
     setVendorData(vendorArray[index]);
     setIsEditing(true);
     setEditIndex(index);
+    setShowForm(true);
   };
 
   const handleCancelEdit = () => {
@@ -282,253 +283,280 @@ const VendorDetails: React.FC = () => {
       address: "",
       pan: "",
     });
+    setShowForm(false);
   };
+
+  const fetchAllVendors = async () => {
+    try {
+      const response = await fetch("/api/vendor");
+      const result = await response.json();
+      
+     
+
+      if (true) {
+        console.log(result);
+        setVendorArray(result);
+        console.log(result.data);
+        
+      } else {
+        toast.error(result.message || "Failed to fetch vendor data.");
+      }
+    } catch (error) {
+      toast.error("An error occurred while fetching vendor data.");
+    }
+  };
+
+  useEffect(() => {
+    fetchAllVendors();
+    
+    
+  }, []);
 
   return (
     <div className="p-5">
-      <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap gap-7">
-        <div className="flex flex-col gap-3 w-60 text-base relative">
-          <label htmlFor="vendor_gstn">Vendor GSTN</label>
-          <input
-            type="text"
-            name="vendor_gstn"
-            value={vendorData.vendor_gstn}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.gstn ? "border-red-600" : "border-gray-600"
-            } pr-10`}
-            required
-          />
-          <button
-            type="button"
-            onClick={handleSearchGSTN}
-            className="absolute top-1/2 right-2 transform -translate-y-1/2"
-          >
-            <svg width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M23 21l-4.35-4.35M20.69 11.1A9.09 9.09 0 1 0 11.1 20.69a9.09 9.09 0 0 0 9.59-9.59z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-          {errors.gstn && <p className="text-red-600 text-sm">{errors.gstn}</p>}
-        </div>
+      <div className="flex justify-end">
+      <button
+        onClick={() => setShowForm((prev) => !prev)}
+        className="bg-green-500  text-white py-2 px-4 rounded mb-5"
+      >
+        {showForm ? "Hide Form" : "Add Vendor"}
+      </button>
+      </div>
 
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="company_name">Company Name</label>
-          <input
-            type="text"
-            name="company_name"
-            value={vendorData.company_name}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.company ? "border-red-600" : "border-gray-600"
-            }`}
-            required
-          />
-          {errors.company && <p className="text-red-600 text-sm">{errors.company}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="contact_no">Contact No</label>
-          <input
-            type="text"
-            name="contact_no"
-            value={vendorData.contact_no}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.contact ? "border-red-600" : "border-gray-600"
-            }`}
-            required
-          />
-          {errors.contact && <p className="text-red-600 text-sm">{errors.contact}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="state">State</label>
-          <select
-            name="state"
-            value={vendorData.state}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.state ? "border-red-600" : "border-gray-600"
-            }`}
-            required
-          >
-            <option value="">Select State</option>
-            {states.map((state) => (
-              <option key={state.value} value={state.value}>
-                {state.label}
-              </option>
-            ))}
-          </select>
-          {errors.state && <p className="text-red-600 text-sm">{errors.state}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="pin_code">Pin Code</label>
-          <input
-            type="text"
-            name="pin_code"
-            value={vendorData.pin_code}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.pin ? "border-red-600" : "border-gray-600"
-            }`}
-          />
-          {errors.pin && <p className="text-red-600 text-sm">{errors.pin}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="person_name">Person Name</label>
-          <input
-            type="text"
-            name="person_name"
-            value={vendorData.person_name}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.person ? "border-red-600" : "border-gray-600"
-            }`}
-            required
-          />
-          {errors.person && <p className="text-red-600 text-sm">{errors.person}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={vendorData.email}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.email ? "border-red-600" : "border-gray-600"
-            }`}
-            required
-          />
-          {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="website">Website</label>
-          <input
-            type="text"
-            name="website"
-            value={vendorData.website}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.website ? "border-red-600" : "border-gray-600"
-            }`}
-          />
-          {errors.website && <p className="text-red-600 text-sm">{errors.website}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="city">City</label>
-          <input
-            type="text"
-            name="city"
-            value={vendorData.city}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.city ? "border-red-600" : "border-gray-600"
-            }`}
-          />
-          {errors.city && <p className="text-red-600 text-sm">{errors.city}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="address">Address</label>
-          <input
-            type="text"
-            name="address"
-            value={vendorData.address}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.address ? "border-red-600" : "border-gray-600"
-            }`}
-          />
-          {errors.address && <p className="text-red-600 text-sm">{errors.address}</p>}
-        </div>
-
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="pan_card">PAN Card</label>
-          <input
-            type="text"
-            name="pan_card"
-            value={vendorData.pan_card}
-            onChange={handleChangeVendorDetails}
-            className={`outline-none border-b-2 ${
-              errors.pan ? "border-red-600" : "border-gray-600"
-            }`}
-          />
-          {errors.pan && <p className="text-red-600 text-sm">{errors.pan}</p>}
-        </div>
-
-        <div className="flex gap-5">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded"
-          >
-            {isEditing ? "Update Vendor" : "Add Vendor"}
-          </button>
-          {isEditing && (
+      {showForm && (
+        <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap gap-7">
+          <div className="flex flex-col gap-3 w-60 text-base relative">
+            <label className="font-bold">GSTN</label>
+            <input
+              type="text"
+              name="vendor_gstn"
+              value={vendorData.vendor_gstn}
+              onChange={handleChangeVendorDetails}
+              placeholder="GSTN"
+              className="p-2  border-b-2 border-black"
+            />
             <button
               type="button"
-              onClick={handleCancelEdit}
-              className="bg-gray-500 text-white py-2 px-4 rounded"
+              onClick={handleSearchGSTN}
+              className="absolute right-0 top-14 transform -translate-y-1/2 bg-blue-500 text-white px-1 py-1 rounded"
             >
-              Cancel
+              Search
             </button>
-          )}
-        </div>
-      </form>
+            {errors.gstn && <p className="text-red-500">{errors.gstn}</p>}
+          </div>
 
-      <div className="mt-5">
-        <h2 className="text-xl font-semibold mb-3">Vendor List</h2>
-        {vendorArray.length > 0 ? (
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr>
-                <th className="border border-gray-300 p-2">GSTN</th>
-                <th className="border border-gray-300 p-2">Company Name</th>
-                <th className="border border-gray-300 p-2">Contact No</th>
-                <th className="border border-gray-300 p-2">State</th>
-                <th className="border border-gray-300 p-2">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendorArray.map((vendor, index) => (
-                <tr key={index}>
-                  <td className="border border-gray-300 p-2">{vendor.vendor_gstn}</td>
-                  <td className="border border-gray-300 p-2">{vendor.company_name}</td>
-                  <td className="border border-gray-300 p-2">{vendor.contact_no}</td>
-                  <td className="border border-gray-300 p-2">{vendor.state}</td>
-                  <td className="border border-gray-300 p-2">
-                    <button
-                      onClick={() => handleEditVendor(index)}
-                      className="text-blue-500 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemoveVendor(vendor.email)}
-                      className="text-red-500 hover:underline ml-2"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Company Name</label>
+            <input
+              type="text"
+              name="company_name"
+              value={vendorData.company_name}
+              onChange={handleChangeVendorDetails}
+              placeholder="Company Name"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.company && <p className="text-red-500">{errors.company}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Contact No</label>
+            <input
+              type="text"
+              name="contact_no"
+              value={vendorData.contact_no}
+              onChange={handleChangeVendorDetails}
+              placeholder="Contact No"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.contact && <p className="text-red-500">{errors.contact}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">State</label>
+            <select
+              name="state"
+              value={vendorData.state}
+              onChange={handleChangeVendorDetails}
+              className="p-2  border-b-2 border-black"
+            >
+              <option value="">Select State</option>
+              {states.map((state) => (
+                <option key={state.value} value={state.value}>
+                  {state.label}
+                </option>
               ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No vendors added yet.</p>
-        )}
-      </div>
+            </select>
+            {errors.state && <p className="text-red-500">{errors.state}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Pin Code</label>
+            <input
+              type="text"
+              name="pin_code"
+              value={vendorData.pin_code}
+              onChange={handleChangeVendorDetails}
+              placeholder="Pin Code"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.pin && <p className="text-red-500">{errors.pin}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Person Name</label>
+            <input
+              type="text"
+              name="person_name"
+              value={vendorData.person_name}
+              onChange={handleChangeVendorDetails}
+              placeholder="Person Name"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.person && <p className="text-red-500">{errors.person}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Email</label>
+            <input
+              type="text"
+              name="email"
+              value={vendorData.email}
+              onChange={handleChangeVendorDetails}
+              placeholder="Email"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.email && <p className="text-red-500">{errors.email}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Website</label>
+            <input
+              type="text"
+              name="website"
+              value={vendorData.website}
+              onChange={handleChangeVendorDetails}
+              placeholder="Website"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.website && <p className="text-red-500">{errors.website}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">City</label>
+            <input
+              type="text"
+              name="city"
+              value={vendorData.city}
+              onChange={handleChangeVendorDetails}
+              placeholder="City"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.city && <p className="text-red-500">{errors.city}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Address</label>
+            <input
+              type="text"
+              name="address"
+              value={vendorData.address}
+              onChange={handleChangeVendorDetails}
+              placeholder="Address"
+              className="p-2  border-b-2 border-black "
+            />
+            {errors.address && <p className="text-red-500">{errors.address}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">PAN Card</label>
+            <input
+              type="text"
+              name="pan_card"
+              value={vendorData.pan_card}
+              onChange={handleChangeVendorDetails}
+              placeholder="PAN Card"
+              className="p-2  border-b-2 border-black"
+            />
+            {errors.pan && <p className="text-red-500">{errors.pan}</p>}
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              className="bg-blue-500 text-white mt-8 py-2 px-4 rounded"
+            >
+              {isEditing ? "Update Vendor" : "Add Vendor"}
+            </button>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="bg-gray-500 text-white py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      )}
+
+      <table className="min-w-full mt-8 border-collapse">
+        <thead>
+          <tr>
+            <th className="border p-2">GSTN</th>
+            <th className="border p-2">Vendor Name</th>
+            <th className="border p-2">Company Name</th>
+            <th className="border p-2">Contact No</th>
+            <th className="border p-2 hidden">State</th>
+            {/* <th className="border p-2">Pin Code</th> */}
+            
+            <th className="border p-2">Email</th>
+            {/* <th className="border p-2">Website</th> */}
+            {/* <th className="border p-2">City</th> */}
+            {/* <th className="border p-2">Address</th> */}
+            {/* <th className="border p-2">PAN Card</th> */}
+            <th className="border p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vendorArray.length === 0 ? (
+            <tr>
+              <td colSpan={12} className="border p-2 text-center">No data available</td>
+            </tr>
+          ) : (
+            vendorArray.map((vendor, index) => (
+              <tr key={vendor.email}>
+                <td className="border p-2">{vendor.gstin}</td>
+                <td className="border p-2">{vendor.primaryName}</td>
+                <td className="border p-2">{vendor.companyName}</td>
+                <td className="border p-2">{vendor.mobile}</td>
+                <td className="border p-2 hidden">{vendor.state}</td>
+                {/* <td className="border p-2">{vendor.pin_code}</td> */}
+                
+                <td className="border p-2">{vendor.email}</td>
+                {/* <td className="border p-2">{vendor.website}</td> */}
+                {/* <td className="border p-2">{vendor.city}</td> */}
+                {/* <td className="border p-2">{vendor.address}</td> */}
+                {/* <td className="border p-2">{vendor.pan_card}</td> */}
+                <td className="border p-2">
+                  <button
+                    onClick={() => handleEditVendor(index)}
+                    className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleRemoveVendor(vendor.email)}
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                  >
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };
