@@ -1,28 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { VendorRequestBody } from "@/types";
+import { serializePrismaModel } from "../[tablename]/route";
 
 const prisma = new PrismaClient();
 
-interface VendorRequestBody {
-  customerCode?: string;
-  primaryName: string;
-  companyName: string;
-  contactDisplayName: string;
-  email?: string;
-  workPhone?: string;
-  mobile?: string;
-  website?: string;
-  gstin?: string;
-  msmeNo?: string;
-  address?: string;
-  customerState?: string;
-  customerCity?: string;
-  country?: string;
-  zip?: string;
-  remarks?: string;
-  pan?: string;
-  verifiedById?: string;
-}
+const vendorModel = {
+  model: prisma.vendor,
+  attributes: [
+    "id",
+    "customerCode",
+    "primaryName",
+    "companyName",
+    "contactDisplayName",
+    "email",
+    "workPhone",
+    "mobile",
+    "website",
+    "gstin",
+    "msmeNo",
+    "address",
+    "customerState",
+    "customerCity",
+    "country",
+    "zip",
+    "remarks",
+    "pan",
+    "verifiedById",
+    "created_at",
+    "updated_at",
+  ],
+};
 
 export async function POST(request: Request) {
   try {
@@ -139,3 +147,51 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID is required for updating a record" },
+        { status: 400 }
+      );
+    }
+
+    const data = await request.json();
+
+    const validAttributes = vendorModel.attributes;
+    const invalidKeys = Object.keys(data).filter(
+      (key) => !validAttributes.includes(key)
+    );
+    if (invalidKeys.length > 0) {
+      return NextResponse.json(
+        { error: `Invalid attributes in data: ${invalidKeys.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Add the updated_at field to the data
+    data.updated_at = new Date(); // Set to the current date and time
+
+    // Update the record
+    const updatedRecord = await vendorModel.model.update({
+      where: { id: id },
+      data,
+    });
+
+    return NextResponse.json(serializePrismaModel(updatedRecord), {
+      status: 200,
+    });
+  } catch (error: unknown) {
+    console.error("Detailed error:", error);
+    return NextResponse.json(
+      { error: "Error updating record", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
