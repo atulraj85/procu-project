@@ -150,7 +150,7 @@ export const managerList = [
   },
   {
     value: "Addvendor",
-    label: "Add Vendor",
+    label: "Vendor List",
     imgUrl: "/svgs/orderManagement.png", // Update with correct path
     route: "/dashboard/manager",
   },

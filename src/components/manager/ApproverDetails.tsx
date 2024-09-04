@@ -1,11 +1,8 @@
 "use client";
-import React, { ChangeEvent, useState } from "react";
+
+import React, { ChangeEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import {
-  validateEmail,
-  validateIndianPhoneNumber,
-  validateUsername,
-} from "@/lib/Validation";
+import { validateEmail, validateIndianPhoneNumber } from "@/lib/Validation";
 
 interface ApproverData {
   approver_name: string;
@@ -13,23 +10,52 @@ interface ApproverData {
   approver_number: string;
 }
 
-const ApproveDetails: React.FC = () => {
+interface ApproveDetailsProps {
+  onApproverDataChange: (data: ApproverData[]) => void;
+}
+
+const ApproveDetails: React.FC<ApproveDetailsProps> = ({ onApproverDataChange }) => {
   const [approverArray, setApproverArray] = useState<ApproverData[]>([]);
   const [approverData, setApproverData] = useState<ApproverData>({
     approver_name: "",
     approver_email: "",
     approver_number: "",
   });
-  console.log("approve name ",approverData.approver_name);
-  
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     number: "",
   });
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredApprovers, setFilteredApprovers] = useState<any[]>([]);
+  const [dropdownVisible, setDropdownVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    onApproverDataChange(approverArray);
+  }, [approverArray, onApproverDataChange]);
+
+  useEffect(() => {
+    const fetchApproverData = async (name: string) => {
+      if (name.trim() === "") {
+        setFilteredApprovers([]);
+        return;
+      }
+      try {
+        const response = await fetch(`/api/ajax/users?q=${name}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch approver data");
+        }
+        const data = await response.json();
+        setFilteredApprovers(data);
+      } catch (error) {
+        console.error("Error fetching approver data:", error);
+      }
+    };
+
+    fetchApproverData(searchTerm);
+  }, [searchTerm]);
 
   const validateFields = (): boolean => {
     const newErrors = { name: "", email: "", number: "" };
@@ -57,6 +83,20 @@ const ApproveDetails: React.FC = () => {
   const handleChangeApproverDetails = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setApproverData((prevData) => ({ ...prevData, [name]: value }));
+    if (name === "approver_name") {
+      setSearchTerm(value);
+      setDropdownVisible(true); // Show dropdown when typing
+    }
+  };
+
+  const handleSelectApprover = (approver: any) => {
+    setApproverData({
+      approver_name: approver.name,
+      approver_email: approver.email,
+      approver_number: "", // Assuming phone number is not in the API response
+    });
+    setSearchTerm(""); // Clear search term
+    setDropdownVisible(false); // Hide dropdown
   };
 
   const onSubmitApproverDetails = (e: React.FormEvent<HTMLFormElement>) => {
@@ -121,13 +161,15 @@ const ApproveDetails: React.FC = () => {
       approver_number: "",
     });
     setErrors({ name: "", email: "", number: "" });
+    setSearchTerm(""); // Clear search term on cancel
+    setDropdownVisible(false); // Hide dropdown
   };
 
   return (
     <div className="p-5">
       <form onSubmit={onSubmitApproverDetails} className="flex space-x-7">
-        <div className="flex flex-col gap-3 w-60 text-base">
-          <label htmlFor="approver_name">Approver name</label>
+        <div className="relative flex flex-col gap-3 w-60 text-base">
+          <label htmlFor="approver_name">Approver Name</label>
           <input
             type="text"
             name="approver_name"
@@ -138,9 +180,23 @@ const ApproveDetails: React.FC = () => {
             }`}
             required
           />
+          {dropdownVisible && searchTerm && filteredApprovers.length > 0 && (
+            <ul className="absolute bg-white border border-gray-300 mt-1 w-full max-h-60 overflow-y-auto z-10 shadow-lg">
+              {filteredApprovers.map((approver) => (
+                <li
+                  key={approver.email}
+                  onClick={() => handleSelectApprover(approver)}
+                  className="cursor-pointer px-4 py-2 hover:bg-gray-200"
+                >
+                  {approver.name} ({approver.email})
+                </li>
+              ))}
+            </ul>
+          )}
           {errors.name && <p className="text-red-600 text-sm">{errors.name}</p>}
         </div>
-        <div className="flex flex-col gap-3 w-64 text-base">
+
+        <div className="relative flex flex-col gap-3 w-64 text-base">
           <label htmlFor="approver_email">Approver Email</label>
           <input
             type="email"
@@ -154,10 +210,11 @@ const ApproveDetails: React.FC = () => {
           />
           {errors.email && <p className="text-red-600 text-sm">{errors.email}</p>}
         </div>
-        <div className="flex flex-col gap-3 w-52 text-base">
+
+        <div className="relative flex flex-col gap-3 w-48 text-base">
           <label htmlFor="approver_number">Approver Phone</label>
           <input
-            type="tel"
+            type="text"
             name="approver_number"
             value={approverData.approver_number}
             onChange={handleChangeApproverDetails}
@@ -168,18 +225,19 @@ const ApproveDetails: React.FC = () => {
           />
           {errors.number && <p className="text-red-600 text-sm">{errors.number}</p>}
         </div>
-        <div className="flex items-end justify-center space-x-3 text-base">
+
+        <div className="flex flex-col gap-3 mt-7">
           <button
             type="submit"
-            className="bg-blue-700 hover:bg-blue-400 py-2 px-4 text-white rounded-md"
+            className="border py-2 px-4 bg-blue-500 text-white"
           >
-            {isEditing ? "Update Approver" : "Add More"}
+            {isEditing ? "Update Approver" : "Add Approver"}
           </button>
           {isEditing && (
             <button
               type="button"
               onClick={handleCancelEdit}
-              className="bg-gray-700 hover:bg-gray-400 py-2 px-4 text-white rounded-md"
+              className="border py-2 px-4 bg-gray-500 text-white"
             >
               Cancel
             </button>
@@ -209,41 +267,13 @@ const ApproveDetails: React.FC = () => {
                       className="border py-1 px-4 text-blue-600 text-sm cursor-pointer"
                       onClick={() => handleEditApprover(index)}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
-                        <path d="m15 5 4 4" />
-                      </svg>
+                      Edit
                     </button>
                     <button
                       className="border py-1 px-4 text-red-900 text-sm cursor-pointer"
                       onClick={() => handleRemoveApprover(data.approver_email)}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M8 6v12" />
-                        <path d="M16 6v12" />
-                        <path d="M5 6v2h14V6H5z" />
-                      </svg>
+                      Delete
                     </button>
                   </td>
                 </tr>

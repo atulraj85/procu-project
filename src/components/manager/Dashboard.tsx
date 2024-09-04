@@ -14,7 +14,7 @@ interface TableRow {
 }
 
 const Dashboard = () => {
-  const [status, setStatus] = useState<'OPEN' | 'COMPLETED' | 'DRAFT'>('OPEN');
+  const [status, setStatus] = useState<'OPEN' | 'COMPLETED' | 'DRAFT'>('DRAFT');
   const [content, setContent] = useState<TableRow[]>([]);
   const [title, setTitle] = useState("OPEN RFPs");
   const [loading, setLoading] = useState(true); // Loading state
