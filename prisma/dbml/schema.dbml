@@ -87,9 +87,11 @@ Table PO {
   quotationId String [unique, not null]
   user User [not null]
   userId String [not null]
+  invoice Invoice
   companyId String [not null]
   company Company [not null]
-  invoice Invoice
+  rfpId String [unique, not null]
+  rfp RFP [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
 }
@@ -151,13 +153,14 @@ Table RFP {
   lastDateToRespond DateTime [not null]
   user User [not null]
   userId String [not null]
-  rfpStatus RFPStatus [not null]
+  rfpStatus RFPStatus [not null, default: 'DRAFT']
   preferredQuotationId String
   quotations Quotation [not null]
   approversList ApproversList [not null]
   rfpProducts RFPProduct [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
+  po PO
   Quotation Quotation [not null]
 }
 
@@ -216,10 +219,11 @@ Enum Role {
 }
 
 Enum RFPStatus {
+  DRAFT
   PENDING
   IN_PROGRESS
-  GRN_NOT_RECEIVED
   INVOICE_NOT_RECEIVED
+  GRN_NOT_RECEIVED
   PAYMENT_NOT_DONE
   COMPLETED
 }
@@ -237,6 +241,8 @@ Ref: PO.quotationId - Quotation.id
 Ref: PO.userId > User.id
 
 Ref: PO.companyId > Company.id
+
+Ref: PO.rfpId - RFP.id
 
 Ref: GoodStatus.invoiceId - Invoice.id
 
