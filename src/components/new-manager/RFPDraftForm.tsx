@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface RFPProduct {
-  id: string;
+  productId: string;
   name?: string;
   modelNo?: string;
   quantity: number;
@@ -20,7 +21,7 @@ interface Approver {
 }
 
 type User = {
-  id: number; // or string, depending on your API
+  id: number;
   name: string;
   email: string;
 };
@@ -36,7 +37,6 @@ interface FormData {
   rfpProducts: RFPProduct[];
   approvers: Approver[];
 }
-
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     requirementType: "",
@@ -58,13 +58,13 @@ const RFPForm: React.FC = () => {
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
   const [searchProductTerm, setSearchProductTerm] = useState("");
   const [fetchedUsers, setFetchedUsers] = useState<User[]>([]);
-  const [fetchedProducts, setfetchedProducts] = useState<RFPProduct[]>([]);
-  const [approvedUsers, setapprovedUsers] = useState<User[]>([]);
+  const [fetchedProducts, setFetchedProducts] = useState<RFPProduct[]>([]);
+  const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [user, setUser] = useState<User>();
   const [userSelected, setUserSelected] = useState(false);
   const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
-  const [approvedProducts, setapprovedProducts] = useState<RFPProduct[]>([]);
+  const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
 
   const [additionalInstructions, setAdditionalInstructions] =
     useState<string>("");
@@ -111,19 +111,22 @@ const RFPForm: React.FC = () => {
         const data = await response.json();
 
         if (entity === "users") {
-          setFetchedUsers(data); // Assuming the response is an array of users
+          setFetchedUsers(data);
         } else if (entity === "products") {
-            console.log(data);
-            
-          setfetchedProducts(data);
+          // Ensure productId is set correctly
+          const formattedProducts = data.map((product: any) => ({
+            ...product,
+            productId: product.productId || product.id || String(product._id),
+          }));
+          setFetchedProducts(formattedProducts);
         }
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error(`Error fetching ${entity}:`, error);
       }
     } else {
       setFetchedUsers([]);
       setUserSelected(false);
-      setfetchedProducts([]);
+      setFetchedProducts([]);
       setProductSelected(false);
     }
   };
@@ -133,62 +136,103 @@ const RFPForm: React.FC = () => {
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-const handleProductChange = <T extends keyof RFPProduct>(
-  index: number,
-  field: T,
-  value: RFPProduct[T]
-) => {
-  const updatedProducts = [...formData.rfpProducts];
-  updatedProducts[index][field] = value;
-  setFormData((prevData) => ({ ...prevData, rfpProducts: updatedProducts }));
-};
+  const handleProductChange = (
+    index: number,
+    field: keyof RFPProduct,
+    value: RFPProduct[keyof RFPProduct]
+  ) => {
+    const updatedProducts = [...approvedProducts];
+    updatedProducts[index] = { ...updatedProducts[index], [field]: value };
+    setApprovedProducts(updatedProducts);
 
-
-  const addApprover = (user: User) => {
-    setapprovedUsers((prevUsers) => [...prevUsers, user]);
     setFormData((prevData) => ({
       ...prevData,
-      approvers: [...prevData.approvers, { approverId: String(user?.id) }],
+      rfpProducts: updatedProducts.map(({ productId, quantity }) => ({
+        productId,
+        quantity,
+      })),
+    }));
+  };
+
+  const addApprover = (user: User) => {
+    setApprovedUsers((prevUsers) => [...prevUsers, user]);
+    setFormData((prevData) => ({
+      ...prevData,
+      approvers: [
+        ...prevData.approvers,
+        { approverId: String(user.id) },
+      ],
     }));
   };
 
   const removeApprover = (index: number) => {
-    const updatedApprovers = formData.approvers.filter((_, i) => i !== index);
-    setFormData((prevData) => ({ ...prevData, approvers: updatedApprovers }));
+    setApprovedUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
+    setFormData((prevData) => ({
+      ...prevData,
+      approvers: prevData.approvers.filter((_, i) => i !== index),
+    }));
   };
 
   const addProduct = (product: RFPProduct) => {
-    // Check if the product already exists in the approved products
-      const productExists = approvedProducts.some((p) => p.id === product.id);
-      console.log(product)
+    if (!product.productId) {
+      console.error("Product ID is missing");
+      return;
+    }
+
+    const productExists = approvedProducts.some(
+      (p) => p.productId === product.productId
+    );
 
     if (!productExists) {
-      setapprovedProducts((prevProducts) => [...prevProducts, product]);
-
-      // Ensure that we are adding a complete RFPProduct object
+      const newProduct = { ...product, quantity: 1 };
+      setApprovedProducts((prevProducts) => [...prevProducts, newProduct]);
       setFormData((prevData) => ({
         ...prevData,
         rfpProducts: [
           ...prevData.rfpProducts,
-          {
-            id: product.id, // Include the id
-            quantity: product.quantity, // Include the quantity
-          },
+          { productId: String(product.productId), quantity: 1 },
         ],
       }));
+      setSearchProductTerm("");
+      setFetchedProducts([]);
     } else {
-      console.warn(`Product with ID ${product.id} already exists.`);
+      console.warn(`Product with ID ${product.productId} already exists.`);
     }
   };
-
   const removeProduct = (index: number) => {
-    const updatedProducts = formData.rfpProducts.filter((_, i) => i !== index);
-    setFormData((prevData) => ({ ...prevData, rfpProducts: updatedProducts }));
+    setApprovedProducts((prevProducts) =>
+      prevProducts.filter((_, i) => i !== index)
+    );
+    setFormData((prevData) => ({
+      ...prevData,
+      rfpProducts: prevData.rfpProducts.filter((_, i) => i !== index),
+    }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(formData);
+    console.log(JSON.stringify(formData));
+
+    try {
+      const response = await fetch("/api/rfp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit RFP");
+      }
+
+      const result = await response.json();
+      toast.success("RFP submitted successfully!");
+    } catch (err) {
+      // setError("Error submitting RFP. Please try again later.");
+      toast.error("Error submitting RFP. Please try again later.");
+    }
+
     // Here you would send the formData to your API
   };
 
@@ -254,7 +298,7 @@ const handleProductChange = <T extends keyof RFPProduct>(
               type="text"
               placeholder="Search Approvers..."
               value={searchApproverTerm}
-              onChange={(e) => handleSearchChange(e, "users")} // Pass the entity here
+              onChange={(e) => handleSearchChange(e, "users")}
               className="flex-1"
             />
             <Button
@@ -262,6 +306,8 @@ const handleProductChange = <T extends keyof RFPProduct>(
               onClick={() => {
                 if (user) {
                   addApprover(user);
+                  setSearchApproverTerm("");
+                  setFetchedUsers([]);
                 } else {
                   console.error("No user selected");
                 }
@@ -330,7 +376,7 @@ const handleProductChange = <T extends keyof RFPProduct>(
               type="text"
               placeholder="Search Products..."
               value={searchProductTerm}
-              onChange={(e) => handleSearchChange(e, "products")} // Pass the entity here
+              onChange={(e) => handleSearchChange(e, "products")}
               className="flex-1"
             />
             <Button
@@ -355,14 +401,14 @@ const handleProductChange = <T extends keyof RFPProduct>(
               <ul>
                 {fetchedProducts.map((product) => (
                   <li
-                    key={product.id}
+                    key={product.productId}
                     className="py-1 cursor-pointer hover:bg-gray-200"
                     onClick={() => {
                       setProduct(product);
                       setProductSelected(true);
                     }}
                   >
-                    {product.name} ({product.modelNo})
+                    {product.name} ({product.modelNo}) - ID: {product.productId}
                   </li>
                 ))}
               </ul>
@@ -370,7 +416,10 @@ const handleProductChange = <T extends keyof RFPProduct>(
           )}
 
           {approvedProducts.map((product, index) => (
-            <div key={index} className="flex items-center space-x-2 mb-2">
+            <div
+              key={product.productId}
+              className="flex items-center space-x-2 mb-2"
+            >
               <Input
                 disabled
                 value={product.name}
@@ -406,48 +455,8 @@ const handleProductChange = <T extends keyof RFPProduct>(
               </Button>
             </div>
           ))}
-
-          {/* <Button type="button" onClick={(e) => {}} variant="outline">
-            Add Product
-          </Button> */}
-
-          {/* {formData.rfpProducts.map((product, index) => (
-            <div key={index} className="flex items-center space-x-2 mb-2">
-              <Input
-                value={product.productId}
-                onChange={(e) =>
-                  handleProductChange(index, "productId", e.target.value)
-                }
-                placeholder="Product ID"
-              />
-              <Input
-                type="number"
-                value={product.quantity}
-                onChange={(e) =>
-                  handleProductChange(
-                    index,
-                    "quantity",
-                    parseInt(e.target.value, 10)
-                  )
-                }
-                placeholder="Quantity"
-              />
-              <Button
-                type="button"
-                onClick={() => removeProduct(index)}
-                variant="outline"
-                size="icon"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))} */}
-          {/* <Button type="button" onClick={(e) => { addProduct(product) }}   variant="outline">
-            Add Product
-          </Button> */}
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>Delivery Details</CardTitle>
@@ -519,4 +528,3 @@ const handleProductChange = <T extends keyof RFPProduct>(
 };
 
 export default RFPForm;
-
