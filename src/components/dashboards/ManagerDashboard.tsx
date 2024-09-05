@@ -4,28 +4,24 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../shared/Sidebar";
 import { SidebarItem } from "@/app/types/types";
-import { Table } from "@/components/dashboards/Admin/Table";
-import { Table2 } from "@/components/dashboards/Admin/Table2";
-import Page from "../vendor/dashboard/page";
-import ProductDetails from "../manager/ProductDetails";
 import RequestForProduct from "../manager/RequestForProduct";
 import Dashboard from "../manager/Dashboard";
 import Addvender from "../manager/Addvender";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
-  
 }
 
 export default function ManagerDashboard({ list }: ManagerDashboardProps) {
-  // Use TypeScript to explicitly set the type for activeComponent
-  const [activeComponent, setActiveComponent] = useState<"dashboard" | string>("dashboard");
+  const [activeComponent, setActiveComponent] = useState<
+    "dashboard" | "createRFP" | "Addvendor"
+  >("dashboard");
 
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
-    const role = localStorage.getItem("USER_ROLE")
+    const role = localStorage.getItem("USER_ROLE");
 
     if (!token) {
       router.push("/login");
@@ -39,15 +35,13 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
       <div className="fixed top-0 left-0">
         <Sidebar
           items={list}
-          activeComponent={activeComponent}
-          setActiveComponent={setActiveComponent}
+          setActiveComponent={setActiveComponent} // Pass the function to update state
         />
       </div>
       <div>
-        {activeComponent === "dashboard" && < Dashboard/>}
-        {activeComponent === "productCatalog" && <RequestForProduct/>}
-        {activeComponent === "Addvendor" && <Addvender/>}
-        
+        {activeComponent === "dashboard" && <Dashboard />}
+        {activeComponent === "createRFP" && <RequestForProduct />}
+        {activeComponent === "Addvendor" && <Addvender />}
       </div>
     </div>
   );

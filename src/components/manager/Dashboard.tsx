@@ -34,7 +34,7 @@ const Dashboard = () => {
     try {
       const response = await fetch('/api/rfp');
       const data = await response.json();
-      console.log("Fetched data:", data); // Log fetched data
+      // console.log("Fetched data:", data); // Log fetched data
 
       // Convert data to fit TableRow format and filter based on status
       const formattedData = data.map((item: any) => ({
@@ -48,7 +48,7 @@ const Dashboard = () => {
       }));
 
       // Filter based on `status` state
-      const filteredData = formattedData.filter(item =>
+      const filteredData = formattedData.filter((item: { rfpStatus: string; }) =>
         status === 'OPEN' ? item.rfpStatus === 'PENDING' :
         status === 'COMPLETED' ? item.rfpStatus === 'COMPLETED' :
         status === 'DRAFT' ? item.rfpStatus === 'DRAFT' :

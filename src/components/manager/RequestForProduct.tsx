@@ -38,7 +38,7 @@ const RequestForProduct: React.FC = () => {
     country: "",
     preferredDeliveryDate: "",
     state: "",
-    zipCode: ""
+    zipCode: "",
   });
 
   useEffect(() => {
@@ -84,8 +84,12 @@ const RequestForProduct: React.FC = () => {
       requirementType: "Office Supplies",
       dateOfOrdering: new Date().toISOString(),
       deliveryLocation: `${deliveryData.address}, ${deliveryData.city}, ${deliveryData.state}, ${deliveryData.country}, ${deliveryData.zipCode}`,
-      deliveryByDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(),
-      lastDateToRespond: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString(),
+      deliveryByDate: new Date(
+        new Date().setMonth(new Date().getMonth() + 3)
+      ).toISOString(),
+      lastDateToRespond: new Date(
+        new Date().setMonth(new Date().getMonth() + 2)
+      ).toISOString(),
       userId: "ded94860-af4c-4b45-a151-3d0d9babd7e0",
       rfpStatus: "DRAFT",
       rfpProducts: productData.map((product) => ({
@@ -93,8 +97,8 @@ const RequestForProduct: React.FC = () => {
         quantity: product.additionalField,
       })),
       approvers: approverData.map((approver) => ({
-        approverId: "ded94860-af4c-4b45-a151-3d0d9babd7e0",
-      }))
+        approverId: approver.approverId, // Use the actual approverId from the data
+      })),
     };
 
     try {
@@ -119,7 +123,7 @@ const RequestForProduct: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>; // Consider adding a spinner or skeleton loader
   }
 
   if (error) {
@@ -128,7 +132,9 @@ const RequestForProduct: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-gray-800 text-2xl mb-4">Request of Product/Services</h1>
+      <h1 className="text-gray-800 text-2xl mb-4">
+        Request of Product/Services
+      </h1>
       {rfpId && <p className="text-gray-600 mb-4">RFP ID: {rfpId}</p>}
 
       <hr className="my-4" />
@@ -140,11 +146,11 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Approver Details</h2>
         </button>
-        
-          <div className="p-4  border border-gray-300">
+        {activeAccordion === "approver" && ( // Conditional rendering based on activeAccordion
+          <div className="p-4 border border-gray-300">
             <ApproveDetails onApproverDataChange={handleApproverDataChange} />
           </div>
-       
+        )}
       </div>
 
       <hr className="my-4" />
@@ -156,11 +162,11 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Product Details</h2>
         </button>
-        
-          <div className="p-4  border border-gray-300">
+        {activeAccordion === "product" && ( // Conditional rendering based on activeAccordion
+          <div className="p-4 border border-gray-300">
             <ProductDetails onProductDataChange={handleProductDataChange} />
           </div>
-        
+        )}
       </div>
 
       <hr className="my-4" />
@@ -172,11 +178,14 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Delivery Details</h2>
         </button>
-       
+        {activeAccordion === "delivery" && ( // Conditional rendering based on activeAccordion
           <div className="p-4 border border-gray-300">
-            <DeliveryDetails deliveryData={deliveryData} onDeliveryDataChange={handleDeliveryDataChange} />
+            <DeliveryDetails
+              deliveryData={deliveryData}
+              onDeliveryDataChange={handleDeliveryDataChange}
+            />
           </div>
-       
+        )}
       </div>
 
       <hr className="my-4" />

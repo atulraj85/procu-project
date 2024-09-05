@@ -12,7 +12,7 @@ import Dashboardfinance from "@/components/finance/Dashboard";
 import DashboardManager from "@/components/manager/Dashboard";
 import AccountantDashboard from "@/components/dashboards/AccountantDashboard";
 import VendorDashboard from "@/components/dashboards/VendorDashboard";
-import {Admin, managerList, vendorList} from  "@/lib/sidebarLinks"
+import { Admin, managerList, vendorList } from "@/lib/sidebarLinks";
 import { log } from "console";
 import ManagerDashboard from "@/components/dashboards/ManagerDashboard";
 
@@ -59,27 +59,25 @@ export default function RoleDashboard({ params }: RoleDashboardProps) {
   //   fetch();
   // }, []);
 
-  // Render the dashboard based on the role
-  console.log("Merge " ,managerList);
-  
+
   const renderDashboardContent = () => {
     switch (role) {
       case "admin":
-        return <AdminDashboard  list={Admin} />;
+        return <AdminDashboard list={Admin} />;
       case "manager":
-        return <ManagerDashboard list={managerList}/>; // Replace with actual ManagerDashboard component
+        return <ManagerDashboard list={managerList} />;
       case "accountant":
-        return <AccountantDashboard list={managerList} />; // Replace with actual AccountantDashboard component
+        return <AccountantDashboard list={managerList} />;
       case "vendor":
-        return <VendorDashboard list={vendorList} />; // Replace with actual VendorDashboard component
+        return <VendorDashboard list={vendorList} />;
       default:
-        return null; // Fallback if no role matches
+        return null;
     }
   };
 
   return (
     <div className="mx-4  mt-4 pb-16">
-      <DashboardNavBar  userProfile={userProfile} loading={false} />
+      <DashboardNavBar userProfile={userProfile} loading={false} />
       <p>Welcome to the {role} dashboard!</p>
       {renderDashboardContent()}
     </div>

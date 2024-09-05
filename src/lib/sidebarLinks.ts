@@ -126,13 +126,7 @@ export const vendorList = [
     label: "Support",
     imgUrl: "/svgs/support.svg", // Update with correct path
     route: "/vendor/support",
-  },
-  {
-    value: "logout",
-    label: "Log Out",
-    imgUrl: "/svgs/logout.svg", // Update with correct path
-    route: "/vendor/logout",
-  },
+  }
 ];
 
 export const managerList = [
@@ -143,9 +137,9 @@ export const managerList = [
     route: "/dashboard/manager",
   },
   {
-    value: "productCatalog",
-    label: "Product Catalog",
-    imgUrl: "/svgs/productCatalog.png", // Update with correct path
+    value: "createRFP",
+    label: "Create RFP",
+    imgUrl: "/svgs/product-form.svg.png", // Update with correct path
     route: "/dashboard/manager",
   },
   {
@@ -154,22 +148,16 @@ export const managerList = [
     imgUrl: "/svgs/orderManagement.png", // Update with correct path
     route: "/dashboard/manager",
   },
-  {
-    value: "reports",
-    label: "Reports",
-    imgUrl: "/svgs/report.svg",
-    route: "/company/reports",
-  },
-  {
-    value: "support",
-    label: "Support",
-    imgUrl: "/svgs/support.svg",
-    route: "/company/support",
-  },
-  {
-    value: "logout",
-    label: "Log Out",
-    imgUrl: "/svgs/logout.png",
-    route: "/company/logout",
-  },
+  // {
+  //   value: "reports",
+  //   label: "Reports",
+  //   imgUrl: "/svgs/report.svg",
+  //   route: "/company/reports",
+  // },
+  // {
+  //   value: "support",
+  //   label: "Support",
+  //   imgUrl: "/svgs/support.svg",
+  //   route: "/company/support",
+  // }
 ];
