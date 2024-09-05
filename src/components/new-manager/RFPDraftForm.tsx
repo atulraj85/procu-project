@@ -189,7 +189,7 @@ const handleProductChange = <T extends keyof RFPProduct>(
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(formData);
-    // Here you would send the formData to your API
+    
   };
 
   return (
