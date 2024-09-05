@@ -146,11 +146,11 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Approver Details</h2>
         </button>
-        {activeAccordion === "approver" && ( // Conditional rendering based on activeAccordion
+        {/* {activeAccordion === "approver" && ( */}
           <div className="p-4 border border-gray-300">
             <ApproveDetails onApproverDataChange={handleApproverDataChange} />
           </div>
-        )}
+        {/* // )} */}
       </div>
 
       <hr className="my-4" />
@@ -162,11 +162,11 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Product Details</h2>
         </button>
-        {activeAccordion === "product" && ( // Conditional rendering based on activeAccordion
+        {/* {activeAccordion === "product" && ( // Conditional rendering based on activeAccordion */}
           <div className="p-4 border border-gray-300">
             <ProductDetails onProductDataChange={handleProductDataChange} />
           </div>
-        )}
+        {/* )} */}
       </div>
 
       <hr className="my-4" />
@@ -178,14 +178,14 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Delivery Details</h2>
         </button>
-        {activeAccordion === "delivery" && ( // Conditional rendering based on activeAccordion
+        {/* {activeAccordion === "delivery" && ( // Conditional rendering based on activeAccordion */}
           <div className="p-4 border border-gray-300">
             <DeliveryDetails
               deliveryData={deliveryData}
               onDeliveryDataChange={handleDeliveryDataChange}
             />
           </div>
-        )}
+        {/* )} */}
       </div>
 
       <hr className="my-4" />
