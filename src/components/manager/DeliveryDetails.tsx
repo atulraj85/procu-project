@@ -113,7 +113,7 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({ deliveryData, onDeliv
       setIsEditing(null);
     } else {
       // Add new delivery
-      onDeliveryDataChange([...deliveryData, newDelivery]);
+      onDeliveryDataChange([ newDelivery]);
     }
 
     setNewDelivery({
@@ -224,7 +224,7 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({ deliveryData, onDeliv
         </div>
       </form>
 
-      <div className="my-5">
+      {/* <div className="my-5">
         {deliveryData.length > 0 && (
           <table className="w-full text-[15px] border-collapse border border-gray-300 text-left">
             <thead>
@@ -266,7 +266,7 @@ const DeliveryDetails: React.FC<DeliveryDetailsProps> = ({ deliveryData, onDeliv
             </tbody>
           </table>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };

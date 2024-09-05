@@ -4,6 +4,26 @@ import React, { useState, useEffect } from "react";
 import ProductDetails from "./ProductDetails";
 import DeliveryDetails from "./DeliveryDetails";
 import ApproveDetails from "./ApproverDetails";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+interface ApproverData {
+  approverId: string;
+}
+
+interface Product {
+  id: string;
+  additionalField: number; // Changed to number
+}
+
+interface Delivery {
+  address: string;
+  city: string;
+  country: string;
+  preferredDeliveryDate: string;
+  state: string;
+  zipCode: string;
+}
 
 const RequestForProduct: React.FC = () => {
   const [activeAccordion, setActiveAccordion] = useState<string | null>(null);
@@ -60,44 +80,22 @@ const RequestForProduct: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // Construct the payload based on the current state
-    // const payload = {
-    //   requirementType: "Office Supplies",
-    //   dateOfOrdering: new Date().toISOString(), // Replace with actual value if needed
-    //   deliveryLocation: `${deliveryData.address}, ${deliveryData.city}, ${deliveryData.state}, ${deliveryData.country}, ${deliveryData.zipCode}`,
-    //   deliveryByDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(), // Example: 3 months from now
-    //   lastDateToRespond: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString(), // Example: 2 months from now
-    //   userId: "ded94860-af4c-4b45-a151-3d0d9babd7e0", // Replace with actual user ID
-    //   rfpStatus: "DRAFT",
-    //   rfpProducts: productData.map((product) => ({
-    //     productId: product.id,
-    //     quantity: 1, // Assuming a default quantity if not specified
-    //     additionalField: product.additionalField // Include additional fields if needed
-    //   })),
-    //   approvers: approverData.map((approver) => ({
-    //     approverId: approver.approver_email // Adjust according to your API requirements
-    //   })),
-    // };
-    const payload={ 
-      "requirementType": "Office Supplies", 
-      "dateOfOrdering": "2023-10-01T10:00:00Z", 
-      "deliveryLocation": "123 Main St, City, Country", 
-      "deliveryByDate": "2023-12-31T10:00:00Z", 
-      "lastDateToRespond": "2023-11-30T10:00:00Z", 
-      "userId": "ded94860-af4c-4b45-a151-3d0d9babd7e0", 
-      "rfpStatus": "DRAFT", // Use one of the RFPStatus enum values 
-      "rfpProducts": [ 
-        { 
-          "productId": "1", // Replace with an actual product ID 
-          "quantity": 20 
-        } 
-      ], 
-      "approvers": [ 
-        { 
-          "approverId": "ded94860-af4c-4b45-a151-3d0d9babd7e0" // Replace with an actual approver ID 
-        } 
-      ]
-     }
+    const payload = {
+      requirementType: "Office Supplies",
+      dateOfOrdering: new Date().toISOString(),
+      deliveryLocation: `${deliveryData.address}, ${deliveryData.city}, ${deliveryData.state}, ${deliveryData.country}, ${deliveryData.zipCode}`,
+      deliveryByDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(),
+      lastDateToRespond: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString(),
+      userId: "ded94860-af4c-4b45-a151-3d0d9babd7e0",
+      rfpStatus: "DRAFT",
+      rfpProducts: productData.map((product) => ({
+        productId: product.id,
+        quantity: product.additionalField,
+      })),
+      approvers: approverData.map((approver) => ({
+        approverId: "ded94860-af4c-4b45-a151-3d0d9babd7e0",
+      }))
+    };
 
     try {
       const response = await fetch("/api/rfp", {
@@ -113,11 +111,10 @@ const RequestForProduct: React.FC = () => {
       }
 
       const result = await response.json();
-      console.log("RFP submitted successfully:", result);
-      // Handle success (e.g., show a success message or redirect)
+      toast.success("RFP submitted successfully!");
     } catch (err) {
       setError("Error submitting RFP. Please try again later.");
-      console.error("Error submitting RFP:", err);
+      toast.error("Error submitting RFP. Please try again later.");
     }
   };
 
@@ -143,11 +140,11 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Approver Details</h2>
         </button>
-       
-          <div className="p-4 bg-gray-100 border border-gray-300">
+        
+          <div className="p-4  border border-gray-300">
             <ApproveDetails onApproverDataChange={handleApproverDataChange} />
           </div>
-      
+       
       </div>
 
       <hr className="my-4" />
@@ -160,10 +157,10 @@ const RequestForProduct: React.FC = () => {
           <h2 className="text-lg text-gray-800">Product Details</h2>
         </button>
         
-          <div className="p-4 bg-gray-100 border border-gray-300">
+          <div className="p-4  border border-gray-300">
             <ProductDetails onProductDataChange={handleProductDataChange} />
           </div>
-       
+        
       </div>
 
       <hr className="my-4" />
@@ -175,21 +172,25 @@ const RequestForProduct: React.FC = () => {
         >
           <h2 className="text-lg text-gray-800">Delivery Details</h2>
         </button>
-        
-          <div className="p-4 bg-gray-100 border border-gray-300">
+       
+          <div className="p-4 border border-gray-300">
             <DeliveryDetails deliveryData={deliveryData} onDeliveryDataChange={handleDeliveryDataChange} />
           </div>
-        
+       
       </div>
 
       <hr className="my-4" />
 
-      <button
-        onClick={handleSubmit}
-        className="w-full py-2 px-4 bg-blue-500 text-white hover:bg-blue-600 transition duration-200"
-      >
-        Submit RFP
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={handleSubmit}
+          className="py-2 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition duration-200"
+        >
+          Submit RFP
+        </button>
+      </div>
+      {/* ToastContainer to display toast notifications */}
+      <ToastContainer />
     </div>
   );
 };

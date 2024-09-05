@@ -3,6 +3,8 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { validateEmail, validateIndianPhoneNumber } from "@/lib/Validation";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import { MdEdit } from "react-icons/md";
 
 interface ApproverData {
   approver_name: string;
@@ -229,9 +231,9 @@ const ApproveDetails: React.FC<ApproveDetailsProps> = ({ onApproverDataChange })
         <div className="flex flex-col gap-3 mt-7">
           <button
             type="submit"
-            className="border py-2 px-4 bg-blue-500 text-white"
+            className="border py-2 rounded-lg px-4 bg-blue-500 text-white"
           >
-            {isEditing ? "Update Approver" : "Add Approver"}
+            {isEditing ? "Update Approver" : "Add "}
           </button>
           {isEditing && (
             <button
@@ -264,16 +266,16 @@ const ApproveDetails: React.FC<ApproveDetailsProps> = ({ onApproverDataChange })
                   <td className="border border-gray-300 p-2">{data.approver_number}</td>
                   <td className="border border-gray-300 p-2 flex items-center justify-center space-x-4">
                     <button
-                      className="border py-1 px-4 text-blue-600 text-sm cursor-pointer"
+                      className=" py-1 px-4 text-blue-600 text-lg cursor-pointer"
                       onClick={() => handleEditApprover(index)}
                     >
-                      Edit
+                      <MdEdit />
                     </button>
                     <button
-                      className="border py-1 px-4 text-red-900 text-sm cursor-pointer"
+                      className=" py-1 px-4 text-red-400 text-lg cursor-pointer"
                       onClick={() => handleRemoveApprover(data.approver_email)}
                     >
-                      Delete
+                       <RiDeleteBin6Line />
                     </button>
                   </td>
                 </tr>

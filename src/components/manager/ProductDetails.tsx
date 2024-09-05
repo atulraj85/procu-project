@@ -2,12 +2,14 @@
 
 import React, { ChangeEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import { MdAdd } from "react-icons/md";
 
 // Define your interfaces
 interface Product {
   id: number;
   name: string;
-  additionalField: string; // New input field
+  additionalField: number; // Changed to number
 }
 
 interface ProductDetailsProps {
@@ -16,11 +18,10 @@ interface ProductDetailsProps {
 
 // Validation functions
 const validateName = (value: string) => value.trim() !== "";
-// const validateAdditionalField = (value: string) => value.trim() !== "";
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) => {
   const [products, setProducts] = useState<Product[]>([
-    { id: 0, name: "", additionalField: "" }
+    { id: 0, name: "", additionalField: 0 }
   ]);
   const [productOptions, setProductOptions] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -89,7 +90,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
     const { name, value } = e.target;
     setProducts((prevProducts) => {
       const updatedProducts = [...prevProducts];
-      updatedProducts[index] = { ...updatedProducts[index], [name]: value };
+      updatedProducts[index] = { ...updatedProducts[index], [name]: Number(value) }; // Convert to number
       setIsModified(true);
       return updatedProducts;
     });
@@ -107,10 +108,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
         isValid = false;
       }
 
-      // if (!validateAdditionalField(product.additionalField)) {
-      //   errorsForProduct.additionalField = "Additional field is required.";
-      //   isValid = false;
-      // }
+      if (isNaN(product.additionalField) || product.additionalField <= 0) {
+        errorsForProduct.additionalField = "Valid quantity is required.";
+        isValid = false;
+      }
 
       if (Object.keys(errorsForProduct).length > 0) {
         newErrors[index] = errorsForProduct;
@@ -124,7 +125,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
   const handleAddRow = () => {
     setProducts((prevProducts) => [
       ...prevProducts,
-      { id: prevProducts.length + 1, name: "", additionalField: "" }
+      { id: prevProducts.length + 1, name: "", additionalField: 0 }
     ]);
     setIsModified(true);
   };
@@ -140,6 +141,10 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
   };
 
   const handleRemove = (index: number) => {
+    if (index === 0) {
+      toast.error("The first row cannot be deleted.");
+      return;
+    }
     setProducts((prevProducts) => prevProducts.filter((_, i) => i !== index));
     setIsModified(true);
     toast.success("Product removed successfully.");
@@ -148,20 +153,14 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
   return (
     <div className="text-gray-800 text-xl p-5">
       <div className="my-5 flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={handleAddRow}
-          className="bg-blue-700 hover:bg-blue-400 py-2 px-4 text-white text-base rounded-md"
-        >
-          Add New Row
-        </button>
+        {/* Enable the Add New Row button */}
         {(products.length > 0 && isModified) && (
           <button
             type="button"
             onClick={handleSave}
             className="bg-green-700 hover:bg-green-400 py-2 px-4 text-white text-base rounded-md"
           >
-            Save All Changes
+            Save 
           </button>
         )}
       </div>
@@ -177,7 +176,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
           </thead>
           <tbody>
             {products.map((product, index) => (
-              <tr key={product.id}> {/* Use product.id as key */}
+              <tr key={product.id}>
                 <td className="border border-gray-300 p-2">
                   <div className="relative">
                     <input
@@ -185,7 +184,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
                       name="name"
                       value={product.name}
                       onChange={(e) => handleSearchChange(e, index)}
-                      className={`outline-none border-b-2 bg-gray-100 ${errors[index]?.name ? "border-red-600" : "border-gray-600"}`}
+                      className={`outline-none border-b-2  ${errors[index]?.name ? "border-red-600" : "border-gray-600"}`}
                     />
                     {dropdownIndex === index && searchTerm && productOptions.length > 0 && (
                       <ul className="absolute bg-white border border-gray-300 mt-3 w-full max-h-60 overflow-y-auto z-10">
@@ -205,21 +204,31 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ onProductDataChange }) 
                 </td>
                 <td className="border border-gray-300 p-2">
                   <input
-                    type="text"
+                    type="number" // Changed to number
                     name="additionalField"
                     value={product.additionalField}
                     onChange={(e) => handleChange(e, index)}
-                    className={`outline-none border-b-2 bg-gray-100 ${errors[index]?.additionalField ? "border-red-600" : "border-gray-600"}`}
+                    className={`outline-none border-b-2  ${errors[index]?.additionalField ? "border-red-600" : "border-gray-600"}`}
                   />
                   {errors[index]?.additionalField && <p className="text-red-600 text-sm">{errors[index].additionalField}</p>}
                 </td>
-                <td className="border border-gray-300 p-2 flex items-center justify-center space-x-4">
+                <td className="flex border border-gray-300 p-2 items-center justify-center space-x-4">
                   <button
-                    className="border py-1 px-2 text-red-900 text-sm cursor-pointer"
+                    className="py-1 px-2 text-red-500 text-lg cursor-pointer"
                     onClick={() => handleRemove(index)}
+                    disabled={index === 0} // Disable delete for the first row
                   >
-                    Remove
+                    <RiDeleteBin6Line />
                   </button>
+                  {index === products.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={handleAddRow}
+                      className="text-black px-2 py-1 text-xl"
+                    >
+                      <MdAdd />
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
