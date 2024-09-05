@@ -7,6 +7,7 @@ import { SidebarItem } from "@/app/types/types";
 import RequestForProduct from "../manager/RequestForProduct";
 import Dashboard from "../manager/Dashboard";
 import Addvender from "../manager/Addvender";
+import RFPForm from "../new-manager/RFPDraftForm";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
@@ -40,7 +41,7 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
       </div>
       <div>
         {activeComponent === "dashboard" && <Dashboard />}
-        {activeComponent === "createRFP" && <RequestForProduct />}
+        {activeComponent === "createRFP" && <RFPForm />}
         {activeComponent === "Addvendor" && <Addvender />}
       </div>
     </div>
