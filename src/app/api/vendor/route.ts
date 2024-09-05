@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { VendorRequestBody } from "@/types";
-import { serializePrismaModel } from "../[tablename]/route";
+import { serializePrismaModel, VendorRequestBody } from "@/types";
 
 const prisma = new PrismaClient();
 
