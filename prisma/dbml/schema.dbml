@@ -161,7 +161,6 @@ Table RFP {
   dateOfOrdering DateTime [not null]
   deliveryLocation String [not null]
   deliveryByDate DateTime [not null]
-  lastDateToRespond DateTime [not null]
   user User [not null]
   userId String [not null]
   rfpStatus RFPStatus [not null, default: 'DRAFT']

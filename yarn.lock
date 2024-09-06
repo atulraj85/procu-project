@@ -800,8 +800,11 @@
     "@radix-ui/react-slot" "1.0.2"
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 "@radix-ui/react-slot@^1.0.2", "@radix-ui/react-slot@1.0.2":
 =======
+=======
+>>>>>>> 0217fc6629278bc5a4340ba0ed42caaebdf5181c
 "@radix-ui/react-primitive@2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-primitive/-/react-primitive-2.0.0.tgz#fe05715faa9203a223ccc0be15dc44b9f9822884"
@@ -810,7 +813,10 @@
     "@radix-ui/react-slot" "1.1.0"
 
 "@radix-ui/react-slot@1.0.2":
+<<<<<<< HEAD
 >>>>>>> backend
+=======
+>>>>>>> 0217fc6629278bc5a4340ba0ed42caaebdf5181c
   version "1.0.2"
   resolved "https://registry.npmjs.org/@radix-ui/react-slot/-/react-slot-1.0.2.tgz"
   integrity sha512-YeTpuq4deV+6DusvVUW4ivBgnkHwECUu0BiN43L5UCDFgdhsRUWAghhTF5MbvNTPzmiFOx90asDSUjWuCNapwg==
