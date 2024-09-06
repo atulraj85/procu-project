@@ -21,7 +21,7 @@ type FormData = {
   quotations: Quotation[];
   preferredVendorId: string;
 };
-
+type SupportingDocumentKeys = "quotation" | "bill" | "productCatalog";
 export default function RFPUpdateForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +99,9 @@ export default function RFPUpdateForm() {
 
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -116,11 +118,7 @@ export default function RFPUpdateForm() {
           <CardTitle>Update RFP</CardTitle>
           <div>
             <Label htmlFor="rfpId">RFP ID</Label>
-            <Input
-              id="rfpId"
-              value={rfpId}
-              onChange={handleRFPIdChange}
-            />
+            <Input id="rfpId" value={rfpId} onChange={handleRFPIdChange} />
           </div>
         </CardHeader>
         <CardContent>
@@ -129,7 +127,9 @@ export default function RFPUpdateForm() {
               <h3 className="text-lg font-semibold">Quotation {index + 1}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor={`quotations.${index}.vendorId`}>Vendor ID</Label>
+                  <Label htmlFor={`quotations.${index}.vendorId`}>
+                    Vendor ID
+                  </Label>
                   <Input
                     {...register(`quotations.${index}.vendorId`, {
                       required: "Vendor ID is required",
@@ -143,7 +143,9 @@ export default function RFPUpdateForm() {
                   )}
                 </div>
                 <div>
-                  <Label htmlFor={`quotations.${index}.billAmount`}>Bill Amount</Label>
+                  <Label htmlFor={`quotations.${index}.billAmount`}>
+                    Bill Amount
+                  </Label>
                   <Input
                     type="number"
                     {...register(`quotations.${index}.billAmount`, {
@@ -163,17 +165,23 @@ export default function RFPUpdateForm() {
                 <Label>Supporting Documents</Label>
                 {["quotation", "bill", "productCatalog"].map((docType) => (
                   <div key={docType}>
-                    <Label htmlFor={`quotations.${index}.supportingDocuments.${docType}`}>
+                    <Label
+                      htmlFor={`quotations.${index}.supportingDocuments.${docType}`}
+                    >
                       {docType.charAt(0).toUpperCase() + docType.slice(1)}
                     </Label>
                     <Controller
-                      name={`quotations.${index}.supportingDocuments.${docType}` as const}
+                      name={
+                        `quotations.${index}.supportingDocuments.${docType}` as const
+                      }
                       control={control}
                       defaultValue={null}
                       render={({ field }) => (
                         <Input
                           type="file"
-                          onChange={(e) => field.onChange(e.target.files?.[0] || null)}
+                          onChange={(e) =>
+                            field.onChange(e.target.files?.[0] || null)
+                          }
                           id={`quotations.${index}.supportingDocuments.${docType}`}
                         />
                       )}

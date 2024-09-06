@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../shared/Sidebar";
 import { SidebarItem } from "@/app/types/types";
-import RequestForProduct from "../manager/RequestForProduct";
 import Dashboard from "../manager/Dashboard";
 import Addvender from "../manager/Addvender";
 import RFPForm from "../new-manager/RFPDraftForm";

@@ -50,10 +50,10 @@ export const modelMap: Record<string, any> = {
     model: prisma.productCategory,
     attributes: ["id", "name", "created_at", "updated_at"],
   },
-  po: {
-    model: prisma.pO,
-    attributes: ["id", "quotationId", "userId", "created_at", "updated_at"],
-  },
+  // po: {
+  //   model: prisma.pO,
+  //   attributes: ["id", "quotationId", "userId", "created_at", "updated_at"],
+  // },
   goodStatus: {
     model: prisma.goodStatus,
     attributes: [
@@ -180,3 +180,24 @@ export async function generatePOId() {
   const formattedNumber = String(nextNumber).padStart(4, "0");
   return `${prefix}${formattedNumber}`;
 }
+
+
+
+export const rfpModel = {
+  model: prisma.rFP,
+  attributes: [
+    "id",
+    "rfpId",
+    "requirementType",
+    "dateOfOrdering",
+    "deliveryLocation",
+    "deliveryByDate",
+    "userId",
+    "rfpStatus",
+    "quotations",
+    "preferredVendorId",
+    "preferredQuotationId",
+    "created_at",
+    "updated_at",
+  ],
+};
