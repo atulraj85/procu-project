@@ -8,6 +8,7 @@ import RequestForProduct from "../manager/RequestForProduct";
 import Dashboard from "../manager/Dashboard";
 import Addvender from "../manager/Addvender";
 import RFPForm from "../new-manager/RFPDraftForm";
+import RFPUpdateForm from "../new-manager/UpdateRFPForm";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
@@ -15,7 +16,7 @@ interface ManagerDashboardProps {
 
 export default function ManagerDashboard({ list }: ManagerDashboardProps) {
   const [activeComponent, setActiveComponent] = useState<
-    "dashboard" | "createRFP" | "Addvendor"
+    "dashboard" | "createRFP" | "Addvendor" | "addQoutation"
   >("dashboard");
 
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
       <div>
         {activeComponent === "dashboard" && <Dashboard />}
         {activeComponent === "createRFP" && <RFPForm />}
+        {activeComponent === "addQoutation" && <RFPUpdateForm />}
         {activeComponent === "Addvendor" && <Addvender />}
       </div>
     </div>

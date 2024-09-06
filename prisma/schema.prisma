@@ -12,19 +12,19 @@ datasource db {
 }
 
 model Company {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   address     String?
-  email       String?  @unique // Optional and unique email address
-  phone       String?  // Optional phone number
-  website     String?  // Optional website URL
-  industry    String?  // Optional industry type
+  email       String?   @unique // Optional and unique email address
+  phone       String? // Optional phone number
+  website     String? // Optional website URL
+  industry    String? // Optional industry type
   foundedDate DateTime? // Optional founded date
-  status      String?  // Optional status (e.g., "active", "inactive")
+  status      String? // Optional status (e.g., "active", "inactive")
   users       User[]
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  PO PO[]
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  PO          PO[]
 }
 
 model User {
@@ -148,18 +148,30 @@ model Invoice {
   updated_at DateTime    @updatedAt
 }
 
-model Quotation {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp        RFP      @relation(fields: [rfpId], references: [id])
-  rfpId      String   @db.Uuid
-  vendor     Vendor   @relation(fields: [vendorId], references: [id])
-  vendorId   String   @db.Uuid
-  billAmount Decimal  @db.Decimal(10, 2)
-  po         PO?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+model SupportingDocument {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation    Quotation @relation(fields: [quotationId], references: [id])
+  quotationId  String    @db.Uuid
+  documentType String // e.g., "quotation", "bill", "productCatalog"
+  documentName String
+  location     String
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
 
-  RFP RFP[] @relation("RFPQuotations")
+}
+
+model Quotation {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp                 RFP                  @relation(fields: [rfpId], references: [id])
+  rfpId               String               @db.Uuid
+  vendor              Vendor               @relation(fields: [vendorId], references: [id])
+  vendorId            String               @db.Uuid
+  billAmount          Decimal              @db.Decimal(10, 2)
+  po                  PO?
+  supportingDocuments SupportingDocument[]
+  created_at          DateTime             @default(now())
+  updated_at          DateTime             @updatedAt
+
 }
 
 model RFP {
@@ -172,19 +184,16 @@ model RFP {
   lastDateToRespond    DateTime
   user                 User            @relation(fields: [userId], references: [id])
   userId               String          @db.Uuid
-  rfpStatus            RFPStatus @default(DRAFT)
-  preferredQuotationId String?         @db.Uuid // New field for preferred quotation
-  quotations           Quotation[]     @relation("RFPQuotations")
+  rfpStatus            RFPStatus       @default(DRAFT)
+  preferredQuotationId String?         @db.Uuid
+  quotations           Quotation[]
   approversList        ApproversList[]
   rfpProducts          RFPProduct[]
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
+  po                   PO?
 
-  po                   PO?             @relation // One-to-one relation to PO
-
-  Quotation Quotation[]
 }
-
 
 enum RFPStatus {
   DRAFT
