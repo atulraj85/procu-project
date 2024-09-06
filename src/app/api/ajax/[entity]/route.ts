@@ -91,6 +91,11 @@ export async function GET(
     const results = await config.model.findMany({
       where: whereClause,
       select: config.returnFields,
+      orderBy: {
+        // Specify the field to sort by and the order
+        // For example, sorting by 'name' in ascending order
+        name: "asc", // Change this to the desired field for sorting
+      },
     });
 
     return NextResponse.json(results);
