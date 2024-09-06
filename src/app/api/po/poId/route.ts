@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { serializePrismaModel } from "../../[tablename]/route";
 import { generatePOId } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {

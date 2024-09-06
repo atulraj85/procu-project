@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { generateRFPId, modelMap } from "@/lib/prisma";
+import { generateRFPId } from "@/lib/prisma";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 
 const prisma = new PrismaClient();
