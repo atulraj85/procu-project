@@ -289,9 +289,6 @@ const RFPForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Button variant="outline" onClick={() => {}}>
-        Open Sheet
-      </Button>
       <Card>
         <CardHeader>
           <CardTitle>Request for Product</CardTitle>
