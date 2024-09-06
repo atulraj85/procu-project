@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { generateRFPId } from "@/lib/prisma";
+import { generateRFPId, rfpModel } from "@/lib/prisma";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 
 const prisma = new PrismaClient();
@@ -139,25 +139,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-export const rfpModel = {
-  model: prisma.rFP,
-  attributes: [
-    "id",
-    "rfpId",
-    "requirementType",
-    "dateOfOrdering",
-    "deliveryLocation",
-    "deliveryByDate",
-    "userId",
-    "rfpStatus",
-    "quotations",
-    "preferredVendorId",
-    "preferredQuotationId",
-    "created_at",
-    "updated_at",
-  ],
-};
 
 export async function PUT(request: NextRequest) {
   try {

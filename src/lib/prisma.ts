@@ -180,3 +180,24 @@ export async function generatePOId() {
   const formattedNumber = String(nextNumber).padStart(4, "0");
   return `${prefix}${formattedNumber}`;
 }
+
+
+
+export const rfpModel = {
+  model: prisma.rFP,
+  attributes: [
+    "id",
+    "rfpId",
+    "requirementType",
+    "dateOfOrdering",
+    "deliveryLocation",
+    "deliveryByDate",
+    "userId",
+    "rfpStatus",
+    "quotations",
+    "preferredVendorId",
+    "preferredQuotationId",
+    "created_at",
+    "updated_at",
+  ],
+};

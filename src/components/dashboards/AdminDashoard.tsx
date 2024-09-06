@@ -17,10 +17,8 @@ interface SidebarOneProps {
   list: SidebarItem[];
 }
 // const Sidebar: React.FC<SidebarOneProps> = ({ items }) => {
-export default function AdminDashboard({ list }:SidebarOneProps) {
+export default function AdminDashboard({ list }: SidebarOneProps) {
   console.log("Received list prop:", list);
- 
-  
 
   const router = useRouter();
   const [usersListing, setUsersListing] =
@@ -50,7 +48,7 @@ export default function AdminDashboard({ list }:SidebarOneProps) {
 
   if (!usersListing) {
     return <div>Loading...</div>;
-  } 
+  }
 
   const users = usersListing.response.data.map((user) => ({
     id: user.id,
@@ -59,35 +57,40 @@ export default function AdminDashboard({ list }:SidebarOneProps) {
     role: user.role, // Assuming the user object has a role property
   }));
 
+   const [activeComponent, setActiveComponent] = useState<
+     "dashboard" | "createRFP" | "Addvendor" | "addQoutation"
+   >("dashboard");
+
+
   return (
     <>
-    <div>
-    <div className="fixed top-0 left-0">
-      <Sidebar items={list} />
-    </div>
+      <div>
+        <div className="fixed top-0 left-0">
+          <Sidebar items={list} setActiveComponent={setActiveComponent} />
+        </div>
       </div>
-    <div>
-      <h1>Admin Dashboard</h1>
-      {/* <p>List content: {JSON.stringify(list)}</p> Display the received list prop */}
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-          </TableRow>
-        </TableHeader>  
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
+      <div>
+        <h1>Admin Dashboard</h1>
+        {/* <p>List content: {JSON.stringify(list)}</p> Display the received list prop */}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell className="font-medium">{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.role}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </>
   );
 }

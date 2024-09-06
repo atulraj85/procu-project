@@ -88,9 +88,8 @@
 //   }
 // }
 import { NextRequest, NextResponse } from "next/server";
-import { rfpModel } from "../route";
 import { serializePrismaModel } from "@/types";
-import { prisma } from "@/lib/prisma";
+import { prisma, rfpModel } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
 
