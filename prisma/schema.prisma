@@ -32,6 +32,7 @@ model User {
   email            String            @unique
   password         String
   name             String?
+  mobile           String?
   role             Role              @default(USER)
   company          Company           @relation(fields: [companyId], references: [id])
   companyId        String            @db.Uuid
@@ -43,7 +44,7 @@ model User {
   Vendor           Vendor[]
   approversList    ApproversList[]
 
-  @@index([name]) // Add index for searching by name
+  @@index([name, email, mobile]) // Add index for searching by name
 }
 
 enum Role {
