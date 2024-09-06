@@ -181,7 +181,6 @@ model RFP {
   dateOfOrdering       DateTime
   deliveryLocation     String
   deliveryByDate       DateTime
-  lastDateToRespond    DateTime
   user                 User            @relation(fields: [userId], references: [id])
   userId               String          @db.Uuid
   rfpStatus            RFPStatus       @default(DRAFT)
