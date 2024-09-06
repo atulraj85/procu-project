@@ -1,9 +1,9 @@
-// src/app/dashboard/page.tsx
-
 "use client";
 
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Loader from "@/components/shared/Loader";
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -40,5 +40,5 @@ export default function Dashboard() {
   }, [router]);
 
   // This return is just a fallback, the component should redirect before rendering
-  return <div>Redirecting...</div>;
+  return <Loader/>;
 }

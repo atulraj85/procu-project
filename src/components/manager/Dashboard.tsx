@@ -2,6 +2,7 @@
 import Table from "@/components/shared/Table";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import Loader from "../shared/Loader";
 
 interface TableRow {
   rfpId: string;
@@ -127,8 +128,7 @@ const Dashboard = () => {
 
       <div className="w-full">
         {loading ? (
-          <div className="text-center py-10">Loading...</div>
-        ) : (
+<Loader/>        ) : (
           <Table title={title} titles={headers} content={content} />
         )}
       </div>

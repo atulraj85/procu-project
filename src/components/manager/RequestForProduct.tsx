@@ -6,6 +6,7 @@ import DeliveryDetails from "./DeliveryDetails";
 import ApproveDetails from "./ApproverDetails";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Loader from "../shared/Loader";
 
 interface ApproverData {
   approverId: string;
@@ -123,7 +124,7 @@ const RequestForProduct: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>; // Consider adding a spinner or skeleton loader
+    return <Loader/>; // Consider adding a spinner or skeleton loader
   }
 
   if (error) {

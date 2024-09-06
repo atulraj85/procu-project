@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"; // Assuming these are your table components
 import { IUsersListingResponse, SidebarItem } from "@/types";
 import Sidebar from "../shared/Sidebar";
+import Loader from "../shared/Loader";
 
 interface SidebarOneProps {
   list: SidebarItem[];
@@ -47,7 +48,7 @@ export default function AdminDashboard({ list }: SidebarOneProps) {
   }, []);
 
   if (!usersListing) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }
 
   const users = usersListing.response.data.map((user) => ({

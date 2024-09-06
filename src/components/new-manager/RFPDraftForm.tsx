@@ -42,12 +42,11 @@ interface FormData {
     city: string;
     zipCode: string;
   };
- 
 }
 function getTodayDate(): string {
   const today = new Date();
-  const day = String(today.getDate()).padStart(2, '0');
-  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed, so add 1
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
   const year = today.getFullYear(); // Get the full year
 
   return `${day}/${month}/${year}`;
@@ -89,9 +88,10 @@ const RFPForm: React.FC = () => {
 
   const [additionalInstructions, setAdditionalInstructions] =
     useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-   
-console.log(city);
+  console.log(city);
 
   useEffect(() => {
     const fetchRfpId = async () => {
@@ -193,10 +193,7 @@ console.log(city);
     setApprovedUsers((prevUsers) => [...prevUsers, user]);
     setFormData((prevData) => ({
       ...prevData,
-      approvers: [
-        ...prevData.approvers,
-        { approverId: String(user.id) },
-      ],
+      approvers: [...prevData.approvers, { approverId: String(user.id) }],
     }));
   };
 
@@ -246,7 +243,7 @@ console.log(city);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     setFormData((prevData) => ({
       ...prevData,
       deliveryLocation: address,
@@ -258,8 +255,10 @@ console.log(city);
       },
     }));
     console.log(formData);
-    
-  
+
+    setLoading(true); // Set loading state to true
+    setError(null); // Reset error state
+
     try {
       const response = await fetch("/api/rfp", {
         method: "POST",
@@ -268,18 +267,24 @@ console.log(city);
         },
         body: JSON.stringify(formData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to submit RFP");
       }
-  
+
       const result = await response.json();
       toast.success("RFP submitted successfully!");
     } catch (err) {
       toast.error("Error submitting RFP. Please try again later.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Error submitting RFP. Please try again later."
+      );
+    } finally {
+      setLoading(false); // Reset loading state
     }
   };
-  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -288,8 +293,8 @@ console.log(city);
           <CardTitle>Request for Product</CardTitle>
           {rfpId && (
             <div className="flex justify-between">
-            <p className="text-md text-muted-foreground">RFP ID: {rfpId}</p>
-            <p>Date of Ordering: {getTodayDate()}</p>
+              <p className="text-md text-muted-foreground">RFP ID: {rfpId}</p>
+              <p>Date of Ordering: {getTodayDate()}</p>
             </div>
           )}
         </CardHeader>
@@ -342,7 +347,6 @@ console.log(city);
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4 space-x-2">
-            
             <Input
               type="text"
               placeholder="Search Approvers..."
@@ -391,49 +395,50 @@ console.log(city);
           {approvedUsers.map((approver, index) => (
             <div key={index} className="flex items-center space-x-2 mb-2">
               <div className="flex flex-col">
-              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }>Approver Name</Label>
-              <Input
-                disabled
-                value={approver.name}
-                placeholder="Name"
-                className="flex-1"
-              />
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Approver Name
+                </Label>
+                <Input
+                  disabled
+                  value={approver.name}
+                  placeholder="Name"
+                  className="flex-1"
+                />
               </div>
               <div className="flex flex-col">
-              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }>Email</Label>
-              <Input
-                disabled
-                value={approver.email}
-                placeholder="Email"
-                className="flex-1"
-              />
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Email
+                </Label>
+                <Input
+                  disabled
+                  value={approver.email}
+                  placeholder="Email"
+                  className="flex-1"
+                />
               </div>
               <div className="flex flex-col">
-                
-              
-
-              <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }></Label>
-              <Button
-                type="button"
-                onClick={() => removeApprover(index)}
-                variant="outline"
-                size="icon"
-                className="text-red-500"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+                <Label
+                  className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                ></Label>
+                <Button
+                  type="button"
+                  onClick={() => removeApprover(index)}
+                  variant="outline"
+                  size="icon"
+                  className="text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           ))}
@@ -446,7 +451,6 @@ console.log(city);
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4 space-x-2">
-            
             <Input
               type="text"
               placeholder="Search Products..."
@@ -483,7 +487,6 @@ console.log(city);
                       setProductSelected(true);
                     }}
                   >
-                    
                     {product.name} ({product.modelNo}) - ID: {product.productId}
                   </li>
                 ))}
@@ -497,66 +500,72 @@ console.log(city);
               className="flex items-center space-x-2 mb-2"
             >
               <div className="flex flex-col">
-              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }>Product</Label>
-              <Input
-                disabled
-                value={product.name}
-                placeholder="Name"
-                className="flex-1"
-              />
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Product
+                </Label>
+                <Input
+                  disabled
+                  value={product.name}
+                  placeholder="Name"
+                  className="flex-1"
+                />
               </div>
               <div className="flex flex-col">
-              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }>Model No</Label>
-              <Input
-                disabled
-                value={product.modelNo}
-                placeholder="Model"
-                className="flex-1"
-              />
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Model No
+                </Label>
+                <Input
+                  disabled
+                  value={product.modelNo}
+                  placeholder="Model"
+                  className="flex-1"
+                />
               </div>
               <div className="flex flex-col">
-               <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }>Quantity</Label>
-              <Input
-                type="number"
-                value={product.quantity}
-                onChange={(e) =>
-                  handleProductChange(
-                    index,
-                    "quantity",
-                    parseInt(e.target.value, 10)
-                  )
-                }
-                placeholder="Quantity"
-                className="flex-1"
-              />
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Quantity
+                </Label>
+                <Input
+                  type="number"
+                  value={product.quantity}
+                  onChange={(e) =>
+                    handleProductChange(
+                      index,
+                      "quantity",
+                      parseInt(e.target.value, 10)
+                    )
+                  }
+                  placeholder="Quantity"
+                  className="flex-1"
+                />
               </div>
               <div className="flex flex-col">
-              <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                  index === 1
-                    ? "hidden"
-                    : "visible"
-                }`  }></Label>
-              <Button
-                type="button"
-                onClick={() => removeProduct(index)}
-                variant="outline"
-                size="icon"
-                className="text-red-500"
-              >
-                <X className="h-4 w-4 "  />
-              </Button>
+                <Label
+                  className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                ></Label>
+                <Button
+                  type="button"
+                  onClick={() => removeProduct(index)}
+                  variant="outline"
+                  size="icon"
+                  className="text-red-500"
+                >
+                  <X className="h-4 w-4 " />
+                </Button>
               </div>
             </div>
           ))}
@@ -625,10 +634,16 @@ console.log(city);
         </CardContent>
       </Card>
       <div className="flex justify-end mr-10">
-      <Button type="submit" className="px-4 py-2 rounded-lg bg-green-700">
-        Save Draft RFP
-      </Button>
+        <Button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-green-700"
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : "Save Draft RFP"}
+        </Button>
       </div>
+
+      {error && <div className="text-red-500">{error}</div>}
     </form>
   );
 };
