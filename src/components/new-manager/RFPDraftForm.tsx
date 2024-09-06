@@ -36,17 +36,38 @@ interface FormData {
   userId?: string;
   rfpProducts: RFPProduct[];
   approvers: Approver[];
+  deliveryLocationDetails: {
+    country: string;
+    state: string;
+    city: string;
+    zipCode: string;
+  };
+ 
+}
+function getTodayDate(): string {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed, so add 1
+  const year = today.getFullYear(); // Get the full year
+
+  return `${day}/${month}/${year}`;
 }
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     requirementType: "",
-    dateOfOrdering: "",
+    dateOfOrdering: getTodayDate(),
     deliveryLocation: "",
     deliveryByDate: "",
-    lastDateToRespond: "",
+    lastDateToRespond: "hii",
     rfpStatus: "DRAFT",
     rfpProducts: [],
     approvers: [],
+    deliveryLocationDetails: {
+      country: "",
+      state: "",
+      city: "",
+      zipCode: "",
+    },
   });
 
   const [address, setAddress] = useState<string>("");
@@ -68,6 +89,9 @@ const RFPForm: React.FC = () => {
 
   const [additionalInstructions, setAdditionalInstructions] =
     useState<string>("");
+
+   
+console.log(city);
 
   useEffect(() => {
     const fetchRfpId = async () => {
@@ -134,6 +158,17 @@ const RFPForm: React.FC = () => {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
+    if (name === "deliveryLocation") {
+      setAddress(value);
+    } else if (name === "country") {
+      setCountry(value);
+    } else if (name === "state") {
+      setState(value);
+    } else if (name === "city") {
+      setCity(value);
+    } else if (name === "zipCode") {
+      setZipCode(value);
+    }
   };
 
   const handleProductChange = (
@@ -211,8 +246,20 @@ const RFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log(JSON.stringify(formData));
-
+    
+    setFormData((prevData) => ({
+      ...prevData,
+      deliveryLocation: address,
+      deliveryLocationDetails: {
+        country,
+        state,
+        city,
+        zipCode,
+      },
+    }));
+    console.log(formData);
+    
+  
     try {
       const response = await fetch("/api/rfp", {
         method: "POST",
@@ -221,20 +268,18 @@ const RFPForm: React.FC = () => {
         },
         body: JSON.stringify(formData),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to submit RFP");
       }
-
+  
       const result = await response.json();
       toast.success("RFP submitted successfully!");
     } catch (err) {
-      // setError("Error submitting RFP. Please try again later.");
       toast.error("Error submitting RFP. Please try again later.");
     }
-
-    // Here you would send the formData to your API
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -242,7 +287,10 @@ const RFPForm: React.FC = () => {
         <CardHeader>
           <CardTitle>Request for Product</CardTitle>
           {rfpId && (
+            <div className="flex justify-between">
             <p className="text-md text-muted-foreground">RFP ID: {rfpId}</p>
+            <p>Date of Ordering: {getTodayDate()}</p>
+            </div>
           )}
         </CardHeader>
         <CardContent className="grid grid-cols-4 gap-2">
@@ -255,7 +303,7 @@ const RFPForm: React.FC = () => {
               onChange={handleInputChange}
             />
           </div>
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="dateOfOrdering">Date of Ordering</Label>
             <Input
               id="dateOfOrdering"
@@ -264,7 +312,7 @@ const RFPForm: React.FC = () => {
               value={formData.dateOfOrdering}
               onChange={handleInputChange}
             />
-          </div>
+          </div> */}
           <div className="space-y-2">
             <Label htmlFor="deliveryByDate">Delivery By Date</Label>
             <Input
@@ -275,7 +323,7 @@ const RFPForm: React.FC = () => {
               onChange={handleInputChange}
             />
           </div>
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="lastDateToRespond">Last Date to Respond</Label>
             <Input
               id="lastDateToRespond"
@@ -284,7 +332,7 @@ const RFPForm: React.FC = () => {
               value={formData.lastDateToRespond}
               onChange={handleInputChange}
             />
-          </div>
+          </div> */}
         </CardContent>
       </Card>
 
@@ -294,6 +342,7 @@ const RFPForm: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4 space-x-2">
+            
             <Input
               type="text"
               placeholder="Search Approvers..."
@@ -341,26 +390,51 @@ const RFPForm: React.FC = () => {
 
           {approvedUsers.map((approver, index) => (
             <div key={index} className="flex items-center space-x-2 mb-2">
+              <div className="flex flex-col">
+              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }>Approver Name</Label>
               <Input
                 disabled
                 value={approver.name}
                 placeholder="Name"
                 className="flex-1"
               />
+              </div>
+              <div className="flex flex-col">
+              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }>Email</Label>
               <Input
                 disabled
                 value={approver.email}
                 placeholder="Email"
                 className="flex-1"
               />
+              </div>
+              <div className="flex flex-col">
+                
+              
+
+              <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }></Label>
               <Button
                 type="button"
                 onClick={() => removeApprover(index)}
                 variant="outline"
                 size="icon"
+                className="text-red-500"
               >
                 <X className="h-4 w-4" />
               </Button>
+              </div>
             </div>
           ))}
         </CardContent>
@@ -372,6 +446,7 @@ const RFPForm: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-center mb-4 space-x-2">
+            
             <Input
               type="text"
               placeholder="Search Products..."
@@ -408,6 +483,7 @@ const RFPForm: React.FC = () => {
                       setProductSelected(true);
                     }}
                   >
+                    
                     {product.name} ({product.modelNo}) - ID: {product.productId}
                   </li>
                 ))}
@@ -420,18 +496,38 @@ const RFPForm: React.FC = () => {
               key={product.productId}
               className="flex items-center space-x-2 mb-2"
             >
+              <div className="flex flex-col">
+              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }>Product</Label>
               <Input
                 disabled
                 value={product.name}
                 placeholder="Name"
                 className="flex-1"
               />
+              </div>
+              <div className="flex flex-col">
+              <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }>Model No</Label>
               <Input
                 disabled
                 value={product.modelNo}
                 placeholder="Model"
                 className="flex-1"
               />
+              </div>
+              <div className="flex flex-col">
+               <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }>Quantity</Label>
               <Input
                 type="number"
                 value={product.quantity}
@@ -445,14 +541,23 @@ const RFPForm: React.FC = () => {
                 placeholder="Quantity"
                 className="flex-1"
               />
+              </div>
+              <div className="flex flex-col">
+              <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                  index === 1
+                    ? "hidden"
+                    : "visible"
+                }`  }></Label>
               <Button
                 type="button"
                 onClick={() => removeProduct(index)}
                 variant="outline"
                 size="icon"
+                className="text-red-500"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 "  />
               </Button>
+              </div>
             </div>
           ))}
         </CardContent>
@@ -519,10 +624,11 @@ const RFPForm: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-
-      <Button type="submit" className="w-full">
+      <div className="flex justify-end mr-10">
+      <Button type="submit" className="px-4 py-2 rounded-lg bg-green-700">
         Save Draft RFP
       </Button>
+      </div>
     </form>
   );
 };

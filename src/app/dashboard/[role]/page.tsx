@@ -76,9 +76,9 @@ export default function RoleDashboard({ params }: RoleDashboardProps) {
   };
 
   return (
-    <div className="mx-4  mt-4 pb-16">
+    <div className="mx-4  mt-4  pb-16">
       <DashboardNavBar userProfile={userProfile} loading={false} />
-      <p>Welcome to the {role} dashboard!</p>
+      {/* <p>Welcome to the {role} dashboard!</p> */}
       {renderDashboardContent()}
     </div>
   );
