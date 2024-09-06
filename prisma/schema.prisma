@@ -41,7 +41,9 @@ model User {
   pos              PO[]
   rfps             RFP[]
   Vendor           Vendor[]
-  approversList    ApproversList[] // Add this line to reference ApproversList
+  approversList    ApproversList[]
+
+  @@index([name]) // Add index for searching by name
 }
 
 enum Role {
@@ -79,6 +81,8 @@ model Vendor {
   ProductCategory    ProductCategory? @relation(fields: [productCategoryId], references: [id])
   productCategoryId  Int?
   Quotation          Quotation[]
+
+  @@index([primaryName, companyName, contactDisplayName, email, mobile, gstin]) // Add index for searching
 }
 
 model Payment {
@@ -136,6 +140,8 @@ model Product {
   rfpProducts       RFPProduct[]
   created_at        DateTime        @default(now())
   updated_at        DateTime        @updatedAt
+
+  @@index([name, modelNo, specification]) // Add index for searching
 }
 
 model Invoice {
@@ -157,7 +163,6 @@ model SupportingDocument {
   location     String
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
-
 }
 
 model Quotation {
@@ -171,7 +176,6 @@ model Quotation {
   supportingDocuments SupportingDocument[]
   created_at          DateTime             @default(now())
   updated_at          DateTime             @updatedAt
-
 }
 
 model RFP {
@@ -191,7 +195,6 @@ model RFP {
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
   po                   PO?
-
 }
 
 enum RFPStatus {
