@@ -5,6 +5,14 @@ import { MdModeEdit } from "react-icons/md";
 import { IoIosSearch } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
   validateEmail,
   validateIndianPhoneNumber,
   validatePinCode,

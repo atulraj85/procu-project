@@ -130,6 +130,17 @@ Table Invoice {
   updated_at DateTime [not null]
 }
 
+Table SupportingDocument {
+  id String [pk]
+  quotation Quotation [not null]
+  quotationId String [not null]
+  documentType String [not null]
+  documentName String [not null]
+  location String [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+}
+
 Table Quotation {
   id String [pk]
   rfp RFP [not null]
@@ -138,9 +149,9 @@ Table Quotation {
   vendorId String [not null]
   billAmount Decimal [not null]
   po PO
+  supportingDocuments SupportingDocument [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
-  RFP RFP [not null]
 }
 
 Table RFP {
@@ -161,7 +172,6 @@ Table RFP {
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
   po PO
-  Quotation Quotation [not null]
 }
 
 Table RFPProduct {
@@ -202,11 +212,6 @@ Table QualityAssurance {
   goodStatuses GoodStatus [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [default: `now()`, not null]
-}
-
-Table RFPQuotations {
-  rfpId String [ref: > RFP.id]
-  quotationsId String [ref: > Quotation.id]
 }
 
 Enum Role {
@@ -251,6 +256,8 @@ Ref: GoodStatus.qualityAssuranceLeaderId > QualityAssurance.id
 Ref: Product.productCategoryId > ProductCategory.id
 
 Ref: Invoice.poId - PO.id
+
+Ref: SupportingDocument.quotationId > Quotation.id
 
 Ref: Quotation.rfpId > RFP.id
 

@@ -139,21 +139,22 @@ export const managerList = [
   {
     value: "createRFP",
     label: "Create RFP",
-    imgUrl: "/svgs/product-form.svg.png", // Update with correct path
+    imgUrl: "/svgs/product-form.svg", // Update with correct path
+    route: "/dashboard/manager",
+  },
+  {
+    value: "addQoutation",
+    label: "Add Qoutation",
+    imgUrl: "/svgs/report.svg",
     route: "/dashboard/manager",
   },
   {
     value: "Addvendor",
     label: "Vendor List",
-    imgUrl: "/svgs/orderManagement.png", // Update with correct path
+    imgUrl: "/svgs/productOrder.svg", // Update with correct path
     route: "/dashboard/manager",
   },
-  // {
-  //   value: "reports",
-  //   label: "Reports",
-  //   imgUrl: "/svgs/report.svg",
-  //   route: "/company/reports",
-  // },
+
   // {
   //   value: "support",
   //   label: "Support",
