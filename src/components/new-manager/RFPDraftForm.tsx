@@ -26,6 +26,7 @@ type User = {
   id: number;
   name: string;
   email: string;
+  mobile: string;
 };
 
 interface FormData {
@@ -391,7 +392,7 @@ const RFPForm: React.FC = () => {
                       }
                     }}
                   >
-                    {user.name} | {user.email}
+                    {user.name} | {user.email} | {user.mobile}
                   </li>
                 ))}
               </ul>
@@ -427,6 +428,21 @@ const RFPForm: React.FC = () => {
                   disabled
                   value={approver.email}
                   placeholder="Email"
+                  className="flex-1"
+                />
+              </div>
+              <div className="flex flex-col">
+                <Label
+                  className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                    index === 1 ? "hidden" : "visible"
+                  }`}
+                >
+                  Phone
+                </Label>
+                <Input
+                  disabled
+                  value={approver.mobile}
+                  placeholder="Phone"
                   className="flex-1"
                 />
               </div>

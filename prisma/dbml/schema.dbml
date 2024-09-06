@@ -23,6 +23,7 @@ Table User {
   email String [unique, not null]
   password String [not null]
   name String
+  mobile String
   role Role [not null, default: 'USER']
   company Company [not null]
   companyId String [not null]

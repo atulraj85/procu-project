@@ -32,6 +32,7 @@ function RegisterForm() {
       name: "",
       company: "",
       email: "",
+      mobile: "",
       password: "",
     },
   });
@@ -121,6 +122,23 @@ function RegisterForm() {
                     {...field}
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="email"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="mobile"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="Phone Number"
+                    {...field}
+                    className="h-[3.75rem] w-full rounded-large"
+                    startIcon="phone"
                   />
                 </FormControl>
                 <FormMessage />

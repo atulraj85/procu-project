@@ -12,11 +12,12 @@ type SearchConfig = {
 const searchConfigs: Record<string, SearchConfig> = {
   users: {
     model: prisma.user,
-    searchFields: ["name", "email"],
+    searchFields: ["name", "email", "mobile"],
     returnFields: {
       id: true,
       name: true,
       email: true,
+      mobile: true,
       role: true,
     },
   },

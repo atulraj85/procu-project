@@ -6,7 +6,7 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 interface ExtendedInputProps extends InputProps {
-  startIcon?: "email" | "padlock" | "user";
+  startIcon?: "email" | "padlock" | "user" | "phone";
 }
 
 const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
@@ -31,6 +31,8 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
                   ? "/images/mail_icon.png"
                   : startIcon === "user"
                   ? "/images/user_icon.png"
+                  : startIcon === "phone"
+                  ? "/images/icons8-phone-16.png"
                   : "/images/lock_icon.png"
               }
             />
