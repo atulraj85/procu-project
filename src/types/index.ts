@@ -38,6 +38,7 @@ export interface ILoginUserResponse {
   response: {
     meta: Meta,
     data: {
+      userId: string;
       token: string;
       role: string; // Ensure this is a string
     };

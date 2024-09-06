@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X } from "lucide-react";
+import { Plus, Sheet, X } from "lucide-react";
 import { toast } from "react-toastify";
+
+import SheetSide from "./Product";
 
 interface RFPProduct {
   productId: string;
@@ -43,6 +45,7 @@ interface FormData {
     zipCode: string;
   };
 }
+
 function getTodayDate(): string {
   const today = new Date();
   const day = String(today.getDate()).padStart(2, "0");
@@ -51,6 +54,7 @@ function getTodayDate(): string {
 
   return `${day}/${month}/${year}`;
 }
+
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     requirementType: "",
@@ -85,13 +89,10 @@ const RFPForm: React.FC = () => {
   const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-
   const [additionalInstructions, setAdditionalInstructions] =
     useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log(city);
 
   useEffect(() => {
     const fetchRfpId = async () => {
@@ -288,6 +289,9 @@ const RFPForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <Button variant="outline" onClick={() => {}}>
+        Open Sheet
+      </Button>
       <Card>
         <CardHeader>
           <CardTitle>Request for Product</CardTitle>
@@ -357,13 +361,13 @@ const RFPForm: React.FC = () => {
             <Button
               type="button"
               onClick={() => {
-                if (user) {
-                  addApprover(user);
-                  setSearchApproverTerm("");
-                  setFetchedUsers([]);
-                } else {
-                  console.error("No user selected");
-                }
+                // if (user) {
+                //   addApprover(user);
+                //   setSearchApproverTerm("");
+                //   setFetchedUsers([]);
+                // } else {
+                //   console.error("No user selected");
+                // }
               }}
               variant="outline"
               className={userSelected ? "bg-green-500" : ""}
@@ -381,11 +385,16 @@ const RFPForm: React.FC = () => {
                     key={user.id}
                     className="py-1 cursor-pointer hover:bg-gray-200"
                     onClick={() => {
-                      setUser(user);
-                      setUserSelected(true);
+                      if (user) {
+                        addApprover(user);
+                        setSearchApproverTerm("");
+                        setFetchedUsers([]);
+                      } else {
+                        console.error("No user selected");
+                      }
                     }}
                   >
-                    {user.name} ({user.email})
+                    {user.name} | {user.email}
                   </li>
                 ))}
               </ul>
@@ -458,20 +467,7 @@ const RFPForm: React.FC = () => {
               onChange={(e) => handleSearchChange(e, "products")}
               className="flex-1"
             />
-            <Button
-              type="button"
-              onClick={() => {
-                if (product) {
-                  addProduct(product);
-                } else {
-                  console.error("No Product selected");
-                }
-              }}
-              variant="outline"
-              className={productSelected ? "bg-green-500" : ""}
-            >
-              <Plus />
-            </Button>
+            <SheetSide />
           </div>
 
           {fetchedProducts.length > 0 && (
@@ -483,11 +479,14 @@ const RFPForm: React.FC = () => {
                     key={product.productId}
                     className="py-1 cursor-pointer hover:bg-gray-200"
                     onClick={() => {
-                      setProduct(product);
-                      setProductSelected(true);
+                      if (product) {
+                        addProduct(product);
+                      } else {
+                        console.error("No Product selected");
+                      }
                     }}
                   >
-                    {product.name} ({product.modelNo}) - ID: {product.productId}
+                    {product.name} | {product.modelNo}
                   </li>
                 ))}
               </ul>
