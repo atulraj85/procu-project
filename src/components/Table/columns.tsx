@@ -139,11 +139,11 @@ export const columns1: ColumnDef<TableRow>[] = [
 
 export const columns: ColumnDef<Vendor>[] = [
   
-  {
-    accessorKey: "gstn",
-    header: "GSTN",
-  },
-  {
+  // {
+  //   accessorKey: "gstn",
+  //   header: "GSTN",
+  // },
+   {
     accessorKey: "primaryName",
     // header: "Vendor Name",
     header: ({ column }) => {
@@ -158,18 +158,18 @@ export const columns: ColumnDef<Vendor>[] = [
         )
       },
   },
-  {
-    accessorKey: "companyname",
-    header: "Company Name",
-  },
+  // {
+  //   accessorKey: "companyname",
+  //   header: "Company Name",
+  // },
   {
     accessorKey: "mobile",
     header: "Contact No",
   },
-  {
-    accessorKey: "state",
-    header: "State",
-  },
+  // {
+  //   accessorKey: "state",
+  //   header: "State",
+  // },
   {
     accessorKey: "email",
     // header: "Email",
@@ -187,4 +187,5 @@ export const columns: ColumnDef<Vendor>[] = [
   },
   
 ];
+
 
