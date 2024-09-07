@@ -5,7 +5,7 @@
 Table Company {
   id String [pk]
   name String [not null]
-  address String
+  address Json
   email String [unique]
   phone String
   website String
@@ -23,6 +23,7 @@ Table User {
   email String [unique, not null]
   password String [not null]
   name String
+  mobile String
   role Role [not null, default: 'USER']
   company Company [not null]
   companyId String [not null]
@@ -147,9 +148,11 @@ Table Quotation {
   rfpId String [not null]
   vendor Vendor [not null]
   vendorId String [not null]
-  billAmount Decimal [not null]
+  isPrimary Boolean [not null, default: false]
+  totalAmount Decimal [not null]
   po PO
   supportingDocuments SupportingDocument [not null]
+  vendorPricings VendorPricing [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
 }
@@ -180,11 +183,27 @@ Table RFPProduct {
   product Product [not null]
   productId Int [not null]
   quantity Int [not null]
+  vendorPricings VendorPricing [not null]
   created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 
   indexes {
     (rfpId, productId) [unique]
+  }
+}
+
+Table VendorPricing {
+  id String [pk]
+  quotation Quotation [not null]
+  quotationId String [not null]
+  rfpProduct RFPProduct [not null]
+  rfpProductId String [not null]
+  price Decimal [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+
+  indexes {
+    (quotationId, rfpProductId) [unique]
   }
 }
 
@@ -197,7 +216,7 @@ Table ApproversList {
   approved Boolean [not null, default: false]
   approvedAt DateTime
   created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
 
   indexes {
     (rfpId, userId) [unique]
@@ -267,6 +286,10 @@ Ref: RFP.userId > User.id
 Ref: RFPProduct.rfpId > RFP.id
 
 Ref: RFPProduct.productId > Product.id
+
+Ref: VendorPricing.quotationId > Quotation.id
+
+Ref: VendorPricing.rfpProductId > RFPProduct.id
 
 Ref: ApproversList.rfpId > RFP.id
 

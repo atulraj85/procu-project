@@ -9,11 +9,9 @@ const CreateUserInputValidation = z.object({
     .max(50, {
       message: "Full name must be at most 50 characters.",
     }),
-  company: z
-    .string()
-    .min(2, {
-      message: "Company must be at least 2 characters.",
-    }),
+  company: z.string().min(2, {
+    message: "Company must be at least 2 characters.",
+  }),
 
   email: z
     .string()
@@ -21,8 +19,11 @@ const CreateUserInputValidation = z.object({
       message: "Enter a valid email",
     })
     .min(2, {
-      message: "email must be at least 2 characters.",
+      message: "Email must be at least 2 characters.",
     }),
+  mobile: z.string().min(10, {
+    message: "Number must be at least 10 characters.",
+  }),
   password: z
     .string()
     .min(8, {

@@ -12,11 +12,12 @@ type SearchConfig = {
 const searchConfigs: Record<string, SearchConfig> = {
   users: {
     model: prisma.user,
-    searchFields: ["name", "email"],
+    searchFields: ["name", "email", "mobile"],
     returnFields: {
       id: true,
       name: true,
       email: true,
+      mobile: true,
       role: true,
     },
   },
@@ -94,7 +95,7 @@ export async function GET(
       orderBy: {
         // Specify the field to sort by and the order
         // For example, sorting by 'name' in ascending order
-        name: "asc", // Change this to the desired field for sorting
+        // name: "asc", // Change this to the desired field for sorting
       },
     });
 

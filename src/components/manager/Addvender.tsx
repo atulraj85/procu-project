@@ -1,17 +1,14 @@
 "use client"
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { MdModeEdit } from "react-icons/md";
 import { IoIosSearch } from "react-icons/io";
-import { IoMdClose } from "react-icons/io";
 import { DataTable } from "../Table/data-table";
-import { columns, Vendor } from "../Table/columns";
+import { columns } from "../Table/columns";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
 import {

@@ -9,7 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"; // Assuming these are your table components
+} from "@/components/ui/table";
 import { IUsersListingResponse, SidebarItem } from "@/types";
 import Sidebar from "../shared/Sidebar";
 import Loader from "../shared/Loader";
@@ -17,18 +17,18 @@ import Loader from "../shared/Loader";
 interface SidebarOneProps {
   list: SidebarItem[];
 }
-// const Sidebar: React.FC<SidebarOneProps> = ({ items }) => {
-export default function AdminDashboard({ list }: SidebarOneProps) {
-  console.log("Received list prop:", list);
 
+export default function AdminDashboard({ list }: SidebarOneProps) {
   const router = useRouter();
   const [usersListing, setUsersListing] =
     useState<IUsersListingResponse | null>(null);
+  const [activeComponent, setActiveComponent] = useState<
+    "dashboard" | "createRFP" | "Addvendor" | "addQoutation"
+  >("dashboard");
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
     const role = localStorage.getItem("USER_ROLE");
-
     if (!token) {
       router.push("/login");
     } else if (role?.toLowerCase() !== "admin") {
@@ -48,31 +48,25 @@ export default function AdminDashboard({ list }: SidebarOneProps) {
   }, []);
 
   if (!usersListing) {
-    return <Loader/>;
+    return <Loader />;
   }
 
   const users = usersListing.response.data.map((user) => ({
     id: user.id,
     name: user.name,
-    email: user.email, // Assuming the user object has an email property
-    role: user.role, // Assuming the user object has a role property
+    email: user.email,
+    role: user.role,
   }));
 
-   const [activeComponent, setActiveComponent] = useState<
-     "dashboard" | "createRFP" | "Addvendor" | "addQoutation"
-   >("dashboard");
-
-
   return (
-    <>
-      <div>
-        <div className="fixed top-0 left-0">
-          <Sidebar items={list} setActiveComponent={setActiveComponent} />
-        </div>
+    <div className="flex">
+      <div className="fixed top-0 left-0">
+        <Sidebar items={list} setActiveComponent={setActiveComponent} />
       </div>
-      <div>
-        <h1>Admin Dashboard</h1>
-        {/* <p>List content: {JSON.stringify(list)}</p> Display the received list prop */}
+      <div className="ml-64 p-8 w-full">
+        {" "}
+        {/* Adjust margin and padding as needed */}
+        <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,6 +86,6 @@ export default function AdminDashboard({ list }: SidebarOneProps) {
           </TableBody>
         </Table>
       </div>
-    </>
+    </div>
   );
 }

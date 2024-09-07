@@ -8,7 +8,19 @@ export { prisma };
 export const modelMap: Record<string, any> = {
   company: {
     model: prisma.company,
-    attributes: ["id", "name", "address", "created_at", "updated_at"],
+    attributes: [
+      "id",
+      "name",
+      "address",
+      "email",
+      "phone",
+      "website",
+      "industry",
+      "foundedDate",
+      "status",
+      "created_at",
+      "updated_at",
+    ],
   },
   // vendor: {
   //   model: prisma.vendor,
