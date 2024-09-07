@@ -7,7 +7,7 @@ import fs from "fs";
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const id = searchParams.get("id");
+    const id = String(searchParams.get("id") || "");
     if (!id) {
       return NextResponse.json(
         { error: "ID is required for updating a record" },
@@ -18,6 +18,10 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
     const { quotations, preferredVendorId } = data;
+
+    console.log("data:", data);
+    console.log("quotations:", quotations);
+    console.log("preferredVendorId:", preferredVendorId);
 
     // Define valid attributes for the RFP model
     const validAttributes = rfpModel.attributes;
@@ -36,8 +40,9 @@ export async function PUT(request: NextRequest) {
 
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
-      quotations.map(async (quotation: any) => {
-        const { vendorId, products, supportingDocuments } = quotation;
+      (quotations || []).map(async (quotation: any) => {
+        const { vendorId, products, supportingDocuments, totalAmount } =
+          quotation;
         const quotationDirPath = path.join(
           process.cwd(),
           "public",
@@ -48,7 +53,7 @@ export async function PUT(request: NextRequest) {
         await fs.promises.mkdir(quotationDirPath, { recursive: true });
 
         const processedDocuments = await Promise.all(
-          Object.entries(supportingDocuments[0]).map(
+          Object.entries(supportingDocuments || {}).map(
             async ([docType, fileName]) => {
               const file = formData.get(`${vendorId}-${docType}`) as File;
               if (!file) {
@@ -67,45 +72,46 @@ export async function PUT(request: NextRequest) {
         );
 
         // Create VendorPricing entries for each product in the quotation
-        const vendorPricingEntries = await Promise.all(
-          products.map(async (product: any) => {
-            return {
-              price: parseFloat(product.amount), // Assuming amount is the quoted price
-              rfpProduct: {
-                connect: {
-                  id: product.id, // Assuming product.id corresponds to RFPProduct ID
-                },
-              },
-            };
-          })
-        );
+        const vendorPricingEntries = products.map((product: any) => ({
+          price: parseFloat(product.amount),
+          rfpProduct: {
+            connect: {
+              id: product.id,
+            },
+          },
+        }));
 
         return {
           vendorId,
+          totalAmount: parseFloat(totalAmount),
           supportingDocuments: {
             create: processedDocuments,
           },
-          vendorPricing: {
-            create: vendorPricingEntries, // Create VendorPricing entries
+          vendorPricings: {
+            create: vendorPricingEntries,
           },
         };
       })
     );
 
+    console.log("processedQuotations", processedQuotations);
+
     delete data.preferredVendorId;
+
+    console.log(data, typeof id)
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
-      where: { id: id },
+      where: { id: String(id) },
       data: {
         ...data,
         quotations: {
-          deleteMany: {}, // Delete existing quotations
-          create: processedQuotations, // Create new quotations with processed documents
+          deleteMany: {},
+          create: processedQuotations,
         },
       },
       include: {
-        quotations: true, // Include quotations in the result
+        quotations: true,
       },
     });
 
@@ -116,9 +122,9 @@ export async function PUT(request: NextRequest) {
 
     if (preferredQuotation) {
       await prisma.rFP.update({
-        where: { id: id },
+        where: { id: String(id) },
         data: {
-          preferredQuotationId: preferredQuotation.id, // Update preferredQuotationId
+          preferredQuotationId: preferredQuotation.id,
         },
       });
     }

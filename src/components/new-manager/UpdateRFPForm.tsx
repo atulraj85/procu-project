@@ -154,6 +154,8 @@ export default function RFPUpdateForm() {
     setError(null);
     setSuccess(false);
 
+    //TODO hard coded totalAmount for now
+
     const formData = new FormData();
     formData.append(
       "data",
@@ -162,7 +164,7 @@ export default function RFPUpdateForm() {
           vendorId: q.vendorId,
           isPrimary: q.isPrimary,
           products: q.products,
-          totalAmount: q.totalAmount,
+          totalAmount: 7869,
           supportingDocuments: {
             quotation: q.supportingDocuments.quotation?.name,
             bill: q.supportingDocuments.bill?.name,
