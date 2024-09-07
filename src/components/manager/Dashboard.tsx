@@ -3,6 +3,8 @@ import Table from "@/components/shared/Table";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Loader from "../shared/Loader";
+import { DataTable } from "../Table/data-table";
+import { columns1 } from "../Table/columns";
 
 interface TableRow {
   rfpId: string;
@@ -129,7 +131,8 @@ const Dashboard = () => {
       <div className="w-full">
         {loading ? (
 <Loader/>        ) : (
-          <Table title={title} titles={headers} content={content} />
+          // <Table title={title} titles={headers} content={content} />
+          <DataTable columns={columns1} data={content}/>
         )}
       </div>
     </div>

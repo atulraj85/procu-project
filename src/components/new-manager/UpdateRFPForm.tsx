@@ -161,7 +161,7 @@ export default function RFPUpdateForm() {
                   )}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 w-[30%] ">
                 <Label>Supporting Documents</Label>
                 {["quotation", "bill", "productCatalog"].map((docType) => (
                   <div key={docType}>
