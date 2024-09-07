@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
     // console.log("Where clause:", whereClause);
 
     const records = await modelMap[tableName].model.findMany({
-      // where: whereClause,
-      // orderBy: orderByClause,
+      where: whereClause,
+      orderBy: orderByClause,
     });
 
     if (Object.keys(whereClause).length > 0 && records.length === 0) {
