@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 
 type Product = {
   quantity?: any;
@@ -15,12 +15,22 @@ type Product = {
   amount: number;
 };
 
-type RFPProduct = {
+type Vendor = {
   id: string;
-  rfpId: string;
-  productId: number;
-  quantity: number;
+  primaryName: string;
+  companyName: string;
+  contactDisplayName: string;
+  email: string;
+  mobile: string;
+  gstin: string;
 };
+
+interface RFPProduct {
+  productId: string;
+  name?: string;
+  modelNo?: string;
+  quantity: number;
+}
 
 type SupportingDocumentKeys = "quotation" | "bill" | "productCatalog";
 
@@ -46,6 +56,14 @@ export default function RFPUpdateForm() {
   const [rfpId, setRfpId] = useState<string>("");
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
 
+  const [searchVendorTerm, setSearchVendorTerm] = useState("");
+  const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
+  const [vendorSelected, setVendorSelected] = useState(false);
+  const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
+
+
+
+  //TODO hard coded VendorID for now
   const {
     register,
     control,
@@ -56,7 +74,7 @@ export default function RFPUpdateForm() {
     defaultValues: {
       quotations: [
         {
-          vendorId: "",
+          vendorId: "f0fcf4a2-af42-49d5-bbee-6e2b6e85bcbe",
           isPrimary: true,
           products: [],
           totalAmount: 0,
@@ -67,7 +85,7 @@ export default function RFPUpdateForm() {
           },
         },
       ],
-      preferredVendorId: "",
+      preferredVendorId: "f0fcf4a2-af42-49d5-bbee-6e2b6e85bcbe",
     },
   });
 
@@ -75,6 +93,88 @@ export default function RFPUpdateForm() {
     control,
     name: "quotations",
   });
+
+  const handleSearchChange = async (
+    e: ChangeEvent<HTMLInputElement>,
+    entity: string
+  ) => {
+    const value = e.target.value;
+    if (entity === "vendors") {
+      setSearchVendorTerm(value);
+    }
+
+    if (value) {
+      try {
+        const response = await fetch(`/api/ajax/${entity}?q=${value}`);
+        const data = await response.json();
+
+        if (entity === "vendors") {
+          const formattedVendors = data.map((product: any) => ({
+            ...product,
+            productId: product.productId || product.id || String(product._id),
+          }));
+          setFetchedVendors(formattedVendors);
+        }
+      } catch (error) {
+        console.error(`Error fetching ${entity}:`, error);
+      }
+    } else {
+      setFetchedVendors([]);
+      setVendorSelected(false);
+    }
+  };
+
+  const handleVendorChange = (
+    index: number,
+    field: keyof Vendor,
+    value: Vendor[keyof Vendor]
+  ) => {
+    const updatedVendors = [...approvedVendors];
+    updatedVendors[index] = { ...updatedVendors[index], [field]: value };
+    setApprovedVendors(updatedVendors);
+
+    // setFormData((prevData) => ({
+    //   ...prevData,
+    //   rfpProducts: updatedProducts.map(({ productId, quantity }) => ({
+    //     productId,
+    //     quantity,
+    //   })),
+    // }));
+  };
+
+  const addProduct = (vendor: Vendor) => {
+    if (!vendor.id) {
+      console.error("Vendor ID is missing");
+      return;
+    }
+
+    const vendorExists = approvedVendors.some((p) => p.id === vendor.id);
+
+    if (!vendorExists) {
+      const newProduct = { ...vendor, quantity: 1 };
+      setApprovedVendors((prevProducts) => [...prevProducts, newProduct]);
+      // setFormData((prevData) => ({
+      //   ...prevData,
+      //   rfpProducts: [
+      //     ...prevData.rfpProducts,
+      //     { productId: String(product.productId), quantity: 1 },
+      //   ],
+      // }));
+      setSearchVendorTerm("");
+      setFetchedVendors([]);
+    } else {
+      console.warn(`Vendor with ID ${vendor.id} already exists.`);
+    }
+  };
+  const removeProduct = (index: number) => {
+    setApprovedVendors((prevProducts) =>
+      prevProducts.filter((_, i) => i !== index)
+    );
+    // setFormData((prevData) => ({
+    //   ...prevData,
+    //   rfpProducts: prevData.rfpProducts.filter((_, i) => i !== index),
+    // }));
+  };
 
   const fetchProductDetails = async (productId: string): Promise<Product> => {
     const response = await fetch(`/api/product?id=${productId}`);
@@ -103,7 +203,7 @@ export default function RFPUpdateForm() {
         const productsWithDetails = await Promise.all(
           rfpProductsData.map(async (rfpProduct) => {
             const productDetails = await fetchProductDetails(
-              String(rfpProduct.productId )
+              String(rfpProduct.productId)
             );
             return {
               ...productDetails,
@@ -237,22 +337,143 @@ export default function RFPUpdateForm() {
                   ? "Primary Quotation"
                   : `Secondary Quotation ${index}`}
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid  gap-4">
                 <div>
                   <Label htmlFor={`quotations.${index}.vendorId`}>
-                    Vendor ID
+                    Vendor Details
                   </Label>
-                  <Input
+                  {/* <Input
                     {...register(`quotations.${index}.vendorId` as const, {
                       required: "Vendor ID is required",
                     })}
                     id={`quotations.${index}.vendorId`}
-                  />
+                  /> */}
                   {errors.quotations?.[index]?.vendorId && (
                     <p className="text-red-500 text-sm mt-1">
                       {errors.quotations[index]?.vendorId?.message}
                     </p>
                   )}
+
+                  <Input
+                    type="text"
+                    placeholder="Search Vendors..."
+                    value={searchVendorTerm}
+                    onChange={(e) => handleSearchChange(e, "vendors")}
+                    className="flex-1 my-2 mb-10"
+                  />
+
+                  {fetchedVendors.length > 0 && (
+                    <div className="mt-2">
+                      <h3 className="font-semibold">Fetched Products:</h3>
+                      <ul>
+                        {fetchedVendors.map((vendor) => (
+                          <li
+                            key={vendor.id}
+                            className="py-1 cursor-pointer hover:bg-gray-200"
+                            onClick={() => {
+                              if (vendor) {
+                                addProduct(vendor);
+                              } else {
+                                console.error("No vendor selected");
+                              }
+                            }}
+                          >
+                            {vendor.primaryName} | {vendor.email}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {approvedVendors.map((vendor, index) => (
+                    <div
+                      key={vendor.id}
+                      className="flex items-center space-x-2 mb-2"
+                    >
+                      <div className="flex flex-col">
+                        <Label
+                          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                            index === 1 ? "hidden" : "visible"
+                          }`}
+                        >
+                          Vendor Name
+                        </Label>
+                        <Input
+                          disabled
+                          value={vendor.primaryName}
+                          placeholder="Name"
+                          className="flex-1"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label
+                          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                            index === 1 ? "hidden" : "visible"
+                          }`}
+                        >
+                          Email
+                        </Label>
+                        <Input
+                          disabled
+                          value={vendor.email}
+                          placeholder="Email"
+                          className="flex-1"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label
+                          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                            index === 1 ? "hidden" : "visible"
+                          }`}
+                        >
+                          Phone
+                        </Label>
+                        <Input
+                          disabled
+                          value={vendor.mobile}
+                          placeholder="Phone"
+                          className="flex-1"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label
+                          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                            index === 1 ? "hidden" : "visible"
+                          }`}
+                        >
+                          GSTIN
+                        </Label>
+                        <Input
+                          disabled
+                          value={vendor.gstin}
+                          placeholder="GSTIN"
+                          className="flex-1"
+                        />
+                        {/* <Input
+                          type="number"
+                          value={vendor.gstin}
+                          placeholder="GSTIN"
+                          className="flex-1"
+                        /> */}
+                      </div>
+                      <div className="flex flex-col">
+                        <Label
+                          className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                            index === 1 ? "hidden" : "visible"
+                          }`}
+                        ></Label>
+                        <Button
+                          type="button"
+                          onClick={() => removeProduct(index)}
+                          variant="outline"
+                          size="icon"
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4 " />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
               <div className="space-y-2">

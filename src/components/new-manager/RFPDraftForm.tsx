@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Sheet, X } from "lucide-react";
-import { toast } from "react-toastify";
 
 import SheetSide from "./Product";
+import { toast } from "../ui/use-toast";
 
 interface RFPProduct {
   productId: string;
@@ -187,21 +187,24 @@ const RFPForm: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-    if (name === "deliveryLocation") {
-      setAddress(value);
-    } else if (name === "country") {
-      setCountry(value);
-    } else if (name === "state") {
-      setState(value);
-    } else if (name === "city") {
-      setCity(value);
-    } else if (name === "zipCode") {
-      setZipCode(value);
-    }
-  };
+const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const { name, value } = e.target;
+  setFormData((prevData) => ({
+    ...prevData,
+    [name]: value,
+    deliveryLocation: `${value}, ${prevData.deliveryLocationDetails.city}, ${prevData.deliveryLocationDetails.state}, ${prevData.deliveryLocationDetails.country}, ${prevData.deliveryLocationDetails.zipCode}`,
+  }));
+  if (name === "country") {
+    setCountry(value);
+  } else if (name === "state") {
+    setState(value);
+  } else if (name === "city") {
+    setCity(value);
+  } else if (name === "zipCode") {
+    setZipCode(value);
+  }
+};
+
 
   const handleProductChange = (
     index: number,
@@ -306,10 +309,14 @@ const RFPForm: React.FC = () => {
       }
 
       const result = await response.json();
-      toast.success("RFP submitted successfully!");
-    } catch (err) {
-      toast.error("Error submitting RFP. Please try again later.");
-      setError(
+    toast({
+      title: "🎉 Draft Submitted!",
+      description: response.ok,
+    });    } catch (err) {
+    toast({
+      title: "Error",
+      description: "",
+    });      setError(
         err instanceof Error
           ? err.message
           : "Error submitting RFP. Please try again later."

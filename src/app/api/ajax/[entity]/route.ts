@@ -95,7 +95,7 @@ export async function GET(
       orderBy: {
         // Specify the field to sort by and the order
         // For example, sorting by 'name' in ascending order
-        name: "asc", // Change this to the desired field for sorting
+        // name: "asc", // Change this to the desired field for sorting
       },
     });
 
