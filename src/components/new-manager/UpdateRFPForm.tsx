@@ -76,7 +76,7 @@ export default function RFPUpdateForm() {
     name: "quotations",
   });
 
-  const fetchProductDetails = async (productId: number): Promise<Product> => {
+  const fetchProductDetails = async (productId: string): Promise<Product> => {
     const response = await fetch(`/api/product?id=${productId}`);
     if (!response.ok) {
       throw new Error(`Failed to fetch product details for ID ${productId}`);
@@ -103,7 +103,7 @@ export default function RFPUpdateForm() {
         const productsWithDetails = await Promise.all(
           rfpProductsData.map(async (rfpProduct) => {
             const productDetails = await fetchProductDetails(
-              rfpProduct.productId
+              String(rfpProduct.productId )
             );
             return {
               ...productDetails,
@@ -160,6 +160,7 @@ export default function RFPUpdateForm() {
     formData.append(
       "data",
       JSON.stringify({
+        rfpStatus: "PENDING",
         quotations: data.quotations.map((q) => ({
           vendorId: q.vendorId,
           isPrimary: q.isPrimary,
@@ -256,6 +257,12 @@ export default function RFPUpdateForm() {
               </div>
               <div className="space-y-2">
                 <Label>Products</Label>
+                <div className="grid grid-cols-4 gap-2 mb-2">
+                  <Label>Name</Label>
+                  <Label>Model No.</Label>
+                  <Label>Quantity</Label>
+                  <Label>Amount</Label>
+                </div>
                 {field.products.map((product, productIndex) => (
                   <div key={product.id} className="grid grid-cols-4 gap-2">
                     <Input value={product.name} readOnly />
@@ -280,6 +287,7 @@ export default function RFPUpdateForm() {
                   </div>
                 ))}
               </div>
+
               <div>
                 <Label>Total Amount</Label>
                 <Input value={field.totalAmount.toString()} readOnly />

@@ -4,13 +4,20 @@ import { prisma, rfpModel } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
 
+// Helper function to validate UUID
+function isValidUUID(uuid: string) {
+  const uuidRegex =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+  return uuidRegex.test(uuid);
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const id = String(searchParams.get("id") || "");
-    if (!id) {
+    const id = searchParams.get("id");
+    if (!id || !isValidUUID(id)) {
       return NextResponse.json(
-        { error: "ID is required for updating a record" },
+        { error: "Valid UUID is required for updating a record" },
         { status: 400 }
       );
     }
@@ -43,6 +50,10 @@ export async function PUT(request: NextRequest) {
       (quotations || []).map(async (quotation: any) => {
         const { vendorId, products, supportingDocuments, totalAmount } =
           quotation;
+        if (!isValidUUID(vendorId)) {
+          throw new Error(`Invalid vendorId: ${vendorId}`);
+        }
+
         const quotationDirPath = path.join(
           process.cwd(),
           "public",
@@ -72,14 +83,23 @@ export async function PUT(request: NextRequest) {
         );
 
         // Create VendorPricing entries for each product in the quotation
-        const vendorPricingEntries = products.map((product: any) => ({
-          price: parseFloat(product.amount),
-          rfpProduct: {
-            connect: {
-              id: product.id,
+        const vendorPricingEntries = products.map((product: any) => {
+          // Instead of checking for UUID, we'll use the numeric ID
+          if (typeof product.id !== "number" || isNaN(product.id)) {
+            throw new Error(`Invalid product id: ${product.id}`);
+          }
+          return {
+            price: parseFloat(product.amount),
+            rfpProduct: {
+              connect: {
+                rfpId_productId: {
+                  rfpId: id,
+                  productId: product.id,
+                },
+              },
             },
-          },
-        }));
+          };
+        });
 
         return {
           vendorId,
@@ -98,11 +118,11 @@ export async function PUT(request: NextRequest) {
 
     delete data.preferredVendorId;
 
-    console.log(data, typeof id)
+    console.log(data, typeof id);
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
-      where: { id: String(id) },
+      where: { id },
       data: {
         ...data,
         quotations: {
@@ -122,7 +142,7 @@ export async function PUT(request: NextRequest) {
 
     if (preferredQuotation) {
       await prisma.rFP.update({
-        where: { id: String(id) },
+        where: { id },
         data: {
           preferredQuotationId: preferredQuotation.id,
         },
