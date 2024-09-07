@@ -4,6 +4,16 @@ import { toast } from "react-toastify";
 import { MdModeEdit } from "react-icons/md";
 import { IoIosSearch } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
+import { DataTable } from "../Table/data-table";
+import { columns, Vendor } from "../Table/columns";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import {
   validateEmail,
   validateIndianPhoneNumber,
@@ -11,6 +21,7 @@ import {
   validateGstn,
   validatePanCard,
 } from "@/lib/Validation";
+
 
 const states = [
   { value: 'state1', label: 'State 1' },
@@ -192,6 +203,8 @@ const VendorDetails: React.FC = () => {
       pan: vendorData.pan_card,
       verifiedById: "ded94860-af4c-4b45-a151-3d0d9babd7e0"
     };
+    console.log(newVendor);
+    
 
     try {
       const response = await fetch("/api/vendor", {
@@ -199,7 +212,7 @@ const VendorDetails: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newVendor),
+        body: JSON.stringify([newVendor]),
       });
       const result = await response.json();
 
@@ -317,17 +330,23 @@ const VendorDetails: React.FC = () => {
 
   return (
     <div className="p-5">
-      <div className="flex justify-end">
+      <Sheet  >
+  <SheetTrigger className="bg-green-500 py-2 px-4 text-white  rounded ">Add Vendor</SheetTrigger>
+  <SheetContent   >
+    <SheetHeader>
+      {/* <SheetTitle>Are you absolutely sure?</SheetTitle> */}
+      <SheetDescription >
+      {/* <div className="flex justify-end">
       <button
         onClick={() => setShowForm((prev) => !prev)}
         className="bg-green-500   text-white py-2 px-4 rounded mb-5"
       >
         {showForm ? < IoMdClose/> : "Add Vendor"}
       </button>
-      </div>
+      </div> */}
 
-      {showForm && (
-        <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap gap-7">
+      
+        <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap w-full  gap-7">
           <div className="flex flex-col gap-3 w-60 text-base relative">
             <label className="font-bold">GSTN</label>
             <input
@@ -486,7 +505,7 @@ const VendorDetails: React.FC = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="bg-blue-500 text-white mt-8 py-2 px-4 rounded"
+              className="bg-green-500 text-white mt-8 py-2 px-4 rounded"
             >
               {isEditing ? "Update Vendor" : "Add Vendor"}
             </button>
@@ -501,65 +520,14 @@ const VendorDetails: React.FC = () => {
             )}
           </div>
         </form>
-      )}
+      
+      </SheetDescription>
+    </SheetHeader>
+  </SheetContent>
+</Sheet>
+     
 
-      <table className="min-w-full mt-8 border-collapse">
-        <thead>
-          <tr>
-            <th className="border p-2">GSTN</th>
-            <th className="border p-2">Vendor Name</th>
-            <th className="border p-2">Company Name</th>
-            <th className="border p-2">Contact No</th>
-            <th className="border p-2 hidden">State</th>
-            {/* <th className="border p-2">Pin Code</th> */}
-            
-            <th className="border p-2">Email</th>
-            {/* <th className="border p-2">Website</th> */}
-            {/* <th className="border p-2">City</th> */}
-            {/* <th className="border p-2">Address</th> */}
-            {/* <th className="border p-2">PAN Card</th> */}
-            <th className="border p-2">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {vendorArray.length === 0 ? (
-            <tr>
-              <td colSpan={12} className="border p-2 text-center">No data available</td>
-            </tr>
-          ) : (
-            vendorArray.map((vendor, index) => (
-              <tr key={vendor.email}>
-                <td className="border p-2">{vendor.gstin}</td>
-                <td className="border p-2">{vendor.primaryName}</td>
-                <td className="border p-2">{vendor.companyName}</td>
-                <td className="border p-2">{vendor.mobile}</td>
-                <td className="border p-2 hidden">{vendor.state}</td>
-                {/* <td className="border p-2">{vendor.pin_code}</td> */}
-                
-                <td className="border p-2">{vendor.email}</td>
-                {/* <td className="border p-2">{vendor.website}</td> */}
-                {/* <td className="border p-2">{vendor.city}</td> */}
-                {/* <td className="border p-2">{vendor.address}</td> */}
-                {/* <td className="border p-2">{vendor.pan_card}</td> */}
-                <td className="border p-2">
-                  <button
-                    onClick={() => handleEditVendor(index)}
-                    className="  px-2 py-1 rounded mr-2"
-                  >
-                   <MdModeEdit />
-                  </button>
-                  {/* <button
-                    onClick={() => handleRemoveVendor(vendor.email)}
-                    className="bg-red-500 text-white px-2 py-1 rounded"
-                  >
-                    Remove
-                  </button> */}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+<DataTable columns={columns} data={vendorArray} />
     </div>
   );
 };
