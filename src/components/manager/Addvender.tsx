@@ -17,9 +17,9 @@ import {
 import {
   validateEmail,
   validateIndianPhoneNumber,
-  validatePinCode,
+ 
   validateGstn,
-  validatePanCard,
+ 
 } from "@/lib/Validation";
 import { Input } from "../ui/input";
 
@@ -31,7 +31,7 @@ const states = [
 ];
 
 interface VendorData {
-  primaryName: ReactNode;
+  primaryName: string;
   vendor_gstn: string;
   company_name: string;
   contact_no: string;
