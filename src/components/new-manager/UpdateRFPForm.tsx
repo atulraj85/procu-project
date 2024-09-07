@@ -181,18 +181,16 @@ export default function RFPUpdateForm() {
       });
     });
 
-
     try {
+      console.log(formData);
+      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+        method: "PUT",
+        body: formData,
+      });
 
-        console.log(formData);
-      // const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error("Failed to update RFP");
-      // }
+      if (!response.ok) {
+        throw new Error("Failed to update RFP");
+      }
 
       setSuccess(true);
     } catch (err) {
