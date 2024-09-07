@@ -1,27 +1,21 @@
 "use client";
 import { ChangeEvent, FormEvent, useState, useEffect, ReactNode } from "react";
 import { toast } from "react-toastify";
-import { MdModeEdit } from "react-icons/md";
 import { IoIosSearch } from "react-icons/io";
-import { IoMdClose } from "react-icons/io";
 import { DataTable } from "../Table/data-table";
-import { columns, Vendor } from "../Table/columns";
+import { columns } from "../Table/columns";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   validateEmail,
-  validateIndianPhoneNumber,
-  validatePinCode,
   validateGstn,
-  validatePanCard,
 } from "@/lib/Validation";
-import { Input } from "../ui/Input";
+import { Input } from "../ui/input";
 
 const states = [
   { value: 'state1', label: 'State 1' },
@@ -221,18 +215,18 @@ const VendorDetails: React.FC = () => {
       address: "",
       pan_card: "",
     });
-    setErrors({
-      gstn: "",
-      company: "",
-      contact: "",
-      state: "",
-      pin: "",
-      person: "",
-      email: "",
-      website: "",
-      city: "",
-      address: "",
-    });
+    // setErrors({
+    //   gstn: "",
+    //   company: "",
+    //   contact: "",
+    //   state: "",
+    //   pin: "",
+    //   person: "",
+    //   email: "",
+    //   website: "",
+    //   city: "",
+    //   address: "",
+    // });
     setIsEditing(false);
     setEditIndex(null);
     setShowForm(false);
@@ -267,18 +261,18 @@ const VendorDetails: React.FC = () => {
       address: "",
       pan_card: "",
     });
-    setErrors({
-      gstn: "",
-      company: "",
-      contact: "",
-      state: "",
-      pin: "",
-      person: "",
-      email: "",
-      website: "",
-      city: "",
-      address: "",
-    });
+    // setErrors({
+    //   gstn: "",
+    //   company: "",
+    //   contact: "",
+    //   state: "",
+    //   pin: "",
+    //   person: "",
+    //   email: "",
+    //   website: "",
+    //   city: "",
+    //   address: "",
+    // });
     setShowForm(false);
   };
 
