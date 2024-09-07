@@ -21,6 +21,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
+import RFPUpdateForm from "../new-manager/UpdateRFPForm";
 interface TableRow {
     rfpId: string;
     requirementType: string;
@@ -39,42 +40,110 @@ export const columns1: ColumnDef<TableRow>[] = [
     { header: "Delivery By Date", accessorKey: "deliveryByDate" },
     { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
     { header: "RFP Status", accessorKey: "rfpStatus" },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const payment = row.original
+   
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+             
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Show </DropdownMenuItem>
+             
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
   ];
 
+  // export const columns = [
+  //   {
+  //     Header: 'ID',
+  //     accessor: 'id',
+  //   },
+  //   {
+  //     Header: 'Customer Code',
+  //     accessor: 'customerCode',
+  //   },
+  //   {
+  //     Header: 'Primary Name',
+  //     accessor: 'primaryName',
+  //   },
+  //   {
+  //     Header: 'Company Name',
+  //     accessor: 'companyName',
+  //   },
+  //   {
+  //     Header: 'Contact Display Name',
+  //     accessor: 'contactDisplayName',
+  //   },
+  //   {
+  //     Header: 'Email',
+  //     accessor: 'email',
+  //   },
+  //   {
+  //     Header: 'Work Phone',
+  //     accessor: 'workPhone',
+  //   },
+  //   {
+  //     Header: 'Mobile',
+  //     accessor: 'mobile',
+  //   },
+  //   {
+  //     Header: 'Website',
+  //     accessor: 'website',
+  //   },
+  //   {
+  //     Header: 'GSTIN',
+  //     accessor: 'gstin',
+  //   },
+  //   {
+  //     Header: 'MSME No',
+  //     accessor: 'msmeNo',
+  //   },
+  //   {
+  //     Header: 'Address',
+  //     accessor: 'address',
+  //   },
+  //   {
+  //     Header: 'State',
+  //     accessor: 'customerState',
+  //   },
+  //   {
+  //     Header: 'City',
+  //     accessor: 'customerCity',
+  //   },
+  //   {
+  //     Header: 'Country',
+  //     accessor: 'country',
+  //   },
+  //   {
+  //     Header: 'Zip',
+  //     accessor: 'zip',
+  //   },
+  //   {
+  //     Header: 'PAN',
+  //     accessor: 'pan',
+  //   },
+  // ];
+
 export const columns: ColumnDef<Vendor>[] = [
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const payment = row.original
- 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(Vendor.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-  {
-    accessorKey: "gstn",
-    header: "GSTN",
-  },
-  {
+  
+  // {
+  //   accessorKey: "gstn",
+  //   header: "GSTN",
+  // },
+   {
     accessorKey: "primaryName",
     // header: "Vendor Name",
     header: ({ column }) => {
@@ -89,18 +158,18 @@ export const columns: ColumnDef<Vendor>[] = [
         )
       },
   },
-  {
-    accessorKey: "companyname",
-    header: "Company Name",
-  },
+  // {
+  //   accessorKey: "companyname",
+  //   header: "Company Name",
+  // },
   {
     accessorKey: "mobile",
     header: "Contact No",
   },
-  {
-    accessorKey: "state",
-    header: "State",
-  },
+  // {
+  //   accessorKey: "state",
+  //   header: "State",
+  // },
   {
     accessorKey: "email",
     // header: "Email",
@@ -116,5 +185,7 @@ export const columns: ColumnDef<Vendor>[] = [
         )
       },
   },
+  
 ];
+
 

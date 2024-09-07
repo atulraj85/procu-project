@@ -17,10 +17,11 @@ import {
 import {
   validateEmail,
   validateIndianPhoneNumber,
-  validatePinCode,
+ 
   validateGstn,
-  validatePanCard,
+ 
 } from "@/lib/Validation";
+import { Input } from "../ui/input";
 
 
 const states = [
@@ -30,7 +31,7 @@ const states = [
 ];
 
 interface VendorData {
-  primaryName: ReactNode;
+  primaryName: string;
   vendor_gstn: string;
   company_name: string;
   contact_no: string;
@@ -139,6 +140,7 @@ const VendorDetails: React.FC = () => {
     setErrors(newErrors);
     return isValid;
   };
+  const USER_ID = localStorage.getItem("USER_ID");
 
   const handleChangeVendorDetails = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -201,7 +203,7 @@ const VendorDetails: React.FC = () => {
       customerCity: vendorData.city,
       country: "India",
       pan: vendorData.pan_card,
-      verifiedById: "ded94860-af4c-4b45-a151-3d0d9babd7e0"
+      verifiedById: USER_ID,
     };
     console.log(newVendor);
     
@@ -331,7 +333,7 @@ const VendorDetails: React.FC = () => {
   return (
     <div className="p-5">
       <Sheet  >
-  <SheetTrigger className="bg-green-500 py-2 px-4 text-white  rounded ">Add Vendor</SheetTrigger>
+  <SheetTrigger className="bg-primary py-2 px-4 text-white  rounded ">Add Vendor</SheetTrigger>
   <SheetContent   >
     <SheetHeader>
       {/* <SheetTitle>Are you absolutely sure?</SheetTitle> */}
@@ -349,13 +351,13 @@ const VendorDetails: React.FC = () => {
         <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap w-full  gap-7">
           <div className="flex flex-col gap-3 w-60 text-base relative">
             <label className="font-bold">GSTN</label>
-            <input
+            <Input
               type="text"
               name="vendor_gstn"
               value={vendorData.vendor_gstn}
               onChange={handleChangeVendorDetails}
               placeholder="GSTN"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             <button
               type="button"
@@ -369,26 +371,26 @@ const VendorDetails: React.FC = () => {
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Company Name</label>
-            <input
+            <Input
               type="text"
               name="company_name"
               value={vendorData.company_name}
               onChange={handleChangeVendorDetails}
               placeholder="Company Name"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.company && <p className="text-red-500">{errors.company}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Contact No</label>
-            <input
+            <Input
               type="text"
               name="contact_no"
               value={vendorData.contact_no}
               onChange={handleChangeVendorDetails}
               placeholder="Contact No"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.contact && <p className="text-red-500">{errors.contact}</p>}
           </div>
@@ -399,7 +401,7 @@ const VendorDetails: React.FC = () => {
               name="state"
               value={vendorData.state}
               onChange={handleChangeVendorDetails}
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             >
               <option value="">Select State</option>
               {states.map((state) => (
@@ -413,91 +415,91 @@ const VendorDetails: React.FC = () => {
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Pin Code</label>
-            <input
+            <Input
               type="text"
               name="pin_code"
               value={vendorData.pin_code}
               onChange={handleChangeVendorDetails}
               placeholder="Pin Code"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.pin && <p className="text-red-500">{errors.pin}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Person Name</label>
-            <input
+            <Input
               type="text"
               name="person_name"
               value={vendorData.person_name}
               onChange={handleChangeVendorDetails}
               placeholder="Person Name"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.person && <p className="text-red-500">{errors.person}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Email</label>
-            <input
+            <Input
               type="text"
               name="email"
               value={vendorData.email}
               onChange={handleChangeVendorDetails}
               placeholder="Email"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.email && <p className="text-red-500">{errors.email}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Website</label>
-            <input
+            <Input
               type="text"
               name="website"
               value={vendorData.website}
               onChange={handleChangeVendorDetails}
               placeholder="Website"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.website && <p className="text-red-500">{errors.website}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">City</label>
-            <input
+            <Input
               type="text"
               name="city"
               value={vendorData.city}
               onChange={handleChangeVendorDetails}
               placeholder="City"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.city && <p className="text-red-500">{errors.city}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Address</label>
-            <input
+            <Input
               type="text"
               name="address"
               value={vendorData.address}
               onChange={handleChangeVendorDetails}
               placeholder="Address"
-              className="p-2  border-b-2 border-black "
+              className="p-2    "
             />
             {errors.address && <p className="text-red-500">{errors.address}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">PAN Card</label>
-            <input
+            <Input
               type="text"
               name="pan_card"
               value={vendorData.pan_card}
               onChange={handleChangeVendorDetails}
               placeholder="PAN Card"
-              className="p-2  border-b-2 border-black"
+              className="p-2   "
             />
             {errors.pan && <p className="text-red-500">{errors.pan}</p>}
           </div>
@@ -505,7 +507,7 @@ const VendorDetails: React.FC = () => {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="bg-green-500 text-white mt-8 py-2 px-4 rounded"
+              className="bg-primary text-white mt-8 py-2 px-4 rounded"
             >
               {isEditing ? "Update Vendor" : "Add Vendor"}
             </button>
