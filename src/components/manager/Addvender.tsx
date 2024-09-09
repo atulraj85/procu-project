@@ -44,7 +44,7 @@ interface VendorData {
 
 const VendorDetails: React.FC = () => {
   const [vendorArray, setVendorArray] = useState<VendorData[]>([]);
-  console.log(vendorArray);
+  console.log("vendor1",vendorArray);
   
   const [vendorData, setVendorData] = useState<VendorData>({
     vendor_gstn: "",
@@ -145,20 +145,26 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
+
     try {
       const response = await fetch(`/api/vendor/gst/${gstn}`);
       const result = await response.json();
-
+       console.log("result 1",result);
+       
       if (result.flag) {
         const data = result.data;
+        console.log("hi");
+        let pan=data.gstin;
+        
         setVendorData({
           ...vendorData,
-          company_name: data.companyName || "",
-          state: data.customerState || "",
-          pin_code: data.zip || "",
-          address: data.address || "",
-          city: data.customerCity || "",
-          pan_card: data.pan || "",
+          company_name: data.lgnm || "",
+          state: data.pradr.addr.stcd || "",
+          pin_code: data.pradr.addr.pncd || "",
+          address: data.pradr.adr || "",
+          city: data.pradr.addr.city || "",
+           pan_card: (data.gstin).slice(2, 12) || "",
+
         });
       } else {
         toast.error(result.message || "Failed to fetch vendor details.");
@@ -170,6 +176,8 @@ const VendorDetails: React.FC = () => {
 
   const handleSearchGSTN = () => {
     if (validateGstn(vendorData.vendor_gstn).isValid) {
+      console.log("data",vendorData.vendor_gstn);
+      
       fetchVendorDetails(vendorData.vendor_gstn);
     } else {
       toast.error("Invalid GSTN.");
@@ -263,6 +271,8 @@ const VendorDetails: React.FC = () => {
   };
 
   const handleEditVendor = (index: number) => {
+    console.log("ven",vendorArray[index]);
+    
     setVendorData(vendorArray[index]);
     setIsEditing(true);
     setEditIndex(index);
@@ -356,6 +366,7 @@ const VendorDetails: React.FC = () => {
               placeholder="GSTN"
               className="p-2   "
             />
+            
             <button
               type="button"
               onClick={handleSearchGSTN}
@@ -372,11 +383,63 @@ const VendorDetails: React.FC = () => {
               type="text"
               name="company_name"
               value={vendorData.company_name}
-              onChange={handleChangeVendorDetails}
+              // onChange={handleChangeVendorDetails}
               placeholder="Company Name"
               className="p-2   "
             />
+        
             {errors.company && <p className="text-red-500">{errors.company}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">PAN Card</label>
+            <Input
+              type="text"
+              name="pan_card"
+              value={vendorData.pan_card}
+              // onChange={handleChangeVendorDetails}
+              placeholder="PAN Card"
+              className="p-2   "
+            />
+            {errors.pan && <p className="text-red-500">{errors.pan}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Address</label>
+            <Input
+              type="text"
+              name="address"
+              value={vendorData.address}
+              // onChange={handleChangeVendorDetails}
+              placeholder="Address"
+              className="p-2    "
+            />
+            {errors.address && <p className="text-red-500">{errors.address}</p>}
+          </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Pin Code</label>
+            <Input
+              type="text"
+              name="pin_code"
+              value={vendorData.pin_code}
+              // onChange={handleChangeVendorDetails}
+              placeholder="Pin Code"
+              className="p-2   "
+            />
+            {errors.pin && <p className="text-red-500">{errors.pin}</p>}
+          </div>
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Person Name</label>
+            <Input
+              type="text"
+              name="person_name"
+              value={vendorData.person_name}
+              onChange={handleChangeVendorDetails}
+              placeholder="Person Name"
+              className="p-2   "
+            />
+            {errors.person && <p className="text-red-500">{errors.person}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
@@ -390,50 +453,6 @@ const VendorDetails: React.FC = () => {
               className="p-2   "
             />
             {errors.contact && <p className="text-red-500">{errors.contact}</p>}
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">State</label>
-            <select
-              name="state"
-              value={vendorData.state}
-              onChange={handleChangeVendorDetails}
-              className="p-2   "
-            >
-              <option value="">Select State</option>
-              {states.map((state) => (
-                <option key={state.value} value={state.value}>
-                  {state.label}
-                </option>
-              ))}
-            </select>
-            {errors.state && <p className="text-red-500">{errors.state}</p>}
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Pin Code</label>
-            <Input
-              type="text"
-              name="pin_code"
-              value={vendorData.pin_code}
-              onChange={handleChangeVendorDetails}
-              placeholder="Pin Code"
-              className="p-2   "
-            />
-            {errors.pin && <p className="text-red-500">{errors.pin}</p>}
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Person Name</label>
-            <Input
-              type="text"
-              name="person_name"
-              value={vendorData.person_name}
-              onChange={handleChangeVendorDetails}
-              placeholder="Person Name"
-              className="p-2   "
-            />
-            {errors.person && <p className="text-red-500">{errors.person}</p>}
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
@@ -463,6 +482,32 @@ const VendorDetails: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">State</label>
+            <select
+              name="state"
+              value={vendorData.state}
+              onChange={handleChangeVendorDetails}
+              className="p-2   "
+            >
+              <option value="">Select State</option>
+              {states.map((state) => (
+                <option key={state.value} value={state.value}>
+                  {state.label}
+                </option>
+              ))}
+            </select>
+            {errors.state && <p className="text-red-500">{errors.state}</p>}
+          </div>
+
+          
+
+          
+
+          
+
+          
+
+          <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">City</label>
             <Input
               type="text"
@@ -475,31 +520,9 @@ const VendorDetails: React.FC = () => {
             {errors.city && <p className="text-red-500">{errors.city}</p>}
           </div>
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Address</label>
-            <Input
-              type="text"
-              name="address"
-              value={vendorData.address}
-              onChange={handleChangeVendorDetails}
-              placeholder="Address"
-              className="p-2    "
-            />
-            {errors.address && <p className="text-red-500">{errors.address}</p>}
-          </div>
+          
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">PAN Card</label>
-            <Input
-              type="text"
-              name="pan_card"
-              value={vendorData.pan_card}
-              onChange={handleChangeVendorDetails}
-              placeholder="PAN Card"
-              className="p-2   "
-            />
-            {errors.pan && <p className="text-red-500">{errors.pan}</p>}
-          </div>
+          
 
           <div className="flex gap-4">
             <button

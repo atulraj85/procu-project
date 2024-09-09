@@ -23,6 +23,7 @@ import {
   } from "@/components/ui/dropdown-menu"
 import RFPUpdateForm from "../new-manager/UpdateRFPForm";
 import Link from "next/link";
+import { MdEdit } from "react-icons/md";
 interface TableRow {
     rfpId: string;
     requirementType: string;
@@ -45,6 +46,8 @@ export const columns1: ColumnDef<TableRow>[] = [
       id: "actions",
       cell: ({ row }) => {
         const columns1 = row.original
+        console.log(columns1);
+        
    
         return (
           <DropdownMenu>
@@ -58,8 +61,10 @@ export const columns1: ColumnDef<TableRow>[] = [
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
              
               <DropdownMenuSeparator />
-              <DropdownMenuItem> <Link href="/dashboard/add">Create Quotation</Link></DropdownMenuItem>
-             
+              <Link href="/dashboard/add"> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
+              <Link href="/dashboard/add"><DropdownMenuItem> View</DropdownMenuItem></Link>
+              <Link href="/dashboard/add" ><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+              <DropdownMenuItem> {columns1.rfpId} </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )
@@ -67,7 +72,7 @@ export const columns1: ColumnDef<TableRow>[] = [
     },
   ];
 
-  // export const columns = [
+  
   //   {
   //     Header: 'ID',
   //     accessor: 'id',
@@ -140,10 +145,10 @@ export const columns1: ColumnDef<TableRow>[] = [
 
 export const columns: ColumnDef<Vendor>[] = [
   
-  // {
-  //   accessorKey: "gstn",
-  //   header: "GSTN",
-  // },
+  {
+    accessorKey: "gstin",
+    header: "GSTN",
+  },
    {
     accessorKey: "primaryName",
     // header: "Vendor Name",
@@ -159,14 +164,14 @@ export const columns: ColumnDef<Vendor>[] = [
         )
       },
   },
-  // {
-  //   accessorKey: "companyname",
-  //   header: "Company Name",
-  // },
   {
-    accessorKey: "mobile",
-    header: "Contact No",
+    accessorKey: "companyName",
+    header: "Company Name",
   },
+  // {
+  //   accessorKey: "mobile",
+  //   header: "Contact No",
+  // },
   // {
   //   accessorKey: "state",
   //   header: "State",
@@ -185,6 +190,31 @@ export const columns: ColumnDef<Vendor>[] = [
           </Button>
         )
       },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const columns1 = row.original
+ 
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+           
+            <DropdownMenuSeparator />
+            {/* <Link href="/dashboard/add"> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link> */}
+            <Link href="/dashboard/add"><DropdownMenuItem> View</DropdownMenuItem></Link>
+            <Link href="/dashboard/add" ><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
   },
   
 ];

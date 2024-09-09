@@ -61,7 +61,7 @@ const RFPForm: React.FC = () => {
     requirementType: "",
     dateOfOrdering: getTodayDate(),
     deliveryLocation: "",
-    deliveryByDate: "",
+    deliveryByDate: "27/07/2024",
     lastDateToRespond: "hii",
     rfpStatus: "DRAFT",
     rfpProducts: [],
@@ -311,10 +311,10 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         description: response.ok,
       });
     } catch (err) {
-      toast({
-        title: "Error",
-        description: "",
-      });
+      // toast({
+      //   title: "Error",
+      //   description: "",
+    //   });
       setError(
         err instanceof Error
           ? err.message
