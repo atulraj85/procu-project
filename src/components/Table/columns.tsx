@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
 import RFPUpdateForm from "../new-manager/UpdateRFPForm";
+import Link from "next/link";
 interface TableRow {
     rfpId: string;
     requirementType: string;
@@ -38,12 +39,12 @@ export const columns1: ColumnDef<TableRow>[] = [
     { header: "Date of Ordering", accessorKey: "dateOfOrdering" },
     { header: "Delivery Location", accessorKey: "deliveryLocation" },
     { header: "Delivery By Date", accessorKey: "deliveryByDate" },
-    { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
+    // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
     { header: "RFP Status", accessorKey: "rfpStatus" },
     {
       id: "actions",
       cell: ({ row }) => {
-        const payment = row.original
+        const columns1 = row.original
    
         return (
           <DropdownMenu>
@@ -57,7 +58,7 @@ export const columns1: ColumnDef<TableRow>[] = [
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
              
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Show </DropdownMenuItem>
+              <DropdownMenuItem> <Link href="/dashboard/add">Create Quotation</Link></DropdownMenuItem>
              
             </DropdownMenuContent>
           </DropdownMenu>

@@ -98,31 +98,27 @@ const RFPForm: React.FC = () => {
   console.log(state);
   console.log(address);
   useEffect(() => {
-    const fetchVendorData = async () => {
+    const fetchCompanyData = async () => {
       try {
-        const response = await fetch("/api/company"); // Replace with your API endpoint
+        const response = await fetch('/api/company'); // Replace with your actual API endpoint
         const data = await response.json();
-
-        // Assuming you want to populate the first vendor's details
+        
+        // Assuming the API returns an array and you want the first item
         if (data.length > 0) {
-          const vendor = data[0]; // Get the first vendor
-
-          // Parse the address JSON string
-          const addressData = JSON.parse(vendor.address);
-
-          setAddress(addressData.street || "");
-          setCountry(addressData.country || "");
-          setState(addressData.state || "");
-          setCity(addressData.city || "");
-          setZipCode(addressData.zip || ""); // Handle null zip code
-          // You can also set additional instructions if needed
+          const company = data[0];
+          setAddress(company.address.street);
+          setCountry(company.address.country);
+          setState(company.address.state);
+          setCity(company.address.city);
+          setZipCode(company.address.zip);
+          // You can set additional instructions if needed
         }
       } catch (error) {
-        console.error("Error fetching vendor data:", error);
+        console.error('Error fetching company data:', error);
       }
     };
 
-    fetchVendorData();
+    fetchCompanyData();
   }, []);
 
   useEffect(() => {
@@ -278,10 +274,11 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    const deliveryLocation = `${city}, ${state}, ${country}, ${zipCode}`;
+    // Create updatedFormData without including the address
     const updatedFormData = {
       ...formData,
-      deliveryLocation: address,
+      deliveryLocation,
       deliveryLocationDetails: {
         country,
         state,
@@ -289,12 +286,12 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         zipCode,
       },
     };
-
+  
     console.log("form data", updatedFormData);
-
+  
     setLoading(true); // Set loading state to true
     setError(null); // Reset error state
-
+  
     try {
       const response = await fetch("/api/rfp", {
         method: "POST",
@@ -303,20 +300,22 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         },
         body: JSON.stringify(updatedFormData),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to submit RFP");
       }
-
+  
       const result = await response.json();
-    toast({
-      title: "🎉 Draft Submitted!",
-      description: response.ok,
-    });    } catch (err) {
-    toast({
-      title: "Error",
-      description: "",
-    });      setError(
+      toast({
+        title: "🎉 Draft Submitted!",
+        description: response.ok,
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "",
+      });
+      setError(
         err instanceof Error
           ? err.message
           : "Error submitting RFP. Please try again later."
@@ -325,6 +324,7 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
       setLoading(false); // Reset loading state
     }
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -641,67 +641,67 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader>
-          <CardTitle>Delivery Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <CardHeader>
+        <CardTitle>Delivery Details</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="address">Address</Label>
+          <Input
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="country">Country</Label>
             <Input
-              id="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              id="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Input
-                id="country"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zipCode">Zip Code</Label>
-              <Input
-                id="zipCode"
-                value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-              />
-            </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="additionalInstructions">
-              Additional Delivery Instructions
-            </Label>
-            <Textarea
-              id="additionalInstructions"
-              value={additionalInstructions}
-              onChange={(e) => setAdditionalInstructions(e.target.value)}
-              rows={4}
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="zipCode">Zip Code</Label>
+            <Input
+              id="zipCode"
+              value={zipCode}
+              onChange={(e) => setZipCode(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="additionalInstructions">
+            Additional Delivery Instructions
+          </Label>
+          <Textarea
+            id="additionalInstructions"
+            value={additionalInstructions}
+            onChange={(e) => setAdditionalInstructions(e.target.value)}
+            rows={4}
+          />
+        </div>
+      </CardContent>
+    </Card>
       <div className="flex justify-end mr-10">
         <Button
           type="submit"
