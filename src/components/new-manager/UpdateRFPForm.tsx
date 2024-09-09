@@ -94,8 +94,15 @@ export default function RFPUpdateForm() {
   const [searchVendorTerm, setSearchVendorTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
   const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
+  const [disableVendorSearch, setDisableVendorSearch] = useState(false);
 
   const { fetchData } = useApi();
+
+  useEffect(() => {
+    setRfpId("07448c47-cc99-4eff-b1b6-4cde3c21d162");
+
+    fetchRFPProducts();
+  }, [rfpId]);
 
   const {
     control,
@@ -165,6 +172,7 @@ export default function RFPUpdateForm() {
 
       if (!vendorExists) {
         setApprovedVendors((prevVendors) => [...prevVendors, vendor]);
+        setDisableVendorSearch(true);
         setSearchVendorTerm("");
         setFetchedVendors([]);
       } else {
@@ -175,6 +183,7 @@ export default function RFPUpdateForm() {
   );
 
   const removeProduct = useCallback((index: number) => {
+    setDisableVendorSearch(false);
     setApprovedVendors((prevVendors) =>
       prevVendors.filter((_, i) => i !== index)
     );
@@ -322,16 +331,14 @@ export default function RFPUpdateForm() {
     },
     [rfpId]
   );
-
-  // Memoize the form rendering
   const renderForm = useMemo(
     () => (
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Update RFP</CardTitle>
+            <CardTitle>Update RFP : {"2024-08-09-0002"}</CardTitle>
             <div className="flex items-center space-x-2">
-              <div className="flex-grow">
+              {/* <div className="flex-grow">
                 <Label htmlFor="rfpId">RFP ID</Label>
                 <Input id="rfpId" value={rfpId} onChange={handleRFPIdChange} />
               </div>
@@ -346,7 +353,7 @@ export default function RFPUpdateForm() {
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-              </Button>
+              </Button> */}
             </div>
           </CardHeader>
           <CardContent>
@@ -355,315 +362,438 @@ export default function RFPUpdateForm() {
                 <div className="space-y-4 mb-6">
                   <h3 className="text-lg font-semibold">Primary Quotation</h3>
                   <div key={fields[0].id} className="grid gap-4">
-                    {/* Vendor Details */}
-                    <div>
-                      <Label htmlFor={`quotations.0.vendorId`}>
-                        Vendor Details
-                      </Label>
-                      {errors.quotations?.[0]?.vendorId && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.quotations[0]?.vendorId?.message}
-                        </p>
-                      )}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          {" "}
+                          Vendor Details
+                        </CardTitle>
+                      </CardHeader>
 
-                      <Input
-                        type="text"
-                        placeholder="Search Vendors..."
-                        value={searchVendorTerm}
-                        onChange={(e) => handleSearchChange(e, "vendors")}
-                        className="flex-1 my-2 mb-10"
-                      />
+                      <CardContent>
+                        <div>
+                          {errors.quotations?.[0]?.vendorId && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.quotations[0]?.vendorId?.message}
+                            </p>
+                          )}
 
-                      {fetchedVendors.length > 0 && (
-                        <div className="mt-2">
-                          <h3 className="font-semibold">Fetched Products:</h3>
-                          <ul>
-                            {fetchedVendors.map((vendor) => (
-                              <li
-                                key={vendor.id}
-                                className="py-1 cursor-pointer hover:bg-gray-200"
-                                onClick={() => {
-                                  if (vendor) {
-                                    addProduct(vendor);
-                                  } else {
-                                    console.error("No vendor selected");
-                                  }
-                                }}
-                              >
-                                {vendor.primaryName} | {vendor.email}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                          <Input
+                            disabled={disableVendorSearch}
+                            type="text"
+                            placeholder="Search Vendors..."
+                            value={searchVendorTerm}
+                            onChange={(e) => handleSearchChange(e, "vendors")}
+                            className="my-2 grid-cols-4 mb-10 w-1/3"
+                          />
 
-                      {approvedVendors.map((vendor, index) => (
-                        <div
-                          key={vendor.id}
-                          className="flex items-center space-x-2 mb-2"
-                        >
-                          <div className="flex flex-col">
-                            <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                              Vendor Name
-                            </Label>
-                            <Input
-                              disabled
-                              value={vendor.primaryName}
-                              placeholder="Name"
-                              className="flex-1"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                              Email
-                            </Label>
-                            <Input
-                              disabled
-                              value={vendor.email}
-                              placeholder="Email"
-                              className="flex-1"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                              Phone
-                            </Label>
-                            <Input
-                              disabled
-                              value={vendor.mobile}
-                              placeholder="Phone"
-                              className="flex-1"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                              GSTIN
-                            </Label>
-                            <Input
-                              disabled
-                              value={vendor.gstin}
-                              placeholder="GSTIN"
-                              className="flex-1"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
-                            <Button
-                              type="button"
-                              onClick={() => removeProduct(index)}
-                              variant="outline"
-                              size="icon"
-                              className="text-red-500"
+                          {fetchedVendors.length > 0 && (
+                            <div className="mt-2">
+                              <h3 className="font-semibold">
+                                Fetched Vendors:
+                              </h3>
+                              <ul>
+                                {fetchedVendors.map((vendor) => (
+                                  <li
+                                    key={vendor.id}
+                                    className="py-1 cursor-pointer hover:bg-gray-200"
+                                    onClick={() => {
+                                      if (vendor) {
+                                        addProduct(vendor);
+                                      } else {
+                                        console.error("No vendor selected");
+                                      }
+                                    }}
+                                  >
+                                    {vendor.primaryName} | {vendor.email}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {approvedVendors.map((vendor, index) => (
+                            <div
+                              key={vendor.id}
+                              className="flex items-center space-x-2 mb-2"
                             >
-                              <X className="h-4 w-4 " />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Products */}
-                    <div className="space-y-2">
-                      <Label>Products</Label>
-                      <div className="grid grid-cols-7 gap-2 mb-2">
-                        <Label>Name</Label>
-                        <Label>Model No.</Label>
-                        <Label>Quantity</Label>
-                        <Label>Unit Price</Label>
-                        <Label>GST</Label>
-                        <Label>Total (Without GST)</Label>
-                        <Label>Total (With GST)</Label>
-                      </div>
-                      {fields[0].products.map((product, productIndex) => (
-                        <div
-                          key={product.id}
-                          className="grid grid-cols-7 gap-2"
-                        >
-                          <Input value={product.name} readOnly />
-                          <Input value={product.modelNo} readOnly />
-                          <Input value={product.quantity.toString()} readOnly />
-                          <Controller
-                            name={`quotations.0.products.${productIndex}.unitPrice`}
-                            control={control}
-                            render={({ field }) => (
-                              <Input
-                                type="number"
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(parseFloat(e.target.value));
-                                  calculateProductTotals(0, productIndex);
-                                }}
-                              />
-                            )}
-                          />
-                          <Controller
-                            name={`quotations.0.products.${productIndex}.gst`}
-                            control={control}
-                            render={({ field }) => (
-                              <Select
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  calculateProductTotals(0, productIndex);
-                                }}
-                                value={field.value}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select GST" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {[
-                                    "NILL",
-                                    "0",
-                                    "3",
-                                    "5",
-                                    "12",
-                                    "18",
-                                    "28",
-                                  ].map((gst) => (
-                                    <SelectItem key={gst} value={gst}>
-                                      {gst}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                          <Input
-                            value={product.totalPriceWithoutGST?.toFixed(2)}
-                            readOnly
-                          />
-                          <Input
-                            value={product.totalPriceWithGST?.toFixed(2)}
-                            readOnly
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Other Charges */}
-                    <div className="space-y-2">
-                      <Label>Other Charges</Label>
-                      <div className="grid grid-cols-3 gap-2 mb-2">
-                        <Label>Name</Label>
-                        <Label>GST</Label>
-                        <Label>Unit Price</Label>
-                      </div>
-                      <Controller
-                        name="quotations.0.otherCharges"
-                        control={control}
-                        render={({ field }) => (
-                          <>
-                            {field.value.map((charge, chargeIndex) => (
-                              <div
-                                key={chargeIndex}
-                                className="grid grid-cols-3 gap-2"
-                              >
+                              <div className="flex flex-col">
+                                <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                                  Vendor Name
+                                </Label>
                                 <Input
-                                  value={charge.name}
-                                  onChange={(e) => {
-                                    const newCharges = [...field.value];
-                                    newCharges[chargeIndex].name =
-                                      e.target.value;
-                                    field.onChange(newCharges);
-                                  }}
-                                />
-                                <Select
-                                  onValueChange={(value) => {
-                                    const newCharges = [...field.value];
-                                    newCharges[chargeIndex].gst = value;
-                                    field.onChange(newCharges);
-                                    calculateTotalAmount(0);
-                                  }}
-                                  value={charge.gst}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select GST" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {[
-                                      "NILL",
-                                      "0",
-                                      "3",
-                                      "5",
-                                      "12",
-                                      "18",
-                                      "28",
-                                    ].map((gst) => (
-                                      <SelectItem key={gst} value={gst}>
-                                        {gst}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <Input
-                                  type="number"
-                                  value={charge.unitPrice}
-                                  onChange={(e) => {
-                                    const newCharges = [...field.value];
-                                    newCharges[chargeIndex].unitPrice =
-                                      parseFloat(e.target.value);
-                                    field.onChange(newCharges);
-                                    calculateTotalAmount(0);
-                                  }}
+                                  disabled
+                                  value={vendor.primaryName}
+                                  placeholder="Name"
+                                  className="flex-1"
                                 />
                               </div>
-                            ))}
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                field.onChange([
-                                  ...field.value,
-                                  { name: "", gst: "NILL", unitPrice: 0 },
-                                ]);
-                              }}
-                            >
-                              Add Other Charge
-                            </Button>
-                          </>
-                        )}
-                      />
-                    </div>
-
-                    {/* Total Amount */}
-                    {/* <div>
-                      <Label>Total Amount</Label>
-                      <Input
-                        value={fields[0].totalAmount.toFixed(2)}
-                        readOnly
-                      />
-                    </div> */}
-
-                    <div className="space-y-2">
-                      <Label>Supporting Documents</Label>
-                      {(["quotation", "bill", "productCatalog"] as const).map(
-                        (docType) => (
-                          <div key={docType}>
-                            <Label
-                              htmlFor={`quotations.0.supportingDocuments.${docType}`}
-                            >
-                              {docType.charAt(0).toUpperCase() +
-                                docType.slice(1)}
-                            </Label>
-                            <Controller
-                              name={`quotations.0.supportingDocuments.${docType}`}
-                              control={control}
-                              defaultValue={null}
-                              render={({
-                                field: { onChange, value, ...rest },
-                              }) => (
+                              <div className="flex flex-col">
+                                <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                                  Email
+                                </Label>
                                 <Input
-                                  type="file"
-                                  onChange={(
-                                    e: ChangeEvent<HTMLInputElement>
-                                  ) => onChange(e.target.files?.[0] || null)}
-                                  {...rest}
+                                  disabled
+                                  value={vendor.email}
+                                  placeholder="Email"
+                                  className="flex-1"
                                 />
-                              )}
+                              </div>
+                              <div className="flex flex-col">
+                                <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                                  Phone
+                                </Label>
+                                <Input
+                                  disabled
+                                  value={vendor.mobile}
+                                  placeholder="Phone"
+                                  className="flex-1"
+                                />
+                              </div>
+                              <div className="flex flex-col">
+                                <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                                  GSTIN
+                                </Label>
+                                <Input
+                                  disabled
+                                  value={vendor.gstin}
+                                  placeholder="GSTIN"
+                                  className="flex-1"
+                                />
+                              </div>
+                              <div className="flex flex-col">
+                                <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
+                                <Button
+                                  type="button"
+                                  onClick={() => removeProduct(index)}
+                                  variant="outline"
+                                  size="icon"
+                                  className="text-red-500"
+                                >
+                                  <X className="h-4 w-4 " />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Products */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Products</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-7 gap-2 mb-2">
+                            <Label>Name</Label>
+                            <Label>Model No.</Label>
+                            <Label>Quantity</Label>
+                            <Label>Unit Price</Label>
+                            <Label>GST</Label>
+                            <Label>Total (Without GST)</Label>
+                            <Label>Total (With GST)</Label>
+                          </div>
+                          {fields[0].products.map((product, productIndex) => (
+                            <div
+                              key={product.id}
+                              className="grid grid-cols-7 gap-2"
+                            >
+                              <Input value={product.name} readOnly />
+                              <Input value={product.modelNo} readOnly />
+                              <Input
+                                value={product.quantity.toString()}
+                                readOnly
+                              />
+                              <Controller
+                                name={`quotations.0.products.${productIndex}.unitPrice`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Input
+                                    type="number"
+                                    {...field}
+                                    onChange={(e) => {
+                                      field.onChange(
+                                        parseFloat(e.target.value)
+                                      );
+                                      calculateProductTotals(0, productIndex);
+                                    }}
+                                  />
+                                )}
+                              />
+                              <Controller
+                                name={`quotations.0.products.${productIndex}.gst`}
+                                control={control}
+                                render={({ field }) => (
+                                  <Select
+                                    onValueChange={(value) => {
+                                      field.onChange(value);
+                                      calculateProductTotals(0, productIndex);
+                                    }}
+                                    value={field.value}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select GST" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {[
+                                        "NILL",
+                                        "0",
+                                        "3",
+                                        "5",
+                                        "12",
+                                        "18",
+                                        "28",
+                                      ].map((gst) => (
+                                        <SelectItem key={gst} value={gst}>
+                                          {gst}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
+                              <Input
+                                value={product.totalPriceWithoutGST?.toFixed(2)}
+                                readOnly
+                              />
+                              <Input
+                                value={product.totalPriceWithGST?.toFixed(2)}
+                                readOnly
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Other Charges */}
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Other Charges (If any)
+                        </CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-4 gap-2 mb-2">
+                            <Label>Name</Label>
+                            <Label>GST</Label>
+                            <Label>Unit Price</Label>
+                          </div>
+                          <Controller
+                            name="quotations.0.otherCharges"
+                            control={control}
+                            render={({ field }) => (
+                              <>
+                                {field.value.map((charge, chargeIndex) => (
+                                  <div
+                                    key={chargeIndex}
+                                    className="grid grid-cols-4 gap-2"
+                                  >
+                                    <Input
+                                      value={charge.name}
+                                      onChange={(e) => {
+                                        const newCharges = [...field.value];
+                                        newCharges[chargeIndex].name =
+                                          e.target.value;
+                                        field.onChange(newCharges);
+                                      }}
+                                    />
+                                    <Select
+                                      onValueChange={(value) => {
+                                        const newCharges = [...field.value];
+                                        newCharges[chargeIndex].gst = value;
+                                        field.onChange(newCharges);
+                                        calculateTotalAmount(0);
+                                      }}
+                                      value={charge.gst}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select GST" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {[
+                                          "NILL",
+                                          "0",
+                                          "3",
+                                          "5",
+                                          "12",
+                                          "18",
+                                          "28",
+                                        ].map((gst) => (
+                                          <SelectItem key={gst} value={gst}>
+                                            {gst}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <Input
+                                      type="number"
+                                      value={charge.unitPrice}
+                                      onChange={(e) => {
+                                        const newCharges = [...field.value];
+                                        newCharges[chargeIndex].unitPrice =
+                                          parseFloat(e.target.value);
+                                        field.onChange(newCharges);
+                                        calculateTotalAmount(0);
+                                      }}
+                                    />
+                                    {/* Remove Button */}
+                                    <Button
+                                      type="button"
+                                      onClick={() => {
+                                        const newCharges = [...field.value];
+                                        newCharges.splice(chargeIndex, 1); // Remove the charge at chargeIndex
+                                        field.onChange(newCharges);
+                                      }}
+                                      variant="outline"
+                                      size="icon"
+                                      className="text-red-500"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  className="bg-primary"
+                                  type="button"
+                                  onClick={() => {
+                                    field.onChange([
+                                      ...field.value,
+                                      { name: "", gst: "NILL", unitPrice: 0 },
+                                    ]);
+                                  }}
+                                >
+                                  Add Other Charge
+                                </Button>
+                              </>
+                            )}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Total Amount */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">Total</CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="flex items-center space-x-4">
+                          {" "}
+                          {/* Added space-x-4 for spacing between items */}
+                          <div>
+                            <Label>Total Taxable Amount</Label>
+                            <Input
+                              value={fields[0].totalAmount.toFixed(2)}
+                              readOnly
                             />
                           </div>
-                        )
-                      )}
-                    </div>
+                          <div>
+                            <Label>Total Amount</Label>
+                            <Input
+                              value={fields[0].totalAmount.toFixed(2)}
+                              readOnly
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Supporting Documents
+                        </CardTitle>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-4 gap-2 mb-2">
+                            <Label>Name</Label>
+                            <Label>File</Label>
+                            <Label>Action</Label>
+                          </div>
+                          <Controller
+                            name="quotations.0.supportingDocuments"
+                            control={control}
+                            render={({ field }) => {
+                              const supportingDocsArray = Object.entries(
+                                field.value
+                              ).map(([key, value]) => ({
+                                name: key as SupportingDocumentKeys, // Assert the key as SupportingDocumentKeys
+                                file: value,
+                              }));
+
+                              return (
+                                <>
+                                  {supportingDocsArray.map((doc, docIndex) => (
+                                    <div
+                                      key={docIndex}
+                                      className="grid grid-cols-4 gap-2"
+                                    >
+                                      <Input
+                                        value={
+                                          doc.name.charAt(0).toUpperCase() +
+                                          doc.name.slice(1)
+                                        } // Display the name
+                                        onChange={(e) => {
+                                          const newDocs = { ...field.value };
+                                          newDocs[doc.name] = e.target.value; // Update the name in the object
+                                          field.onChange(newDocs);
+                                        }}
+                                      />
+                                      <Input
+                                        type="file"
+                                        onChange={(
+                                          e: ChangeEvent<HTMLInputElement>
+                                        ) => {
+                                          const newDocs = { ...field.value };
+                                          newDocs[doc.name] =
+                                            e.target.files?.[0] || null; // Use the key directly
+                                          field.onChange(newDocs);
+                                        }}
+                                      />
+                                      {/* Remove Button */}
+                                      <Button
+                                        type="button"
+                                        onClick={() => {
+                                          const newDocs = { ...field.value };
+                                          delete newDocs[doc.name]; // Remove the document
+                                          field.onChange(newDocs);
+                                        }}
+                                        variant="outline"
+                                        size="icon"
+                                        className="text-red-500"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  <Button
+                                    className="bg-primary"
+                                    type="button"
+                                    onClick={() => {
+                                      const newDocs = { ...field.value };
+                                      newDocs[
+                                        "newDocument" as SupportingDocumentKeys
+                                      ] = null; // Add a new document entry with a null file
+                                      field.onChange(newDocs);
+                                    }}
+                                  >
+                                    Add Supporting Document
+                                  </Button>
+                                </>
+                              );
+                            }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}
