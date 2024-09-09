@@ -274,7 +274,7 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const deliveryLocation = `${city}, ${state}, ${country}, ${zipCode}`;
+    const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
     // Create updatedFormData without including the address
     const updatedFormData = {
       ...formData,
