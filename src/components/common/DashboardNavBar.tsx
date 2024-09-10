@@ -30,7 +30,7 @@ function DashboardNavBar({ loading, userProfile }: IProps) {
   };
 
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-end pt-6 pr-6">
       <Popover>
         <PopoverTrigger>
           <div className="flex gap-4 items-center ">

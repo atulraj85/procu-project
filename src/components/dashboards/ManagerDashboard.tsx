@@ -11,13 +11,15 @@ import RFPUpdateForm from "../new-manager/UpdateRFPForm";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
+  activeComponent: string;
+  setActiveComponent: (value: string) => void;
 }
 
-export default function ManagerDashboard({ list }: ManagerDashboardProps) {
-  const [activeComponent, setActiveComponent] = useState<
-    "dashboard" | "createRFP" | "Addvendor" | "addQoutation"
-  >("dashboard");
-
+export default function ManagerDashboard({
+  list,
+  activeComponent,
+  setActiveComponent,
+}: ManagerDashboardProps) {
   const router = useRouter();
 
   useEffect(() => {
@@ -31,20 +33,27 @@ export default function ManagerDashboard({ list }: ManagerDashboardProps) {
     }
   }, [router]);
 
+  const renderComponent = () => {
+    switch (activeComponent) {
+      case "dashboard":
+        return <Dashboard />;
+      case "createRFP":
+        return <RFPForm />;
+      case "addQoutation":
+        return <RFPUpdateForm />;
+      case "Addvendor":
+        return <Addvender />;
+      default:
+        return <h1 className="text-2xl font-bold mb-4">Select a component</h1>;
+    }
+  };
+
   return (
-    <div>
+    <div className="flex">
       <div className="fixed top-0 left-0">
-        <Sidebar
-          items={list}
-          setActiveComponent={setActiveComponent} // Pass the function to update state
-        />
+        <Sidebar items={list} setActiveComponent={setActiveComponent} />
       </div>
-      <div>
-        {activeComponent === "dashboard" && <Dashboard />}
-        {activeComponent === "createRFP" && <RFPForm />}
-        {activeComponent === "addQoutation" && <RFPUpdateForm />}
-        {activeComponent === "Addvendor" && <Addvender />}
-      </div>
+      <div className="p-8 w-full">{renderComponent()}</div>
     </div>
   );
 }
