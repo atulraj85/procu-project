@@ -7,7 +7,7 @@ import { SidebarItem } from "@/app/types/types";
 import Dashboard from "../manager/Dashboard";
 import Addvender from "../manager/Addvender";
 import RFPForm from "../new-manager/RFPDraftForm";
-import RFPUpdateForm from "../new-manager/UpdateRFPForm";
+import RFPUpdateForm from "../new-manager/UpdateRFP2";
 
 interface ManagerDashboardProps {
   list: SidebarItem[];
