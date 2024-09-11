@@ -86,22 +86,43 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-
     const whereClause: Record<string, any> = {};
-    const orderByClause: Record<string, "asc" | "desc"> = {};
-    const validAttributes = rfpModel.attributes;
+    let orderByClause: Record<string, "asc" | "desc"> | undefined = undefined;
+    const validAttributes = [...rfpModel.attributes, "orderBy"];
+
+    console.log("Received search params:", Object.fromEntries(searchParams));
 
     searchParams.forEach((value, key) => {
+      console.log(`Processing parameter: ${key} = ${value}`);
       if (validAttributes.includes(key)) {
         if (key === "orderBy") {
-          const [orderByField, orderByDirection] = value.split(",");
-          if (validAttributes.includes(orderByField)) {
-            orderByClause[orderByField] =
-              orderByDirection === "asc" ? "asc" : "desc";
+          const parts = value.split(",");
+          let orderByField: string = rfpModel.attributes[0]; // Default to first attribute
+          let orderByDirection: "asc" | "desc" = "asc"; // Default to ascending
+
+          if (parts.length === 2) {
+            orderByField = parts[0];
+            orderByDirection =
+              parts[1].toLowerCase() === "desc" ? "desc" : "asc";
+          } else if (parts.length === 1) {
+            orderByDirection =
+              parts[0].toLowerCase() === "desc" ? "desc" : "asc";
+          }
+
+          console.log(
+            `OrderBy field: ${orderByField}, direction: ${orderByDirection}`
+          );
+
+          if (rfpModel.attributes.includes(orderByField)) {
+            orderByClause = {
+              [orderByField]: orderByDirection,
+            };
+            console.log(`Set orderByClause:`, orderByClause);
+          } else {
+            console.log(`Invalid orderBy field: ${orderByField}`);
           }
         } else if (key === "id") {
           const ids = value.split(",").map((id) => parseInt(id, 10));
@@ -113,19 +134,24 @@ export async function GET(request: NextRequest) {
         } else {
           whereClause[key] = value;
         }
+      } else {
+        console.log(`Ignoring invalid parameter: ${key}`);
       }
     });
 
-    // console.log("Where clause:", whereClause);
+    console.log("Final where clause:", whereClause);
+    console.log("Final order by clause:", orderByClause);
 
     const records = await prisma.rFP.findMany({
       where: whereClause,
       orderBy: orderByClause,
     });
 
+    console.log(`Found ${records.length} records`);
+
     if (Object.keys(whereClause).length > 0 && records.length === 0) {
       return NextResponse.json(
-        { error: `No found matching the criteria` },
+        { error: `No records found matching the criteria` },
         { status: 404 }
       );
     }
@@ -139,7 +165,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
