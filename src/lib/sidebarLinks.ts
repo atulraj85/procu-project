@@ -129,11 +129,6 @@ export const managerList = [
     imgUrl: "/svgs/product-form.svg",
   },
   {
-    value: "addQoutation",
-    label: "Add Qoutation",
-    imgUrl: "/svgs/report.svg",
-  },
-  {
     value: "Addvendor",
     label: "Vendor List",
     imgUrl: "/svgs/productOrder.svg",
