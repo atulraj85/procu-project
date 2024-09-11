@@ -1,44 +1,84 @@
 "use client";
-
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/shared/Loader";
-
+import AccountantDashboard from "@/components/dashboards/AccountantDashboard";
+import ManagerDashboard from "@/components/dashboards/ManagerDashboard";
+import VendorDashboard from "@/components/dashboards/VendorDashboard";
+import {
+  AdminList,
+  managerList,
+  vendorList,
+  financeList,
+} from "@/lib/sidebarLinks";
+import AdminDashboard from "@/components/dashboards/AdminDashoard";
 
 export default function Dashboard() {
   const router = useRouter();
+  const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [activeComponent, setActiveComponent] = useState("dashboard");
 
   useEffect(() => {
-    // Retrieve the token and role from local storage
     const token = localStorage.getItem("TOKEN");
-    const role = localStorage.getItem("USER_ROLE");
-
-    // Check if the user is authenticated
+    const userRole = localStorage.getItem("USER_ROLE");
     if (!token) {
       router.push("/login");
       return;
     }
-
-    // Redirect based on user role
-    switch (role) {
-      case "ADMIN":
-        router.push("/dashboard/admin");
-        break;
-      case "PR_MANAGER":
-        router.push("/dashboard/manager");
-        break;
-      case "ACCOUNTANT":
-        router.push("/dashboard/accountant");
-        break;
-      case "VENDOR":
-        router.push("/dashboard/vendor");
-        break;
-      default:
-        // If role is not set or unknown, redirect to a default page
-        router.push("/dashboard/default");
-    }
+    console.log(userRole);
+    setRole(userRole || "");
+    setLoading(false);
   }, [router]);
 
-  // This return is just a fallback, the component should redirect before rendering
-  return <Loader/>;
+  const renderDashboardContent = () => {
+    switch (role) {
+      case "ADMIN":
+        return (
+          <AdminDashboard
+            list={AdminList}
+            activeComponent={activeComponent}
+            setActiveComponent={setActiveComponent}
+          />
+        );
+      case "PR_MANAGER":
+        return (
+          <ManagerDashboard
+            list={managerList}
+            activeComponent={activeComponent}
+            setActiveComponent={setActiveComponent}
+          />
+        );
+      // case "ACCOUNTANT":
+      //   return (
+      //     <AccountantDashboard
+      //       list={financeList}
+      //       activeComponent={activeComponent}
+      //       setActiveComponent={setActiveComponent}
+      //     />
+      //   );
+      // case "VENDOR":
+      //   return (
+      //     <VendorDashboard
+      //       list={vendorList}
+      //       activeComponent={activeComponent}
+      //       setActiveComponent={setActiveComponent}
+      //     />
+      //   );
+      // default:
+      //   return (
+      //     <VendorDashboard
+      //       list={vendorList}
+      //       activeComponent={activeComponent}
+      //       setActiveComponent={setActiveComponent}
+      //     />
+      //   );
+    }
+  };
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  return <div className="mx-4 mt-4">{renderDashboardContent()}</div>;
 }

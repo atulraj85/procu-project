@@ -2,7 +2,6 @@ export interface SidebarItem {
   value: string;
   label: string;
   imgUrl: string;
-  route: string;
 }
 
 export interface InfoItem {
