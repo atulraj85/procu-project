@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Loader from "../shared/Loader";
 
 type Product = {
   id: string;
@@ -69,6 +68,8 @@ type Quotation = {
 type FormData = {
   quotations: Quotation[];
 };
+
+const globalFormData = new FormData();
 
 // Step 2: Create Vendor Selector Component
 
@@ -119,7 +120,6 @@ const VendorSelector = ({
     },
     []
   );
-
   const addVendor = useCallback(
     (vendor: Vendor) => {
       if (!vendor.id) {
@@ -132,17 +132,40 @@ const VendorSelector = ({
         setDisableVendorSearch(true);
         setSearchTerm("");
         setFetchedVendors([]);
+
+        const vendorData = {
+          vendorId: vendor.id,
+        };
+
+        if (!globalFormData.has("quotations")) {
+          globalFormData.set("quotations", JSON.stringify([]));
+        }
+
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index] = { ...quotations[index], ...vendorData };
+        globalFormData.set("quotations", JSON.stringify(quotations));
       } else {
         setError(`Vendor with ID ${vendor.id} already exists.`);
       }
     },
-    [approvedVendors]
+    [approvedVendors, index]
   );
 
   const removeVendor = (vendorId: string) => {
     setApprovedVendors((prev) => prev.filter((v) => v.id !== vendorId));
     setValue(`quotations.${index}.vendorId`, "");
     setDisableVendorSearch(false);
+
+    // Remove vendor data from global FormData
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      if (quotations[index]) {
+        delete quotations[index].vendorId;
+      }
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
   };
 
   return (
@@ -267,8 +290,9 @@ const ProductList = ({
   const [rfpId, setRfpId] = useState<string>("");
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
+
   useEffect(() => {
-    setRfpId("07448c47-cc99-4eff-b1b6-4cde3c21d162");
+    setRfpId("b9c42c82-ec99-4163-b886-a348d156ffc8");
 
     async function fetchRFPProducts() {
       setIsLoading(true);
@@ -311,6 +335,17 @@ const ProductList = ({
             `quotations.${index}.products`,
             flattenedProductsWithDetails
           );
+
+          if (globalFormData.has("quotations")) {
+            const quotations = JSON.parse(
+              globalFormData.get("quotations") as string
+            );
+            quotations[index] = {
+              ...quotations[index],
+              products: flattenedProductsWithDetails,
+            };
+            globalFormData.set("quotations", JSON.stringify(quotations));
+          }
 
           setError(null);
         } catch (err) {
@@ -396,14 +431,31 @@ const ProductList = ({
                         );
                         const { totalWithoutGST, totalWithGST } =
                           calculateTotals(unitPrice, quantity, gst);
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-                          totalWithoutGST
+
+                        const quotations = JSON.parse(
+                          globalFormData.get("quotations") as string
                         );
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-                          totalWithGST
+                        quotations[index].products[productIndex].unitPrice =
+                          unitPrice;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithoutGST = totalWithoutGST;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithGST = totalWithGST;
+                        globalFormData.set(
+                          "quotations",
+                          JSON.stringify(quotations)
                         );
+
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+                        //   totalWithoutGST
+                        // );
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+                        //   totalWithGST
+                        // );
                       }}
                     />
                   )}
@@ -485,14 +537,28 @@ const ProductList = ({
 const OtherChargesList = ({
   control,
   index,
+  formData,
 }: {
   control: any;
   index: number;
+  formData: any;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `quotations.${index}.otherCharges`,
   });
+
+  const updateGlobalFormData = useCallback(() => {
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].otherCharges = fields;
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
+  }, [fields, index]);
+
+  useEffect(() => {
+    updateGlobalFormData();
+  }, [fields, updateGlobalFormData]);
 
   return (
     <div>
@@ -560,7 +626,10 @@ const OtherChargesList = ({
 
           <Button
             className="bg-primary mt-2"
-            onClick={() => append({ name: "", gst: "NILL", unitPrice: 0 })}
+            onClick={() => {
+              append({ name: "", gst: "NILL", unitPrice: 0 });
+              updateGlobalFormData();
+            }}
           >
             Add Other Charge
           </Button>
@@ -579,12 +648,24 @@ const SupportingDocumentsList = ({
 }: {
   control: any;
   index: number;
-  setValue: any
+  setValue: any;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `quotations.${index}.supportingDocuments`,
   });
+
+  const updateGlobalFormData = useCallback(() => {
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].supportingDocuments = fields;
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
+  }, [fields, index]);
+
+  useEffect(() => {
+    updateGlobalFormData();
+  }, [fields, updateGlobalFormData]);
 
   return (
     <div>
@@ -614,6 +695,7 @@ const SupportingDocumentsList = ({
                     `quotations.${index}.supportingDocuments.${docIndex}.file`,
                     file
                   );
+                  updateGlobalFormData();
                 }}
               />
               <div className="flex flex-col">
@@ -648,7 +730,6 @@ interface TotalComponentProps {
   index: number;
   setValue: UseFormSetValue<any>;
 }
-
 
 const TotalComponent: React.FC<TotalComponentProps> = ({
   control,
@@ -691,6 +772,16 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
       withoutGST: Number(totalWithoutGST.toFixed(2)),
       withGST: Number(totalWithGST.toFixed(2)),
     });
+
+    // Update globalFormData
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].total = {
+        withoutGST: Number(totalWithoutGST.toFixed(2)),
+        withGST: Number(totalWithGST.toFixed(2)),
+      };
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
   }, [quotation, setValue, index]);
 
   return (
@@ -727,6 +818,8 @@ export default function RFPUpdateForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const formData = new FormData();
+
   const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
     defaultValues: {
       quotations: [
@@ -746,16 +839,64 @@ export default function RFPUpdateForm() {
     name: "quotations",
   });
 
+  const jsonToFormData = (data: any) => {
+    const formData = new FormData();
+
+    // Append each property of the JSON object to FormData
+    for (const key in data) {
+      if (Array.isArray(data[key])) {
+        data[key].forEach((item, index) => {
+          for (const itemKey in item) {
+            // If the item is an object, append its properties
+            if (typeof item[itemKey] === "object" && item[itemKey] !== null) {
+              for (const subKey in item[itemKey]) {
+                formData.append(
+                  `${key}[${index}][${itemKey}][${subKey}]`,
+                  item[itemKey][subKey]
+                );
+              }
+            } else {
+              formData.append(`${key}[${index}][${itemKey}]`, item[itemKey]);
+            }
+          }
+        });
+      } else {
+        formData.append(key, data[key]);
+      }
+    }
+
+    return formData;
+  };
+
+  useEffect(() => {
+    globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+  }, []);
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      // TODO: Implement actual form submission logic
-      console.log("Form Data:", data);
+      console.log(globalFormData);
+
+      const response = await fetch(
+        "/api/rfp/quotation?id=b9c42c82-ec99-4163-b886-a348d156ffc8",
+        {
+          method: "PUT",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
+      console.error("Error updating RFP:", err);
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
@@ -797,7 +938,13 @@ export default function RFPUpdateForm() {
                       index={index}
                     />
                   </div>
-                  <OtherChargesList control={control} index={index} />
+
+                  <OtherChargesList
+                    control={control}
+                    index={index}
+                    formData={formData}
+                  />
+
                   <div className="m-2">
                     <TotalComponent
                       setValue={setValue}
@@ -806,12 +953,30 @@ export default function RFPUpdateForm() {
                     />
                   </div>
                   <div className="m-2">
-                    <SupportingDocumentsList setValue={setValue} control={control} index={index} />
+                    <SupportingDocumentsList
+                      setValue={setValue}
+                      control={control}
+                      index={index}
+                    />
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      console.log("Removing index:", index);
+                      remove(index);
+                    }}
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           ))}
+
           {fields.length < 3 && (
             <Button
               onClick={() =>
@@ -853,5 +1018,4 @@ export default function RFPUpdateForm() {
       </Button>
     </form>
   );
-  
 }
