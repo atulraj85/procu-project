@@ -10,7 +10,6 @@ function isValidUUID(uuid: string) {
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
 }
-
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -62,11 +61,15 @@ export async function PUT(request: NextRequest) {
         );
         await fs.promises.mkdir(quotationDirPath, { recursive: true });
 
+        console.log("supportingDocuments", supportingDocuments);
+
         const processedDocuments = await Promise.all(
           (supportingDocuments || []).map(async (doc: any) => {
             const file = formData.get(`${vendorId}-${doc.name}`) as File;
+            console.log("Processing file:", file);
             if (!file) {
-              throw new Error(`File not found for ${vendorId}-${doc.name}`);
+              console.warn(`File not found for ${vendorId}-${doc.name}`);
+              return null;
             }
             const fileName = file.name;
             const filePath = path.join(quotationDirPath, fileName);
@@ -78,7 +81,7 @@ export async function PUT(request: NextRequest) {
               location: `/assets/RFP-${id}/${vendorId}/${fileName}`,
             };
           })
-        );
+        ).then((documents) => documents.filter((doc) => doc !== null));
 
         // Create VendorPricing entries for each product in the quotation
         const vendorPricingEntries = products.map((product: any) => ({
