@@ -639,19 +639,29 @@ const OtherChargesList = ({
   );
 };
 
+
 // Step 5: Create Supporting Documents List Component
 const SupportingDocumentsList = ({
   control,
   index,
   setValue,
+  files,
+  setFiles,
 }: {
   control: Control<FormData>;
   index: number;
   setValue: UseFormSetValue<FormData>;
+  files: { [key: string]: File };
+  setFiles: React.Dispatch<React.SetStateAction<{ [key: string]: File }>>;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `quotations.${index}.supportingDocuments`,
+  });
+
+  const quotation = useWatch({
+    control,
+    name: `quotations.${index}`,
   });
 
   const updateGlobalFormData = useCallback(() => {
@@ -677,7 +687,6 @@ const SupportingDocumentsList = ({
           <div className="grid grid-cols-2 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
-            <Label></Label>
           </div>
           {fields.map((field, docIndex) => (
             <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
@@ -690,42 +699,29 @@ const SupportingDocumentsList = ({
                 type="file"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
-                  console.log("Selected file:", file);
-                  // Set the file in the form state
-                  setValue(
-                    `quotations.${index}.supportingDocuments.${docIndex}.file`,
-                    file
-                  );
-                  // Update globalFormData
-                  if (globalFormData.has("quotations")) {
-                    const quotations = JSON.parse(
-                      globalFormData.get("quotations") as string
+                  if (file) {
+                    const fieldName = `${quotation.vendorId}-${field.name}`;
+                    setFiles((prevFiles) => ({
+                      ...prevFiles,
+                      [fieldName]: file,
+                    }));
+                    setValue(
+                      `quotations.${index}.supportingDocuments.${docIndex}.file`,
+                      file
                     );
-                    if (!quotations[index].vendorId) {
-                      console.error("Vendor ID is missing for this quotation");
-                      return;
-                    }
-                    const fieldName = `${quotations[index].vendorId}-${field.name}`;
-                    if (file) {
-                      globalFormData.set(fieldName, file);
-                    }
+                    updateGlobalFormData();
                   }
-                  updateGlobalFormData();
                 }}
               />
-
-              <div className="flex flex-col">
-                <Label className="font-bold text-[16px] text-slate-700"></Label>
-                <Button
-                  type="button"
-                  onClick={() => remove(docIndex)}
-                  variant="outline"
-                  size="icon"
-                  className="text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                onClick={() => remove(docIndex)}
+                variant="outline"
+                size="icon"
+                className="text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           ))}
           <Button
@@ -844,6 +840,8 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [files, setFiles] = useState<{ [key: string]: File }>({});
+
 
   const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
     defaultValues: {
@@ -874,15 +872,12 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
     setError(null);
     setSuccess(false);
 
-    // Create FormData from the form values and globalFormData
     const formData = new FormData();
     formData.append("data", JSON.stringify(data));
 
-    // Append files from globalFormData
-    globalFormData.forEach((value, key) => {
-      if (value instanceof File) {
-        formData.append(key, value);
-      }
+    // Append files to formData
+    Object.entries(files).forEach(([key, file]) => {
+      formData.append(key, file);
     });
 
     try {
@@ -907,6 +902,7 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
       setIsLoading(false);
     }
   };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -957,9 +953,11 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
                   </div>
                   <div className="m-2">
                     <SupportingDocumentsList
-                      setValue={setValue}
                       control={control}
                       index={index}
+                      setValue={setValue}
+                      files={files}
+                      setFiles={setFiles}
                     />
                   </div>
 
