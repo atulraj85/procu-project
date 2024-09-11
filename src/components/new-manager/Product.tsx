@@ -35,9 +35,11 @@ export default function SheetSide() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("/api/product");
+        const response = await fetch("/api/productCategory");
         const data: Product[] = await response.json(); // Type the response data
         setProducts(data);
+        console.log( data);
+        
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -106,11 +108,11 @@ export default function SheetSide() {
   const isFormValid = name && modelNo && specification && productCategoryId;
 
   return (
-    <Sheet>
+    <Sheet >
       <SheetTrigger asChild>
         <Button variant="outline">Add Product</Button>
       </SheetTrigger>
-      <SheetContent>
+      <SheetContent side="right1">
         <SheetHeader>
           <SheetTitle>Add Product</SheetTitle>
           <SheetDescription>

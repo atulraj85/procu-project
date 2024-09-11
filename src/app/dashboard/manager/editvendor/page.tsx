@@ -260,7 +260,7 @@ const VendorDetails: React.FC = () => {
   return (
     <div className="p-5">
       <div className="flex justify-end pb-8">
-        <Link href="/dashboard/manager"><Button>Cancel</Button></Link>
+        <Link href="/dashboard"><Button>Cancel</Button></Link>
       </div>
       <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap w-full gap-7">
         <div className="flex flex-col gap-3 w-60 text-base relative">

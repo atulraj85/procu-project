@@ -47,7 +47,7 @@ export const columns1: ColumnDef<TableRow>[] = [
       id: "actions",
       cell: ({ row }) => {
         const columns1 = row.original
-        console.log(columns1);
+        console.log("from  ",columns1);
         
    
         return (
@@ -62,10 +62,10 @@ export const columns1: ColumnDef<TableRow>[] = [
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
              
               <DropdownMenuSeparator />
-              <Link href="/dashboard/add"> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
-              <Link href="/dashboard/add"><DropdownMenuItem> View</DropdownMenuItem></Link>
-              <Link href="/dashboard/add" ><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
-              <DropdownMenuItem> {columns1.rfpId} </DropdownMenuItem>
+              <Link  href={`/dashboard/manager/quotation?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
+              <Link href={`/dashboard/manager/viewrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
+              <Link href={`/dashboard/manager/editrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+
             </DropdownMenuContent>
           </DropdownMenu>
         )

@@ -1,6 +1,6 @@
 "use client";
 import { ChangeEvent, FormEvent, useState, useEffect } from "react";
-import { toast } from "react-toastify";
+import { toast } from "@/components/ui/use-toast";
 import { IoIosSearch } from "react-icons/io";
 import { DataTable } from "../Table/data-table";
 import { columns } from "../Table/columns";
@@ -78,7 +78,7 @@ interface VendorData {
 
 const VendorDetails: React.FC = () => {
   const [vendorArray, setVendorArray] = useState<Vendor[]>([]);
-  console.log("vendor1", vendorArray);
+  // console.log("vendor1", vendorArray);
 
   const [vendorData, setVendorData] = useState<VendorData>({
     vendor_gstn: "",
@@ -220,23 +220,32 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
+    console.log("gstttttttt",gstn);
+    
     try {
-      const response1 = await fetch(`/api/vendor?gst=${gstn}`);
+      const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
       const result1 = await response1.json();
-      console.log("result 1", result1);
+      console.log("result 1", );
 
-      if (result1.length != 0) {
-        toast.error("User all ready exist");
-        console.log("user exist");
-
+      if (!result1.error) {
+        toast({
+          title: "Error",
+       description: "User all ready exist.",
+         
+          
+        });
+       
+       
+       
+       window.location.reload()
         return router.push("/dashboard");
-        console.log("hi");
+        
       } else {
         console.log("hhh1");
 
         const response = await fetch(`/api/vendor/gst/${gstn}`);
         const result = await response.json();
-        console.log("result 1", result);
+        console.log("result 1 out", result);
 
         if (result.flag) {
           const data = result.data;
@@ -253,11 +262,19 @@ const VendorDetails: React.FC = () => {
             pan_card: data.gstin.slice(2, 12) || "",
           });
         } else {
-          toast.error(result.message || "Failed to fetch vendor details.");
+          toast({
+            title: "Failed to fetch vendor details.",
+            
+          });
+         
         }
       }
     } catch (error) {
-      toast.error("An error occurred while fetching vendor details.");
+      toast({
+        title: "An error occurred while fetching vendor details.",
+        
+      });
+      
     }
   };
 
@@ -267,7 +284,11 @@ const VendorDetails: React.FC = () => {
 
       fetchVendorDetails(vendorData.vendor_gstn);
     } else {
-      toast.error("Invalid GSTN.");
+      toast({
+        title: "Invalid GSTN.",
+        
+      });
+     
     }
   };
 
@@ -275,7 +296,11 @@ const VendorDetails: React.FC = () => {
     e.preventDefault();
 
     if (!validateFields()) {
-      toast.error("Please correct the errors in the form.");
+      toast({
+        title: "Please correct the errors in the form.",
+        
+      });
+      
       return;
     }
 
@@ -313,14 +338,27 @@ const VendorDetails: React.FC = () => {
 
       if (result.success) {
         setVendorArray((prevData) => [...prevData, result.vendor]);
-        toast.success("Vendor added successfully.");
+        toast({
+          title: "🎉 Vendor added successfully.",
+          
+        });
+       
+        window.location.reload()
         return router.push("/dashboard");
       } else {
-        toast.error(result.message || "Failed to add vendor.");
+        toast({
+          title: "Failed to add vendor.",
+          
+        });
+       
         return router.push("/dashboard");
       }
     } catch (error) {
-      toast.error("An error occurred while adding the vendor.");
+      toast({
+        title: "An error occurred while adding the vendor.",
+        
+      });
+      
     }
 
     setVendorData({
@@ -411,10 +449,18 @@ const VendorDetails: React.FC = () => {
         setVendorArray(result);
         console.log(result.data);
       } else {
-        toast.error(result.message || "Failed to fetch vendor data.");
+        toast({
+          title: "Failed to fetch vendor data.",
+          
+        });
+       
       }
     } catch (error) {
-      toast.error("An error occurred while fetching vendor data.");
+      toast({
+        title: "An error occurred while fetching vendor data.",
+        
+      });
+      
     }
   };
 
