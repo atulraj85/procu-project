@@ -625,6 +625,7 @@ const OtherChargesList = ({
           ))}
 
           <Button
+            type="button"
             className="bg-primary mt-2"
             onClick={() => {
               append({ name: "", gst: "NILL", unitPrice: 0 });
@@ -730,7 +731,6 @@ interface TotalComponentProps {
   index: number;
   setValue: UseFormSetValue<any>;
 }
-
 const TotalComponent: React.FC<TotalComponentProps> = ({
   control,
   index,
@@ -768,19 +768,26 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
         0
       ) || 0);
 
-    setValue(`quotations.${index}.total`, {
+    const newTotal = {
       withoutGST: Number(totalWithoutGST.toFixed(2)),
       withGST: Number(totalWithGST.toFixed(2)),
-    });
+    };
 
-    // Update globalFormData
-    if (globalFormData.has("quotations")) {
-      const quotations = JSON.parse(globalFormData.get("quotations") as string);
-      quotations[index].total = {
-        withoutGST: Number(totalWithoutGST.toFixed(2)),
-        withGST: Number(totalWithGST.toFixed(2)),
-      };
-      globalFormData.set("quotations", JSON.stringify(quotations));
+    // Only update if the total has changed
+    if (
+      quotation.total?.withoutGST !== newTotal.withoutGST ||
+      quotation.total?.withGST !== newTotal.withGST
+    ) {
+      setValue(`quotations.${index}.total`, newTotal);
+
+      // Update globalFormData
+      if (globalFormData.has("quotations")) {
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index].total = newTotal;
+        globalFormData.set("quotations", JSON.stringify(quotations));
+      }
     }
   }, [quotation, setValue, index]);
 
@@ -839,38 +846,9 @@ export default function RFPUpdateForm() {
     name: "quotations",
   });
 
-  const jsonToFormData = (data: any) => {
-    const formData = new FormData();
-
-    // Append each property of the JSON object to FormData
-    for (const key in data) {
-      if (Array.isArray(data[key])) {
-        data[key].forEach((item, index) => {
-          for (const itemKey in item) {
-            // If the item is an object, append its properties
-            if (typeof item[itemKey] === "object" && item[itemKey] !== null) {
-              for (const subKey in item[itemKey]) {
-                formData.append(
-                  `${key}[${index}][${itemKey}][${subKey}]`,
-                  item[itemKey][subKey]
-                );
-              }
-            } else {
-              formData.append(`${key}[${index}][${itemKey}]`, item[itemKey]);
-            }
-          }
-        });
-      } else {
-        formData.append(key, data[key]);
-      }
-    }
-
-    return formData;
-  };
-
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-  }, []);
+  }, [getValues().quotations]); // Add quotations as a dependency
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
