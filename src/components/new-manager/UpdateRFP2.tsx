@@ -640,15 +640,14 @@ const OtherChargesList = ({
 };
 
 // Step 5: Create Supporting Documents List Component
-
 const SupportingDocumentsList = ({
   control,
   index,
   setValue,
 }: {
-  control: any;
+  control: Control<FormData>;
   index: number;
-  setValue: any;
+  setValue: UseFormSetValue<FormData>;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -697,7 +696,21 @@ const SupportingDocumentsList = ({
                     `quotations.${index}.supportingDocuments.${docIndex}.file`,
                     file
                   );
-                  updateGlobalFormData(); // Update global form data if needed
+                  // Update globalFormData
+                  if (globalFormData.has("quotations")) {
+                    const quotations = JSON.parse(
+                      globalFormData.get("quotations") as string
+                    );
+                    if (!quotations[index].vendorId) {
+                      console.error("Vendor ID is missing for this quotation");
+                      return;
+                    }
+                    const fieldName = `${quotations[index].vendorId}-${field.name}`;
+                    if (file) {
+                      globalFormData.set(fieldName, file);
+                    }
+                  }
+                  updateGlobalFormData();
                 }}
               />
 
@@ -856,14 +869,21 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   }, [getValues().quotations]);
 
   const onSubmit = async (data: FormData) => {
-    console.log("Form data submitted:", data); // Log the submitted data
+    console.log("Form data submitted:", data);
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
-    // Create FormData from the form values
+    // Create FormData from the form values and globalFormData
     const formData = new FormData();
     formData.append("data", JSON.stringify(data));
+
+    // Append files from globalFormData
+    globalFormData.forEach((value, key) => {
+      if (value instanceof File) {
+        formData.append(key, value);
+      }
+    });
 
     try {
       const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
@@ -887,7 +907,6 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
       setIsLoading(false);
     }
   };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
