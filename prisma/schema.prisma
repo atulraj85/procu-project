@@ -167,18 +167,32 @@ model SupportingDocument {
 }
 
 model Quotation {
-  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp                 RFP                  @relation(fields: [rfpId], references: [id])
-  rfpId               String               @db.Uuid
-  vendor              Vendor               @relation(fields: [vendorId], references: [id])
-  vendorId            String               @db.Uuid
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp                   RFP                  @relation(fields: [rfpId], references: [id])
+  rfpId                 String               @db.Uuid
+  vendor                Vendor               @relation(fields: [vendorId], references: [id])
+  vendorId              String               @db.Uuid
   isPrimary           Boolean              @default(false)
-  totalAmount         Decimal              @db.Decimal(10, 2)
-  po                  PO?
-  supportingDocuments SupportingDocument[]
-  vendorPricings      VendorPricing[]
-  created_at          DateTime             @default(now())
-  updated_at          DateTime             @updatedAt
+
+  totalAmount           Decimal              @db.Decimal(10, 2)
+  totalAmountWithoutGST Decimal              @db.Decimal(10, 2)
+  po                    PO?
+  supportingDocuments   SupportingDocument[]
+  vendorPricings        VendorPricing[]
+  otherCharges          OtherCharge[]
+  created_at            DateTime             @default(now())
+  updated_at            DateTime             @updatedAt
+}
+
+model OtherCharge {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quotation   Quotation @relation(fields: [quotationId], references: [id])
+  quotationId String    @db.Uuid
+  name        String
+  price       Decimal   @db.Decimal(10, 2)
+  gst         Decimal   @db.Decimal(5, 2)
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
 }
 
 model RFP {
