@@ -776,6 +776,7 @@ export default function RFPUpdateForm() {
               key={field.id}
               type="single"
               collapsible
+              defaultValue={index === 0 ? `quotation-0` : undefined}
               className="mb-4"
             >
               <AccordionItem value={`quotation-${index}`}>
@@ -796,9 +797,7 @@ export default function RFPUpdateForm() {
                       index={index}
                     />
                   </div>
-
                   <OtherChargesList control={control} index={index} />
-
                   <div className="m-2">
                     <TotalComponent
                       setValue={setValue}
@@ -806,7 +805,6 @@ export default function RFPUpdateForm() {
                       index={index}
                     />
                   </div>
-
                   <div className="m-2">
                     <SupportingDocumentsList setValue={setValue} control={control} index={index} />
                   </div>
@@ -837,14 +835,12 @@ export default function RFPUpdateForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
           <AlertDescription>RFP updated successfully.</AlertDescription>
         </Alert>
       )}
-
       <Button type="submit" disabled={isLoading}>
         {isLoading ? (
           <>
@@ -857,4 +853,5 @@ export default function RFPUpdateForm() {
       </Button>
     </form>
   );
+  
 }
