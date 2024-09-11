@@ -46,7 +46,7 @@ Table Vendor {
   workPhone String
   mobile String
   website String
-  gstin String
+  gstin String [unique]
   msmeNo String
   address String
   customerState String
