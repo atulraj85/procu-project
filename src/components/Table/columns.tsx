@@ -6,6 +6,7 @@ import { MoreHorizontal } from "lucide-react"
 
 
 export type Vendor = {
+  gstin: string | number | boolean;
   vendor_gstn: string;
   company_name: string;
   contact_no: string;
@@ -209,8 +210,12 @@ export const columns: ColumnDef<Vendor>[] = [
            
             <DropdownMenuSeparator />
             {/* <Link href="/dashboard/add"> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link> */}
-            <Link href="/dashboard/add"><DropdownMenuItem> View</DropdownMenuItem></Link>
-            <Link href="/dashboard/add" ><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+            <Link
+            href={`/dashboard/manager/viewvendor?gstin=${encodeURIComponent(columns1.gstin)}`}>
+               <DropdownMenuItem>View</DropdownMenuItem>
+            </Link>
+           
+            <Link href={`/dashboard/manager/editvendor?gstin=${encodeURIComponent(columns1.gstin)}` }><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
           </DropdownMenuContent>
         </DropdownMenu>
       )

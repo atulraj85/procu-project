@@ -38,7 +38,6 @@ import {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
   }
-  
   export function DataTable<TData, TValue>({
   
     columns,
@@ -140,8 +139,9 @@ import {
             )}
           </TableBody>
         </Table>
+
       </div>
-      {/* <div className="flex items-center justify-end space-x-2 py-4">
+       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"
           size="sm"
@@ -158,7 +158,8 @@ import {
         >
           Next
         </Button>
-      </div> */}
+      </div>
+    
     
       </div>
     );

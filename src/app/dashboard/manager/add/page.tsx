@@ -1,3 +1,4 @@
+"use client"
 import React, {
   ChangeEvent,
   useState,
@@ -17,7 +18,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "../ui/accordion";
+} from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 
 // Updated type definitions
 type Product = {
@@ -326,7 +328,11 @@ export default function RFPUpdateForm() {
   // Memoize the form rendering
   const renderForm = useMemo(
     () => (
+      <div>
+        <Link href="/dashboard/manager"><button>Cancel</button></Link>
+      
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+
         <Card>
           <CardHeader>
             <CardTitle>Update RFP</CardTitle>
@@ -737,6 +743,7 @@ export default function RFPUpdateForm() {
           )}
         </Button>
       </form>
+      </div>
     ),
     [
       handleSubmit,
