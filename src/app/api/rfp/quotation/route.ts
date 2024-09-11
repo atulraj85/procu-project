@@ -24,11 +24,10 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    const { quotations, preferredVendorId } = data;
+    const { quotations } = data;
 
     console.log("data:", data);
     console.log("quotations:", quotations);
-    console.log("preferredVendorId:", preferredVendorId);
 
     // Define valid attributes for the RFP model
     const validAttributes = rfpModel.attributes;
@@ -48,7 +47,7 @@ export async function PUT(request: NextRequest) {
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
       (quotations || []).map(async (quotation: any) => {
-        const { vendorId, products, supportingDocuments, totalAmount } =
+        const { vendorId, products, otherCharges, total, supportingDocuments } =
           quotation;
         if (!isValidUUID(vendorId)) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
@@ -64,61 +63,61 @@ export async function PUT(request: NextRequest) {
         await fs.promises.mkdir(quotationDirPath, { recursive: true });
 
         const processedDocuments = await Promise.all(
-          Object.entries(supportingDocuments || {}).map(
-            async ([docType, fileName]) => {
-              const file = formData.get(`${vendorId}-${docType}`) as File;
-              if (!file) {
-                throw new Error(`File not found for ${vendorId}-${docType}`);
-              }
-              const filePath = path.join(quotationDirPath, fileName as string);
-              const fileBuffer = Buffer.from(await file.arrayBuffer());
-              await fs.promises.writeFile(filePath, fileBuffer);
-              return {
-                documentType: docType,
-                documentName: fileName,
-                location: `/assets/RFP-${id}/${vendorId}/${fileName}`,
-              };
+          (supportingDocuments || []).map(async (doc: any) => {
+            const file = formData.get(`${vendorId}-${doc.name}`) as File;
+            if (!file) {
+              throw new Error(`File not found for ${vendorId}-${doc.name}`);
             }
-          )
+            const fileName = file.name;
+            const filePath = path.join(quotationDirPath, fileName);
+            const fileBuffer = Buffer.from(await file.arrayBuffer());
+            await fs.promises.writeFile(filePath, fileBuffer);
+            return {
+              documentType: doc.name,
+              documentName: fileName,
+              location: `/assets/RFP-${id}/${vendorId}/${fileName}`,
+            };
+          })
         );
 
         // Create VendorPricing entries for each product in the quotation
-        const vendorPricingEntries = products.map((product: any) => {
-          // Instead of checking for UUID, we'll use the numeric ID
-          if (typeof product.id !== "number" || isNaN(product.id)) {
-            throw new Error(`Invalid product id: ${product.id}`);
-          }
-          return {
-            price: parseFloat(product.amount),
-            rfpProduct: {
-              connect: {
-                rfpId_productId: {
-                  rfpId: id,
-                  productId: product.id,
-                },
+        const vendorPricingEntries = products.map((product: any) => ({
+          price: parseFloat(product.unitPrice),
+          rfpProduct: {
+            connect: {
+              rfpId_productId: {
+                rfpId: id,
+                productId: product.id,
               },
             },
-          };
-        });
+          },
+        }));
+
+        // Create OtherCharges entries
+        const otherChargesEntries = otherCharges.map((charge: any) => ({
+          name: charge.name,
+          price: parseFloat(charge.unitPrice),
+          gst: parseFloat(charge.gst),
+        }));
 
         return {
           vendorId,
-          totalAmount: parseFloat(totalAmount),
+          totalAmount: parseFloat(total.withGST),
+          totalAmountWithoutGST: parseFloat(total.withoutGST),
           supportingDocuments: {
             create: processedDocuments,
           },
           vendorPricings: {
             create: vendorPricingEntries,
           },
+          otherCharges: {
+            create: otherChargesEntries,
+          },
         };
       })
     );
 
     console.log("processedQuotations", processedQuotations);
-
-    delete data.preferredVendorId;
-
-    console.log(data, typeof id);
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
@@ -131,23 +130,15 @@ export async function PUT(request: NextRequest) {
         },
       },
       include: {
-        quotations: true,
+        quotations: {
+          include: {
+            supportingDocuments: true,
+            vendorPricings: true,
+            otherCharges: true,
+          },
+        },
       },
     });
-
-    // Find the preferredQuotationId based on preferredVendorId
-    const preferredQuotation = updatedRecord.quotations.find(
-      (quotation) => quotation.vendorId === preferredVendorId
-    );
-
-    if (preferredQuotation) {
-      await prisma.rFP.update({
-        where: { id },
-        data: {
-          preferredQuotationId: preferredQuotation.id,
-        },
-      });
-    }
 
     return NextResponse.json(serializePrismaModel(updatedRecord), {
       status: 200,

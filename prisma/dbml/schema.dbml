@@ -150,9 +150,22 @@ Table Quotation {
   vendorId String [not null]
   isPrimary Boolean [not null, default: false]
   totalAmount Decimal [not null]
+  totalAmountWithoutGST Decimal [not null]
   po PO
   supportingDocuments SupportingDocument [not null]
   vendorPricings VendorPricing [not null]
+  otherCharges OtherCharge [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+}
+
+Table OtherCharge {
+  id String [pk]
+  quotation Quotation [not null]
+  quotationId String [not null]
+  name String [not null]
+  price Decimal [not null]
+  gst Decimal [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
 }
@@ -280,6 +293,8 @@ Ref: SupportingDocument.quotationId > Quotation.id
 Ref: Quotation.rfpId > RFP.id
 
 Ref: Quotation.vendorId > Vendor.id
+
+Ref: OtherCharge.quotationId > Quotation.id
 
 Ref: RFP.userId > User.id
 
