@@ -276,24 +276,23 @@ const ProductList = ({
   index,
   getValues,
   setValue,
+  rfpId,
 }: {
   control: any;
   index: number;
   getValues: any;
   setValue: any;
+  rfpId: string;
 }) => {
   const { fields } = useFieldArray({
     control,
     name: `quotations.${index}.products`,
   });
   const [error, setError] = useState<string | null>(null);
-  const [rfpId, setRfpId] = useState<string>("");
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setRfpId("b9c42c82-ec99-4163-b886-a348d156ffc8");
-
     async function fetchRFPProducts() {
       setIsLoading(true);
       if (rfpId) {
@@ -692,13 +691,16 @@ const SupportingDocumentsList = ({
                 type="file"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
+                  console.log("Selected file:", file);
+                  // Set the file in the form state
                   setValue(
                     `quotations.${index}.supportingDocuments.${docIndex}.file`,
                     file
                   );
-                  updateGlobalFormData();
+                  updateGlobalFormData(); // Update global form data if needed
                 }}
               />
+
               <div className="flex flex-col">
                 <Label className="font-bold text-[16px] text-slate-700"></Label>
                 <Button
@@ -714,6 +716,7 @@ const SupportingDocumentsList = ({
             </div>
           ))}
           <Button
+            type="button"
             className="bg-primary mt-2"
             onClick={() => append({ name: "", file: null })}
           >
@@ -820,12 +823,14 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
 
 // Step 7: Create Main RFP Update Form Component
 
-export default function RFPUpdateForm() {
+interface RFPUpdateFormProps {
+  rfpId: string; // Define the prop type for rfpId
+}
+
+export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  const formData = new FormData();
 
   const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
     defaultValues: {
@@ -848,23 +853,23 @@ export default function RFPUpdateForm() {
 
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-  }, [getValues().quotations]); // Add quotations as a dependency
+  }, [getValues().quotations]);
 
   const onSubmit = async (data: FormData) => {
+    console.log("Form data submitted:", data); // Log the submitted data
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
-    try {
-      console.log(globalFormData);
+    // Create FormData from the form values
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(data));
 
-      const response = await fetch(
-        "/api/rfp/quotation?id=b9c42c82-ec99-4163-b886-a348d156ffc8",
-        {
-          method: "PUT",
-          body: formData,
-        }
-      );
+    try {
+      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+        method: "PUT",
+        body: formData,
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -910,6 +915,7 @@ export default function RFPUpdateForm() {
                   </div>
                   <div className="m-2">
                     <ProductList
+                      rfpId={rfpId}
                       setValue={setValue}
                       getValues={getValues}
                       control={control}
@@ -920,7 +926,7 @@ export default function RFPUpdateForm() {
                   <OtherChargesList
                     control={control}
                     index={index}
-                    formData={formData}
+                    formData={FormData}
                   />
 
                   <div className="m-2">
