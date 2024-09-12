@@ -1,6 +1,9 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { X } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import React from "react";
 
@@ -53,6 +56,18 @@ const vendor = {
 const Page = () => {
   return (
     <div className="mx-20 mt-4">
+      <div className="flex justify-end pb-8">
+        <Link href="/dashboard/finance">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="text-black-500 bg-red-400"
+          >
+            <X className="h-4 w-4" />
+          </Button>{" "}
+        </Link>
+      </div>
       <section className="flex justify-between pb-7">
         <div>
           <label className="font-bold">Company Logo</label>
@@ -60,7 +75,6 @@ const Page = () => {
         </div>
         <div>
           <div>
-           
             <h1 className="font-bold">{company.name}</h1>
             <p className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</p>
           </div>
@@ -76,7 +90,9 @@ const Page = () => {
           {/* <label className="font-bold">GSTN</label> */}
           <h1 className="font-bold">{vendor.companyName}</h1>
           <h1 className="text-[14px]">{vendor.address}</h1>
-          <p className="font-bold">GSTIN: <span className="text-[14px]"> {vendor.gstin}</span></p>
+          <p className="font-bold">
+            GSTIN: <span className="text-[14px]"> {vendor.gstin}</span>
+          </p>
         </div>
         <div>
           <div className="flex">
@@ -127,14 +143,13 @@ const Page = () => {
       </section>
 
       <section className="flex justify-between">
-      
         <div>
-        <div className="w-[50%] mt-7 mb-3" >
+          <div className="w-[50%] mt-7 mb-3">
             <label className="font-bold">M-Monks Digital Media Pvt Ltd.</label>
             <Image height={100} width={100} alt="Company logo" src=""></Image>
             <h1 className="text-[14px]">Authorized Signatory</h1>
           </div>
-          <div className="w-[50%] mt-7 mb-3" >
+          <div className="w-[50%] mt-7 mb-3">
             <label className="font-bold">Invoice To:</label>
             <h1 className="text-[14px]">{vendor.address}</h1>
           </div>
@@ -142,7 +157,6 @@ const Page = () => {
             <label className="font-bold">Ship To:</label>
             <h1 className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</h1>
           </div>
-          
         </div>
       </section>
     </div>

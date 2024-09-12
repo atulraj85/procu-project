@@ -215,13 +215,15 @@ model RFP {
 }
 
 enum RFPStatus {
-  DRAFT
-  PENDING
-  IN_PROGRESS
-  INVOICE_NOT_RECEIVED
-  GRN_NOT_RECEIVED
-  PAYMENT_NOT_DONE
-  COMPLETED
+  DRAFT //RFP Created but not submitted
+  PENDING //Submitted to finance, change this to SUBMITTED / PO_DUE 
+  IN_PROGRESS //Change status to PO_CREATED, PO_SENT
+  // ADVANCE_PAID add this status
+  INVOICE_NOT_RECEIVED //INVOICE_RECEIVED
+  GRN_NOT_RECEIVED //GRN_RECEIVED
+  PAYMENT_NOT_DONE //PAYMENT_DONE (PO Complete)
+  COMPLETED //Remove this status
+  // all other status excluding DRAFT are (Open PO)
 }
 
 model RFPProduct {

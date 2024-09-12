@@ -5,7 +5,7 @@ export const financeList = [
     value: "dashboard",
     label: "Dashboard",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/finance/dashboard",
+    route: "/dashboard/finance",
   },
   // Uncomment and add routes for the following items as needed
   // {
