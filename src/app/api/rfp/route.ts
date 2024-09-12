@@ -145,6 +145,7 @@ export async function GET(request: NextRequest) {
     const records = await prisma.rFP.findMany({
       where: whereClause,
       orderBy: orderByClause,
+      
     });
 
     console.log(`Found ${records.length} records`);

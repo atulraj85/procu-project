@@ -1,0 +1,152 @@
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import Image from "next/image";
+
+import React from "react";
+
+const company = {
+  id: "863f6852-7513-4c4e-8fef-c6828d843f1a",
+  name: "Tech Innovations Inc.",
+  address: {
+    zip: "94043",
+    city: "Silicon Valley",
+    state: "California",
+    county: "Santa Clara",
+    street: "123 Tech Lane",
+    country: "USA",
+    district: "Silicon Valley District",
+  },
+  email: "contact@techinnovations.com",
+  phone: "+1-234-567-8901",
+  website: "https://www.techinnovations.com",
+  industry: "Technology",
+  foundedDate: "2020-01-15T00:00:00.000Z",
+  status: "active",
+  created_at: "2024-10-01T12:00:00.000Z",
+  updated_at: "2024-10-01T12:00:00.000Z",
+};
+const vendor = {
+  id: "b5b7988e-c18f-4193-9737-cc35ae3c557c",
+  customerCode: "CUST-001",
+  primaryName: "Ashutosh Kumar Mishra",
+  companyName: "GROWW AND BECONSCIOUS PRIVATE LIMITED",
+  contactDisplayName: "Ashutosh Kumar Mishra",
+  email: "ashutoshmishra8796@gmail.com",
+  workPhone: "9267970511",
+  mobile: "9267970511",
+  website: "https://www.gennextit.com",
+  gstin: "27AAECG8478M1ZT",
+  msmeNo: "MSME123456",
+  address:
+    "GROUND FLOOR, FLAT NO. 001,, DADARKAR ARCADE N L PARELKAR, PAREL VILLAGE, PAREL, Mumbai, Maharashtra, 400012",
+  customerState: "UP",
+  customerCity: "Ghaziabad",
+  country: "India",
+  zip: "400012",
+  remarks: null,
+  pan: "AAECG8478M",
+  verifiedById: "9984cfb2-5bb0-4475-9340-f16be26bcb5b",
+  created_at: "2024-09-11T08:54:50.009Z",
+  updated_at: "2024-09-11T08:54:50.009Z",
+  productCategoryId: null,
+};
+const Page = () => {
+  return (
+    <div className="mx-20 mt-4">
+      <section className="flex justify-between pb-7">
+        <div>
+          <label className="font-bold">Company Logo</label>
+          <Image height={100} width={100} alt="Company logo" src=""></Image>
+        </div>
+        <div>
+          <div>
+           
+            <h1 className="font-bold">{company.name}</h1>
+            <p className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Another section for Purchase Order */}
+      <div className="font-bold flex justify-center">
+        <h1>Purchase Order</h1>
+      </div>
+      <section className="flex justify-between">
+        <div className="w-[30%]">
+          {/* <label className="font-bold">GSTN</label> */}
+          <h1 className="font-bold">{vendor.companyName}</h1>
+          <h1 className="text-[14px]">{vendor.address}</h1>
+          <p className="font-bold">GSTIN: <span className="text-[14px]"> {vendor.gstin}</span></p>
+        </div>
+        <div>
+          <div className="flex">
+            <label className="font-bold">Order No :</label>
+            <h1>MM-PO-2024-25-190</h1>
+          </div>
+          <div className="flex">
+            <label className="font-bold">Ref :-</label>
+            <h1>SO-24-00012</h1>
+          </div>
+          <div className="flex">
+            <label className="font-bold">Date :-</label>
+            <h1>22/07/2024</h1>
+          </div>
+        </div>
+      </section>
+
+      <div className="font-bold mt-10 mb-4 ">
+        <h1>Description: Render Farm</h1>
+      </div>
+      <section className="flex justify-between">
+        <div className="w-[30%]">
+          {/* <label className="font-bold">GSTN</label> */}
+          <h1 className="font-bold pb-1">Product Description</h1>
+          <p className="text-[14px]">
+            GSTIN: Render Farm : https://www.foxrenderfarm.com/ Credits
+            Required: Rs 169340 (USD 2000 * 84.67) Handling cost: 18% INR
+            30,481. Total cost: 199821
+          </p>
+        </div>
+        <div className="">
+          {/* <label className="font-bold">GSTN</label> */}
+          <h1 className="font-bold pb-1">Unit price in INR</h1>
+          <p className="text-[14px]">1,99,821.00</p>
+        </div>
+
+        <div className="">
+          {/* <label className="font-bold">GSTN</label> */}
+          <h1 className="font-bold pb-1">Qty</h1>
+          <p className="text-[14px]">1</p>
+        </div>
+
+        <div className="">
+          {/* <label className="font-bold">GSTN</label> */}
+          <h1 className="font-bold pb-1">Total Price in INR</h1>
+          <p className="text-[14px]">1,99,821.00</p>
+        </div>
+      </section>
+
+      <section className="flex justify-between">
+      
+        <div>
+        <div className="w-[50%] mt-7 mb-3" >
+            <label className="font-bold">M-Monks Digital Media Pvt Ltd.</label>
+            <Image height={100} width={100} alt="Company logo" src=""></Image>
+            <h1 className="text-[14px]">Authorized Signatory</h1>
+          </div>
+          <div className="w-[50%] mt-7 mb-3" >
+            <label className="font-bold">Invoice To:</label>
+            <h1 className="text-[14px]">{vendor.address}</h1>
+          </div>
+          <div className="mb-8">
+            <label className="font-bold">Ship To:</label>
+            <h1 className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</h1>
+          </div>
+          
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Page;

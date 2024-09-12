@@ -99,6 +99,8 @@ const VendorDetails: React.FC = () => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const router = useRouter();
   const [states, setStates] = useState<{ value: string; label: string }[]>([]);
+  const [cities, setCities] = useState<{ value: string; label: string }[]>([]);
+
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -127,6 +129,32 @@ const VendorDetails: React.FC = () => {
 
     fetchStates(); // Call the fetch function
   }, []);
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (vendorData.state) {
+        try {
+          const response = await fetch(`/api/address/cities/IN/${vendorData.state}`);
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          const data = await response.json();
+
+          const transformedCities = data.map(
+            (city: {  name: any }) => ({
+              value: city.name,
+              label: city.name,
+            })
+          );
+
+          setCities(transformedCities);
+        } catch (error) {
+          console.error("There was a problem fetching cities:", error);
+        }
+      }
+    };
+
+    fetchCities();
+  }, [vendorData.state]);
   const [errors, setErrors] = useState({
     gstn: "",
     company: "",
@@ -397,6 +425,12 @@ const VendorDetails: React.FC = () => {
       prevData.filter((data) => data.email !== email)
     );
   };
+  const handleCityChange = (value: string) => {
+    setVendorData((prevData) => ({
+      ...prevData,
+      city: value,
+    }));
+  };
 
   const handleEditVendor = (index: number) => {
     console.log("ven", vendorArray[index]);
@@ -469,9 +503,13 @@ const VendorDetails: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-5">
+    <div className="px-5 pb-1">
       <Sheet>
-        <div className=" flex justify-end mt">
+        <div className=" flex justify-between mt">
+          <div>
+          <h1 className="text-2xl font-bold text-gray-600">Vendor List</h1>
+          </div>
+          
           <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
             Add Vendor
           </SheetTrigger>
@@ -534,6 +572,7 @@ const VendorDetails: React.FC = () => {
                 <div className="flex flex-col gap-3 w-60 text-base">
                   <label className="font-bold">PAN Card</label>
                   <Input
+                  disabled
                     type="text"
                     name="pan_card"
                     value={vendorData.pan_card}
@@ -547,6 +586,7 @@ const VendorDetails: React.FC = () => {
                 <div className="flex flex-col gap-3 w-60 text-base">
                   <label className="font-bold">Address</label>
                   <Input
+                  disabled
                     type="text"
                     name="address"
                     value={vendorData.address}
@@ -562,6 +602,7 @@ const VendorDetails: React.FC = () => {
                 <div className="flex flex-col gap-3 w-60 text-base">
                   <label className="font-bold">Pin Code</label>
                   <Input
+                  disabled
                     type="text"
                     name="pin_code"
                     value={vendorData.pin_code}
@@ -636,6 +677,7 @@ const VendorDetails: React.FC = () => {
                     onValueChange={handleStateChange}
                     value={vendorData.state}
                   >
+                  
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a state" />
                     </SelectTrigger>
@@ -656,14 +698,24 @@ const VendorDetails: React.FC = () => {
 
                 <div className="flex flex-col gap-3 w-60 text-base">
                   <label className="font-bold">City</label>
-                  <Input
-                    type="text"
-                    name="city"
+                  <Select
+                    onValueChange={handleCityChange}
                     value={vendorData.city}
-                    onChange={handleChangeVendorDetails}
-                    placeholder="City"
-                    className="p-2   "
-                  />
+                  >
+                    
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a city" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {cities.map((city) => (
+                          <SelectItem key={city.value} value={city.value}>
+                            {city.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                   {errors.city && <p className="text-red-500">{errors.city}</p>}
                 </div>
 

@@ -89,7 +89,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col w-full">
       <div className="flex items-center justify-evenly w-full">
-        <div className="flex justify-between w-full px-10 py-5">
+        <div className="flex justify-between w-full px-10 ">
           <h1 className="text-2xl font-bold">Dashboard</h1>
           {/* <Link
             href={`/company/request-product`}
