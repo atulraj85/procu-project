@@ -639,7 +639,6 @@ const OtherChargesList = ({
   );
 };
 
-
 // Step 5: Create Supporting Documents List Component
 const SupportingDocumentsList = ({
   control,
@@ -664,17 +663,27 @@ const SupportingDocumentsList = ({
     name: `quotations.${index}`,
   });
 
-  const updateGlobalFormData = useCallback(() => {
-    if (globalFormData.has("quotations")) {
-      const quotations = JSON.parse(globalFormData.get("quotations") as string);
-      quotations[index].supportingDocuments = fields;
-      globalFormData.set("quotations", JSON.stringify(quotations));
+  const handleFileChange = (
+    e: ChangeEvent<HTMLInputElement>,
+    docIndex: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const documentName = fields[docIndex].name; // Get the document name from the field
+      const fieldName = `${quotation.vendorId}-${documentName}`; // Use the document name here
+      console.log("Selected file:", file);
+      setFiles((prevFiles) => ({
+        ...prevFiles,
+        [fieldName]: file,
+      }));
+      setValue(
+        `quotations.${index}.supportingDocuments.${docIndex}.file`,
+        file
+      );
+    } else {
+      console.warn("No file selected");
     }
-  }, [fields, index]);
-
-  useEffect(() => {
-    updateGlobalFormData();
-  }, [fields, updateGlobalFormData]);
+  };
 
   return (
     <div>
@@ -694,24 +703,11 @@ const SupportingDocumentsList = ({
                 {...control.register(
                   `quotations.${index}.supportingDocuments.${docIndex}.name`
                 )}
+                placeholder="Enter document name"
               />
               <Input
                 type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  if (file) {
-                    const fieldName = `${quotation.vendorId}-${field.name}`;
-                    setFiles((prevFiles) => ({
-                      ...prevFiles,
-                      [fieldName]: file,
-                    }));
-                    setValue(
-                      `quotations.${index}.supportingDocuments.${docIndex}.file`,
-                      file
-                    );
-                    updateGlobalFormData();
-                  }
-                }}
+                onChange={(e) => handleFileChange(e, docIndex)}
               />
               <Button
                 type="button"
@@ -736,6 +732,7 @@ const SupportingDocumentsList = ({
     </div>
   );
 };
+
 
 // Step 6: Create Total Component
 interface TotalComponentProps {
@@ -842,7 +839,6 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
 
-
   const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
     defaultValues: {
       quotations: [
@@ -866,42 +862,46 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
   }, [getValues().quotations]);
 
-  const onSubmit = async (data: FormData) => {
-    console.log("Form data submitted:", data);
-    setIsLoading(true);
-    setError(null);
-    setSuccess(false);
+const onSubmit = async (data: FormData) => {
+  setIsLoading(true);
+  setError(null);
+  setSuccess(false);
 
-    const formData = new FormData();
-    formData.append("data", JSON.stringify(data));
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(data));
 
-    // Append files to formData
-    Object.entries(files).forEach(([key, file]) => {
-      formData.append(key, file);
-    });
+  // Append files to formData with the specified format
+  Object.entries(files).forEach(([key, file]) => {
+    const [vendorId, documentName] = key.split("-"); // Split the key to get vendorId and documentName
+    const filePath = `${rfpId}/${vendorId}/${documentName}`; // Construct the file path
+    formData.append(filePath, file); // Append the file with the constructed path
+    console.log(`Appending file: ${filePath}`, file);
+  });
 
-    try {
-      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
-        method: "PUT",
-        body: formData,
-      });
+  console.log(formData)
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  try {
+    // const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+    //   method: "PUT",
+    //   body: formData,
+    // });
 
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
-      setSuccess(true);
-    } catch (err) {
-      console.error("Error updating RFP:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // if (!response.ok) {
+    //   throw new Error(`HTTP error! status: ${response.status}`);
+    // }
+
+    // const result = await response.json();
+    // console.log("RFP updated successfully:", result);
+
+
+    setSuccess(true);
+  } catch (err) {
+    console.error("Error updating RFP:", err);
+    setError(err instanceof Error ? err.message : "An unknown error occurred");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">

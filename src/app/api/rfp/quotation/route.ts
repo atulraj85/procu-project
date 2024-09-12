@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serializePrismaModel } from "@/types";
-import { prisma, rfpModel } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises";
 
 // Helper function to validate UUID
 function isValidUUID(uuid: string) {
@@ -10,6 +10,7 @@ function isValidUUID(uuid: string) {
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
 }
+
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -24,24 +25,6 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
     const { quotations } = data;
-
-    console.log("data:", data);
-    console.log("quotations:", quotations);
-
-    // Define valid attributes for the RFP model
-    const validAttributes = rfpModel.attributes;
-    const invalidKeys = Object.keys(data).filter(
-      (key) => !validAttributes.includes(key)
-    );
-    if (invalidKeys.length > 0) {
-      return NextResponse.json(
-        { error: `Invalid attributes in data: ${invalidKeys.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Add the updated_at field to the data
-    data.updated_at = new Date();
 
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
@@ -59,29 +42,36 @@ export async function PUT(request: NextRequest) {
           `RFP-${id}`,
           vendorId
         );
-        await fs.promises.mkdir(quotationDirPath, { recursive: true });
-
-        console.log("supportingDocuments", supportingDocuments);
+        await fs.mkdir(quotationDirPath, { recursive: true });
 
         const processedDocuments = await Promise.all(
           (supportingDocuments || []).map(async (doc: any) => {
-            const file = formData.get(`${vendorId}-${doc.name}`) as File;
-            console.log("Processing file:", file);
+            const fileKey = `${vendorId}/${doc.name}`; // Construct the file key based on the new format
+            const file = formData.get(fileKey) as File;
             if (!file) {
-              console.warn(`File not found for ${vendorId}-${doc.name}`);
-              return null;
+              console.warn(`File not found for ${fileKey}`);
+              return null; // Handle this case as needed
             }
             const fileName = file.name;
-            const filePath = path.join(quotationDirPath, fileName);
+            const filePath = path.join(
+              process.cwd(),
+              "public",
+              "assets",
+              fileKey
+            ); // Save to the specified path
             const fileBuffer = Buffer.from(await file.arrayBuffer());
-            await fs.promises.writeFile(filePath, fileBuffer);
+            await fs.writeFile(filePath, fileBuffer);
             return {
               documentType: doc.name,
               documentName: fileName,
-              location: `/assets/RFP-${id}/${vendorId}/${fileName}`,
+              location: `/assets/${fileKey}`, // Adjust the location accordingly
             };
           })
-        ).then((documents) => documents.filter((doc) => doc !== null));
+        );
+
+        const filteredDocuments = processedDocuments.filter(
+          (doc) => doc !== null
+        );
 
         // Create VendorPricing entries for each product in the quotation
         const vendorPricingEntries = products.map((product: any) => ({
@@ -108,7 +98,7 @@ export async function PUT(request: NextRequest) {
           totalAmount: parseFloat(total.withGST),
           totalAmountWithoutGST: parseFloat(total.withoutGST),
           supportingDocuments: {
-            create: processedDocuments,
+            create: filteredDocuments,
           },
           vendorPricings: {
             create: vendorPricingEntries,
@@ -119,8 +109,6 @@ export async function PUT(request: NextRequest) {
         };
       })
     );
-
-    console.log("processedQuotations", processedQuotations);
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
