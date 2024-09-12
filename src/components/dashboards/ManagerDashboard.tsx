@@ -1,31 +1,21 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "../shared/Sidebar";
-import { SidebarItem } from "@/app/types/types";
 import Dashboard from "../manager/Dashboard";
-import Addvender from "../manager/Addvender";
 import RFPForm from "../new-manager/RFPDraftForm";
-import RFPUpdateForm from "../new-manager/UpdateRFP2";
 
 interface ManagerDashboardProps {
-  list: SidebarItem[];
   activeComponent: string;
-  setActiveComponent: (value: string) => void;
 }
 
 export default function ManagerDashboard({
-  list,
   activeComponent,
-  setActiveComponent,
 }: ManagerDashboardProps) {
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
     const role = localStorage.getItem("USER_ROLE");
-
     if (!token) {
       router.push("/login");
     } else if (role !== "PR_MANAGER") {
@@ -44,12 +34,5 @@ export default function ManagerDashboard({
     }
   };
 
-  return (
-    <div className="flex">
-      <div className="fixed top-0 left-0">
-        <Sidebar items={list} setActiveComponent={setActiveComponent} />
-      </div>
-      <div className="px-8 py-4 w-full">{renderComponent()}</div>
-    </div>
-  );
+  return <div className="px-8 py-4 w-full">{renderComponent()}</div>;
 }

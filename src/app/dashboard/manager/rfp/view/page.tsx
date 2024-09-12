@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { X } from "lucide-react";
+import Loader from "@/components/shared/Loader";
 
 interface RfpData {
   id: string;
@@ -53,7 +55,7 @@ const RfpDetails: React.FC = () => {
   }, [rfpId]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }
 
   if (error) {
@@ -66,8 +68,19 @@ const RfpDetails: React.FC = () => {
 
   return (
     <>
+      <div className="text-lg font-bold">View RFP</div>
+
       <div className="flex justify-end mt-6 mr-20">
-        <Link href="/dashboard"><Button>Cancel</Button></Link>
+        <Link href="/dashboard/manager">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="text-black-500 bg-red-400"
+          >
+            <X className="h-4 w-4" />
+          </Button>{" "}
+        </Link>{" "}
       </div>
       <div className="p-5">
         <form className="flex flex-wrap w-full gap-7">
@@ -83,7 +96,9 @@ const RfpDetails: React.FC = () => {
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Date of Ordering</label>
-            <h1 className="text-[15px]">{new Date(rfpData.dateOfOrdering).toLocaleDateString()}</h1>
+            <h1 className="text-[15px]">
+              {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+            </h1>
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
@@ -93,7 +108,9 @@ const RfpDetails: React.FC = () => {
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Delivery By Date</label>
-            <h1 className="text-[15px]">{new Date(rfpData.deliveryByDate).toLocaleDateString()}</h1>
+            <h1 className="text-[15px]">
+              {new Date(rfpData.deliveryByDate).toLocaleDateString()}
+            </h1>
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
@@ -103,12 +120,16 @@ const RfpDetails: React.FC = () => {
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Created At</label>
-            <h1 className="text-[15px]">{new Date(rfpData.created_at).toLocaleString()}</h1>
+            <h1 className="text-[15px]">
+              {new Date(rfpData.created_at).toLocaleString()}
+            </h1>
           </div>
 
           <div className="flex flex-col gap-3 w-60 text-base">
             <label className="font-bold">Updated At</label>
-            <h1 className="text-[15px]">{new Date(rfpData.updated_at).toLocaleString()}</h1>
+            <h1 className="text-[15px]">
+              {new Date(rfpData.updated_at).toLocaleString()}
+            </h1>
           </div>
         </form>
       </div>

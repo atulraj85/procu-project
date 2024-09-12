@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Select from "react-select";
-import { parseISO, format } from 'date-fns';
+import { parseISO, format } from "date-fns";
+import { X } from "lucide-react";
 
 interface RfpData {
   id: string;
@@ -50,13 +51,13 @@ const RfpSubmissionForm: React.FC = () => {
   useEffect(() => {
     const fetchRfpData = async () => {
       try {
-        const response = await fetch('/api/rfp?rfpId=RFP-2024-09-11-0000');
+        const response = await fetch("/api/rfp?rfpId=RFP-2024-09-11-0000");
         if (!response.ok) {
-          throw new Error('Failed to fetch RFP data');
+          throw new Error("Failed to fetch RFP data");
         }
         const data: RfpData = await response.json();
         console.log("data", data);
-        
+
         setRfpData(data[0]);
       } catch (error) {
         toast.error("An error occurred while fetching RFP data.");
@@ -96,13 +97,20 @@ const RfpSubmissionForm: React.FC = () => {
     return isValid;
   };
 
-  const handleChangeRfpDetails = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChangeRfpDetails = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setRfpData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleRequirementTypeChange = (selectedOption: { value: string; label: string } | null) => {
-    setRfpData((prevData) => ({ ...prevData, requirementType: selectedOption ? selectedOption.value : "" }));
+  const handleRequirementTypeChange = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
+    setRfpData((prevData) => ({
+      ...prevData,
+      requirementType: selectedOption ? selectedOption.value : "",
+    }));
   };
 
   const onSubmitRfpDetails = async (e: FormEvent<HTMLFormElement>) => {
@@ -115,7 +123,7 @@ const RfpSubmissionForm: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/rfp', {
+      const response = await fetch("/api/rfp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,7 +134,7 @@ const RfpSubmissionForm: React.FC = () => {
 
       if (result.success) {
         toast.success("RFP submitted successfully.");
-        router.push('/dashboard');
+        router.push("/dashboard");
       } else {
         toast.error(result.message || "Failed to submit RFP.");
       }
@@ -135,7 +143,6 @@ const RfpSubmissionForm: React.FC = () => {
     }
   };
 
-  
   const dateString = rfpData.dateOfOrdering;
   const dateObject = new Date(dateString);
   let formattedDate = "";
@@ -158,10 +165,24 @@ const RfpSubmissionForm: React.FC = () => {
 
   return (
     <div className="p-5">
+      <div className="text-lg font-bold">Edit RFP</div>
+
       <div className="flex justify-end pb-8">
-        <Link href="/dashboard"><Button>Cancel</Button></Link>
+        <Link href="/dashboard/manager">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="text-black-500 bg-red-400"
+          >
+            <X className="h-4 w-4" />
+          </Button>{" "}
+        </Link>
       </div>
-      <form onSubmit={onSubmitRfpDetails} className="flex flex-wrap w-full gap-7">
+      <form
+        onSubmit={onSubmitRfpDetails}
+        className="flex flex-wrap w-full gap-7"
+      >
         <div className="flex flex-col gap-3 w-60 text-base">
           <label className="font-bold">Requirement Type</label>
           <Select
@@ -169,13 +190,18 @@ const RfpSubmissionForm: React.FC = () => {
               { value: "Service", label: "Service" },
               { value: "Product", label: "Product" },
             ]}
-            value={{ value: rfpData.requirementType, label: rfpData.requirementType }}
+            value={{
+              value: rfpData.requirementType,
+              label: rfpData.requirementType,
+            }}
             onChange={handleRequirementTypeChange}
             placeholder="Select Requirement Type"
             className="basic-single"
             classNamePrefix="select"
           />
-          {errors.requirementType && <p className="text-red-500">{errors.requirementType}</p>}
+          {errors.requirementType && (
+            <p className="text-red-500">{errors.requirementType}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 w-60 text-base">
@@ -187,7 +213,9 @@ const RfpSubmissionForm: React.FC = () => {
             onChange={handleChangeRfpDetails}
             className="p-2"
           />
-          {errors.dateOfOrdering && <p className="text-red-500">{errors.dateOfOrdering}</p>}
+          {errors.dateOfOrdering && (
+            <p className="text-red-500">{errors.dateOfOrdering}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 w-60 text-base">
@@ -200,7 +228,9 @@ const RfpSubmissionForm: React.FC = () => {
             placeholder="Delivery Location"
             className="p-2"
           />
-          {errors.deliveryLocation && <p className="text-red-500">{errors.deliveryLocation}</p>}
+          {errors.deliveryLocation && (
+            <p className="text-red-500">{errors.deliveryLocation}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 w-60 text-base">
@@ -212,7 +242,9 @@ const RfpSubmissionForm: React.FC = () => {
             onChange={handleChangeRfpDetails}
             className="p-2"
           />
-          {errors.deliveryByDate && <p className="text-red-500">{errors.deliveryByDate}</p>}
+          {errors.deliveryByDate && (
+            <p className="text-red-500">{errors.deliveryByDate}</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 w-60 text-base">

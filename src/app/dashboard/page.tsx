@@ -26,6 +26,7 @@ export default function Dashboard() {
       router.push("/login");
       return;
     }
+    renderDashboardContent();
     console.log(userRole);
     setRole(userRole || "");
     setLoading(false);
@@ -34,29 +35,14 @@ export default function Dashboard() {
   const renderDashboardContent = () => {
     switch (role) {
       case "ADMIN":
-        return (
-          <AdminDashboard
-            list={AdminList}
-            activeComponent={activeComponent}
-            setActiveComponent={setActiveComponent}
-          />
-        );
+        router.push("/dashboard/admin");
+        break;
       case "PR_MANAGER":
-        return (
-          <ManagerDashboard
-            list={managerList}
-            activeComponent={activeComponent}
-            setActiveComponent={setActiveComponent}
-          />
-        );
+        router.push("/dashboard/manager");
+        break;
       case "FINANCE_MANAGER":
-        return (
-          <AccountantDashboard
-            list={financeList}
-            activeComponent={activeComponent}
-            setActiveComponent={setActiveComponent}
-          />
-        );
+        router.push("/dashboard/finance");
+        break;
       // case "VENDOR":
       //   return (
       //     <VendorDashboard
@@ -80,5 +66,9 @@ export default function Dashboard() {
     return <Loader />;
   }
 
-  return <div className="mx-4 ">{renderDashboardContent()}</div>;
+  return (
+    <div className="mx-4 ">
+      <Loader />
+    </div>
+  );
 }

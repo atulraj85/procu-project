@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 
 type Product = {
   id: string;
@@ -924,9 +925,20 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>
+          <Link href="/dashboard/manager">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="text-black-500 bg-red-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>{" "}
+          </Link>
         </CardHeader>
+
         <CardContent>
           {fields.map((field, index) => (
             <Accordion

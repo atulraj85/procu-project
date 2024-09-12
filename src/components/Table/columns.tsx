@@ -62,9 +62,9 @@ export const columns1: ColumnDef<TableRow>[] = [
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
              
               <DropdownMenuSeparator />
-              <Link  href={`/dashboard/manager/quotation?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
-              <Link href={`/dashboard/manager/viewrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
-              <Link href={`/dashboard/manager/editrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+              <Link  href={`/dashboard/manager/rfp/quotation?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
+              <Link href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
+              <Link href={`/dashboard/manager/rfp/edit?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
 
             </DropdownMenuContent>
           </DropdownMenu>

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import RFPUpdateFormOLD from "@/components/new-manager/UpdateRFPFormOLD";
 import RFPUpdateForm from "@/components/new-manager/UpdateRFP2";
+import Loader from "@/components/shared/Loader";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -39,13 +40,9 @@ const Page = () => {
 
   return (
     <div>
-      <div className="flex justify-end py-8 pr-16">
-        <Link href="/dashboard">
-          <Button>Cancel</Button>
-        </Link>
-      </div>
+     
       <div>
-        {loading && <p>Loading...</p>}
+        {loading && <Loader/>}
         {rfpId && <RFPUpdateForm rfpId={rfpId} />}{" "}
         {/* {rfpId && <RFPUpdateFormOLD />}{" "} */}
       </div>
