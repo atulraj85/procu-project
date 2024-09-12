@@ -1,6 +1,7 @@
 import React from "react";
 import { SidebarItem } from "../../types/index";
 import Image from "next/image";
+import Procu from "./Procu";
 
 interface SidebarProps {
   items: SidebarItem[];
@@ -9,7 +10,10 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ items, setActiveComponent }) => {
   return (
-    <aside className="flex h-screen w-64 flex-col overflow-y-auto border-r bg-white px-5 py-8">
+    <aside className="flex h-screen w-56 flex-col overflow-y-auto border-r bg-white px-5 py-8">
+      <div className="text-black text-xl m-3 -ml-0.5">
+        <Procu />
+      </div>
       <div className="mt-6 flex flex-1 flex-col justify-between">
         <nav className="-mx-3 space-y-4">
           {items.map((item) => (

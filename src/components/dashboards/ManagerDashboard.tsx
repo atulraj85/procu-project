@@ -39,10 +39,6 @@ export default function ManagerDashboard({
         return <Dashboard />;
       case "createRFP":
         return <RFPForm />;
-      case "addQoutation":
-        return <RFPUpdateForm />;
-      case "Addvendor":
-        return <Addvender />;
       default:
         return <h1 className="text-2xl font-bold mb-4">Select a component</h1>;
     }
@@ -53,7 +49,7 @@ export default function ManagerDashboard({
       <div className="fixed top-0 left-0">
         <Sidebar items={list} setActiveComponent={setActiveComponent} />
       </div>
-      <div className="px-8 py-2 w-full">{renderComponent()}</div>
+      <div className="px-8 py-4 w-full">{renderComponent()}</div>
     </div>
   );
 }

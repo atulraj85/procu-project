@@ -49,8 +49,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <Loader />
   ) : (
     <div className="">
-      <div className="relative ml-64 flex  flex-col content-center ">
-        <div className=" border  bg-gray-50 ">
+      <div className="relative ml-56 flex  flex-col content-center ">
+        <div className="shadow">
         <DashboardNavBar  userProfile={userProfile} loading={loading} />
         </div>
         {children}
