@@ -53,7 +53,7 @@ export default function ManagerDashboard({
       <div className="fixed top-0 left-0">
         <Sidebar items={list} setActiveComponent={setActiveComponent} />
       </div>
-      <div className="p-8 w-full">{renderComponent()}</div>
+      <div className="px-8 py-2 w-full">{renderComponent()}</div>
     </div>
   );
 }

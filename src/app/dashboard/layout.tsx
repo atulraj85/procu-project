@@ -35,7 +35,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     case "PR_MANAGER":
       list = managerList;
       break;
-    case "ACCOUNTANT":
+    case "FINANCE_MANAGER":
       list = financeList;
       break;
     case "VENDOR":
@@ -49,8 +49,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <Loader />
   ) : (
     <div className="">
-      <div className="relative ml-64 flex flex-col">
-        <DashboardNavBar userProfile={userProfile} loading={loading} />
+      <div className="relative ml-64 flex  flex-col content-center ">
+        <div className=" border  bg-gray-50 ">
+        <DashboardNavBar  userProfile={userProfile} loading={loading} />
+        </div>
         {children}
       </div>
     </div>

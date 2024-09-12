@@ -73,6 +73,44 @@ export const columns1: ColumnDef<TableRow>[] = [
     },
   ];
 
+  export const columns2: ColumnDef<TableRow>[] = [
+    { header: "RFP ID", accessorKey: "rfpId" },
+    { header: "Requirement Type", accessorKey: "requirementType" },
+    { header: "Date of Ordering", accessorKey: "dateOfOrdering" },
+    { header: "Delivery Location", accessorKey: "deliveryLocation" },
+    { header: "Delivery By Date", accessorKey: "deliveryByDate" },
+    // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
+    { header: "RFP Status", accessorKey: "rfpStatus" },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const columns1 = row.original
+        console.log("from  ",columns1);
+        
+   
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+             
+              <DropdownMenuSeparator />
+              <Link  href={`/dashboard/finance/createpo?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Order</DropdownMenuItem> </Link>
+              <Link href={`/dashboard/manager/viewrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
+              {/* <Link href={`/dashboard/manager/editrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link> */}
+
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ];
+
   
   //   {
   //     Header: 'ID',

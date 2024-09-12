@@ -49,14 +49,14 @@ export default function Dashboard() {
             setActiveComponent={setActiveComponent}
           />
         );
-      // case "ACCOUNTANT":
-      //   return (
-      //     <AccountantDashboard
-      //       list={financeList}
-      //       activeComponent={activeComponent}
-      //       setActiveComponent={setActiveComponent}
-      //     />
-      //   );
+      case "FINANCE_MANAGER":
+        return (
+          <AccountantDashboard
+            list={financeList}
+            activeComponent={activeComponent}
+            setActiveComponent={setActiveComponent}
+          />
+        );
       // case "VENDOR":
       //   return (
       //     <VendorDashboard
@@ -80,5 +80,5 @@ export default function Dashboard() {
     return <Loader />;
   }
 
-  return <div className="mx-4 mt-4">{renderDashboardContent()}</div>;
+  return <div className="mx-4 ">{renderDashboardContent()}</div>;
 }

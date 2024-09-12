@@ -4,46 +4,46 @@ export const financeList = [
     label: "Dashboard",
     imgUrl: "/svgs/dashboard.svg",
   },
-  {
-    value: "registration",
-    label: "Registration",
-    imgUrl: "/svgs/registration.svg",
-  },
-  {
-    value: "productForm",
-    label: "Product Form",
-    imgUrl: "/svgs/productForm.svg",
-  },
-  {
-    value: "productRequest",
-    label: "Product Request",
-    imgUrl: "/svgs/productRequest.svg",
-  },
-  {
-    value: "billOfQuantity",
-    label: "Bill of Quantity",
-    imgUrl: "/svgs/bill.svg",
-  },
-  {
-    value: "productOrdered",
-    label: "Product Ordered",
-    imgUrl: "/svgs/productOrder.svg",
-  },
-  {
-    value: "reports",
-    label: "Reports",
-    imgUrl: "/svgs/report.svg",
-  },
-  {
-    value: "invoices",
-    label: "Invoices",
-    imgUrl: "/svgs/invoice.svg",
-  },
-  {
-    value: "support",
-    label: "Support",
-    imgUrl: "/svgs/support.svg",
-  },
+  // {
+  //   value: "registration",
+  //   label: "Registration",
+  //   imgUrl: "/svgs/registration.svg",
+  // },
+  // {
+  //   value: "productForm",
+  //   label: "Product Form",
+  //   imgUrl: "/svgs/productForm.svg",
+  // },
+  // {
+  //   value: "productRequest",
+  //   label: "Product Request",
+  //   imgUrl: "/svgs/productRequest.svg",
+  // },
+  // {
+  //   value: "billOfQuantity",
+  //   label: "Bill of Quantity",
+  //   imgUrl: "/svgs/bill.svg",
+  // },
+  // {
+  //   value: "productOrdered",
+  //   label: "Product Ordered",
+  //   imgUrl: "/svgs/productOrder.svg",
+  // },
+  // {
+  //   value: "reports",
+  //   label: "Reports",
+  //   imgUrl: "/svgs/report.svg",
+  // },
+  // {
+  //   value: "invoices",
+  //   label: "Invoices",
+  //   imgUrl: "/svgs/invoice.svg",
+  // },
+  // {
+  //   value: "support",
+  //   label: "Support",
+  //   imgUrl: "/svgs/support.svg",
+  // },
 ];
 
 export const AdminList = [
