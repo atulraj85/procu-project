@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import RFPUpdateFormOLD from "@/components/new-manager/UpdateRFPFormOLD";
 import RFPUpdateForm from "@/components/new-manager/UpdateRFP2";
 
 const Page = () => {
@@ -34,7 +35,7 @@ const Page = () => {
 
       fetchData();
     }
-  }, [searchParams]); // Dependency array includes searchParams
+  }, [searchParams]);
 
   return (
     <div>
@@ -44,9 +45,9 @@ const Page = () => {
         </Link>
       </div>
       <div>
-        {loading && <p>Loading...</p>} {/* Show loading message */}
+        {loading && <p>Loading...</p>}
         {rfpId && <RFPUpdateForm rfpId={rfpId} />}{" "}
-        {/* Render RFPUpdateForm if rfpId is available */}
+        {/* {rfpId && <RFPUpdateFormOLD />}{" "} */}
       </div>
     </div>
   );

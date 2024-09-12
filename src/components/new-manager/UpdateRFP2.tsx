@@ -49,7 +49,7 @@ type OtherCharge = {
 
 type SupportingDocument = {
   name: string;
-  file: File | null;
+  fileName: string;
 };
 
 type Total = {
@@ -646,10 +646,12 @@ const SupportingDocumentsList = ({
   setValue,
   files,
   setFiles,
+  getValue,
 }: {
   control: Control<FormData>;
   index: number;
   setValue: UseFormSetValue<FormData>;
+  getValue: any;
   files: { [key: string]: File };
   setFiles: React.Dispatch<React.SetStateAction<{ [key: string]: File }>>;
 }) => {
@@ -658,6 +660,7 @@ const SupportingDocumentsList = ({
     name: `quotations.${index}.supportingDocuments`,
   });
 
+  // Use useWatch to get the current values of the quotation
   const quotation = useWatch({
     control,
     name: `quotations.${index}`,
@@ -669,19 +672,31 @@ const SupportingDocumentsList = ({
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const documentName = fields[docIndex].name; // Get the document name from the field
-      const fieldName = `${quotation.vendorId}-${documentName}`; // Use the document name here
-      console.log("Selected file:", file);
+      console.log("File", file);
+
+      console.log(
+        "FILENAME",
+        getValue(`quotations.${index}.supportingDocuments.${docIndex}.name`)
+      );
+
+      const documentName = getValue(
+        `quotations.${index}.supportingDocuments.${docIndex}.name`
+      );
+      console.log("documentName", documentName);
+      console.log(getValue(`quotations.${index}.vendorId`));
+      const fileKey = `${getValue(
+        `quotations.${index}.vendorId`
+      )}/${documentName}`;
+      console.log("fileKey", fileKey);
+
       setFiles((prevFiles) => ({
         ...prevFiles,
-        [fieldName]: file,
+        [fileKey]: file,
       }));
       setValue(
-        `quotations.${index}.supportingDocuments.${docIndex}.file`,
-        file
+        `quotations.${index}.supportingDocuments.${docIndex}.fileName`,
+        file.name
       );
-    } else {
-      console.warn("No file selected");
     }
   };
 
@@ -723,7 +738,7 @@ const SupportingDocumentsList = ({
           <Button
             type="button"
             className="bg-primary mt-2"
-            onClick={() => append({ name: "", file: null })}
+            onClick={() => append({ name: "", fileName: "" })}
           >
             Add Supporting Document
           </Button>
@@ -732,7 +747,6 @@ const SupportingDocumentsList = ({
     </div>
   );
 };
-
 
 // Step 6: Create Total Component
 interface TotalComponentProps {
@@ -862,47 +876,51 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
   }, [getValues().quotations]);
 
-const onSubmit = async (data: FormData) => {
-  setIsLoading(true);
-  setError(null);
-  setSuccess(false);
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
 
-  const formData = new FormData();
-  formData.append("data", JSON.stringify(data));
+    try {
+      const formData = new FormData();
 
-  // Append files to formData with the specified format
-  Object.entries(files).forEach(([key, file]) => {
-    const [vendorId, documentName] = key.split("-"); // Split the key to get vendorId and documentName
-    const filePath = `${rfpId}/${vendorId}/${documentName}`; // Construct the file path
-    formData.append(filePath, file); // Append the file with the constructed path
-    console.log(`Appending file: ${filePath}`, file);
-  });
+      // Add rfpId to formData
+      formData.append("rfpId", rfpId);
 
-  console.log(formData)
+      // Serialize the form data (excluding files) to JSON
+      const serializedData = JSON.stringify(data);
+      formData.append("data", serializedData);
 
-  try {
-    // const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
-    //   method: "PUT",
-    //   body: formData,
-    // });
+      console.log(files);
 
-    // if (!response.ok) {
-    //   throw new Error(`HTTP error! status: ${response.status}`);
-    // }
+      // Append files to formData
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
 
-    // const result = await response.json();
-    // console.log("RFP updated successfully:", result);
+      console.log(formData);
 
+      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+        method: "PUT",
+        body: formData,
+      });
 
-    setSuccess(true);
-  } catch (err) {
-    console.error("Error updating RFP:", err);
-    setError(err instanceof Error ? err.message : "An unknown error occurred");
-  } finally {
-    setIsLoading(false);
-  }
-};
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
+      setSuccess(true);
+    } catch (err) {
+      console.error("Error updating RFP:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -958,6 +976,7 @@ const onSubmit = async (data: FormData) => {
                       setValue={setValue}
                       files={files}
                       setFiles={setFiles}
+                      getValue={getValues}
                     />
                   </div>
 
@@ -980,6 +999,7 @@ const onSubmit = async (data: FormData) => {
 
           {fields.length < 3 && (
             <Button
+              type="button"
               onClick={() =>
                 append({
                   vendorId: "",
