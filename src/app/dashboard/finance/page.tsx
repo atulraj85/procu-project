@@ -10,12 +10,7 @@ import {
 } from "@/lib/tableContent";
 import { columns2 } from "@/components/Table/columns";
 import { DataTable } from "@/components/Table/data-table";
-
-interface HeaderData {
-  value: string;
-  titles: TableColumn[];
-  content: any;
-}
+import Loader from "@/components/shared/Loader";
 
 interface RfpData {
   rfpId: string;
@@ -28,22 +23,10 @@ interface RfpData {
 }
 
 const Dashboard = () => {
-  const headerData: HeaderData[] = [
-    {
-      value: "grn_received",
-      titles: grn_received,
-      content: grn_received_Data,
-    },
-    {
-      value: "open_po",
-      titles: open_po,
-      content: open_po_Data,
-    },
-    {
-      value: "po_dues",
-      titles: po_dues,
-      content: po_dues_Data,
-    },
+  const headerData: { value: string; titles: TableColumn[]; content: any }[] = [
+    { value: "grn_received", titles: grn_received, content: grn_received_Data },
+    { value: "open_po", titles: open_po, content: open_po_Data },
+    { value: "po_dues", titles: po_dues, content: po_dues_Data },
   ];
 
   const infoLinks: InfoItem[] = [
@@ -70,12 +53,11 @@ const Dashboard = () => {
     },
   ];
 
+  const [rfps, setRfps] = useState<RfpData[]>([]);
   const [content, setContent] = useState<RfpData[]>([]);
   const [header, setHeader] = useState<TableColumn[]>([]);
   const [title, setTitle] = useState("PO Due");
   const [loading, setLoading] = useState(true);
-  const [completeRfps, setCompleteRfps] = useState<RfpData[]>([]); // State for complete RFPs
-  const [openRfps, setOpenRfps] = useState<RfpData[]>([]); // State for open RFPs
 
   const rfpHeaders: TableColumn[] = [
     { key: "rfpId", header: "RFP ID" },
@@ -105,28 +87,12 @@ const Dashboard = () => {
         rfpStatus: item.rfpStatus,
       }));
 
-      // Categorize RFPs based on their status
-      const pendingRfps = formattedData.filter(
-        (item) => item.rfpStatus === "PENDING"
-      );
-      const completeRfps = formattedData.filter(
-        (item) => item.rfpStatus === "COMPLETED"
-      );
-      const openRfps = formattedData.filter(
-        (item) =>
-          item.rfpStatus !== "COMPLETED" &&
-          item.rfpStatus !== "PENDING" &&
-          item.rfpStatus !== "DRAFT"
-      );
-
-      // Set the initial content to pending RFPs
-      setContent(pendingRfps);
-      setCompleteRfps(completeRfps); // Store complete RFPs in state
-      setOpenRfps(openRfps); // Store open RFPs in state
+      setRfps(formattedData);
+      setContent(formattedData.filter((item) => item.rfpStatus === "SU")); // Set initial content to pending RFPs
       setHeader(rfpHeaders);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching RFP data:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -134,12 +100,17 @@ const Dashboard = () => {
   const handleInfoCardClick = (value: string) => {
     setTitle(value.toUpperCase());
     if (value === "po_dues") {
-      fetchRfpData();
-      setContent(content.filter((item) => item.rfpStatus === "PENDING")); // Show pending RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED")); // Show pending RFPs
     } else if (value === "complete") {
-      setContent(completeRfps); // Show complete RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE")); // Show complete RFPs
     } else if (value === "open_po") {
-      setContent(openRfps); // Show open RFPs
+      setContent(
+        rfps.filter(
+          (item) =>
+            item.rfpStatus !== "SUBMITTED" &&
+            item.rfpStatus !== "PAYMENT_DONE" 
+        )
+      ); // Show open RFPs
     } else {
       const heading = headerData.find((data) => data.value === value);
       if (heading) {
@@ -150,8 +121,12 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    handleInfoCardClick("po_dues");
+    fetchRfpData();
   }, []);
+
+  useEffect(() => {
+    handleInfoCardClick("po_dues"); // Set default view to "PO Due"
+  }, [rfps]); // Ensure this runs after RFPs are fetched
 
   return (
     <div className="flex flex-col w-full">
@@ -166,11 +141,7 @@ const Dashboard = () => {
       <hr />
 
       <div className="w-full">
-        {loading ? (
-          <div>Loading...</div> // You can replace this with your Loader component
-        ) : (
-          <DataTable columns={columns2} data={content} />
-        )}
+        {loading ? <Loader /> : <DataTable columns={columns2} data={content} />}
       </div>
     </div>
   );
