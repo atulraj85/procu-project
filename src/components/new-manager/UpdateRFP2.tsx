@@ -848,7 +848,7 @@ interface RFPUpdateFormProps {
   rfpId: string; // Define the prop type for rfpId
 }
 
-export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
+export default function  RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

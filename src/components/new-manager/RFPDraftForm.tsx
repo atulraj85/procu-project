@@ -58,6 +58,7 @@ function getTodayDate(): string {
 
 const RFPForm: React.FC = () => {
 
+  console.log(getTodayDate());
   
   const [formData, setFormData] = useState<FormData>({
     requirementType: "",

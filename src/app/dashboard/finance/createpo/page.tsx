@@ -1,66 +1,132 @@
+"use client"
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@radix-ui/react-label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select";
 import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Controller, useFieldArray } from "react-hook-form";
 
-const company = {
-  id: "863f6852-7513-4c4e-8fef-c6828d843f1a",
-  name: "Tech Innovations Inc.",
-  address: {
-    zip: "94043",
-    city: "Silicon Valley",
-    state: "California",
-    county: "Santa Clara",
-    street: "123 Tech Lane",
-    country: "USA",
-    district: "Silicon Valley District",
-  },
-  email: "contact@techinnovations.com",
-  phone: "+1-234-567-8901",
-  website: "https://www.techinnovations.com",
-  industry: "Technology",
-  foundedDate: "2020-01-15T00:00:00.000Z",
-  status: "active",
-  created_at: "2024-10-01T12:00:00.000Z",
-  updated_at: "2024-10-01T12:00:00.000Z",
-};
-const vendor = {
-  id: "b5b7988e-c18f-4193-9737-cc35ae3c557c",
-  customerCode: "CUST-001",
-  primaryName: "Ashutosh Kumar Mishra",
-  companyName: "GROWW AND BECONSCIOUS PRIVATE LIMITED",
-  contactDisplayName: "Ashutosh Kumar Mishra",
-  email: "ashutoshmishra8796@gmail.com",
-  workPhone: "9267970511",
-  mobile: "9267970511",
-  website: "https://www.gennextit.com",
-  gstin: "27AAECG8478M1ZT",
-  msmeNo: "MSME123456",
-  address:
-    "GROUND FLOOR, FLAT NO. 001,, DADARKAR ARCADE N L PARELKAR, PAREL VILLAGE, PAREL, Mumbai, Maharashtra, 400012",
-  customerState: "UP",
-  customerCity: "Ghaziabad",
-  country: "India",
-  zip: "400012",
-  remarks: null,
-  pan: "AAECG8478M",
-  verifiedById: "9984cfb2-5bb0-4475-9340-f16be26bcb5b",
-  created_at: "2024-09-11T08:54:50.009Z",
-  updated_at: "2024-09-11T08:54:50.009Z",
-  productCategoryId: null,
+
+type Product = {
+  id: string;
+  name: string;
+  modelNo: string;
+  quantity: number;
+  unitPrice?: number;
+  gst?: string;
+  totalPriceWithoutGST?: number;
+  totalPriceWithGST?: number;
 };
 const Page = () => {
+  const ProductList = ({
+    control,
+    index,
+    getValues,
+    setValue,
+    rfpId,
+  }: {
+    control: any;
+    index: number;
+    getValues: any;
+    setValue: any;
+    rfpId: string;
+  }) => {
+    const { fields } = useFieldArray({
+      control,
+      name: `quotations.${index}.products`,
+    });
+    const [error, setError] = useState<string | null>(null);
+    const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
+    const [loading, setIsLoading] = useState(false);
+    const globalFormData = new FormData();
+  
+    useEffect(() => {
+      async function fetchRFPProducts() {
+        setIsLoading(true);
+        if (rfpId) {
+          try {
+            const rfpProductsData = await fetch(`/api/rfpProduct?rfpId=${rfpId}`);
+            const data = await rfpProductsData.json();
+  
+            const productsWithDetails: Product[] = await Promise.all(
+              data.map(async (rfpProduct: any) => {
+                const productData = await fetch(
+                  `/api/product?id=${rfpProduct.productId}`
+                );
+  
+                const responseData = await productData.json();
+  
+                if (Array.isArray(responseData) && responseData.length > 0) {
+                  return responseData.map((product: any) => ({
+                    id: product.id || null,
+                    name: product.name || null,
+                    modelNo: product.modelNo || null,
+                    quantity: rfpProduct.quantity || 0,
+                    amount: 0,
+                    unitPrice: product.unitPrice || null,
+                    gst: product.gst || null,
+                    totalPriceWithoutGST: product.totalPriceWithoutGST || null,
+                    totalPriceWithGST: product.totalPriceWithGST || null,
+                  }));
+                }
+                return []; // Return an empty array if responseData is not valid
+              })
+            );
+  
+            const flattenedProductsWithDetails = productsWithDetails.flat();
+  
+            console.log("productsWithDetails", flattenedProductsWithDetails);
+  
+            setRfpProducts(flattenedProductsWithDetails);
+            setValue(
+              `quotations.${index}.products`,
+              flattenedProductsWithDetails
+            );
+  
+            if (globalFormData.has("quotations")) {
+              const quotations = JSON.parse(
+                globalFormData.get("quotations") as string
+              );
+              quotations[index] = {
+                ...quotations[index],
+                products: flattenedProductsWithDetails,
+              };
+              globalFormData.set("quotations", JSON.stringify(quotations));
+            }
+  
+            setError(null);
+          } catch (err) {
+            setError(
+              err instanceof Error ? err.message : "An unknown error occurred"
+            );
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      }
+  
+      fetchRFPProducts();
+    }, [rfpId]);
+  
+    const calculateTotals = (
+      unitPrice: number,
+      quantity: number,
+      gst: string
+    ) => {
+      const totalWithoutGST = unitPrice * quantity;
+      const gstValue = gst === "NILL" ? 0 : parseFloat(gst);
+      const totalWithGST = totalWithoutGST * (1 + gstValue / 100);
+      return { totalWithoutGST, totalWithGST };
+    };
   return (
-    <div>
-      <div className="flex justify-end pb-8 pt-3 pr-8">
-        <Link href="/dashboard"><Button>Cancel</Button></Link>
-      </div>
-    <div className="mx-20 mt-4">
-      <div className="flex justify-end pb-8">
+   <div>
+    <div className="flex justify-end pb-8">
         <Link href="/dashboard/finance">
           <Button
             type="button"
@@ -72,100 +138,218 @@ const Page = () => {
           </Button>{" "}
         </Link>
       </div>
-      <section className="flex justify-between pb-7">
-        <div>
-          <label className="font-bold">Company Logo</label>
-          <Image height={100} width={100} alt="Company logo" src=""></Image>
-        </div>
+    <Card>
+      <div className="flex flex-wrap justify-between p-4">
         <div>
           <div>
-            <h1 className="font-bold">{company.name}</h1>
-            <p className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</p>
+            <Label className="font-bold">Company Name</Label>
+            <Input className="text-[14px]"></Input>
           </div>
         </div>
-      </section>
+        
+          <div>
+            <Label className="font-bold">Company Address</Label>
+            <Textarea className="text-[14px]"></Textarea>
+          </div>
+          <div>
+            <Label className="font-bold">Company GST</Label>
+            <Input className="text-[14px]"></Input>
+          </div>
+        </div>
+      </Card>
 
-      {/* Another section for Purchase Order */}
-      <div className="font-bold flex justify-center">
-        <h1>Purchase Order</h1>
-      </div>
-      <section className="flex justify-between">
-        <div className="w-[30%]">
-          {/* <label className="font-bold">GSTN</label> */}
-          <h1 className="font-bold">{vendor.companyName}</h1>
-          <h1 className="text-[14px]">{vendor.address}</h1>
-          <p className="font-bold">
-            GSTIN: <span className="text-[14px]"> {vendor.gstin}</span>
-          </p>
+      <Label className="font-bold my-4"> Purchase Order </Label>
+      <Card>
+      <div className="flex flex-wrap justify-between p-4">
+        
+        
+          <div>
+            <Label className="font-bold">Company Address</Label>
+            <Textarea className="text-[14px]"></Textarea>
+          </div>
+          <div>
+            <Label className="font-bold">Company GST</Label>
+            <Input className="text-[14px]"></Input>
+          </div>
+          <div>
+            <Label className="font-bold">Order No</Label>
+            <Input className="text-[14px]"></Input>
+          </div>
+          <div>
+            <Label className="font-bold">Ref</Label>
+            <Input className="text-[14px]"></Input>
+          </div>
+         
+          <div>
+            <Label className="font-bold">Date</Label>
+            <Input className="text-[14px]"></Input>
+          </div>
         </div>
-        <div>
-          <div className="flex">
-            <label className="font-bold">Order No :</label>
-            <h1>MM-PO-2024-25-190</h1>
-          </div>
-          <div className="flex">
-            <label className="font-bold">Ref :-</label>
-            <h1>SO-24-00012</h1>
-          </div>
-          <div className="flex">
-            <label className="font-bold">Date :-</label>
-            <h1>22/07/2024</h1>
-          </div>
-        </div>
-      </section>
+      </Card>
+   
 
-      <div className="font-bold mt-10 mb-4 ">
-        <h1>Description: Render Farm</h1>
-      </div>
-      <section className="flex justify-between">
-        <div className="w-[30%]">
-          {/* <label className="font-bold">GSTN</label> */}
-          <h1 className="font-bold pb-1">Product Description</h1>
-          <p className="text-[14px]">
-            GSTIN: Render Farm : https://www.foxrenderfarm.com/ Credits
-            Required: Rs 169340 (USD 2000 * 84.67) Handling cost: 18% INR
-            30,481. Total cost: 199821
-          </p>
-        </div>
-        <div className="">
-          {/* <label className="font-bold">GSTN</label> */}
-          <h1 className="font-bold pb-1">Unit price in INR</h1>
-          <p className="text-[14px]">1,99,821.00</p>
-        </div>
+  
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Products</CardTitle>
+      </CardHeader>
 
-        <div className="">
-          {/* <label className="font-bold">GSTN</label> */}
-          <h1 className="font-bold pb-1">Qty</h1>
-          <p className="text-[14px]">1</p>
-        </div>
+      <CardContent>
+        <div className="space-y-2">
+          <div className="grid grid-cols-7 gap-2 mb-2">
+            <Label>Name</Label>
+            <Label>Model No.</Label>
+            <Label>Quantity</Label>
+            <Label>Unit Price</Label>
+            <Label>GST</Label>
+            <Label>Total (Without GST)</Label>
+            <Label>Total (With GST)</Label>
+          </div>
 
-        <div className="">
-          {/* <label className="font-bold">GSTN</label> */}
-          <h1 className="font-bold pb-1">Total Price in INR</h1>
-          <p className="text-[14px]">1,99,821.00</p>
-        </div>
-      </section>
+          {loading ? (
+            <>Fetching Data</>
+          ) : (
+            fields.map((field, productIndex) => (
+              <div key={field.id} className="grid grid-cols-7 gap-2 m-2">
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.name`
+                  )}
+                  readOnly
+                />
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.modelNo`
+                  )}
+                  readOnly
+                />
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.quantity`
+                  )}
+                  readOnly
+                />
+                <Controller
+                  name={`quotations.${index}.products.${productIndex}.unitPrice`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => {
+                        const unitPrice = parseFloat(e.target.value);
+                        field.onChange(unitPrice);
+                        const quantity = getValues(
+                          `quotations.${index}.products.${productIndex}.quantity`
+                        );
+                        const gst = getValues(
+                          `quotations.${index}.products.${productIndex}.gst`
+                        );
+                        const { totalWithoutGST, totalWithGST } =
+                          calculateTotals(unitPrice, quantity, gst);
 
-      <section className="flex justify-between">
-        <div>
-          <div className="w-[50%] mt-7 mb-3">
-            <label className="font-bold">M-Monks Digital Media Pvt Ltd.</label>
-            <Image height={100} width={100} alt="Company logo" src=""></Image>
-            <h1 className="text-[14px]">Authorized Signatory</h1>
-          </div>
-          <div className="w-[50%] mt-7 mb-3">
-            <label className="font-bold">Invoice To:</label>
-            <h1 className="text-[14px]">{vendor.address}</h1>
-          </div>
-          <div className="mb-8">
-            <label className="font-bold">Ship To:</label>
-            <h1 className="text-[14px]">{`${company.address.street},${company.address.city},${company.address.state},${company.address.zip}`}</h1>
-          </div>
+                        const quotations = JSON.parse(
+                          globalFormData.get("quotations") as string
+                        );
+                        quotations[index].products[productIndex].unitPrice =
+                          unitPrice;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithoutGST = totalWithoutGST;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithGST = totalWithGST;
+                        globalFormData.set(
+                          "quotations",
+                          JSON.stringify(quotations)
+                        );
+
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+                        //   totalWithoutGST
+                        // );
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+                        //   totalWithGST
+                        // );
+                      }}
+                    />
+                  )}
+                />
+                <Controller
+                  name={`quotations.${index}.products.${productIndex}.gst`}
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const unitPrice = getValues(
+                          `quotations.${index}.products.${productIndex}.unitPrice`
+                        );
+                        const quantity = getValues(
+                          `quotations.${index}.products.${productIndex}.quantity`
+                        );
+                        const { totalWithoutGST, totalWithGST } =
+                          calculateTotals(unitPrice, quantity, value);
+                        setValue(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+                          totalWithoutGST
+                        );
+                        setValue(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+                          totalWithGST
+                        );
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select GST" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                          (gst) => (
+                            <SelectItem key={gst} value={gst}>
+                              {gst}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                  )}
+                  readOnly
+                  value={(
+                    getValues(
+                      `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                    ) || 0
+                  ).toFixed(2)}
+                />
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                  )}
+                  readOnly
+                  value={(
+                    getValues(
+                      `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                    ) || 0
+                  ).toFixed(2)}
+                />
+              </div>
+            ))
+          )}
         </div>
-      </section>
-    </div>
-    </div>
+      </CardContent>
+    </Card>
+  
+      
+   </div>
   );
 };
+}
 
 export default Page;
