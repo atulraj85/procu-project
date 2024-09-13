@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           data: rfpProducts.map((rfpProduct) => ({
             rfpId: createdRFP.id, // Use the ID of the created RFP
             quantity: rfpProduct.quantity,
-            productId: parseInt(rfpProduct.productId, 10), // Ensure this is the correct type
+            productId: rfpProduct.productId, // Ensure this is the correct type
           })),
         }),
         prisma.approversList.createMany({
