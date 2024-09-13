@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { useForm } from "react-hook-form";
+import Image from "next/image";
 
 const Page = () => {
   const { control, handleSubmit, setValue, getValues } = useForm();
@@ -36,7 +37,22 @@ const Page = () => {
             <CardHeader>
               <CardTitle className="text-lg">Company Details</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2">
+            <CardContent className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className=" font-bold text-[16px] text-slate-700">
+                  Company Logo
+                </Label>
+                <div className="w-[150px] h-[150px] overflow-hidden rounded-full">
+                  <Image
+                    src={"/company/logo.png"}
+                    alt={"logo"}
+                    height={150}
+                    width={150}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label className="mb-2 font-bold text-[16px] text-slate-700">
                   Company Name
