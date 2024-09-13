@@ -62,9 +62,9 @@ export const columns1: ColumnDef<TableRow>[] = [
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
              
               <DropdownMenuSeparator />
-              <Link  href={`/dashboard/manager/quotation?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
-              <Link href={`/dashboard/manager/viewrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
-              <Link href={`/dashboard/manager/editrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+              <Link  href={`/dashboard/manager/rfp/quotation?rfp=${encodeURIComponent(columns1.rfpId)}`}> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link>
+              <Link href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem> View</DropdownMenuItem></Link>
+              <Link href={`/dashboard/manager/rfp/edit?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
 
             </DropdownMenuContent>
           </DropdownMenu>
@@ -245,18 +245,27 @@ export const columns: ColumnDef<Vendor>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-           
+
             <DropdownMenuSeparator />
             {/* <Link href="/dashboard/add"> <DropdownMenuItem> Create Quotation</DropdownMenuItem> </Link> */}
             <Link
-            href={`/dashboard/manager/viewvendor?gstin=${encodeURIComponent(columns1.gstin)}`}>
-               <DropdownMenuItem>View</DropdownMenuItem>
+              href={`/dashboard/manager/vendor/view?gstin=${encodeURIComponent(
+                columns1.gstin
+              )}`}
+            >
+              <DropdownMenuItem>View</DropdownMenuItem>
             </Link>
-           
-            <Link href={`/dashboard/manager/editvendor?gstin=${encodeURIComponent(columns1.gstin)}` }><DropdownMenuItem >  Edit </DropdownMenuItem></Link>
+
+            <Link
+              href={`/dashboard/manager/vendor/edit?gstin=${encodeURIComponent(
+                columns1.gstin
+              )}`}
+            >
+              <DropdownMenuItem> Edit </DropdownMenuItem>
+            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
   

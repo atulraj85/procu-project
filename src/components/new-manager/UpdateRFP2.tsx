@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Loader from "../shared/Loader";
+import Link from "next/link";
 
 type Product = {
   id: string;
@@ -50,7 +50,7 @@ type OtherCharge = {
 
 type SupportingDocument = {
   name: string;
-  file: File | null;
+  fileName: string;
 };
 
 type Total = {
@@ -69,6 +69,8 @@ type Quotation = {
 type FormData = {
   quotations: Quotation[];
 };
+
+const globalFormData = new FormData();
 
 // Step 2: Create Vendor Selector Component
 
@@ -119,7 +121,6 @@ const VendorSelector = ({
     },
     []
   );
-
   const addVendor = useCallback(
     (vendor: Vendor) => {
       if (!vendor.id) {
@@ -132,17 +133,40 @@ const VendorSelector = ({
         setDisableVendorSearch(true);
         setSearchTerm("");
         setFetchedVendors([]);
+
+        const vendorData = {
+          vendorId: vendor.id,
+        };
+
+        if (!globalFormData.has("quotations")) {
+          globalFormData.set("quotations", JSON.stringify([]));
+        }
+
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index] = { ...quotations[index], ...vendorData };
+        globalFormData.set("quotations", JSON.stringify(quotations));
       } else {
         setError(`Vendor with ID ${vendor.id} already exists.`);
       }
     },
-    [approvedVendors]
+    [approvedVendors, index]
   );
 
   const removeVendor = (vendorId: string) => {
     setApprovedVendors((prev) => prev.filter((v) => v.id !== vendorId));
     setValue(`quotations.${index}.vendorId`, "");
     setDisableVendorSearch(false);
+
+    // Remove vendor data from global FormData
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      if (quotations[index]) {
+        delete quotations[index].vendorId;
+      }
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
   };
 
   return (
@@ -253,23 +277,23 @@ const ProductList = ({
   index,
   getValues,
   setValue,
+  rfpId,
 }: {
   control: any;
   index: number;
   getValues: any;
   setValue: any;
+  rfpId: string;
 }) => {
   const { fields } = useFieldArray({
     control,
     name: `quotations.${index}.products`,
   });
   const [error, setError] = useState<string | null>(null);
-  const [rfpId, setRfpId] = useState<string>("");
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
-  useEffect(() => {
-    setRfpId("07448c47-cc99-4eff-b1b6-4cde3c21d162");
 
+  useEffect(() => {
     async function fetchRFPProducts() {
       setIsLoading(true);
       if (rfpId) {
@@ -311,6 +335,17 @@ const ProductList = ({
             `quotations.${index}.products`,
             flattenedProductsWithDetails
           );
+
+          if (globalFormData.has("quotations")) {
+            const quotations = JSON.parse(
+              globalFormData.get("quotations") as string
+            );
+            quotations[index] = {
+              ...quotations[index],
+              products: flattenedProductsWithDetails,
+            };
+            globalFormData.set("quotations", JSON.stringify(quotations));
+          }
 
           setError(null);
         } catch (err) {
@@ -396,14 +431,31 @@ const ProductList = ({
                         );
                         const { totalWithoutGST, totalWithGST } =
                           calculateTotals(unitPrice, quantity, gst);
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-                          totalWithoutGST
+
+                        const quotations = JSON.parse(
+                          globalFormData.get("quotations") as string
                         );
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-                          totalWithGST
+                        quotations[index].products[productIndex].unitPrice =
+                          unitPrice;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithoutGST = totalWithoutGST;
+                        quotations[index].products[
+                          productIndex
+                        ].totalPriceWithGST = totalWithGST;
+                        globalFormData.set(
+                          "quotations",
+                          JSON.stringify(quotations)
                         );
+
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+                        //   totalWithoutGST
+                        // );
+                        // setValue(
+                        //   `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+                        //   totalWithGST
+                        // );
                       }}
                     />
                   )}
@@ -485,14 +537,28 @@ const ProductList = ({
 const OtherChargesList = ({
   control,
   index,
+  formData,
 }: {
   control: any;
   index: number;
+  formData: any;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `quotations.${index}.otherCharges`,
   });
+
+  const updateGlobalFormData = useCallback(() => {
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].otherCharges = fields;
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
+  }, [fields, index]);
+
+  useEffect(() => {
+    updateGlobalFormData();
+  }, [fields, updateGlobalFormData]);
 
   return (
     <div>
@@ -559,8 +625,12 @@ const OtherChargesList = ({
           ))}
 
           <Button
+            type="button"
             className="bg-primary mt-2"
-            onClick={() => append({ name: "", gst: "NILL", unitPrice: 0 })}
+            onClick={() => {
+              append({ name: "", gst: "NILL", unitPrice: 0 });
+              updateGlobalFormData();
+            }}
           >
             Add Other Charge
           </Button>
@@ -571,20 +641,65 @@ const OtherChargesList = ({
 };
 
 // Step 5: Create Supporting Documents List Component
-
 const SupportingDocumentsList = ({
   control,
   index,
   setValue,
+  files,
+  setFiles,
+  getValue,
 }: {
-  control: any;
+  control: Control<FormData>;
   index: number;
-  setValue: any
+  setValue: UseFormSetValue<FormData>;
+  getValue: any;
+  files: { [key: string]: File };
+  setFiles: React.Dispatch<React.SetStateAction<{ [key: string]: File }>>;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
     name: `quotations.${index}.supportingDocuments`,
   });
+
+  // Use useWatch to get the current values of the quotation
+  const quotation = useWatch({
+    control,
+    name: `quotations.${index}`,
+  });
+
+  const handleFileChange = (
+    e: ChangeEvent<HTMLInputElement>,
+    docIndex: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log("File", file);
+
+      console.log(
+        "FILENAME",
+        getValue(`quotations.${index}.supportingDocuments.${docIndex}.name`)
+      );
+
+      const documentName = getValue(
+        `quotations.${index}.supportingDocuments.${docIndex}.name`
+      );
+      console.log("documentName", documentName);
+      console.log(getValue(`quotations.${index}.vendorId`));
+      const fileKey = `${getValue(
+        `quotations.${index}.vendorId`
+      )}/${documentName}`;
+      console.log("fileKey", fileKey);
+
+      setFiles((prevFiles) => ({
+        ...prevFiles,
+        [fileKey]: file,
+      }));
+      setValue(
+        `quotations.${index}.supportingDocuments.${docIndex}.fileName`,
+        file.name
+      );
+    }
+  };
 
   return (
     <div>
@@ -597,7 +712,6 @@ const SupportingDocumentsList = ({
           <div className="grid grid-cols-2 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
-            <Label></Label>
           </div>
           {fields.map((field, docIndex) => (
             <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
@@ -605,34 +719,27 @@ const SupportingDocumentsList = ({
                 {...control.register(
                   `quotations.${index}.supportingDocuments.${docIndex}.name`
                 )}
+                placeholder="Enter document name"
               />
               <Input
                 type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setValue(
-                    `quotations.${index}.supportingDocuments.${docIndex}.file`,
-                    file
-                  );
-                }}
+                onChange={(e) => handleFileChange(e, docIndex)}
               />
-              <div className="flex flex-col">
-                <Label className="font-bold text-[16px] text-slate-700"></Label>
-                <Button
-                  type="button"
-                  onClick={() => remove(docIndex)}
-                  variant="outline"
-                  size="icon"
-                  className="text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                onClick={() => remove(docIndex)}
+                variant="outline"
+                size="icon"
+                className="text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           ))}
           <Button
+            type="button"
             className="bg-primary mt-2"
-            onClick={() => append({ name: "", file: null })}
+            onClick={() => append({ name: "", fileName: "" })}
           >
             Add Supporting Document
           </Button>
@@ -648,8 +755,6 @@ interface TotalComponentProps {
   index: number;
   setValue: UseFormSetValue<any>;
 }
-
-
 const TotalComponent: React.FC<TotalComponentProps> = ({
   control,
   index,
@@ -687,10 +792,27 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
         0
       ) || 0);
 
-    setValue(`quotations.${index}.total`, {
+    const newTotal = {
       withoutGST: Number(totalWithoutGST.toFixed(2)),
       withGST: Number(totalWithGST.toFixed(2)),
-    });
+    };
+
+    // Only update if the total has changed
+    if (
+      quotation.total?.withoutGST !== newTotal.withoutGST ||
+      quotation.total?.withGST !== newTotal.withGST
+    ) {
+      setValue(`quotations.${index}.total`, newTotal);
+
+      // Update globalFormData
+      if (globalFormData.has("quotations")) {
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index].total = newTotal;
+        globalFormData.set("quotations", JSON.stringify(quotations));
+      }
+    }
   }, [quotation, setValue, index]);
 
   return (
@@ -722,10 +844,15 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
 
 // Step 7: Create Main RFP Update Form Component
 
-export default function RFPUpdateForm() {
+interface RFPUpdateFormProps {
+  rfpId: string; // Define the prop type for rfpId
+}
+
+export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [files, setFiles] = useState<{ [key: string]: File }>({});
 
   const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
     defaultValues: {
@@ -746,16 +873,48 @@ export default function RFPUpdateForm() {
     name: "quotations",
   });
 
+  useEffect(() => {
+    globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+  }, [getValues().quotations]);
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
     try {
-      // TODO: Implement actual form submission logic
-      console.log("Form Data:", data);
+      const formData = new FormData();
+
+      // Add rfpId to formData
+      formData.append("rfpId", rfpId);
+
+      // Serialize the form data (excluding files) to JSON
+      const serializedData = JSON.stringify(data);
+      formData.append("data", serializedData);
+
+      console.log(files);
+
+      // Append files to formData
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
+
+      console.log(formData);
+
+      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
+      console.error("Error updating RFP:", err);
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
@@ -763,13 +922,23 @@ export default function RFPUpdateForm() {
       setIsLoading(false);
     }
   };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>
+          <Link href="/dashboard/manager">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="text-black-500 bg-red-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>{" "}
+          </Link>
         </CardHeader>
+
         <CardContent>
           {fields.map((field, index) => (
             <Accordion
@@ -791,13 +960,20 @@ export default function RFPUpdateForm() {
                   </div>
                   <div className="m-2">
                     <ProductList
+                      rfpId={rfpId}
                       setValue={setValue}
                       getValues={getValues}
                       control={control}
                       index={index}
                     />
                   </div>
-                  <OtherChargesList control={control} index={index} />
+
+                  <OtherChargesList
+                    control={control}
+                    index={index}
+                    formData={FormData}
+                  />
+
                   <div className="m-2">
                     <TotalComponent
                       setValue={setValue}
@@ -806,14 +982,36 @@ export default function RFPUpdateForm() {
                     />
                   </div>
                   <div className="m-2">
-                    <SupportingDocumentsList setValue={setValue} control={control} index={index} />
+                    <SupportingDocumentsList
+                      control={control}
+                      index={index}
+                      setValue={setValue}
+                      files={files}
+                      setFiles={setFiles}
+                      getValue={getValues}
+                    />
                   </div>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      console.log("Removing index:", index);
+                      remove(index);
+                    }}
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
           ))}
+
           {fields.length < 3 && (
             <Button
+              type="button"
               onClick={() =>
                 append({
                   vendorId: "",
@@ -853,5 +1051,4 @@ export default function RFPUpdateForm() {
       </Button>
     </form>
   );
-  
 }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serializePrismaModel } from "@/types";
-import { prisma, rfpModel } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import path from "path";
-import fs from "fs";
+import fs from "fs/promises";
 
 // Helper function to validate UUID
 function isValidUUID(uuid: string) {
@@ -24,101 +24,121 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    const { quotations, preferredVendorId } = data;
-
-    console.log("data:", data);
-    console.log("quotations:", quotations);
-    console.log("preferredVendorId:", preferredVendorId);
-
-    // Define valid attributes for the RFP model
-    const validAttributes = rfpModel.attributes;
-    const invalidKeys = Object.keys(data).filter(
-      (key) => !validAttributes.includes(key)
-    );
-    if (invalidKeys.length > 0) {
-      return NextResponse.json(
-        { error: `Invalid attributes in data: ${invalidKeys.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Add the updated_at field to the data
-    data.updated_at = new Date();
+    const { quotations } = data;
+    console.log("quotations", quotations);
+    console.log("formData", formData);
+    const supDocs = Array.from(formData.entries()).slice(2);
+    console.log("supDocs", supDocs);
 
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
       (quotations || []).map(async (quotation: any) => {
-        const { vendorId, products, supportingDocuments, totalAmount } =
+        const { vendorId, products, otherCharges, total, supportingDocuments } =
           quotation;
+      
         if (!isValidUUID(vendorId)) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        const quotationDirPath = path.join(
-          process.cwd(),
-          "public",
-          "assets",
-          `RFP-${id}`,
-          vendorId
-        );
-        await fs.promises.mkdir(quotationDirPath, { recursive: true });
+        console.log("vendorId", vendorId);
 
-        const processedDocuments = await Promise.all(
-          Object.entries(supportingDocuments || {}).map(
-            async ([docType, fileName]) => {
-              const file = formData.get(`${vendorId}-${docType}`) as File;
-              if (!file) {
-                throw new Error(`File not found for ${vendorId}-${docType}`);
-              }
-              const filePath = path.join(quotationDirPath, fileName as string);
-              const fileBuffer = Buffer.from(await file.arrayBuffer());
-              await fs.promises.writeFile(filePath, fileBuffer);
-              return {
-                documentType: docType,
-                documentName: fileName,
-                location: `/assets/RFP-${id}/${vendorId}/${fileName}`,
-              };
-            }
-          )
-        );
+        async function processedDocuments() {
+          const quotationDirPath = path.join(
+            process.cwd(),
+            "public",
+            "assets",
+            `RFP-${id}`,
+            vendorId
+          );
+
+          console.log("quotationDirPath", quotationDirPath);
+
+          await fs.mkdir(quotationDirPath, { recursive: true });
+
+          const index = supDocs.findIndex((doc) => doc[0].startsWith(vendorId));
+
+          if (index !== -1) {
+            console.log(`Element found at index: ${index}`);
+            console.log(`Element:`, supDocs[index]);
+          } else {
+            console.log("Element not found");
+            throw "Supporting documents not found!";
+          }
+
+          const str = supDocs[index][0]; // e.g., 'b5b7988e-c18f-4193-9737-cc35ae3c557c/Bill'
+          const result = str.split("/")[1];
+          console.log("result", result);
+
+          const file = supDocs[index][1] as File;
+          if (!file) {
+            console.warn(`File not found for ${supDocs[index][0]}`);
+            return null;
+          }
+
+          // Extract the name from supDocs[0][0] and the original file extension
+          const newFileName = `${result}.${file.name.split(".").pop()}`; // Combine name and extension
+          console.log("newFileName", newFileName);
+
+          const filePath = path.join(quotationDirPath, newFileName); // Create the full file path with the new name
+
+          try {
+            const fileBuffer = await Buffer.from(await file.arrayBuffer());
+            console.log("fileBuffer", fileBuffer);
+            const done = await fs.writeFile(filePath, fileBuffer); // Use the full file path
+            console.log("done", done);
+          } catch (error: any) {
+            console.log(error);
+          }
+
+          return {
+            documentType: file.name,
+            documentName: newFileName,
+            location: `/assets/RFP-${id}/${vendorId}/${newFileName}`,
+          };
+        }
+
+        const processedDocumentData = await processedDocuments();
+
+        console.log("processedDocumentData", processedDocumentData);
 
         // Create VendorPricing entries for each product in the quotation
-        const vendorPricingEntries = products.map((product: any) => {
-          // Instead of checking for UUID, we'll use the numeric ID
-          if (typeof product.id !== "number" || isNaN(product.id)) {
-            throw new Error(`Invalid product id: ${product.id}`);
-          }
-          return {
-            price: parseFloat(product.amount),
-            rfpProduct: {
-              connect: {
-                rfpId_productId: {
-                  rfpId: id,
-                  productId: product.id,
-                },
+        const vendorPricingEntries = products.map((product: any) => ({
+          price: parseFloat(product.unitPrice) || 0, // Default to 0 if unitPrice is null
+          rfpProduct: {
+            connect: {
+              rfpId_productId: {
+                rfpId: id,
+                productId: product.id,
               },
             },
-          };
-        });
+          },
+        }));
+
+        // Create OtherCharges entries
+        const otherChargesEntries = otherCharges.map((charge: any) => ({
+          name: charge.name,
+          price: parseFloat(charge.unitPrice) || 0, // Default to 0 if unitPrice is null
+          gst: parseFloat(charge.gst) || 0, // Default to 0 if gst is null
+        }));
 
         return {
           vendorId,
-          totalAmount: parseFloat(totalAmount),
+          totalAmount: parseFloat(total.withGST) || 0, // Default to 0 if total.withGST is null
+          totalAmountWithoutGST: parseFloat(total.withoutGST) || 0, // Default to 0 if total.withoutGST is null
           supportingDocuments: {
-            create: processedDocuments,
+            create: processedDocumentData,
           },
           vendorPricings: {
             create: vendorPricingEntries,
+          },
+          otherCharges: {
+            create: otherChargesEntries,
           },
         };
       })
     );
 
     console.log("processedQuotations", processedQuotations);
-
-    delete data.preferredVendorId;
-
-    console.log(data, typeof id);
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
@@ -131,23 +151,15 @@ export async function PUT(request: NextRequest) {
         },
       },
       include: {
-        quotations: true,
+        quotations: {
+          include: {
+            supportingDocuments: true,
+            vendorPricings: true,
+            otherCharges: true,
+          },
+        },
       },
     });
-
-    // Find the preferredQuotationId based on preferredVendorId
-    const preferredQuotation = updatedRecord.quotations.find(
-      (quotation) => quotation.vendorId === preferredVendorId
-    );
-
-    if (preferredQuotation) {
-      await prisma.rFP.update({
-        where: { id },
-        data: {
-          preferredQuotationId: preferredQuotation.id,
-        },
-      });
-    }
 
     return NextResponse.json(serializePrismaModel(updatedRecord), {
       status: 200,

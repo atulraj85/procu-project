@@ -1,6 +1,4 @@
 "use client";
-import Table from "@/components/shared/Table";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Loader from "../shared/Loader";
 import { DataTable } from "../Table/data-table";
@@ -89,7 +87,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col w-full">
       <div className="flex items-center justify-evenly w-full">
-        <div className="flex justify-between w-full px-10 ">
+        <div className="flex justify-between w-full  ">
           <h1 className="text-2xl font-bold">Dashboard</h1>
           {/* <Link
             href={`/company/request-product`}
@@ -99,7 +97,7 @@ const Dashboard = () => {
           </Link> */}
         </div>
       </div>
-      <div className="flex px-10 py-5 gap-4">
+      <div className="flex py-5 gap-4">
       <div
           onClick={() => setStatus('DRAFT')}
           className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${

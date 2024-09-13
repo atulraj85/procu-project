@@ -1,92 +1,77 @@
-"use client"
-import * as React from "react"
+"use client";
+import * as React from "react";
 import {
-    ColumnDef,
-    flexRender,
-    VisibilityState,
-    getCoreRowModel,
-    useReactTable,
-    ColumnFiltersState,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    SortingState,
-    getSortedRowModel,
-  } from "@tanstack/react-table";
-  import { Input } from "@/components/ui/input"
-  import { Button } from "@/components/ui/button"
-  
-//   import {
-//     DropdownMenu,
-//     DropdownMenuCheckboxItem,
-//     DropdownMenuContent,
-//     DropdownMenuTrigger,
-//   } from "@/components/ui/dropdown-menu"
-  
-  import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-    
-    
-  } from "@/components/ui/table";
-  
-  
-  interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
-    data: TData[];
-  }
-  export function DataTable<TData, TValue>({
-  
-    columns,
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  ColumnFiltersState,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  SortingState,
+} from "@tanstack/react-table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+}
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+}: DataTableProps<TData, TValue>) {
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const table = useReactTable({
     data,
-    
-  }: DataTableProps<TData, TValue>) {
-    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-        []
-      )
-      const [sorting, setSorting] = React.useState<SortingState>([])
-    const table = useReactTable({
-      data,
-      columns,
-      getCoreRowModel: getCoreRowModel(),
-      onColumnFiltersChange: setColumnFilters,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     state: {
-         sorting,
-        columnFilters,
-      },
-    });
-    // const table = useReactTable({
-    //     data,
-    //     columns,
-    //     // onSortingChange: setSorting,
-    //     getCoreRowModel: getCoreRowModel(),
-    //     // getPaginationRowModel: getPaginationRowModel(),
-    //     // getSortedRowModel: getSortedRowModel(),
-    //     onColumnFiltersChange: setColumnFilters,
-    //     getFilteredRowModel: getFilteredRowModel(),
-    //     state: {
-    //     //   sorting,
-    //       columnFilters,
-    //     },
-    //   })
-    return (
-        <div>
-                 {/* <div className="flex items-center py-4">
+      sorting,
+      columnFilters,
+    },
+  });
+  // const table = useReactTable({
+  //     data,
+  //     columns,
+  //     // onSortingChange: setSorting,
+  //     getCoreRowModel: getCoreRowModel(),
+  //     // getPaginationRowModel: getPaginationRowModel(),
+  //     // getSortedRowModel: getSortedRowModel(),
+  //     onColumnFiltersChange: setColumnFilters,
+  //     getFilteredRowModel: getFilteredRowModel(),
+  //     state: {
+  //     //   sorting,
+  //       columnFilters,
+  //     },
+  //   })
+  return (
+    <div>
+      <div className="flex items-center py-4">
         <Input
           placeholder="Filter emails..."
-          value={(table.getColumn("email",)?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("email")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
-
-      </div> */}
+      </div>
       {/* <div className="flex items-center py-4">
         <Input
           placeholder="Filter emails..."
@@ -125,23 +110,28 @@ import {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-
       </div>
-       <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"
           size="sm"
@@ -159,9 +149,6 @@ import {
           Next
         </Button>
       </div>
-    
-    
-      </div>
-    );
-  }
-  
+    </div>
+  );
+}
