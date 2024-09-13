@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@radix-ui/react-label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@radix-ui/react-select";
+import { Select } from "@radix-ui/react-select";
 import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,17 +14,18 @@ import React, { useEffect, useState } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
 
-type Product = {
-  id: string;
-  name: string;
-  modelNo: string;
-  quantity: number;
-  unitPrice?: number;
-  gst?: string;
-  totalPriceWithoutGST?: number;
-  totalPriceWithGST?: number;
-};
+
 const Page = () => {
+  type Product = {
+    id: string;
+    name: string;
+    modelNo: string;
+    quantity: number;
+    unitPrice?: number;
+    gst?: string;
+    totalPriceWithoutGST?: number;
+    totalPriceWithGST?: number;
+  };
   const ProductList = ({
     control,
     index,
@@ -44,7 +46,6 @@ const Page = () => {
     const [error, setError] = useState<string | null>(null);
     const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
     const [loading, setIsLoading] = useState(false);
-    const globalFormData = new FormData();
   
     useEffect(() => {
       async function fetchRFPProducts() {
@@ -89,16 +90,16 @@ const Page = () => {
               flattenedProductsWithDetails
             );
   
-            if (globalFormData.has("quotations")) {
-              const quotations = JSON.parse(
-                globalFormData.get("quotations") as string
-              );
-              quotations[index] = {
-                ...quotations[index],
-                products: flattenedProductsWithDetails,
-              };
-              globalFormData.set("quotations", JSON.stringify(quotations));
-            }
+            // if (globalFormData.has("quotations")) {
+            //   const quotations = JSON.parse(
+            //     globalFormData.get("quotations") as string
+            //   );
+            //   quotations[index] = {
+            //     ...quotations[index],
+            //     products: flattenedProductsWithDetails,
+            //   };
+            //   globalFormData.set("quotations", JSON.stringify(quotations));
+            // }
   
             setError(null);
           } catch (err) {
@@ -124,6 +125,7 @@ const Page = () => {
       const totalWithGST = totalWithoutGST * (1 + gstValue / 100);
       return { totalWithoutGST, totalWithGST };
     };
+  }
   return (
    <div>
     <div className="flex justify-end pb-8">
@@ -186,9 +188,9 @@ const Page = () => {
           </div>
         </div>
       </Card>
-   
-
   
+
+ 
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Products</CardTitle>
@@ -245,7 +247,7 @@ const Page = () => {
                         const gst = getValues(
                           `quotations.${index}.products.${productIndex}.gst`
                         );
-                        const { totalWithoutGST, totalWithGST } =
+                        const { totalWithoutGST, totalWithGST } = 
                           calculateTotals(unitPrice, quantity, gst);
 
                         const quotations = JSON.parse(
@@ -346,10 +348,10 @@ const Page = () => {
       </CardContent>
     </Card>
   
+
       
    </div>
   );
 };
-}
 
 export default Page;
