@@ -57,8 +57,6 @@ function getTodayDate(): string {
 }
 
 const RFPForm: React.FC = () => {
-
-  
   const [formData, setFormData] = useState<FormData>({
     requirementType: "",
     dateOfOrdering: getTodayDate(),
@@ -97,14 +95,12 @@ const RFPForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log(state);
-  console.log(address);
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await fetch('/api/company'); // Replace with your actual API endpoint
+        const response = await fetch("/api/company"); // Replace with your actual API endpoint
         const data = await response.json();
-        
+
         // Assuming the API returns an array and you want the first item
         if (data.length > 0) {
           const company = data[0];
@@ -116,7 +112,7 @@ const RFPForm: React.FC = () => {
           // You can set additional instructions if needed
         }
       } catch (error) {
-        console.error('Error fetching company data:', error);
+        console.error("Error fetching company data:", error);
       }
     };
 
@@ -185,24 +181,23 @@ const RFPForm: React.FC = () => {
     }
   };
 
-const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
-  setFormData((prevData) => ({
-    ...prevData,
-    [name]: value,
-    deliveryLocation: `${value}, ${prevData.deliveryLocationDetails.city}, ${prevData.deliveryLocationDetails.state}, ${prevData.deliveryLocationDetails.country}, ${prevData.deliveryLocationDetails.zipCode}`,
-  }));
-  if (name === "country") {
-    setCountry(value);
-  } else if (name === "state") {
-    setState(value);
-  } else if (name === "city") {
-    setCity(value);
-  } else if (name === "zipCode") {
-    setZipCode(value);
-  }
-};
-
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+      deliveryLocation: `${value}, ${prevData.deliveryLocationDetails.city}, ${prevData.deliveryLocationDetails.state}, ${prevData.deliveryLocationDetails.country}, ${prevData.deliveryLocationDetails.zipCode}`,
+    }));
+    if (name === "country") {
+      setCountry(value);
+    } else if (name === "state") {
+      setState(value);
+    } else if (name === "city") {
+      setCity(value);
+    } else if (name === "zipCode") {
+      setZipCode(value);
+    }
+  };
 
   const handleProductChange = (
     index: number,
@@ -288,12 +283,12 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         zipCode,
       },
     };
-  
+
     console.log("form data", updatedFormData);
-  
+
     setLoading(true); // Set loading state to true
     setError(null); // Reset error state
-  
+
     try {
       const response = await fetch("/api/rfp", {
         method: "POST",
@@ -302,11 +297,11 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         },
         body: JSON.stringify(updatedFormData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to submit RFP");
       }
-  
+
       const result = await response.json();
       toast({
         title: "🎉 Draft Submitted!",
@@ -316,7 +311,7 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
       // toast({
       //   title: "Error",
       //   description: "",
-    //   });
+      //   });
       setError(
         err instanceof Error
           ? err.message
@@ -326,7 +321,6 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
       setLoading(false); // Reset loading state
     }
   };
-  
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -643,67 +637,67 @@ const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         </CardContent>
       </Card>
       <Card>
-      <CardHeader>
-        <CardTitle>Delivery Details</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
-          <Input
-            id="address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+        <CardHeader>
+          <CardTitle>Delivery Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
+            <Label htmlFor="address">Address</Label>
             <Input
-              id="country"
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zipCode">Zip Code</Label>
+              <Input
+                id="zipCode"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+              />
+            </div>
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="state">State</Label>
-            <Input
-              id="state"
-              value={state}
-              onChange={(e) => setState(e.target.value)}
+            <Label htmlFor="additionalInstructions">
+              Additional Delivery Instructions
+            </Label>
+            <Textarea
+              id="additionalInstructions"
+              value={additionalInstructions}
+              onChange={(e) => setAdditionalInstructions(e.target.value)}
+              rows={4}
             />
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="city">City</Label>
-            <Input
-              id="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="zipCode">Zip Code</Label>
-            <Input
-              id="zipCode"
-              value={zipCode}
-              onChange={(e) => setZipCode(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="additionalInstructions">
-            Additional Delivery Instructions
-          </Label>
-          <Textarea
-            id="additionalInstructions"
-            value={additionalInstructions}
-            onChange={(e) => setAdditionalInstructions(e.target.value)}
-            rows={4}
-          />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
       <div className="flex justify-end mr-10">
         <Button
           type="submit"

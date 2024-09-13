@@ -14,7 +14,7 @@ datasource db {
 model Company {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
-  address     Json?
+  GST         String?
   email       String?   @unique // Optional and unique email address
   phone       String? // Optional phone number
   website     String? // Optional website URL
@@ -22,9 +22,27 @@ model Company {
   foundedDate DateTime? // Optional founded date
   status      String? // Optional status (e.g., "active", "inactive")
   users       User[]
+  addresses   Address[] // One-to-many relationship with Address
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   PO          PO[]
+}
+
+model Address {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  addressType AddressType // Enum for address type
+  companyId   String // Foreign key to Company
+  company     Company     @relation(fields: [companyId], references: [id])
+}
+
+enum AddressType {
+  BUSINESS
+  SHIPPING
 }
 
 model User {

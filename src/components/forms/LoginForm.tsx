@@ -53,33 +53,24 @@ function LoginForm({ api }: any) {
     try {
       setLoading(true);
 
-      //  const response = await makeApiCallService<ILoginUserResponse>(
-      //    api,
-      //    {
-      //      method: "POST",
-      //      body: data,
-      //    }
-      //  );
-
-      const response = await fetch("api/admin", {
+      const response = await makeApiCallService<ILoginUserResponse>("api/login", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: data,
       });
+      if (response?.response?.meta?.success) {
+        // Store the token and role in local storage
+        localStorage.setItem("TOKEN", response?.response?.data?.token);
+        localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
+        localStorage.setItem("USER_ID", response?.response?.data?.userId);
+        //  console.log(userId);
 
-      //  if (response?.response?.meta?.success) {
-      //    // Store the token and role in local storage
-      //    localStorage.setItem("TOKEN", response?.response?.data?.token);
-      //    localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
-      //    localStorage.setItem("USER_ID", response?.response?.data?.userId);
-      //   //  console.log(userId);
+        toast({
+          title: "🎉 Login success",
+          description: response?.response?.meta?.message,
+        });
 
-      //    toast({
-      //      title: "🎉 Login success",
-      //      description: response?.response?.meta?.message,
-      //    });
-
-      //    router.push("/dashboard");
-      //  }
+        router.push("/dashboard");
+      }
 
       setLoading(false);
     } catch (err) {
