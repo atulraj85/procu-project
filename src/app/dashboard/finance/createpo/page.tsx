@@ -1,6 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import Image from "next/image";
+import Link from "next/link";
 
 import React from "react";
 
@@ -52,6 +54,10 @@ const vendor = {
 };
 const Page = () => {
   return (
+    <div>
+      <div className="flex justify-end pb-8 pt-3 pr-8">
+        <Link href="/dashboard"><Button>Cancel</Button></Link>
+      </div>
     <div className="mx-20 mt-4">
       <section className="flex justify-between pb-7">
         <div>
@@ -145,6 +151,7 @@ const Page = () => {
           
         </div>
       </section>
+    </div>
     </div>
   );
 };

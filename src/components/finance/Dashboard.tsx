@@ -158,7 +158,9 @@ const Dashboard = () => {
         {loading ? (
           <div>Loading...</div> // You can replace this with your Loader component
         ) : (
+          <div className="py-4">
           <DataTable columns={columns2} data={content} />
+          </div>
         )}
       </div>
     </div>
