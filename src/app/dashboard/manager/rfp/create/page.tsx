@@ -100,18 +100,24 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await fetch("/api/company"); // Replace with your actual API endpoint
+        const response = await fetch("/api/company");
         const data = await response.json();
 
-        // Assuming the API returns an array and you want the first item
         if (data.length > 0) {
           const company = data[0];
-          setAddress(company.address.street);
-          setCountry(company.address.country);
-          setState(company.address.state);
-          setCity(company.address.city);
-          setZipCode(company.address.zip);
-          // You can set additional instructions if needed
+          const shippingAddress = company.addresses.find(
+            (addr: any) => addr.addressType === "SHIPPING"
+          );
+
+          if (shippingAddress) {
+            setAddress(shippingAddress.street);
+            setCountry(shippingAddress.country);
+            setState(shippingAddress.state);
+            setCity(shippingAddress.city);
+            setZipCode(shippingAddress.postalCode);
+          } else {
+            console.warn("No shipping address found for the company");
+          }
         }
       } catch (error) {
         console.error("Error fetching company data:", error);

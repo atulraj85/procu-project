@@ -337,7 +337,7 @@ const VendorDetails: React.FC = () => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (response.ok) {
         setVendorArray((prevData) => [...prevData, result.vendor]);
         toast({
           title: "🎉 Vendor added successfully.",

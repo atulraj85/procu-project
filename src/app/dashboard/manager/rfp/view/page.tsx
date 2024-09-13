@@ -7,6 +7,19 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import Loader from "@/components/shared/Loader";
 
+interface Approver {
+  id: string;
+  userId: string;
+  approved: boolean;
+  approvedAt: string | null;
+}
+
+interface RfpProduct {
+  id: string;
+  productId: number;
+  quantity: number;
+}
+
 interface RfpData {
   id: string;
   rfpId: string;
@@ -19,6 +32,13 @@ interface RfpData {
   preferredQuotationId: string | null;
   created_at: string;
   updated_at: string;
+  approversList: Approver[];
+  rfpProducts: RfpProduct[];
+  user: {
+    name: string;
+    email: string;
+    mobile: string;
+  };
 }
 
 const RfpDetails: React.FC = () => {
@@ -38,8 +58,6 @@ const RfpDetails: React.FC = () => {
         
         if (Array.isArray(data) && data.length > 0) {
           setRfpData(data[0]);
-        
-          
         } else {
           setError("No RFP data found");
         }
@@ -79,8 +97,8 @@ const RfpDetails: React.FC = () => {
             className="text-black-500 bg-red-400"
           >
             <X className="h-4 w-4" />
-          </Button>{" "}
-        </Link>{" "}
+          </Button>
+        </Link>
       </div>
       <div className="p-5">
         <form className="flex flex-wrap w-full gap-7">
@@ -131,7 +149,58 @@ const RfpDetails: React.FC = () => {
               {new Date(rfpData.updated_at).toLocaleString()}
             </h1>
           </div>
+
+          <div className="flex flex-col gap-3 w-60 text-base">
+            <label className="font-bold">Created By</label>
+            <h1 className="text-[15px]">{rfpData.user.name}</h1>
+            <h1 className="text-[15px]">{rfpData.user.email}</h1>
+            <h1 className="text-[15px]">{rfpData.user.mobile}</h1>
+          </div>
         </form>
+
+        <div className="mt-8">
+          <h2 className="text-lg font-bold mb-4">Approvers List</h2>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">Approver ID</th>
+                <th className="border border-gray-300 p-2">Approved</th>
+                <th className="border border-gray-300 p-2">Approved At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rfpData.approversList.map((approver) => (
+                <tr key={approver.id}>
+                  <td className="border border-gray-300 p-2">{approver.userId}</td>
+                  <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
+                  <td className="border border-gray-300 p-2">
+                    {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-lg font-bold mb-4">Products List</h2>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">Product ID</th>
+                <th className="border border-gray-300 p-2">Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rfpData.rfpProducts.map((product) => (
+                <tr key={product.id}>
+                  <td className="border border-gray-300 p-2">{product.productId}</td>
+                  <td className="border border-gray-300 p-2">{product.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
