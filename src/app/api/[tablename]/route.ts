@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
               orderByDirection === "asc" ? "asc" : "desc";
           }
         } else if (key === "id") {
-          const ids = value.split(",").map((id) => parseInt(id, 10));
+          const ids = value.split(",").map((id) => id);
           whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
         } else if (key === "state_id") {
           const stateIds = value.split(",").map((id) => parseInt(id, 10));
