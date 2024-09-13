@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import Loader from "@/components/shared/Loader";
 
 interface VendorData {
   id: string;
@@ -67,7 +68,7 @@ const VendorDetails: React.FC<VendorDetailsProps> = () => {
   }, [gstin1]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loader/>;
   }
 
   if (error) {
