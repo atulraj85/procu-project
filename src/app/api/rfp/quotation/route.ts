@@ -35,7 +35,7 @@ export async function PUT(request: NextRequest) {
       (quotations || []).map(async (quotation: any) => {
         const { vendorId, products, otherCharges, total, supportingDocuments } =
           quotation;
-      
+
         if (!isValidUUID(vendorId)) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }

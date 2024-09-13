@@ -26,23 +26,33 @@ export default function CompaniesPage() {
   }
 
   async function handleSubmit(data: any) {
+    // const formData = new FormData();
+
+    // // Append the company data to FormData
+    // for (const key in data) {
+    //   formData.append(key, data[key]);
+    // }
+
+    console.log("From page", data);
+    const formData = data;
+
     if (selectedCompany) {
       // Update existing company
+      formData.append("id", selectedCompany.id); // Append the company ID for updating
       await fetch("/api/company", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: selectedCompany.id, ...data }),
+        body: formData, // Use FormData directly
       });
     } else {
       // Create new company
       await fetch("/api/company", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: formData, // Use FormData directly
       });
     }
-    fetchCompanies();
-    setSelectedCompany(null);
+
+    fetchCompanies(); // Refresh the list of companies
+    setSelectedCompany(null); // Reset the selected company
   }
 
   async function handleDelete(id: string) {

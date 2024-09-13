@@ -15,6 +15,8 @@ model Company {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   GST         String?
+  logo        String?
+  stamp       String?
   email       String?   @unique // Optional and unique email address
   phone       String? // Optional phone number
   website     String? // Optional website URL
@@ -36,7 +38,7 @@ model Address {
   postalCode  String
   country     String
   addressType AddressType // Enum for address type
-  companyId   String // Foreign key to Company
+  companyId   String      @db.Uuid // Change this to UUID
   company     Company     @relation(fields: [companyId], references: [id])
 }
 

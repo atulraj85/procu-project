@@ -26,12 +26,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   GST: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().optional().or(z.literal("")), //TODO email
   phone: z.string().optional(),
-  website: z.string().url().optional().or(z.literal("")),
+  website: z.string().optional().or(z.literal("")), //TODO url()
   industry: z.string().optional(),
   foundedDate: z.string().optional(), // Use string for date input
   status: z.enum(["active", "inactive"]).optional(),
+  logo: z.instanceof(File).optional(), // File input for logo
+  stamp: z.instanceof(File).optional(), // File input for stamp
 });
 
 type CompanyFormValues = z.infer<typeof formSchema>;
@@ -43,7 +45,6 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,6 +56,8 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       industry: "",
       foundedDate: "",
       status: "active",
+      logo: undefined,
+      stamp: undefined,
       ...initialData,
     },
   });
@@ -62,7 +65,20 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   async function onSubmitForm(data: CompanyFormValues) {
     setIsLoading(true);
     try {
-      await onSubmit(data);
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      for (const key in data) {
+        // Use type assertion to ensure key is a valid key of CompanyFormValues
+        const value = data[key as keyof CompanyFormValues];
+        if (value instanceof File) {
+          formData.append(key, value);
+        } else {
+          formData.append(key, value || "");
+        }
+      }
+      await onSubmit(formData);
+
+      console.log(formData);
       toast({
         title: "Success",
         description: "Company saved successfully",
@@ -150,7 +166,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   <FormItem>
                     <FormLabel>Website</FormLabel>
                     <FormControl>
-                      <Input type="url" {...field} />
+                      <Input type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -205,6 +221,52 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         <SelectItem value="inactive">Inactive</SelectItem>
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* File input for Logo */}
+              <FormField
+                control={form.control}
+                name="logo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Logo</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            field.onChange(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* File input for Stamp */}
+              <FormField
+                control={form.control}
+                name="stamp"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stamp</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            field.onChange(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
