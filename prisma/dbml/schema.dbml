@@ -16,22 +16,9 @@ Table Company {
   status String
   users User [not null]
   addresses Address [not null]
-  addresses Address [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
   PO PO [not null]
-}
-
-Table Address {
-  id String [pk]
-  street String [not null]
-  city String [not null]
-  state String [not null]
-  postalCode String [not null]
-  country String [not null]
-  addressType AddressType [not null]
-  companyId String [not null]
-  company Company [not null]
 }
 
 Table Address {
@@ -87,8 +74,6 @@ Table Vendor {
   verifiedBy User
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
-  ProductCategory ProductCategory
-  productCategoryId Int
   Quotation Quotation [not null]
 }
 
@@ -96,15 +81,6 @@ Table Payment {
   id String [pk]
   invoice Invoice [not null]
   invoiceId String [not null]
-  created_at DateTime [default: `now()`, not null]
-  updated_at DateTime [not null]
-}
-
-Table ProductCategory {
-  id Int [pk, increment]
-  name String [unique, not null]
-  products Product [not null]
-  vendors Vendor [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
 }
@@ -137,13 +113,21 @@ Table GoodStatus {
   updated_at DateTime [not null]
 }
 
+Table ProductCategory {
+  id String [pk]
+  name String [unique, not null]
+  products Product [not null]
+  created_at DateTime [default: `now()`, not null]
+  updated_at DateTime [not null]
+}
+
 Table Product {
-  id Int [pk, increment]
+  id String [pk]
   name String [not null]
   modelNo String [not null]
   specification String [not null]
   productCategory ProductCategory [not null]
-  productCategoryId Int [not null]
+  productCategoryId String [not null]
   rfpProducts RFPProduct [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
@@ -222,7 +206,7 @@ Table RFPProduct {
   rfp RFP [not null]
   rfpId String [not null]
   product Product [not null]
-  productId Int [not null]
+  productId String [not null]
   quantity Int [not null]
   vendorPricings VendorPricing [not null]
   created_at DateTime [default: `now()`, not null]
@@ -279,11 +263,6 @@ Enum AddressType {
   SHIPPING
 }
 
-Enum AddressType {
-  BUSINESS
-  SHIPPING
-}
-
 Enum Role {
   ADMIN
   PR_MANAGER
@@ -304,21 +283,10 @@ Enum RFPStatus {
 }
 
 Ref: Address.companyId > Company.id
-  SUBMITTED
-  PO_CREATED
-  ADVANCE_PAID
-  INVOICE_RECEIVED
-  GRN_RECEIVED
-  PAYMENT_DONE
-}
-
-Ref: Address.companyId > Company.id
 
 Ref: User.companyId > Company.id
 
 Ref: Vendor.verifiedById > User.id
-
-Ref: Vendor.productCategoryId > ProductCategory.id
 
 Ref: Payment.invoiceId > Invoice.id
 
