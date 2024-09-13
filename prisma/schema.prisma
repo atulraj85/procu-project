@@ -265,6 +265,7 @@ model VendorPricing {
   rfpProduct   RFPProduct @relation(fields: [rfpProductId], references: [id])
   rfpProductId String     @db.Uuid
   price        Decimal    @db.Decimal(10, 2)
+  GST          Int
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
 

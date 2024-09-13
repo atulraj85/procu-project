@@ -227,6 +227,7 @@ Table VendorPricing {
   rfpProduct RFPProduct [not null]
   rfpProductId String [not null]
   price Decimal [not null]
+  GST Int [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
 

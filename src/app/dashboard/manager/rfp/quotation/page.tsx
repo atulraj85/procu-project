@@ -3,50 +3,59 @@ import { Button } from "@/components/ui/button";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import RFPUpdateFormOLD from "@/components/new-manager/UpdateRFPFormOLD";
 import RFPUpdateForm from "@/components/new-manager/UpdateRFP2";
 import Loader from "@/components/shared/Loader";
 
 const Page = () => {
   const searchParams = useSearchParams();
-  const [rfpId, setRfpId] = useState<string | null>(null); // State variable to hold the RFP ID
-  const [loading, setLoading] = useState(true); // State variable for loading state
-  const [error, setError] = useState(null); // State variable for error handling
+  const [rfpId, setRfpId] = useState<string | null>(null);
+  const [rfpData, setRfpData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const id = searchParams.get("rfp"); // Get the id from search params
+    const id = searchParams.get("rfp");
     if (id) {
       const fetchData = async () => {
         try {
-          const response = await fetch(`/api/rfp?rfpId=${id}`);
-          const data = await response.json();
-          console.log(data[0].id);
-          setRfpId(data[0].id);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          // Fetch RFP details
+          const rfpResponse = await fetch(`/api/rfp?rfpId=${id}`);
+          if (!rfpResponse.ok) {
+            throw new Error(`HTTP error! status: ${rfpResponse.status}`);
           }
-          const result = await response.json();
-          // setData(result); // Save the fetched data to state
+          const rfpResult = await rfpResponse.json();
+          setRfpId(rfpResult[0].id);
+
+          const quotationsResult = rfpResult[0].quotations;
+
+          console.log("quotationsResult", quotationsResult);
+
+          // Check if quotations array is not empty
+          if (quotationsResult && quotationsResult.length > 0) {
+            console.log("here");
+            setRfpData({
+              ...rfpResult[0],
+              quotations: quotationsResult,
+            });
+          } else {
+            // If quotations array is empty, set rfpData to null
+            setRfpData(null);
+          }
         } catch (err: any) {
-          setError(err.message); // Set error message if fetch fails
+          setError(err.message);
         } finally {
-          setLoading(false); // Set loading to false after fetch completes
+          setLoading(false);
         }
       };
-
       fetchData();
     }
   }, [searchParams]);
 
+  if (loading) return <Loader />;
+  if (error) return <div>Error: {error}</div>;
+
   return (
-    <div>
-     
-      <div>
-        {loading && <Loader/>}
-        {rfpId && <RFPUpdateForm rfpId={rfpId} />}{" "}
-        {/* {rfpId && <RFPUpdateFormOLD />}{" "} */}
-      </div>
-    </div>
+    <div>{rfpId && <RFPUpdateForm rfpId={rfpId} initialData={rfpData} />}</div>
   );
 };
 

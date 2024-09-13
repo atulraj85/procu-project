@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -148,7 +149,13 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       orderBy: orderByClause,
       include: {
-        quotations: true,
+        quotations: {
+          include: {
+            supportingDocuments: true,
+            vendorPricings: true,
+            otherCharges: true,
+          },
+        },
         approversList: true,
         rfpProducts: true,
         po: true,

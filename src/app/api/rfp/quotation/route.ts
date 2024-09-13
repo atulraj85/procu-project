@@ -103,7 +103,8 @@ export async function PUT(request: NextRequest) {
 
         // Create VendorPricing entries for each product in the quotation
         const vendorPricingEntries = products.map((product: any) => ({
-          price: parseFloat(product.unitPrice) || 0, // Default to 0 if unitPrice is null
+          price: parseFloat(product.unitPrice) || 0,
+          gst: parseInt(product.gst), // Default to 0 if unitPrice is null
           rfpProduct: {
             connect: {
               rfpId_productId: {
