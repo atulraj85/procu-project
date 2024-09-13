@@ -63,7 +63,7 @@ export const AdminList = [
     value: "Dashboard",
     label: "Dashboard",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/admin/dashboard",
+    route: "/dashboard/admin/",
   },
   {
     value: "Users",
@@ -72,16 +72,10 @@ export const AdminList = [
     route: "/dashboard/admin/users",
   },
   {
-    value: "Component 1",
-    label: "Component 1",
+    value: "Company",
+    label: "Company",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/admin/component1",
-  },
-  {
-    value: "Component 2",
-    label: "Component 2",
-    imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/admin/component2",
+    route: "/dashboard/admin/company",
   },
 ];
 

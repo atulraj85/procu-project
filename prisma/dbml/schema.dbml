@@ -6,6 +6,8 @@ Table Company {
   id String [pk]
   name String [not null]
   GST String
+  logo String
+  stamp String
   email String [unique]
   phone String
   website String
@@ -14,9 +16,22 @@ Table Company {
   status String
   users User [not null]
   addresses Address [not null]
+  addresses Address [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
   PO PO [not null]
+}
+
+Table Address {
+  id String [pk]
+  street String [not null]
+  city String [not null]
+  state String [not null]
+  postalCode String [not null]
+  country String [not null]
+  addressType AddressType [not null]
+  companyId String [not null]
+  company Company [not null]
 }
 
 Table Address {
@@ -263,6 +278,11 @@ Enum AddressType {
   SHIPPING
 }
 
+Enum AddressType {
+  BUSINESS
+  SHIPPING
+}
+
 Enum Role {
   ADMIN
   PR_MANAGER
@@ -274,6 +294,15 @@ Enum Role {
 
 Enum RFPStatus {
   DRAFT
+  SUBMITTED
+  PO_CREATED
+  ADVANCE_PAID
+  INVOICE_RECEIVED
+  GRN_RECEIVED
+  PAYMENT_DONE
+}
+
+Ref: Address.companyId > Company.id
   SUBMITTED
   PO_CREATED
   ADVANCE_PAID
