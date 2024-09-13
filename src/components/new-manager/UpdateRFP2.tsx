@@ -322,6 +322,14 @@ const ProductList = ({
     control,
     name: `quotations.${index}.products`,
   });
+
+  const products = useWatch({
+    control,
+    name: `quotations.${index}.products`,
+  });
+
+  // console.log("products", products)
+
   const [error, setError] = useState<string | null>(null);
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
@@ -796,6 +804,9 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   });
 
   useEffect(() => {
+    // if (quotation.total) {
+    //   setValue(`quotations.${index}.total`, quotation.total);
+    // }
     const totalWithoutGST =
       (quotation.products?.reduce(
         (sum: number, product: { totalPriceWithoutGST: number | string }) =>
@@ -934,6 +945,46 @@ interface initialFormData {
     }>;
   }>;
 }
+
+function vendorPricingsToProducts(data: any) {
+  console.log("data", data[0]);
+  console.log(data[0].rfpProductId);
+
+  const product: Product = {
+    id: "",
+    name: "",
+    modelNo: "",
+    quantity: 0
+  };
+
+  product.gst = data[0].GST;
+  product.unitPrice = data[0].price;
+
+
+
+  async function getProducts(id: string) {
+    try {
+      const response = await fetch(`/api/rfpProduct?id=${id}`);
+      const data = await response.json();
+      const responseData = data[0]
+      console.log("responseData", responseData);
+
+
+      product.quantity = responseData.quantity;
+      // product.name = responseData.name;
+      // product.modelNo = responseData.modelNo;
+      product.id = responseData.id;
+
+        console.log("product", product);
+
+
+    } catch (error) {}
+  }
+  getProducts(data[0].rfpProductId);
+
+  console.log(product)
+}
+
 export default function RFPUpdateForm({
   rfpId,
   initialData,
@@ -950,11 +1001,12 @@ export default function RFPUpdateForm({
     defaultValues: {
       quotations: initialData?.quotations.map((quotation) => ({
         vendorId: quotation.vendorId,
-        products: quotation.vendorPricings.map((pricing) => ({
-          id: pricing.id,
-          rfpProductId: pricing.rfpProductId,
-          price: pricing.price,
-        })),
+        products: vendorPricingsToProducts(quotation.vendorPricings),
+        // quotation.vendorPricings.map((pricing) => ({
+        // id: pricing.id,
+        // rfpProductId: pricing.rfpProductId,
+        // price: pricing.price,
+        // }))
         otherCharges: quotation.otherCharges.map((charge) => ({
           id: charge.id,
           name: charge.name,
@@ -983,8 +1035,8 @@ export default function RFPUpdateForm({
     },
   });
 
-    const initData =  initialData?.quotations[0].vendorPricings;
-console.log(initData);
+  const initData = initialData?.quotations[0].vendorPricings;
+  console.log(initData);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1000,7 +1052,7 @@ console.log(initData);
     setError(null);
     setSuccess(false);
 
-    console.log("Text data to be sent:", data)
+    console.log("Text data to be sent:", data);
 
     try {
       const formData = new FormData();
@@ -1019,17 +1071,17 @@ console.log(initData);
         formData.append(key, file);
       });
 
-      // const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
+      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+        method: "PUT",
+        body: formData,
+      });
 
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // const result = await response.json();
-      // console.log("RFP updated successfully:", result);
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
