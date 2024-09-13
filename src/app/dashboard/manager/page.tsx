@@ -34,7 +34,7 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true); // Set loading to true before fetching data
     try {
-      const response = await fetch("/api/rfp");
+      const response = await fetch("/api/rfp?orderBy=created_at,desc");
       const data = await response.json();
       // console.log("Fetched data:", data); // Log fetched data
 
