@@ -66,7 +66,7 @@ model Vendor {
   workPhone          String?
   mobile             String?
   website            String?
-  gstin              String?  @unique
+  gstin              String?          @unique
   msmeNo             String?
   address            String?
   customerState      String?
@@ -167,12 +167,12 @@ model SupportingDocument {
 }
 
 model Quotation {
-  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp                   RFP                  @relation(fields: [rfpId], references: [id])
-  rfpId                 String               @db.Uuid
-  vendor                Vendor               @relation(fields: [vendorId], references: [id])
-  vendorId              String               @db.Uuid
-  isPrimary           Boolean              @default(false)
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp       RFP     @relation(fields: [rfpId], references: [id])
+  rfpId     String  @db.Uuid
+  vendor    Vendor  @relation(fields: [vendorId], references: [id])
+  vendorId  String  @db.Uuid
+  isPrimary Boolean @default(false)
 
   totalAmount           Decimal              @db.Decimal(10, 2)
   totalAmountWithoutGST Decimal              @db.Decimal(10, 2)
@@ -215,13 +215,13 @@ model RFP {
 }
 
 enum RFPStatus {
-  DRAFT
-  PENDING
-  IN_PROGRESS
-  INVOICE_NOT_RECEIVED
-  GRN_NOT_RECEIVED
-  PAYMENT_NOT_DONE
-  COMPLETED
+  DRAFT //RFP Created but not submitted 
+  SUBMITTED //Submitted to finance
+  PO_CREATED
+  ADVANCE_PAID
+  INVOICE_RECEIVED
+  GRN_RECEIVED
+  PAYMENT_DONE // (PO Complete) 
 }
 
 model RFPProduct {
