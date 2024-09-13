@@ -38,7 +38,7 @@ const FormSchema = z.object({
     }),
 });
 
-function LoginForm() {
+function LoginForm({ api }: any) {
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -49,50 +49,54 @@ function LoginForm() {
   });
   const [loading, setLoading] = useState(false);
 
- async function onSubmit(data: z.infer<typeof FormSchema>) {
-   try {
-     setLoading(true);
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    try {
+      setLoading(true);
 
-     const response = await makeApiCallService<ILoginUserResponse>(
-       "/api/login",
-       {
-         method: "POST",
-         body: data,
-       }
-     );
+      //  const response = await makeApiCallService<ILoginUserResponse>(
+      //    api,
+      //    {
+      //      method: "POST",
+      //      body: data,
+      //    }
+      //  );
 
-     if (response?.response?.meta?.success) {
-       // Store the token and role in local storage
-       localStorage.setItem("TOKEN", response?.response?.data?.token);
-       localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
-       localStorage.setItem("USER_ID", response?.response?.data?.userId);
-      //  console.log(userId);
-       
+      const response = await fetch("api/admin", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
 
-       toast({
-         title: "🎉 Login success",
-         description: response?.response?.meta?.message,
-       });
+      //  if (response?.response?.meta?.success) {
+      //    // Store the token and role in local storage
+      //    localStorage.setItem("TOKEN", response?.response?.data?.token);
+      //    localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
+      //    localStorage.setItem("USER_ID", response?.response?.data?.userId);
+      //   //  console.log(userId);
 
-       router.push("/dashboard");
-     }
+      //    toast({
+      //      title: "🎉 Login success",
+      //      description: response?.response?.meta?.message,
+      //    });
 
-     setLoading(false);
-   } catch (err) {
-     setLoading(false);
-     toast({
-       title: "Error",
-       description: "An error occurred during login.",
-     });
-   }
- }
+      //    router.push("/dashboard");
+      //  }
 
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      toast({
+        title: "Error",
+        description: "An error occurred during login.",
+      });
+    }
+  }
 
   return (
-    
     <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
       <div className="self-start">
-        <p className="text-[#333] text-[1.625rem] font-[700]">Pr<span className="text-[#03B300]">o</span>cu</p>
+        <p className="text-[#333] text-[1.625rem] font-[700]">
+          Pr<span className="text-[#03B300]">o</span>cu
+        </p>
         <p className="text-[#333] text-[1.125rem]">Welcome Back</p>
       </div>
       <Form {...form}>
@@ -152,7 +156,6 @@ function LoginForm() {
         </form>
       </Form>
     </div>
-  
   );
 }
 
