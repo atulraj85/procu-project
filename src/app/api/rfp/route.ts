@@ -18,6 +18,8 @@ export async function POST(request: NextRequest) {
       rfpStatus,
     }: RequestBody = await request.json();
 
+    console.log(dateOfOrdering);
+
     // Check if the user exists
     const existingUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
         data: {
           rfpId,
           requirementType,
-          dateOfOrdering: new Date(dateOfOrdering),
+          dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
           userId,
@@ -145,7 +147,13 @@ export async function GET(request: NextRequest) {
     const records = await prisma.rFP.findMany({
       where: whereClause,
       orderBy: orderByClause,
-      
+      include: {
+        quotations: true,
+        approversList: true,
+        rfpProducts: true,
+        po: true,
+        user: true,
+      },
     });
 
     console.log(`Found ${records.length} records`);

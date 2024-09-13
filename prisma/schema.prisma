@@ -14,7 +14,7 @@ datasource db {
 model Company {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
-  address     Json?
+  GST         String?
   email       String?   @unique // Optional and unique email address
   phone       String? // Optional phone number
   website     String? // Optional website URL
@@ -22,9 +22,27 @@ model Company {
   foundedDate DateTime? // Optional founded date
   status      String? // Optional status (e.g., "active", "inactive")
   users       User[]
+  addresses   Address[] // One-to-many relationship with Address
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   PO          PO[]
+}
+
+model Address {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  street      String
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  addressType AddressType // Enum for address type
+  companyId   String // Foreign key to Company
+  company     Company     @relation(fields: [companyId], references: [id])
+}
+
+enum AddressType {
+  BUSINESS
+  SHIPPING
 }
 
 model User {
@@ -66,7 +84,7 @@ model Vendor {
   workPhone          String?
   mobile             String?
   website            String?
-  gstin              String?  @unique
+  gstin              String?          @unique
   msmeNo             String?
   address            String?
   customerState      String?
@@ -167,12 +185,12 @@ model SupportingDocument {
 }
 
 model Quotation {
-  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp                   RFP                  @relation(fields: [rfpId], references: [id])
-  rfpId                 String               @db.Uuid
-  vendor                Vendor               @relation(fields: [vendorId], references: [id])
-  vendorId              String               @db.Uuid
-  isPrimary           Boolean              @default(false)
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp       RFP     @relation(fields: [rfpId], references: [id])
+  rfpId     String  @db.Uuid
+  vendor    Vendor  @relation(fields: [vendorId], references: [id])
+  vendorId  String  @db.Uuid
+  isPrimary Boolean @default(false)
 
   totalAmount           Decimal              @db.Decimal(10, 2)
   totalAmountWithoutGST Decimal              @db.Decimal(10, 2)
@@ -215,15 +233,13 @@ model RFP {
 }
 
 enum RFPStatus {
-  DRAFT //RFP Created but not submitted
-  PENDING //Submitted to finance, change this to SUBMITTED / PO_DUE 
-  IN_PROGRESS //Change status to PO_CREATED, PO_SENT
-  // ADVANCE_PAID add this status
-  INVOICE_NOT_RECEIVED //INVOICE_RECEIVED
-  GRN_NOT_RECEIVED //GRN_RECEIVED
-  PAYMENT_NOT_DONE //PAYMENT_DONE (PO Complete)
-  COMPLETED //Remove this status
-  // all other status excluding DRAFT are (Open PO)
+  DRAFT //RFP Created but not submitted 
+  SUBMITTED //Submitted to finance
+  PO_CREATED
+  ADVANCE_PAID
+  INVOICE_RECEIVED
+  GRN_RECEIVED
+  PAYMENT_DONE // (PO Complete) 
 }
 
 model RFPProduct {
