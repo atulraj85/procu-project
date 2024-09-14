@@ -247,6 +247,7 @@ model RFPProduct {
   rfpId          String          @db.Uuid
   product        Product         @relation(fields: [productId], references: [id])
   productId      String          @db.Uuid
+  description    String
   quantity       Int
   vendorPricings VendorPricing[]
   created_at     DateTime        @default(now())

@@ -149,37 +149,81 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       orderBy: orderByClause,
       include: {
-        quotations: {
-          include: {
-            supportingDocuments: {
-              include: {},
-            },
-            vendorPricings: true,
-            otherCharges: true,
-          },
-        },
         approversList: {
-          include: {
-            user: true,
-          },
-        },
-        rfpProducts: {
-          include: {
-            product: true, // This includes all details of the product
-            vendorPricings: {
-              include: {
-                quotation: {
-                  include: {
-                    vendor: true, // This includes all details of the vendor
-                  },
-                },
+          select: {
+            // id: true,
+            user: {
+              select: {
+                // id: true,
+                name: true,
+                email: true,
+                mobile: true,
               },
             },
           },
         },
-        po: {
-          include: {},
+        quotations: {
+          select: {
+            id: true,
+            totalAmount: true,
+            totalAmountWithoutGST: true,
+            created_at: true,
+            updated_at: true,
+            vendor: {
+              select: {
+                companyName: true,
+                email: true,
+                mobile: true,
+                address: true,
+                customerState: true,
+                customerCity: true,
+                country: true,
+                zip: true,
+                gstin: true,
+                pan: true,
+              },
+            },
+            // vendorPricings: {
+            //   include: {
+            //     rfpProduct: true
+            //   }
+            // },
+
+            otherCharges: true,
+
+            supportingDocuments: {
+              include: {},
+            },
+          },
         },
+        rfpProducts: {
+          select: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                modelNo: true,
+              },
+            },
+            // description: true, TODO
+            quantity: true,
+            vendorPricings: {
+              select: {
+                price: true,
+                GST: true,
+                // quotation: {
+                //   include: {
+                //     vendor: true, 
+                //   },
+                // },
+              },
+            },
+          },
+        },
+
+        // po: {
+        //   include: {},
+        // },
         user: true,
       },
     });

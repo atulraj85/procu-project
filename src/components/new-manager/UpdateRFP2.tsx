@@ -31,6 +31,15 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 
+
+
+// Add quotation ref number (Quotation table)
+
+
+
+
+
+
 type Product = {
   id: string;
   name: string;
@@ -946,50 +955,11 @@ interface initialFormData {
   }>;
 }
 
-function vendorPricingsToProducts(data: any) {
-  console.log("data", data[0]);
-  console.log(data[0].rfpProductId);
-
-  const product: Product = {
-    id: "",
-    name: "",
-    modelNo: "",
-    quantity: 0
-  };
-
-  product.gst = data[0].GST;
-  product.unitPrice = data[0].price;
-
-
-
-  async function getProducts(id: string) {
-    try {
-      const response = await fetch(`/api/rfpProduct?id=${id}`);
-      const data = await response.json();
-      const responseData = data[0]
-      console.log("responseData", responseData);
-
-
-      product.quantity = responseData.quantity;
-      // product.name = responseData.name;
-      // product.modelNo = responseData.modelNo;
-      product.id = responseData.id;
-
-        console.log("product", product);
-
-
-    } catch (error) {}
-  }
-  getProducts(data[0].rfpProductId);
-
-  console.log(product)
-}
-
 export default function RFPUpdateForm({
   rfpId,
   initialData,
 }: RFPUpdateFormProps) {
-  console.log("initialData", initialData?.quotations);
+  console.log("initialData in form: ", initialData?.quotations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -1001,12 +971,11 @@ export default function RFPUpdateForm({
     defaultValues: {
       quotations: initialData?.quotations.map((quotation) => ({
         vendorId: quotation.vendorId,
-        products: vendorPricingsToProducts(quotation.vendorPricings),
-        // quotation.vendorPricings.map((pricing) => ({
-        // id: pricing.id,
-        // rfpProductId: pricing.rfpProductId,
-        // price: pricing.price,
-        // }))
+        products: quotation.vendorPricings.map((pricing) => ({
+          id: pricing.id,
+          rfpProductId: pricing.rfpProductId,
+          price: pricing.price,
+        })),
         otherCharges: quotation.otherCharges.map((charge) => ({
           id: charge.id,
           name: charge.name,
@@ -1035,8 +1004,8 @@ export default function RFPUpdateForm({
     },
   });
 
-  const initData = initialData?.quotations[0].vendorPricings;
-  console.log(initData);
+  // const initData = initialData?.quotations[0].vendorPricings;
+  // console.log(initData);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1226,7 +1195,5 @@ export default function RFPUpdateForm({
     </form>
   );
 }
-
-
 
 export { ProductList };
