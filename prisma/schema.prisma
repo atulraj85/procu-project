@@ -77,7 +77,7 @@ enum Role {
 }
 
 model Vendor {
-  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   customerCode       String?
   primaryName        String
   companyName        String
@@ -86,7 +86,7 @@ model Vendor {
   workPhone          String?
   mobile             String?
   website            String?
-  gstin              String?          @unique
+  gstin              String?     @unique
   msmeNo             String?
   address            String?
   customerState      String?
@@ -95,12 +95,10 @@ model Vendor {
   zip                String?
   remarks            String?
   pan                String?
-  verifiedById       String?          @db.Uuid
-  verifiedBy         User?            @relation(fields: [verifiedById], references: [id])
-  created_at         DateTime         @default(now())
-  updated_at         DateTime         @updatedAt
-  ProductCategory    ProductCategory? @relation(fields: [productCategoryId], references: [id])
-  productCategoryId  Int?
+  verifiedById       String?     @db.Uuid
+  verifiedBy         User?       @relation(fields: [verifiedById], references: [id])
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @updatedAt
   Quotation          Quotation[]
 
   @@index([primaryName, companyName, contactDisplayName, email, mobile, gstin]) // Add index for searching
@@ -112,15 +110,6 @@ model Payment {
   invoiceId  String   @db.Uuid
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-}
-
-model ProductCategory {
-  id         Int       @id @default(autoincrement())
-  name       String    @unique
-  products   Product[]
-  vendors    Vendor[]
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
 }
 
 model PO {
@@ -151,13 +140,21 @@ model GoodStatus {
   updated_at               DateTime         @updatedAt
 }
 
+model ProductCategory {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String    @unique
+  products   Product[]
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
 model Product {
-  id                Int             @id @default(autoincrement())
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name              String
   modelNo           String
   specification     String
   productCategory   ProductCategory @relation(fields: [productCategoryId], references: [id])
-  productCategoryId Int
+  productCategoryId String          @db.Uuid
   rfpProducts       RFPProduct[]
   created_at        DateTime        @default(now())
   updated_at        DateTime        @updatedAt
@@ -249,7 +246,7 @@ model RFPProduct {
   rfp            RFP             @relation(fields: [rfpId], references: [id])
   rfpId          String          @db.Uuid
   product        Product         @relation(fields: [productId], references: [id])
-  productId      Int
+  productId      String          @db.Uuid
   quantity       Int
   vendorPricings VendorPricing[]
   created_at     DateTime        @default(now())
@@ -265,6 +262,7 @@ model VendorPricing {
   rfpProduct   RFPProduct @relation(fields: [rfpProductId], references: [id])
   rfpProductId String     @db.Uuid
   price        Decimal    @db.Decimal(10, 2)
+  GST          Int
   created_at   DateTime   @default(now())
   updated_at   DateTime   @updatedAt
 

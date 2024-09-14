@@ -47,9 +47,6 @@ export const columns1: ColumnDef<TableRow>[] = [
       id: "actions",
       cell: ({ row }) => {
         const columns1 = row.original
-        console.log("from  ",columns1);
-        
-   
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -85,9 +82,6 @@ export const columns1: ColumnDef<TableRow>[] = [
       id: "actions",
       cell: ({ row }) => {
         const columns1 = row.original
-        console.log("from  ",columns1);
-        
-   
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,77 +104,6 @@ export const columns1: ColumnDef<TableRow>[] = [
       },
     },
   ];
-
-  
-  //   {
-  //     Header: 'ID',
-  //     accessor: 'id',
-  //   },
-  //   {
-  //     Header: 'Customer Code',
-  //     accessor: 'customerCode',
-  //   },
-  //   {
-  //     Header: 'Primary Name',
-  //     accessor: 'primaryName',
-  //   },
-  //   {
-  //     Header: 'Company Name',
-  //     accessor: 'companyName',
-  //   },
-  //   {
-  //     Header: 'Contact Display Name',
-  //     accessor: 'contactDisplayName',
-  //   },
-  //   {
-  //     Header: 'Email',
-  //     accessor: 'email',
-  //   },
-  //   {
-  //     Header: 'Work Phone',
-  //     accessor: 'workPhone',
-  //   },
-  //   {
-  //     Header: 'Mobile',
-  //     accessor: 'mobile',
-  //   },
-  //   {
-  //     Header: 'Website',
-  //     accessor: 'website',
-  //   },
-  //   {
-  //     Header: 'GSTIN',
-  //     accessor: 'gstin',
-  //   },
-  //   {
-  //     Header: 'MSME No',
-  //     accessor: 'msmeNo',
-  //   },
-  //   {
-  //     Header: 'Address',
-  //     accessor: 'address',
-  //   },
-  //   {
-  //     Header: 'State',
-  //     accessor: 'customerState',
-  //   },
-  //   {
-  //     Header: 'City',
-  //     accessor: 'customerCity',
-  //   },
-  //   {
-  //     Header: 'Country',
-  //     accessor: 'country',
-  //   },
-  //   {
-  //     Header: 'Zip',
-  //     accessor: 'zip',
-  //   },
-  //   {
-  //     Header: 'PAN',
-  //     accessor: 'pan',
-  //   },
-  // ];
 
 export const columns: ColumnDef<Vendor>[] = [
   

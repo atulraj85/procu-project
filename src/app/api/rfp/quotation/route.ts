@@ -25,10 +25,10 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
     const { quotations } = data;
-    console.log("quotations", quotations);
-    console.log("formData", formData);
+    //console.log("quotations", quotations);
+    //console.log("formData", formData);
     const supDocs = Array.from(formData.entries()).slice(2);
-    console.log("supDocs", supDocs);
+    //console.log("supDocs", supDocs);
 
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        console.log("vendorId", vendorId);
+        //console.log("vendorId", vendorId);
 
         async function processedDocuments() {
           const quotationDirPath = path.join(
@@ -51,23 +51,23 @@ export async function PUT(request: NextRequest) {
             vendorId
           );
 
-          console.log("quotationDirPath", quotationDirPath);
+          //console.log("quotationDirPath", quotationDirPath);
 
           await fs.mkdir(quotationDirPath, { recursive: true });
 
           const index = supDocs.findIndex((doc) => doc[0].startsWith(vendorId));
 
           if (index !== -1) {
-            console.log(`Element found at index: ${index}`);
-            console.log(`Element:`, supDocs[index]);
+            //console.log(`Element found at index: ${index}`);
+            //console.log(`Element:`, supDocs[index]);
           } else {
-            console.log("Element not found");
+            //console.log("Element not found");
             throw "Supporting documents not found!";
           }
 
           const str = supDocs[index][0]; // e.g., 'b5b7988e-c18f-4193-9737-cc35ae3c557c/Bill'
           const result = str.split("/")[1];
-          console.log("result", result);
+          //console.log("result", result);
 
           const file = supDocs[index][1] as File;
           if (!file) {
@@ -77,17 +77,17 @@ export async function PUT(request: NextRequest) {
 
           // Extract the name from supDocs[0][0] and the original file extension
           const newFileName = `${result}.${file.name.split(".").pop()}`; // Combine name and extension
-          console.log("newFileName", newFileName);
+          //console.log("newFileName", newFileName);
 
           const filePath = path.join(quotationDirPath, newFileName); // Create the full file path with the new name
 
           try {
             const fileBuffer = await Buffer.from(await file.arrayBuffer());
-            console.log("fileBuffer", fileBuffer);
+            //console.log("fileBuffer", fileBuffer);
             const done = await fs.writeFile(filePath, fileBuffer); // Use the full file path
-            console.log("done", done);
+            //console.log("done", done);
           } catch (error: any) {
-            console.log(error);
+            //console.log(error);
           }
 
           return {
@@ -99,11 +99,14 @@ export async function PUT(request: NextRequest) {
 
         const processedDocumentData = await processedDocuments();
 
-        console.log("processedDocumentData", processedDocumentData);
+        //console.log("processedDocumentData", processedDocumentData);
+
+        //console.log("products", products);
 
         // Create VendorPricing entries for each product in the quotation
         const vendorPricingEntries = products.map((product: any) => ({
-          price: parseFloat(product.unitPrice) || 0, // Default to 0 if unitPrice is null
+          price: parseFloat(product.unitPrice) || 0,
+          GST: parseInt(product.gst), // Default to 0 if unitPrice is null
           rfpProduct: {
             connect: {
               rfpId_productId: {
@@ -138,7 +141,7 @@ export async function PUT(request: NextRequest) {
       })
     );
 
-    console.log("processedQuotations", processedQuotations);
+    //console.log("processedQuotations", processedQuotations);
 
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({

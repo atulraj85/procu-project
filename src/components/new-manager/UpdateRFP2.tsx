@@ -87,15 +87,47 @@ type Vendor = {
 const VendorSelector = ({
   index,
   setValue,
+  control,
 }: {
   index: number;
   setValue: any;
+  control: Control<FormData>;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
   const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const vendorId = useWatch({
+    control,
+    name: `quotations.${index}.vendorId`,
+  });
+
+  useEffect(() => {
+    const fetchVendorDetails = async () => {
+      if (vendorId) {
+        try {
+          const response = await fetch(`/api/vendor?id=${vendorId}`);
+          const vendorData = await response.json();
+          const formattedVendors = vendorData.map((vendor: any) => ({
+            ...vendor,
+            vendorId: vendor.productId || vendor.id || String(vendor._id),
+          }));
+          // console.log("formattedVendors", formattedVendors);
+          addVendor(formattedVendors[0]);
+          if (vendorData) {
+            setApprovedVendors([formattedVendors[0]]);
+            setDisableVendorSearch(true);
+          }
+        } catch (error) {
+          setError("Failed to fetch vendor details");
+        }
+      }
+    };
+
+    fetchVendorDetails();
+  }, [vendorId]);
 
   const handleSearchChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +138,7 @@ const VendorSelector = ({
         try {
           const response = await fetch(`/api/ajax/vendors?q=${value}`);
           const responseData = await response.json();
-
+          console.log("responseData", responseData);
           const formattedVendors = responseData.map((vendor: any) => ({
             ...vendor,
             vendorId: vendor.productId || vendor.id || String(vendor._id),
@@ -123,6 +155,7 @@ const VendorSelector = ({
   );
   const addVendor = useCallback(
     (vendor: Vendor) => {
+      // console.log("approvedVendors", approvedVendors);
       if (!vendor.id) {
         setError("Vendor ID is missing");
         return;
@@ -289,6 +322,14 @@ const ProductList = ({
     control,
     name: `quotations.${index}.products`,
   });
+
+  const products = useWatch({
+    control,
+    name: `quotations.${index}.products`,
+  });
+
+  // console.log("products", products)
+
   const [error, setError] = useState<string | null>(null);
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
@@ -327,9 +368,6 @@ const ProductList = ({
           );
 
           const flattenedProductsWithDetails = productsWithDetails.flat();
-
-          console.log("productsWithDetails", flattenedProductsWithDetails);
-
           setRfpProducts(flattenedProductsWithDetails);
           setValue(
             `quotations.${index}.products`,
@@ -766,6 +804,9 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   });
 
   useEffect(() => {
+    // if (quotation.total) {
+    //   setValue(`quotations.${index}.total`, quotation.total);
+    // }
     const totalWithoutGST =
       (quotation.products?.reduce(
         (sum: number, product: { totalPriceWithoutGST: number | string }) =>
@@ -845,18 +886,144 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
 // Step 7: Create Main RFP Update Form Component
 
 interface RFPUpdateFormProps {
-  rfpId: string; // Define the prop type for rfpId
+  rfpId: string;
+  initialData?: {
+    quotations: Array<{
+      id: string;
+      rfpId: string;
+      vendorId: string;
+      isPrimary: boolean;
+      totalAmount: string;
+      totalAmountWithoutGST: string;
+      supportingDocuments: Array<{
+        id: string;
+        quotationId: string;
+        documentType: string;
+        documentName: string;
+        location: string;
+      }>;
+      vendorPricings: Array<{
+        id: string;
+        quotationId: string;
+        rfpProductId: string;
+        price: string;
+      }>;
+      otherCharges: Array<{
+        id: string;
+        quotationId: string;
+        name: string;
+        price: string;
+        gst: string;
+      }>;
+    }>;
+  };
 }
 
-export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
+interface initialFormData {
+  quotations: Array<{
+    vendorId: string;
+    products: Array<{
+      id: string;
+      rfpProductId: string;
+      price: string;
+    }>;
+    otherCharges: Array<{
+      id: string;
+      name: string;
+      price: string;
+      gst: string;
+    }>;
+    total: {
+      withGST: number;
+      withoutGST: number;
+    };
+    supportingDocuments: Array<{
+      id: string;
+      documentType: string;
+      documentName: string;
+      location: string;
+    }>;
+  }>;
+}
+
+function vendorPricingsToProducts(data: any) {
+  console.log("data", data[0]);
+  console.log(data[0].rfpProductId);
+
+  const product: Product = {
+    id: "",
+    name: "",
+    modelNo: "",
+    quantity: 0
+  };
+
+  product.gst = data[0].GST;
+  product.unitPrice = data[0].price;
+
+
+
+  async function getProducts(id: string) {
+    try {
+      const response = await fetch(`/api/rfpProduct?id=${id}`);
+      const data = await response.json();
+      const responseData = data[0]
+      console.log("responseData", responseData);
+
+
+      product.quantity = responseData.quantity;
+      // product.name = responseData.name;
+      // product.modelNo = responseData.modelNo;
+      product.id = responseData.id;
+
+        console.log("product", product);
+
+
+    } catch (error) {}
+  }
+  getProducts(data[0].rfpProductId);
+
+  console.log(product)
+}
+
+export default function RFPUpdateForm({
+  rfpId,
+  initialData,
+}: RFPUpdateFormProps) {
+  console.log("initialData", initialData?.quotations);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
 
-  const { control, handleSubmit, setValue, getValues } = useForm<FormData>({
+  const { control, handleSubmit, setValue, getValues } = useForm<
+    initialFormData | FormData | any
+  >({
     defaultValues: {
-      quotations: [
+      quotations: initialData?.quotations.map((quotation) => ({
+        vendorId: quotation.vendorId,
+        products: vendorPricingsToProducts(quotation.vendorPricings),
+        // quotation.vendorPricings.map((pricing) => ({
+        // id: pricing.id,
+        // rfpProductId: pricing.rfpProductId,
+        // price: pricing.price,
+        // }))
+        otherCharges: quotation.otherCharges.map((charge) => ({
+          id: charge.id,
+          name: charge.name,
+          price: charge.price,
+          gst: charge.gst,
+        })),
+        total: {
+          withGST: parseFloat(quotation.totalAmount),
+          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
+        },
+        supportingDocuments: quotation.supportingDocuments.map((doc) => ({
+          id: doc.id,
+          documentType: doc.documentType,
+          documentName: doc.documentName,
+          location: doc.location,
+        })),
+      })) || [
         {
           vendorId: "",
           products: [],
@@ -867,6 +1034,9 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
       ],
     },
   });
+
+  const initData = initialData?.quotations[0].vendorPricings;
+  console.log(initData);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -881,6 +1051,8 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
+
+    console.log("Text data to be sent:", data);
 
     try {
       const formData = new FormData();
@@ -898,8 +1070,6 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
-
-      console.log(formData);
 
       const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
         method: "PUT",
@@ -956,7 +1126,11 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="m-2">
-                    <VendorSelector setValue={setValue} index={index} />
+                    <VendorSelector
+                      setValue={setValue}
+                      index={index}
+                      control={control}
+                    />
                   </div>
                   <div className="m-2">
                     <ProductList
@@ -1052,3 +1226,7 @@ export default function RFPUpdateForm({ rfpId }: RFPUpdateFormProps) {
     </form>
   );
 }
+
+
+
+export { ProductList };

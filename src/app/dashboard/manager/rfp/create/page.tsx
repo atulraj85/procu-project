@@ -393,7 +393,7 @@ const RFPForm: React.FC = () => {
                 <Input
                   id="deliveryByDate"
                   name="deliveryByDate"
-                  type="datetime-local"
+                  type="datetime-local" //TODO Update this to date
                   value={formData.deliveryByDate}
                   onChange={handleInputChange}
                 />
