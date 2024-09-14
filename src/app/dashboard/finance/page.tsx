@@ -88,7 +88,9 @@ const Dashboard = () => {
       }));
 
       setRfps(formattedData);
-      setContent(formattedData.filter((item) => item.rfpStatus === "SU")); // Set initial content to pending RFPs
+      setContent(
+        formattedData.filter((item) => item.rfpStatus === "SUBMITTED")
+      ); // Set initial content to pending RFPs
       setHeader(rfpHeaders);
     } catch (error) {
       console.error("Error fetching RFP data:", error);
