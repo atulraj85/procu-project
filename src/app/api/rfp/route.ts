@@ -151,14 +151,26 @@ export async function GET(request: NextRequest) {
       include: {
         quotations: {
           include: {
-            supportingDocuments: true,
+            supportingDocuments: {
+              include: {},
+            },
             vendorPricings: true,
             otherCharges: true,
           },
         },
-        approversList: true,
-        rfpProducts: true,
-        po: true,
+        approversList: {
+          include: {
+            user: true,
+          },
+        },
+        rfpProducts: {
+          include: {
+            product: true,
+          },
+        },
+        po: {
+          include: {},
+        },
         user: true,
       },
     });
