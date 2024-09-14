@@ -4,7 +4,8 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState ,useRef } from "react";
+import html2canvas from 'html2canvas';
 import jsPDF from "jspdf";
 
 interface CompanyAddress {
@@ -47,6 +48,15 @@ const Page: React.FC = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
+  const pageRef = useRef<HTMLDivElement>(null);
+  const date = new Date();
+
+  let day = date.getDate();
+  let month = date.getMonth() + 1;
+  let year = date.getFullYear();
+  
+  // This arrangement can be altered based on how we want the date's format to appear.
+  let currentDate = `${day}/${month}/${year}`;
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -84,16 +94,23 @@ const Page: React.FC = () => {
     fetchRfpData();
   }, [rfp]);
 
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Purchase Order", 20, 20);
-    doc.text(`Company Name: ${company?.name}`, 20, 30);
-    doc.text(`Address: ${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`, 20, 40);
-    doc.text(`Vendor Name: ${vendor.companyName}`, 20, 50);
-    doc.text(`Vendor Address: ${vendor.address}`, 20, 60);
-    // Add more content as needed
-    doc.save("purchase_order.pdf");
-  };
+  const downloadPDF = async () => {
+  if (pageRef.current) {
+    const canvas = await html2canvas(pageRef.current, {
+      scale: 2, // Increase scale for better quality
+      useCORS: true, // This might be necessary for loading images
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [canvas.width, canvas.height]
+    });
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save("purchase_order_full_page.pdf");
+  }
+}
 
   return (
     <div>
@@ -111,9 +128,9 @@ const Page: React.FC = () => {
           </Link>
         </div>
         <section className="flex justify-between pb-7">
-          <div>
-            <label className="font-bold">Company Logo</label>
-            <Image height={100} width={100} alt="Company logo" src="" />
+          <div >
+            {/* <label className="font-bold">Company Logo</label> */}
+            <Image className=" rounded-full" height={100} width={100} alt="Company logo" src="/company/logo.png" />
           </div>
           <div>
             <div>
@@ -146,7 +163,7 @@ const Page: React.FC = () => {
             </div>
             <div className="flex">
               <label className="font-bold">Date :-</label>
-              <h1 className="text-[14px]">22/07/2024</h1>
+              <h1 className="text-[14px]">{currentDate}</h1>
             </div>
           </div>
         </section>
@@ -183,13 +200,16 @@ const Page: React.FC = () => {
         <section className="flex justify-between">
           <div>
             <div className="w-[50%] mt-7 mb-3">
-              <label className="font-bold">M-Monks Digital Media Pvt Ltd.</label>
-              <Image height={100} width={100} alt="Company logo" src="" />
+              <label className="font-bold">{company?.name}</label>
+              <Image height={80} width={100} alt="Signature" src="/company/sign.png" />
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
+            <div className="flex justify-between">
             <div className="w-[50%] mt-7 mb-3">
               <label className="font-bold">Invoice To:</label>
               <h1 className="text-[14px]">{vendor.address}</h1>
+            </div>
+            <div className="pr-6"> <Image height={150} width={150} alt="Company logo" src="/company/stamp-transparent-19.png" /></div>
             </div>
             <div className="mb-8">
               <label className="font-bold">Ship To:</label>
@@ -199,9 +219,9 @@ const Page: React.FC = () => {
         </section>
 
         <div className="flex justify-center mt-4">
-          <Button onClick={downloadPDF} className="bg-blue-500 text-white">
+        {/* <Button onClick={downloadPDF} className="bg-blue-500 text-white">
             Download PDF
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>
