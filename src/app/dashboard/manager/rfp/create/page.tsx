@@ -9,6 +9,9 @@ import { Plus, Sheet, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 
+
+
+
 interface RFPProduct {
   productId: string;
   name?: string;

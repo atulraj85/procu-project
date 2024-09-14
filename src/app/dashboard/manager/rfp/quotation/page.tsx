@@ -1,8 +1,6 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import RFPUpdateForm from "@/components/new-manager/UpdateRFP2";
 import Loader from "@/components/shared/Loader";
 
@@ -24,21 +22,14 @@ const Page = () => {
             throw new Error(`HTTP error! status: ${rfpResponse.status}`);
           }
           const rfpResult = await rfpResponse.json();
+
           setRfpId(rfpResult[0].id);
 
-          const quotationsResult = rfpResult[0].quotations;
+          console.log("rfpResult from fetch: ", rfpResult);
 
-          console.log("quotationsResult", quotationsResult);
-
-          // Check if quotations array is not empty
-          if (quotationsResult && quotationsResult.length > 0) {
-            console.log("here");
-            setRfpData({
-              ...rfpResult[0],
-              quotations: quotationsResult,
-            });
+          if (rfpResult[0]) {
+            setRfpData(rfpResult[0]);
           } else {
-            // If quotations array is empty, set rfpData to null
             setRfpData(null);
           }
         } catch (err: any) {
@@ -55,7 +46,11 @@ const Page = () => {
   if (error) return <div>Error: {error}</div>;
 
   return (
-    <div>{rfpId && <RFPUpdateForm rfpId={rfpId} initialData={rfpData} />}</div>
+    <div>
+      {rfpId && rfpData && (
+        <RFPUpdateForm rfpId={rfpId} initialData={rfpData} />
+      )}
+    </div>
   );
 };
 
