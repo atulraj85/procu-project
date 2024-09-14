@@ -14,10 +14,27 @@ interface Approver {
   approvedAt: string | null;
 }
 
+interface ApproverDetails {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
 interface RfpProduct {
   id: string;
-  productId: number;
+  productId: string;
   quantity: number;
+}
+
+interface ProductDetails {
+  id: string;
+  name: string;
+  modelNo: string;
+  specification: string;
+  productCategoryId: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface RfpData {
@@ -43,6 +60,8 @@ interface RfpData {
 
 const RfpDetails: React.FC = () => {
   const [rfpData, setRfpData] = useState<RfpData | null>(null);
+  const [productDetails, setProductDetails] = useState<{ [key: string]: ProductDetails }>({});
+  const [approverDetails, setApproverDetails] = useState<{ [key: string]: ApproverDetails | null }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -54,10 +73,15 @@ const RfpDetails: React.FC = () => {
         setLoading(true);
         const response = await fetch(`/api/rfp?rfpId=${encodeURIComponent(rfpId)}`);
         const data = await response.json();
-        console.log("data", data);
         
         if (Array.isArray(data) && data.length > 0) {
           setRfpData(data[0]);
+          await fetchProductDetails(data[0].rfpProducts);
+          console.log();
+          
+          data[0].approversList.forEach(approver => {
+            fetchApproverDetails(approver.userId);
+          });
         } else {
           setError("No RFP data found");
         }
@@ -71,6 +95,38 @@ const RfpDetails: React.FC = () => {
 
     fetchRfpDetails();
   }, [rfpId]);
+
+  const fetchProductDetails = async (products: RfpProduct[]) => {
+    const details: { [key: string]: ProductDetails } = {};
+    for (const product of products) {
+      try {
+        const response = await fetch(`/api/product?id=${product.productId}`);
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          details[product.productId] = data[0];
+        }
+      } catch (err) {
+        console.error(`Failed to fetch details for product ${product.productId}`, err);
+      }
+    }
+    setProductDetails(details);
+  };
+
+  const fetchApproverDetails = async (userId: string) => {
+    try {
+      setApproverDetails(prev => ({ ...prev, [userId]: null })); // Set to null to indicate loading
+      const response = await fetch(`/api/users?id=${userId}`);
+      const data = await response.json();
+      if (data.response && data.response.data && data.response.data.length > 0) {
+        setApproverDetails(prev => ({ ...prev, [userId]: data.response.data[0] }));
+      } else {
+        setApproverDetails(prev => ({ ...prev, [userId]: { id: userId, email: 'N/A', name: 'N/A', role: 'N/A' } }));
+      }
+    } catch (err) {
+      console.error(`Failed to fetch details for approver ${userId}`, err);
+      setApproverDetails(prev => ({ ...prev, [userId]: { id: userId, email: 'Error', name: 'Error', role: 'Error' } }));
+    }
+  };
 
   if (loading) {
     return <Loader/>;
@@ -164,20 +220,35 @@ const RfpDetails: React.FC = () => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="border border-gray-300 p-2">Approver ID</th>
+                <th className="border border-gray-300 p-2">Name</th>
+                <th className="border border-gray-300 p-2">Email</th>
+                <th className="border border-gray-300 p-2">Role</th>
                 <th className="border border-gray-300 p-2">Approved</th>
                 <th className="border border-gray-300 p-2">Approved At</th>
               </tr>
             </thead>
             <tbody>
-              {rfpData.approversList.map((approver) => (
-                <tr key={approver.id}>
-                  <td className="border border-gray-300 p-2">{approver.userId}</td>
-                  <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
-                  <td className="border border-gray-300 p-2">
-                    {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
-                  </td>
-                </tr>
-              ))}
+              {rfpData.approversList.map((approver) => {
+                const details = approverDetails[approver.userId];
+                return (
+                  <tr key={approver.id}>
+                    <td className="border border-gray-300 p-2">{approver.userId}</td>
+                    <td className="border border-gray-300 p-2">
+                      {details === null ? 'Loading...' : details?.name}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {details === null ? 'Loading...' : details?.email}
+                    </td>
+                    <td className="border border-gray-300 p-2">
+                      {details === null ? 'Loading...' : details?.role}
+                    </td>
+                    <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
+                    <td className="border border-gray-300 p-2">
+                      {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -188,16 +259,25 @@ const RfpDetails: React.FC = () => {
             <thead>
               <tr className="bg-gray-100">
                 <th className="border border-gray-300 p-2">Product ID</th>
+                <th className="border border-gray-300 p-2">Name</th>
+                <th className="border border-gray-300 p-2">Model No</th>
+                <th className="border border-gray-300 p-2">Specification</th>
                 <th className="border border-gray-300 p-2">Quantity</th>
               </tr>
             </thead>
             <tbody>
-              {rfpData.rfpProducts.map((product) => (
-                <tr key={product.id}>
-                  <td className="border border-gray-300 p-2">{product.productId}</td>
-                  <td className="border border-gray-300 p-2">{product.quantity}</td>
-                </tr>
-              ))}
+              {rfpData.rfpProducts.map((product) => {
+                const details = productDetails[product.productId];
+                return (
+                  <tr key={product.id}>
+                    <td className="border border-gray-300 p-2">{product.productId}</td>
+                    <td className="border border-gray-300 p-2">{details?.name || 'Loading...'}</td>
+                    <td className="border border-gray-300 p-2">{details?.modelNo || 'Loading...'}</td>
+                    <td className="border border-gray-300 p-2">{details?.specification || 'Loading...'}</td>
+                    <td className="border border-gray-300 p-2">{product.quantity}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

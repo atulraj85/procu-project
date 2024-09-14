@@ -129,149 +129,28 @@ const Page = () => {
           />
         </CardContent>
       </Card>
+
+      <Card className="mt-4">
+<CardHeader>
+  <CardTitle className="text-lg text-slate-700">Shipping Information</CardTitle>
+</CardHeader>
+<CardContent>
+  <div className="flex flex-wrap">
+    <div className="mx-4 flex-1">
+      <Label className="font-bold text-[16px] text-slate-700 pb-2">Billing Address</Label>
+      <Textarea className="text-[14px]" />
+    </div>
+    <div className="mx-4 flex-1">
+      <Label className="font-bold text-[16px] text-slate-700 pb-2">Shipping Address</Label>
+      <Textarea className="text-[14px]" />
+    </div>
+  </div>
+</CardContent>
+</Card>
     </div>
   );
 };
 
-// const Page = () => {
-//   const [company, setCompany] = useState<Company | null>(null);
-//   const [rfpData, setRfpData] = useState<any>({});
-//   const searchParams = useSearchParams();
-//   const rfp = searchParams.get("rfp");
 
-//   const { control, getValues, setValue } = useForm({
-//     defaultValues: {
-//       quotations: [{ products: [] }],
-//     },
-//   });
-
-//   useEffect(() => {
-//     const fetchCompanyData = async () => {
-//       try {
-//         const response = await fetch(`/api/company?rfpId=${encodeURIComponent(rfp)}`);
-//         if (!response.ok) {
-//           throw new Error("Network response was not ok");
-//         }
-//         const data = await response.json();
-//         console.log("company", data[0].addresses);
-//         setCompany(data[0]);
-//       } catch (error) {
-//         console.error("Error fetching company data:", error);
-//       }
-//     };
-
-//     const fetchRfpData = async () => {
-//       try {
-//         const response = await fetch(`/api/rfp?rfpId=${encodeURIComponent(rfp)}`);
-//         if (!response.ok) {
-//           throw new Error("Network response was not ok");
-//         }
-//         const data = await response.json();
-//         console.log(data[0]);
-//         setRfpData(data[0]);
-//       } catch (error) {
-//         console.error("Error fetching RFP data:", error);
-//       }
-//     };
-
-//     fetchCompanyData();
-//     fetchRfpData();
-//   }, [rfp]);
-
-//   return (
-//     <div>
-//       <div className="flex justify-between pb-8">
-//         <h1 className="font-bold text-[24px]">Create PO</h1>
-//         <Link href="/dashboard/finance">
-//           <Button
-//             type="button"
-//             variant="outline"
-//             size="icon"
-//             className="text-black-500 bg-red-400"
-//           >
-//             <X className="h-4 w-4" />
-//           </Button>
-//         </Link>
-//       </div>
-      
-//       {/* Company Information Card */}
-//       <Card className="mb-5">
-//         <div className="flex flex-wrap justify-between p-4">
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Company Name</Label>
-//             <Input className="text-[14px]" value={company?.name || ''} readOnly />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Company GST</Label>
-//             <Input className="text-[14px]" value={company?.gst || ''} readOnly />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Company Address</Label>
-//             <Textarea 
-//               className="text-[14px]" 
-//               value={company?.addresses?.[0] ? `${company.addresses[0].street}, ${company.addresses[0].city}, ${company.addresses[0].postalCode}` : ''} 
-//               readOnly 
-//             />
-//           </div>
-//         </div>
-//       </Card>
-
-//       {/* Purchase Order Card */}
-//       <Label className="font-bold text-[16px] text-slate-700 pb-2">Purchase Order</Label>
-//       <Card className="mt-4 mb-4">
-//         <div className="flex flex-wrap justify-between p-4">
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Company Address</Label>
-//             <Textarea className="text-[14px]" />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Company GST</Label>
-//             <Input className="text-[14px]" />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Order No</Label>
-//             <Input className="text-[14px]" />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Ref</Label>
-//             <Input className="text-[14px]" />
-//           </div>
-//           <div>
-//             <Label className="font-bold text-[16px] text-slate-700 pb-2">Date</Label>
-//             <Input className="text-[14px]" type="date" />
-//           </div>
-//         </div>
-//       </Card>
-
-//       {/* ProductList Component */}
-//       <ProductList
-//         control={control}
-//         index={0}
-//         getValues={getValues}
-//         setValue={setValue}
-//         rfpId={rfp}
-//       />
-
-//       {/* Shipping Information Card */}
-//       <Card className="mt-4">
-//         <CardHeader>
-//           <CardTitle className="text-lg text-slate-700">Shipping Information</CardTitle>
-//         </CardHeader>
-//         <CardContent>
-//           <div className="flex flex-wrap">
-//             <div className="mx-4 flex-1">
-//               <Label className="font-bold text-[16px] text-slate-700 pb-2">Billing Address</Label>
-//               <Textarea className="text-[14px]" />
-//             </div>
-//             <div className="mx-4 flex-1">
-//               <Label className="font-bold text-[16px] text-slate-700 pb-2">Shipping Address</Label>
-//               <Textarea className="text-[14px]" />
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// };
 
 export default Page;

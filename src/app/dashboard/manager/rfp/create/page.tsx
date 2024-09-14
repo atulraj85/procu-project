@@ -206,7 +206,8 @@ const RFPForm: React.FC = () => {
       setZipCode(value);
     }
   };
-
+  const today = new Date();
+  const formattedToday = today.toISOString().slice(0, 16)
   const handleProductChange = (
     index: number,
     field: keyof RFPProduct,
@@ -388,16 +389,17 @@ const RFPForm: React.FC = () => {
               onChange={handleInputChange}
             />
           </div> */}
-              <div className="space-y-2">
-                <Label htmlFor="deliveryByDate">Delivery By Date</Label>
-                <Input
-                  id="deliveryByDate"
-                  name="deliveryByDate"
-                  type="datetime-local" //TODO Update this to date
-                  value={formData.deliveryByDate}
-                  onChange={handleInputChange}
-                />
-              </div>
+               <div className="space-y-2">
+      <Label htmlFor="deliveryByDate">Delivery By Date</Label>
+      <Input
+        id="deliveryByDate"
+        name="deliveryByDate"
+        type="datetime-local"
+        min={formattedToday} // Set the minimum date
+        value={formData.deliveryByDate}
+        onChange={handleInputChange}
+      />
+    </div>
               {/* <div className="space-y-2">
             <Label htmlFor="lastDateToRespond">Last Date to Respond</Label>
             <Input
