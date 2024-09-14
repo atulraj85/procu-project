@@ -165,7 +165,16 @@ export async function GET(request: NextRequest) {
         },
         rfpProducts: {
           include: {
-            product: true,
+            product: true, // This includes all details of the product
+            vendorPricings: {
+              include: {
+                quotation: {
+                  include: {
+                    vendor: true, // This includes all details of the vendor
+                  },
+                },
+              },
+            },
           },
         },
         po: {
