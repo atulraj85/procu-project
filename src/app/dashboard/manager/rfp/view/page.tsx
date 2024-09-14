@@ -105,6 +105,7 @@ const RfpDetails: React.FC = () => {
         setLoading(true);
         const response = await fetch(`/api/rfp?rfpId=${encodeURIComponent(rfpId)}`);
         const data = await response.json();
+        console.log("data",data[0]);
         
         if (Array.isArray(data) && data.length > 0) {
           setRfpData(data[0]);
@@ -216,7 +217,7 @@ const RfpDetails: React.FC = () => {
                 {/* <th className="border border-gray-300 p-2">Approver ID</th> */}
                 <th className="border border-gray-300 p-2">Name</th>
                 <th className="border border-gray-300 p-2">Email</th>
-                <th className="border border-gray-300 p-2">Role</th>
+                {/* <th className="border border-gray-300 p-2">Role</th> */}
                 <th className="border border-gray-300 p-2">Approved</th>
                 <th className="border border-gray-300 p-2">Approved At</th>
               </tr>
@@ -227,7 +228,7 @@ const RfpDetails: React.FC = () => {
                   {/* <td className="border border-gray-300 p-2">{approver.userId}</td> */}
                   <td className="border border-gray-300 p-2">{approver.user.name}</td>
                   <td className="border border-gray-300 p-2">{approver.user.email}</td>
-                  <td className="border border-gray-300 p-2">{approver.user.role}</td>
+                  {/* <td className="border border-gray-300 p-2">{approver.user.role}</td> */}
                   <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
                   <td className="border border-gray-300 p-2">
                     {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
@@ -251,6 +252,7 @@ const RfpDetails: React.FC = () => {
               </tr>
             </thead>
             <tbody>
+              {/* <h1>{rfpData.rfpProducts}</h1> */}
               {rfpData.rfpProducts.map((product) => (
                 <tr key={product.id}>
                   {/* <td className="border border-gray-300 p-2">{product.productId}</td> */}

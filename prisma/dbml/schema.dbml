@@ -207,6 +207,7 @@ Table RFPProduct {
   rfpId String [not null]
   product Product [not null]
   productId String [not null]
+  description String [not null]
   quantity Int [not null]
   vendorPricings VendorPricing [not null]
   created_at DateTime [default: `now()`, not null]
