@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useSearchParams } from 'next/navigation';
@@ -12,29 +12,62 @@ interface Approver {
   userId: string;
   approved: boolean;
   approvedAt: string | null;
-}
-
-interface ApproverDetails {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
 }
 
 interface RfpProduct {
   id: string;
   productId: string;
   quantity: number;
+  product: {
+    id: string;
+    name: string;
+    modelNo: string;
+    specification: string;
+  };
 }
 
-interface ProductDetails {
+interface Quotation {
   id: string;
-  name: string;
-  modelNo: string;
-  specification: string;
-  productCategoryId: string;
+  rfpId: string;
+  vendorId: string;
+  isPrimary: boolean;
+  totalAmount: string;
+  totalAmountWithoutGST: string;
   created_at: string;
   updated_at: string;
+  supportingDocuments: Array<{
+    id: string;
+    quotationId: string;
+    documentType: string;
+    documentName: string;
+    location: string;
+    created_at: string;
+    updated_at: string;
+  }>;
+  vendorPricings: Array<{
+    id: string;
+    quotationId: string;
+    rfpProductId: string;
+    price: string;
+    GST: number;
+    created_at: string;
+    updated_at: string;
+  }>;
+  otherCharges: Array<{
+    id: string;
+    quotationId: string;
+    name: string;
+    price: string;
+    gst: string;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 interface RfpData {
@@ -51,6 +84,7 @@ interface RfpData {
   updated_at: string;
   approversList: Approver[];
   rfpProducts: RfpProduct[];
+  quotations: Quotation[]; // Add quotations field
   user: {
     name: string;
     email: string;
@@ -60,8 +94,6 @@ interface RfpData {
 
 const RfpDetails: React.FC = () => {
   const [rfpData, setRfpData] = useState<RfpData | null>(null);
-  const [productDetails, setProductDetails] = useState<{ [key: string]: ProductDetails }>({});
-  const [approverDetails, setApproverDetails] = useState<{ [key: string]: ApproverDetails | null }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -76,12 +108,6 @@ const RfpDetails: React.FC = () => {
         
         if (Array.isArray(data) && data.length > 0) {
           setRfpData(data[0]);
-          await fetchProductDetails(data[0].rfpProducts);
-          console.log();
-          
-          data[0].approversList.forEach(approver => {
-            fetchApproverDetails(approver.userId);
-          });
         } else {
           setError("No RFP data found");
         }
@@ -96,40 +122,8 @@ const RfpDetails: React.FC = () => {
     fetchRfpDetails();
   }, [rfpId]);
 
-  const fetchProductDetails = async (products: RfpProduct[]) => {
-    const details: { [key: string]: ProductDetails } = {};
-    for (const product of products) {
-      try {
-        const response = await fetch(`/api/product?id=${product.productId}`);
-        const data = await response.json();
-        if (Array.isArray(data) && data.length > 0) {
-          details[product.productId] = data[0];
-        }
-      } catch (err) {
-        console.error(`Failed to fetch details for product ${product.productId}`, err);
-      }
-    }
-    setProductDetails(details);
-  };
-
-  const fetchApproverDetails = async (userId: string) => {
-    try {
-      setApproverDetails(prev => ({ ...prev, [userId]: null })); // Set to null to indicate loading
-      const response = await fetch(`/api/users?id=${userId}`);
-      const data = await response.json();
-      if (data.response && data.response.data && data.response.data.length > 0) {
-        setApproverDetails(prev => ({ ...prev, [userId]: data.response.data[0] }));
-      } else {
-        setApproverDetails(prev => ({ ...prev, [userId]: { id: userId, email: 'N/A', name: 'N/A', role: 'N/A' } }));
-      }
-    } catch (err) {
-      console.error(`Failed to fetch details for approver ${userId}`, err);
-      setApproverDetails(prev => ({ ...prev, [userId]: { id: userId, email: 'Error', name: 'Error', role: 'Error' } }));
-    }
-  };
-
   if (loading) {
-    return <Loader/>;
+    return <Loader />;
   }
 
   if (error) {
@@ -219,7 +213,7 @@ const RfpDetails: React.FC = () => {
           <table className="w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2">Approver ID</th>
+                {/* <th className="border border-gray-300 p-2">Approver ID</th> */}
                 <th className="border border-gray-300 p-2">Name</th>
                 <th className="border border-gray-300 p-2">Email</th>
                 <th className="border border-gray-300 p-2">Role</th>
@@ -228,27 +222,18 @@ const RfpDetails: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rfpData.approversList.map((approver) => {
-                const details = approverDetails[approver.userId];
-                return (
-                  <tr key={approver.id}>
-                    <td className="border border-gray-300 p-2">{approver.userId}</td>
-                    <td className="border border-gray-300 p-2">
-                      {details === null ? 'Loading...' : details?.name}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      {details === null ? 'Loading...' : details?.email}
-                    </td>
-                    <td className="border border-gray-300 p-2">
-                      {details === null ? 'Loading...' : details?.role}
-                    </td>
-                    <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
-                    <td className="border border-gray-300 p-2">
-                      {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
-                    </td>
-                  </tr>
-                );
-              })}
+              {rfpData.approversList.map((approver) => (
+                <tr key={approver.id}>
+                  {/* <td className="border border-gray-300 p-2">{approver.userId}</td> */}
+                  <td className="border border-gray-300 p-2">{approver.user.name}</td>
+                  <td className="border border-gray-300 p-2">{approver.user.email}</td>
+                  <td className="border border-gray-300 p-2">{approver.user.role}</td>
+                  <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
+                  <td className="border border-gray-300 p-2">
+                    {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -258,7 +243,7 @@ const RfpDetails: React.FC = () => {
           <table className="w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2">Product ID</th>
+                {/* <th className="border border-gray-300 p-2">Product ID</th> */}
                 <th className="border border-gray-300 p-2">Name</th>
                 <th className="border border-gray-300 p-2">Model No</th>
                 <th className="border border-gray-300 p-2">Specification</th>
@@ -266,21 +251,61 @@ const RfpDetails: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rfpData.rfpProducts.map((product) => {
-                const details = productDetails[product.productId];
-                return (
-                  <tr key={product.id}>
-                    <td className="border border-gray-300 p-2">{product.productId}</td>
-                    <td className="border border-gray-300 p-2">{details?.name || 'Loading...'}</td>
-                    <td className="border border-gray-300 p-2">{details?.modelNo || 'Loading...'}</td>
-                    <td className="border border-gray-300 p-2">{details?.specification || 'Loading...'}</td>
-                    <td className="border border-gray-300 p-2">{product.quantity}</td>
-                  </tr>
-                );
-              })}
+              {rfpData.rfpProducts.map((product) => (
+                <tr key={product.id}>
+                  {/* <td className="border border-gray-300 p-2">{product.productId}</td> */}
+                  <td className="border border-gray-300 p-2">{product.product.name}</td>
+                  <td className="border border-gray-300 p-2">{product.product.modelNo}</td>
+                  <td className="border border-gray-300 p-2">{product.product.specification}</td>
+                  <td className="border border-gray-300 p-2">{product.quantity}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+         
+        <div className="mt-8">
+          <h2 className="text-lg font-bold mb-4">Quotations List</h2>
+          <table className="w-full border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2">Vendor ID</th>
+                <th className="border border-gray-300 p-2">Total Amount</th>
+                <th className="border border-gray-300 p-2">Total Amount Without GST</th>
+                <th className="border border-gray-300 p-2">Created At</th>
+                <th className="border border-gray-300 p-2">Supporting Documents</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rfpData.quotations.map((quotation) => (
+                <tr key={quotation.id}>
+                  <td className="border border-gray-300 p-2">{quotation.vendorId}</td>
+                  <td className="border border-gray-300 p-2">{quotation.totalAmount}</td>
+                  <td className="border border-gray-300 p-2">{quotation.totalAmountWithoutGST}</td>
+                  <td className="border border-gray-300 p-2">
+                    {new Date(quotation.created_at).toLocaleString()}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {quotation.supportingDocuments.length > 0 ? (
+                      <ul>
+                        {quotation.supportingDocuments.map(doc => (
+                          <li key={doc.id}>
+                            <a href={doc.location} target="_blank" rel="noopener noreferrer">
+                              {doc.documentName}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+       
       </div>
     </>
   );
