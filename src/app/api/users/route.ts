@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       { response: { data: "newUser" } },
       { status: 201 }
     );
-  } catch (error:any) {
+  } catch (error: any) {
     return NextResponse.json(
       {
         error: `Failed to create user, Error: ${error.message}`,
@@ -61,7 +61,6 @@ export async function POST(request: Request) {
     );
   }
 }
-
 
 // PUT: Update an existing user
 export async function PUT(request: Request) {
