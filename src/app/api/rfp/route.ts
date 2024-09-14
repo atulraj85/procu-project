@@ -5,6 +5,47 @@ import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 
 const prisma = new PrismaClient();
 
+function formatRFPData(inputData: any[]) {
+  return inputData.map((rfp: any) => ({
+    rfpId: rfp.rfpId,
+    requirementType: rfp.requirementType,
+    dateOfOrdering: rfp.dateOfOrdering,
+    deliveryLocation: rfp.deliveryLocation,
+    deliveryByDate: rfp.deliveryByDate,
+    rfpStatus: rfp.rfpStatus,
+    preferredQuotationId: rfp.preferredQuotationId,
+    created_at: rfp.created_at,
+    updated_at: rfp.updated_at,
+    approvers: rfp.approversList.map((approver: any) => ({
+      name: approver.user.name,
+      email: approver.user.email,
+      mobile: approver.user.mobile,
+    })),
+    quotations: rfp.quotations.map((quotation: any) => ({
+      id: quotation.id,
+      totalAmount: quotation.totalAmount,
+      totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+      created_at: quotation.created_at,
+      updated_at: quotation.updated_at,
+      vendor: quotation.vendor,
+      products: rfp.rfpProducts.map((product: any) => ({
+        id: product.product.id,
+        name: product.product.name,
+        modelNo: product.product.modelNo,
+        quantity: product.quantity,
+        vendorPricing: product.vendorPricings[0], // Assuming there's only one vendor pricing
+      })),
+      otherCharges: quotation.otherCharges || [],
+      supportingDocuments: quotation.supportingDocuments || [],
+    })),
+    createdBy: {
+      name: rfp.user.name,
+      email: rfp.user.email,
+      mobile: rfp.user.mobile,
+    },
+  }));
+}
+
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -142,22 +183,45 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log("Final where clause:", whereClause);
-    console.log("Final order by clause:", orderByClause);
-
     const records = await prisma.rFP.findMany({
       where: whereClause,
       orderBy: orderByClause,
-      include: {
+      select: {
+        rfpId: true,
+        requirementType: true,
+        dateOfOrdering: true,
+        deliveryLocation: true,
+        deliveryByDate: true,
+        rfpStatus: true,
+        preferredQuotationId: true,
+        created_at: true,
+        updated_at: true,
         approversList: {
           select: {
-            // id: true,
             user: {
               select: {
-                // id: true,
                 name: true,
                 email: true,
                 mobile: true,
+              },
+            },
+          },
+        },
+        rfpProducts: {
+          select: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                modelNo: true,
+              },
+            },
+            // description: true, TODO
+            quantity: true,
+            vendorPricings: {
+              select: {
+                price: true,
+                GST: true,
               },
             },
           },
@@ -183,50 +247,35 @@ export async function GET(request: NextRequest) {
                 pan: true,
               },
             },
-            // vendorPricings: {
-            //   include: {
-            //     rfpProduct: true
-            //   }
-            // },
-
-            otherCharges: true,
+            otherCharges: {
+              select: {
+                name: true,
+                price: true,
+                gst: true,
+              },
+            },
 
             supportingDocuments: {
-              include: {},
-            },
-          },
-        },
-        rfpProducts: {
-          select: {
-            product: {
               select: {
-                id: true,
-                name: true,
-                modelNo: true,
-              },
-            },
-            // description: true, TODO
-            quantity: true,
-            vendorPricings: {
-              select: {
-                price: true,
-                GST: true,
-                // quotation: {
-                //   include: {
-                //     vendor: true, 
-                //   },
-                // },
+                documentName: true,
+                location: true,
               },
             },
           },
         },
 
-        // po: {
-        //   include: {},
-        // },
-        user: true,
+        user: {
+          select: {
+            name: true,
+            email: true,
+            mobile: true,
+          },
+        },
       },
     });
+
+    const formattedData = formatRFPData(records);
+    console.log(formattedData);
 
     console.log(`Found ${records.length} records`);
 
@@ -237,7 +286,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(serializePrismaModel(records));
+    return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
     console.error("Detailed error:", error);
     return NextResponse.json(
@@ -246,6 +295,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 export async function PUT(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
