@@ -52,15 +52,15 @@ const Dashboard = () => {
       }));
 
       // Filter based on `status` state
-      const filteredData = formattedData.filter((item: { rfpStatus: string }) =>
-        status === "OPEN"
-          ? item.rfpStatus === "PENDING"
-          : status === "COMPLETED"
-          ? item.rfpStatus === "COMPLETED"
-          : status === "DRAFT"
-          ? item.rfpStatus === "DRAFT"
-          : false
-      );
+     const filteredData = formattedData.filter(
+       (item: { rfpStatus: string }) => {
+         return (
+           (status === "OPEN" && (item.rfpStatus === "SUBMITTED" || item.rfpStatus === "PO_CREATED" )) ||
+           (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
+           (status === "DRAFT" && item.rfpStatus === "DRAFT")
+         );
+       }
+     );
 
       setContent(filteredData);
       setLoading(false); // Set loading to false after data is set
