@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Sheet, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
+import { useRouter } from "next/navigation";
 
 
 
@@ -97,6 +98,7 @@ const RFPForm: React.FC = () => {
     useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   console.log(state);
   console.log(address);
@@ -319,6 +321,9 @@ const RFPForm: React.FC = () => {
         title: "🎉 Draft Submitted!",
         description: response.ok,
       });
+      // this is for relode form
+      window.location.reload()
+      return router.push("/dashboard");
     } catch (err) {
       // toast({
       //   title: "Error",
