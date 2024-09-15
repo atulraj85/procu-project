@@ -161,6 +161,7 @@ Table Quotation {
   vendor Vendor [not null]
   vendorId String [not null]
   isPrimary Boolean [not null, default: false]
+  refNo String
   totalAmount Decimal [not null]
   totalAmountWithoutGST Decimal [not null]
   po PO

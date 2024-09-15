@@ -184,13 +184,13 @@ model SupportingDocument {
 }
 
 model Quotation {
-  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfp       RFP     @relation(fields: [rfpId], references: [id])
-  rfpId     String  @db.Uuid
-  vendor    Vendor  @relation(fields: [vendorId], references: [id])
-  vendorId  String  @db.Uuid
-  isPrimary Boolean @default(false)
-
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfp                   RFP                  @relation(fields: [rfpId], references: [id])
+  rfpId                 String               @db.Uuid
+  vendor                Vendor               @relation(fields: [vendorId], references: [id])
+  vendorId              String               @db.Uuid
+  isPrimary             Boolean              @default(false)
+  refNo                 String?
   totalAmount           Decimal              @db.Decimal(10, 2)
   totalAmountWithoutGST Decimal              @db.Decimal(10, 2)
   po                    PO?
