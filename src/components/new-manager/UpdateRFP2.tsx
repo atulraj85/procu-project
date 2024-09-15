@@ -318,11 +318,13 @@ const VendorSelector = ({
 // Step 3: Create Product List Component
 
 const ProductList = ({
+  products,
   control,
   index,
   getValues,
   setValue,
 }: {
+  products: Product[];
   control: any;
   index: number;
   getValues: any;
@@ -333,19 +335,62 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  const products = useWatch({
-    control,
-    name: `products`,
-  });
+  // const products = useWatch({
+  //   control,
+  //   name: `products`,
+  // });
 
-  console.log(products);
+  // console.log(products);
 
   const [error, setError] = useState<string | null>(null);
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (products) setRfpProducts(products);
+    setIsLoading(true);
+
+    let mappedProducts;
+
+    if (Array.isArray(products) && products.length > 0) {
+      console.log("products", products);
+
+      mappedProducts = products.map((product: any) => ({
+        id: product.id || null,
+        name: product.name || null,
+        modelNo: product.modelNo || null,
+        quantity: product.quantity || 0,
+        amount: 0,
+        unitPrice: product.unitPrice || null,
+        gst: product.gst || null,
+        totalPriceWithoutGST: product.totalPriceWithoutGST || null,
+        totalPriceWithGST: product.totalPriceWithGST || null,
+      }));
+
+      console.log("mappedProducts", mappedProducts);
+    }
+    try {
+      const flattenedProductsWithDetails = mappedProducts!.flat();
+      console.log("productsWithDetails", flattenedProductsWithDetails);
+      setRfpProducts(flattenedProductsWithDetails);
+      setValue(`quotations.${index}.products`, flattenedProductsWithDetails);
+      if (globalFormData.has("quotations")) {
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index] = {
+          ...quotations[index],
+          products: flattenedProductsWithDetails,
+        };
+        globalFormData.set("quotations", JSON.stringify(quotations));
+      }
+      setError(null);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   }, [products]);
 
   const calculateTotals = (
@@ -907,8 +952,9 @@ export default function RFPUpdateForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
-
   const { control, handleSubmit, setValue, getValues } = useForm<any>();
+
+  const products = initialData.products;
 
   // {
   // defaultValues: {
@@ -1047,6 +1093,7 @@ export default function RFPUpdateForm({
 
                   <div className="m-2">
                     <ProductList
+                      products={products}
                       setValue={setValue}
                       getValues={getValues}
                       control={control}
