@@ -124,9 +124,7 @@ const Page = () => {
             control={control}
             index={0}
             getValues={getValues}
-            setValue={setValue}
-            rfpId={"d4887846-0242-4ece-b311-3089ed5f6fec"}
-          />
+            setValue={setValue} products={[]}          />
         </CardContent>
       </Card>
 

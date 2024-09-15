@@ -12,17 +12,7 @@ import {
 import { IUsersListingResponse, SidebarItem } from "@/types";
 import Loader from "@/components/shared/Loader";
 
-interface AdminDashboardProps {
-  list: SidebarItem[];
-  activeComponent: string;
-  setActiveComponent: (value: string) => void;
-}
-
-export default function AdminDashboard({
-  list,
-  activeComponent,
-  setActiveComponent,
-}: AdminDashboardProps) {
+export default function AdminDashboard() {
   const router = useRouter();
   const [usersListing, setUsersListing] =
     useState<IUsersListingResponse | null>(null);

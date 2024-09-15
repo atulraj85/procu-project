@@ -58,7 +58,7 @@ const RfpSubmissionForm: React.FC = () => {
         const data: RfpData = await response.json();
         console.log("data", data);
 
-        setRfpData(data[0]);
+        // setRfpData(data[0]);
       } catch (error) {
         toast.error("An error occurred while fetching RFP data.");
       }

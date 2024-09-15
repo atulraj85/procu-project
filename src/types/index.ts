@@ -104,13 +104,13 @@ interface Meta {
 
 
 export enum RFPStatus {
-  DRAFT = "DRAFT",
-  PENDING = "PENDING",
-  IN_PROGRESS = "IN_PROGRESS",
-  GRN_NOT_RECEIVED = "GRN_NOT_RECEIVED",
-  INVOICE_NOT_RECEIVED = "INVOICE_NOT_RECEIVED",
-  PAYMENT_NOT_DONE = "PAYMENT_NOT_DONE",
-  COMPLETED = "COMPLETED",
+  DRAFT = "DRAFT", // RFP Created but not submitted
+  SUBMITTED = "SUBMITTED", // Submitted to finance
+  PO_CREATED = "PO_CREATED", // Purchase Order Created
+  ADVANCE_PAID = "ADVANCE_PAID", // Advance Payment Made
+  INVOICE_RECEIVED = "INVOICE_RECEIVED", // Invoice Received
+  GRN_RECEIVED = "GRN_RECEIVED", // Goods Receipt Note Received
+  PAYMENT_DONE = "PAYMENT_DONE", // (PO Complete)
 }
 
 
