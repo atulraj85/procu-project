@@ -1156,7 +1156,9 @@ export default function RFPUpdateForm({
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
   const { control, handleSubmit, setValue, getValues } = useForm<any>();
-
+  const [preferredVendorIndex, setPreferredVendorIndex] = useState<
+    number | null
+  >(null);
   const [showReasonPrompt, setShowReasonPrompt] = useState(false);
   const [reason, setReason] = useState("");
   const quotationLimit = 3;
@@ -1232,6 +1234,12 @@ export default function RFPUpdateForm({
       // Add rfpId to formData
       formData.append("rfpId", rfpId);
 
+      if (quotes < 3) {
+        formData.append("rfpStatus", "DRAFT");
+      } else {
+        formData.append("rfpStatus", "SUBMITTED");
+      }
+
       // Serialize the form data (excluding files) to JSON
       const serializedData = JSON.stringify(data);
       formData.append("data", serializedData);
@@ -1243,17 +1251,17 @@ export default function RFPUpdateForm({
         formData.append(key, file);
       });
 
-      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
 
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // const result = await response.json();
-      // console.log("RFP updated successfully:", result);
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -1302,27 +1310,27 @@ export default function RFPUpdateForm({
                         <CardTitle className="text-lg">
                           <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
                             <Checkbox
-                              // checked={
-                              //   useWatch({
-                              //     control,
-                              //     name: "preferredQuotationId",
-                              //   }) === preferredVendorId
-                              // }
-
-                              disabled={!showCheckbox}
+                              checked={preferredVendorIndex === index}
+                              disabled={
+                                preferredVendorIndex !== null &&
+                                preferredVendorIndex !== index
+                              }
                               onCheckedChange={(checked) => {
                                 if (checked) {
                                   setValue(
                                     "preferredVendorId",
                                     getValues(`quotations.${index}.vendorId`)
                                   );
-                                  setPreferredVendorId("This");
+                                  setPreferredVendorId(
+                                    getValues(`quotations.${index}.vendorId`)
+                                  );
+                                  setPreferredVendorIndex(index); // Set the current index as preferred
                                 } else {
                                   setPreferredVendorId("");
+                                  setPreferredVendorIndex(null); // Reset preferred vendor index
                                 }
                               }}
                             />
-
                             <Label className="font-bold text-[16px] text-slate-700">
                               Preferred Quote
                             </Label>
