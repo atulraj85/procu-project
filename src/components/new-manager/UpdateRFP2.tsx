@@ -1273,7 +1273,6 @@ export default function RFPUpdateForm({
     }
   };
 
-  console.log(quotes);
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -1492,7 +1491,14 @@ export default function RFPUpdateForm({
               }
             }}
           >
-            Submit Reason and Add Quotation
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Reason and Add Quotation"
+            )}
           </Button>
         </div>
       )}

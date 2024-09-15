@@ -80,7 +80,13 @@ export async function PUT(request: NextRequest) {
           const newFileName = `${result}.${file.name.split(".").pop()}`; // Combine name and extension
           //console.log("newFileName", newFileName);
 
-          const filePath = path.join(quotationDirPath, newFileName); // Create the full file path with the new name
+          const getCurrentDate = () => {
+            return new Date().toISOString().split("T")[0]; // "2023-10-05"
+          };
+
+          const fileNameWithDate = `${getCurrentDate()}-${newFileName}`;
+
+          const filePath = path.join(quotationDirPath, fileNameWithDate); // Create the full file path with the new name
 
           try {
             const fileBuffer = await Buffer.from(await file.arrayBuffer());
@@ -93,8 +99,8 @@ export async function PUT(request: NextRequest) {
 
           return {
             documentType: file.name,
-            documentName: newFileName,
-            location: `/assets/RFP-${id}/${vendorId}/${newFileName}`,
+            documentName: fileNameWithDate,
+            location: `/assets/RFP-${id}/${vendorId}/${fileNameWithDate}`,
           };
         }
 
