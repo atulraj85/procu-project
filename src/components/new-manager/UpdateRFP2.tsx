@@ -1337,7 +1337,7 @@ export default function RFPUpdateForm({
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {preferredVendorId ? (
+                        {preferredVendorIndex === index ? (
                           <div>
                             <Textarea
                               className=" mb-2"
@@ -1349,6 +1349,13 @@ export default function RFPUpdateForm({
                         ) : (
                           <></>
                         )}
+
+                        <div className="w-1/2">
+                          <Label>Ref No.</Label>
+                          <Input
+                            {...control.register(`quotations.${index}.refNo`)}
+                          />
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
