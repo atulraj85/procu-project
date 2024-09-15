@@ -24,9 +24,10 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    const { quotations } = data;
-    //console.log("quotations", quotations);
-    //console.log("formData", formData);
+    const { quotations, preferredVendorId, rfpStatus } = data;
+
+    console.log("quotations", quotations);
+    console.log("formData", formData);
     const supDocs = Array.from(formData.entries()).slice(2);
     //console.log("supDocs", supDocs);
 
@@ -143,11 +144,14 @@ export async function PUT(request: NextRequest) {
 
     //console.log("processedQuotations", processedQuotations);
 
+    delete data.preferredVendorId;
+
     // Update the RFP record with new quotations and supporting documents
     const updatedRecord = await prisma.rFP.update({
       where: { id },
       data: {
         ...data,
+        rfpStatus: rfpStatus as string,
         quotations: {
           deleteMany: {},
           create: processedQuotations,
@@ -163,6 +167,22 @@ export async function PUT(request: NextRequest) {
         },
       },
     });
+
+    // Find the preferredQuotationId based on preferredVendorId
+    const preferredQuotation = updatedRecord.quotations.find(
+      (quotation) => quotation.vendorId === preferredVendorId // Use preferredVendorId to find the preferred quotation
+    );
+
+    console.log("preferredQuotation", preferredQuotation);
+
+    if (preferredQuotation) {
+      await prisma.rFP.update({
+        where: { id: id },
+        data: {
+          preferredQuotationId: preferredQuotation.id, // Update preferredQuotationId
+        },
+      });
+    }
 
     return NextResponse.json(serializePrismaModel(updatedRecord), {
       status: 200,
