@@ -1211,25 +1211,25 @@ export default function RFPUpdateForm({
   // },
   // }
 
-  // const { fields, append, remove } = useFieldArray({
-  //   control,
-  //   name: "quotations",
-  // });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "quotations",
+  });
 
   // Be aware of this
   // useEffect(() => {
   //   globalFormData.set("quotations", JSON.stringify(getValues().quotations));
   // }, [getValues().quotations]);
 
-  // const onSubmit = async (data: FormData) => {
-  //   setIsLoading(true);
-  //   setError(null);
-  //   setSuccess(false);
+  const onSubmit = async (data: FormData) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
 
-  //   console.log("Text data to be sent:", data);
+    console.log("Text data to be sent:", data);
 
-  //   try {
-  //     const formData = new FormData();
+    try {
+      const formData = new FormData();
 
       // Add rfpId to formData
       formData.append("rfpId", rfpId);
@@ -1240,25 +1240,25 @@ export default function RFPUpdateForm({
         formData.append("rfpStatus", "SUBMITTED");
       }
 
-  //     // Serialize the form data (excluding files) to JSON
-  //     const serializedData = JSON.stringify(data);
-  //     formData.append("data", serializedData);
+      // Serialize the form data (excluding files) to JSON
+      const serializedData = JSON.stringify(data);
+      formData.append("data", serializedData);
 
-  //     console.log(files);
+      console.log(files);
 
-  //     // Append files to formData
-  //     Object.entries(files).forEach(([key, file]) => {
-  //       formData.append(key, file);
-  //     });
+      // Append files to formData
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
         body: formData,
       });
 
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const result = await response.json();
       console.log("RFP updated successfully:", result);
@@ -1273,7 +1273,6 @@ export default function RFPUpdateForm({
     }
   };
 
-  console.log(quotes);
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -1372,29 +1371,29 @@ export default function RFPUpdateForm({
                     />
                   </div>
 
-  //                 <OtherChargesList
-  //                   control={control}
-  //                   index={index}
-  //                   formData={FormData}
-  //                 />
+                  <OtherChargesList
+                    control={control}
+                    index={index}
+                    formData={FormData}
+                  />
 
-  //                 <div className="m-2">
-  //                   <TotalComponent
-  //                     setValue={setValue}
-  //                     control={control}
-  //                     index={index}
-  //                   />
-  //                 </div>
-  //                 <div className="m-2">
-  //                   <SupportingDocumentsList
-  //                     control={control}
-  //                     index={index}
-  //                     setValue={setValue}
-  //                     files={files}
-  //                     setFiles={setFiles}
-  //                     getValue={getValues}
-  //                   />
-  //                 </div>
+                  <div className="m-2">
+                    <TotalComponent
+                      setValue={setValue}
+                      control={control}
+                      index={index}
+                    />
+                  </div>
+                  <div className="m-2">
+                    <SupportingDocumentsList
+                      control={control}
+                      index={index}
+                      setValue={setValue}
+                      files={files}
+                      setFiles={setFiles}
+                      getValue={getValues}
+                    />
+                  </div>
 
                   <Button
                     type="button"
@@ -1492,7 +1491,14 @@ export default function RFPUpdateForm({
               }
             }}
           >
-            Submit Reason and Add Quotation
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Reason and Add Quotation"
+            )}
           </Button>
         </div>
       )}
