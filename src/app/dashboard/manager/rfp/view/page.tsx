@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useSearchParams } from "next/navigation";
 import { Input } from '@/components/ui/input';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 // Define types for the RFP data structure
 interface Vendor {
   companyName: string;
@@ -88,6 +91,18 @@ const ViewRFP: React.FC = () => {
 
   return (
     <form className="space-y-6">
+      <div className="flex justify-end pb-5">
+        <Link href="/dashboard/manager">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="text-black-500 bg-red-400"
+          >
+            <X className="h-4 w-4" />
+          </Button>{" "}
+        </Link>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>View RFP</CardTitle>
