@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 import { Textarea } from "../ui/textarea";
+import { Checkbox } from "../ui/checkbox";
 
 // Add quotation ref number (Quotation table)
 
@@ -97,50 +98,239 @@ type Vendor = {
   gstin: string;
 };
 
+// const VendorSelector = ({
+//   index,
+//   setValue,
+//   setShowCheckbox,
+// }: {
+//   index: number;
+//   setValue: any;
+//   setShowCheckbox: any;
+// }) => {
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
+//   const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
+//   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // const vendorId = useWatch({
+//   //   control,
+//   //   name: `quotations.${index}.vendorId`,
+//   // });
+
+//   // useEffect(() => {
+//   //   const fetchVendorDetails = async () => {
+//   //     if (vendorId) {
+//   //       try {
+//   //         const response = await fetch(`/api/vendor?id=${vendorId}`);
+//   //         const vendorData = await response.json();
+//   //         const formattedVendors = vendorData.map((vendor: any) => ({
+//   //           ...vendor,
+//   //           vendorId: vendor.productId || vendor.id || String(vendor._id),
+//   //         }));
+//   //         // console.log("formattedVendors", formattedVendors);
+//   //         addVendor(formattedVendors[0]);
+//   //         if (vendorData) {
+//   //           setApprovedVendors([formattedVendors[0]]);
+//   //           setDisableVendorSearch(true);
+//   //         }
+//   //       } catch (error) {
+//   //         setError("Failed to fetch vendor details");
+//   //       }
+//   //     }
+//   //   };
+
+//   //   fetchVendorDetails();
+//   // }, [vendorId]);
+
+//   const handleSearchChange = useCallback(
+//     async (e: ChangeEvent<HTMLInputElement>) => {
+//       const value = e.target.value;
+//       setSearchTerm(value);
+
+//       if (value) {
+//         try {
+//           const response = await fetch(`/api/ajax/vendors?q=${value}`);
+//           const responseData = await response.json();
+//           console.log("responseData", responseData);
+//           const formattedVendors = responseData.map((vendor: any) => ({
+//             ...vendor,
+//             vendorId: vendor.productId || vendor.id || String(vendor._id),
+//           }));
+//           setFetchedVendors(formattedVendors);
+//         } catch (error) {
+//           setError("Failed to fetch vendors");
+//         }
+//       } else {
+//         setFetchedVendors([]);
+//       }
+//     },
+//     []
+//   );
+//   const addVendor = useCallback(
+//     (vendor: Vendor) => {
+//       // console.log("approvedVendors", approvedVendors);
+//       if (!vendor.id) {
+//         setError("Vendor ID is missing");
+//         return;
+//       }
+
+//       if (!approvedVendors.some((p) => p.id === vendor.id)) {
+//         setApprovedVendors((prev) => [...prev, vendor]);
+//         setDisableVendorSearch(true);
+//         setSearchTerm("");
+//         setFetchedVendors([]);
+
+//         const vendorData = {
+//           vendorId: vendor.id,
+//         };
+
+//         if (!globalFormData.has("quotations")) {
+//           globalFormData.set("quotations", JSON.stringify([]));
+//         }
+
+//         const quotations = JSON.parse(
+//           globalFormData.get("quotations") as string
+//         );
+//         quotations[index] = { ...quotations[index], ...vendorData };
+//         globalFormData.set("quotations", JSON.stringify(quotations));
+//       } else {
+//         setError(`Vendor with ID ${vendor.id} already exists.`);
+//       }
+//     },
+//     [approvedVendors, index]
+//   );
+
+//   const removeVendor = (vendorId: string) => {
+//     setApprovedVendors((prev) => prev.filter((v) => v.id !== vendorId));
+//     setValue(`quotations.${index}.vendorId`, "");
+//     setDisableVendorSearch(false);
+
+//     // Remove vendor data from global FormData
+//     if (globalFormData.has("quotations")) {
+//       const quotations = JSON.parse(globalFormData.get("quotations") as string);
+//       if (quotations[index]) {
+//         delete quotations[index].vendorId;
+//       }
+//       globalFormData.set("quotations", JSON.stringify(quotations));
+//     }
+//   };
+
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <CardTitle className="text-lg">Vendor Details</CardTitle>
+//       </CardHeader>
+//       <CardContent>
+//         <Input
+//           disabled={disableVendorSearch}
+//           className="w-1/2"
+//           type="text"
+//           placeholder="Search Vendors..."
+//           value={searchTerm}
+//           onChange={handleSearchChange}
+//         />
+//         {error && <div className="text-red-500">{error}</div>}
+//         {fetchedVendors.length > 0 && (
+//           <div className="mt-2">
+//             <h3 className="font-semibold">Fetched Vendors:</h3>
+//             <ul>
+//               {fetchedVendors.map((vendor) => (
+//                 <li
+//                   key={vendor.id}
+//                   className="py-1 cursor-pointer hover:bg-gray-200"
+//                   onClick={() => {
+//                     addVendor(vendor);
+//                     setValue(`quotations.${index}.vendorId`, vendor.id);
+//                     setFetchedVendors([]);
+//                     setError(null);
+//                   }}
+//                 >
+//                   {vendor.primaryName} | {vendor.email}
+//                 </li>
+//               ))}
+//             </ul>
+//           </div>
+//         )}
+//         {approvedVendors.map((vendor) => (
+//           <div key={vendor.id} className="flex items-center space-x-2 mb-2">
+//             <div className="flex flex-col">
+//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
+//                 Vendor Name
+//               </Label>
+//               <Input
+//                 disabled
+//                 value={vendor.primaryName}
+//                 placeholder="Name"
+//                 className="flex-1"
+//               />
+//             </div>
+//             <div className="flex flex-col">
+//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
+//                 Email
+//               </Label>
+//               <Input
+//                 disabled
+//                 value={vendor.email}
+//                 placeholder="Email"
+//                 className="flex-1"
+//               />
+//             </div>
+//             <div className="flex flex-col">
+//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
+//                 Phone
+//               </Label>
+//               <Input
+//                 disabled
+//                 value={vendor.mobile}
+//                 placeholder="Phone"
+//                 className="flex-1"
+//               />
+//             </div>
+//             <div className="flex flex-col">
+//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
+//                 GSTIN
+//               </Label>
+//               <Input
+//                 disabled
+//                 value={vendor.gstin}
+//                 placeholder="GSTIN"
+//                 className="flex-1"
+//               />
+//             </div>
+//             <div className="flex flex-col">
+//               <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
+//               <Button
+//                 type="button"
+//                 onClick={() => removeVendor(vendor.id)}
+//                 variant="outline"
+//                 size="icon"
+//                 className="text-red-500"
+//               >
+//                 <X className="h-4 w-4" />
+//               </Button>
+//             </div>
+//           </div>
+//         ))}
+//       </CardContent>
+//     </Card>
+//   );
+// };
+
 const VendorSelector = ({
   index,
   setValue,
-  control,
+  setShowCheckbox,
 }: {
   index: number;
   setValue: any;
-  control: Control<FormData>;
+  setShowCheckbox: any;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
-  const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
+  const [approvedVendor, setApprovedVendor] = useState<Vendor | null>(null);
   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const vendorId = useWatch({
-    control,
-    name: `quotations.${index}.vendorId`,
-  });
-
-  useEffect(() => {
-    const fetchVendorDetails = async () => {
-      if (vendorId) {
-        try {
-          const response = await fetch(`/api/vendor?id=${vendorId}`);
-          const vendorData = await response.json();
-          const formattedVendors = vendorData.map((vendor: any) => ({
-            ...vendor,
-            vendorId: vendor.productId || vendor.id || String(vendor._id),
-          }));
-          // console.log("formattedVendors", formattedVendors);
-          addVendor(formattedVendors[0]);
-          if (vendorData) {
-            setApprovedVendors([formattedVendors[0]]);
-            setDisableVendorSearch(true);
-          }
-        } catch (error) {
-          setError("Failed to fetch vendor details");
-        }
-      }
-    };
-
-    fetchVendorDetails();
-  }, [vendorId]);
 
   const handleSearchChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -166,42 +356,53 @@ const VendorSelector = ({
     },
     []
   );
+
   const addVendor = useCallback(
     (vendor: Vendor) => {
-      // console.log("approvedVendors", approvedVendors);
       if (!vendor.id) {
         setError("Vendor ID is missing");
         return;
       }
 
-      if (!approvedVendors.some((p) => p.id === vendor.id)) {
-        setApprovedVendors((prev) => [...prev, vendor]);
-        setDisableVendorSearch(true);
-        setSearchTerm("");
-        setFetchedVendors([]);
+      // Check if the vendor is already added to any quotation
+      const quotations = JSON.parse(
+        (globalFormData.get("quotations") as string) || "[]"
+      );
+      const isVendorAlreadyAdded = quotations.some(
+        (quotation: any) => quotation.vendorId === vendor.id
+      );
 
-        const vendorData = {
-          vendorId: vendor.id,
-        };
-
-        if (!globalFormData.has("quotations")) {
-          globalFormData.set("quotations", JSON.stringify([]));
-        }
-
-        const quotations = JSON.parse(
-          globalFormData.get("quotations") as string
+      if (isVendorAlreadyAdded) {
+        setError(
+          `Vendor with ID ${vendor.id} is already added to a quotation.`
         );
-        quotations[index] = { ...quotations[index], ...vendorData };
-        globalFormData.set("quotations", JSON.stringify(quotations));
-      } else {
-        setError(`Vendor with ID ${vendor.id} already exists.`);
+        return;
       }
+
+      setApprovedVendor(vendor);
+      setDisableVendorSearch(true);
+      setSearchTerm("");
+      setFetchedVendors([]);
+
+      const vendorData = {
+        vendorId: vendor.id,
+      };
+
+      if (!globalFormData.has("quotations")) {
+        globalFormData.set("quotations", JSON.stringify([]));
+      }
+
+      const updatedQuotations = JSON.parse(
+        globalFormData.get("quotations") as string
+      );
+      updatedQuotations[index] = { ...updatedQuotations[index], ...vendorData };
+      globalFormData.set("quotations", JSON.stringify(updatedQuotations));
     },
-    [approvedVendors, index]
+    [index]
   );
 
-  const removeVendor = (vendorId: string) => {
-    setApprovedVendors((prev) => prev.filter((v) => v.id !== vendorId));
+  const removeVendor = () => {
+    setApprovedVendor(null);
     setValue(`quotations.${index}.vendorId`, "");
     setDisableVendorSearch(false);
 
@@ -251,15 +452,15 @@ const VendorSelector = ({
             </ul>
           </div>
         )}
-        {approvedVendors.map((vendor) => (
-          <div key={vendor.id} className="flex items-center space-x-2 mb-2">
+        {approvedVendor && (
+          <div className="flex items-center space-x-2 mb-2">
             <div className="flex flex-col">
               <Label className="mb-2 font-bold text-[16px] text-slate-700">
                 Vendor Name
               </Label>
               <Input
                 disabled
-                value={vendor.primaryName}
+                value={approvedVendor.primaryName}
                 placeholder="Name"
                 className="flex-1"
               />
@@ -270,7 +471,7 @@ const VendorSelector = ({
               </Label>
               <Input
                 disabled
-                value={vendor.email}
+                value={approvedVendor.email}
                 placeholder="Email"
                 className="flex-1"
               />
@@ -281,7 +482,7 @@ const VendorSelector = ({
               </Label>
               <Input
                 disabled
-                value={vendor.mobile}
+                value={approvedVendor.mobile}
                 placeholder="Phone"
                 className="flex-1"
               />
@@ -292,7 +493,7 @@ const VendorSelector = ({
               </Label>
               <Input
                 disabled
-                value={vendor.gstin}
+                value={approvedVendor.gstin}
                 placeholder="GSTIN"
                 className="flex-1"
               />
@@ -301,7 +502,7 @@ const VendorSelector = ({
               <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
               <Button
                 type="button"
-                onClick={() => removeVendor(vendor.id)}
+                onClick={() => removeVendor()}
                 variant="outline"
                 size="icon"
                 className="text-red-500"
@@ -310,7 +511,7 @@ const VendorSelector = ({
               </Button>
             </div>
           </div>
-        ))}
+        )}
       </CardContent>
     </Card>
   );
@@ -564,6 +765,7 @@ const ProductList = ({
     </Card>
   );
 };
+export { ProductList };
 
 // Step 4: Create Other Charges List Component
 
@@ -959,7 +1161,8 @@ export default function RFPUpdateForm({
   const [reason, setReason] = useState("");
   const quotationLimit = 3;
   const [quotes, setQuotes] = useState(0);
-
+  const [preferredVendorId, setPreferredVendorId] = useState("");
+  const [showCheckbox, setShowCheckbox] = useState(true);
   const products = initialData.products;
 
   // {
@@ -1040,17 +1243,17 @@ export default function RFPUpdateForm({
         formData.append(key, file);
       });
 
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
+      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+      //   method: "PUT",
+      //   body: formData,
+      // });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
+      // const result = await response.json();
+      // console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -1094,10 +1297,60 @@ export default function RFPUpdateForm({
 
                 <AccordionContent>
                   <div className="m-2">
+                    <Card className="w-1/2">
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
+                            <Checkbox
+                              // checked={
+                              //   useWatch({
+                              //     control,
+                              //     name: "preferredQuotationId",
+                              //   }) === preferredVendorId
+                              // }
+
+                              disabled={!showCheckbox}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setValue(
+                                    "preferredVendorId",
+                                    getValues(`quotations.${index}.vendorId`)
+                                  );
+                                  setPreferredVendorId("This");
+                                } else {
+                                  setPreferredVendorId("");
+                                }
+                              }}
+                            />
+
+                            <Label className="font-bold text-[16px] text-slate-700">
+                              Preferred Quote
+                            </Label>
+                          </div>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {preferredVendorId ? (
+                          <div>
+                            <Textarea
+                              className=" mb-2"
+                              placeholder="Reason for preferring this vendor"
+                              value={reason}
+                              onChange={(e) => setReason(e.target.value)}
+                            />
+                          </div>
+                        ) : (
+                          <></>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="m-2">
                     <VendorSelector
                       setValue={setValue}
                       index={index}
-                      control={control}
+                      setShowCheckbox={setShowCheckbox}
                     />
                   </div>
 
@@ -1191,12 +1444,13 @@ export default function RFPUpdateForm({
         </Alert>
       )}
 
-      {/* {showReasonPrompt && (
-        
-      )} */}
-
       {quotes === 3 ? (
-        <Button className="bg-primary" type="submit" disabled={isLoading} onClick={() => {}}>
+        <Button
+          className="bg-primary"
+          type="submit"
+          disabled={isLoading}
+          onClick={() => {}}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1237,5 +1491,3 @@ export default function RFPUpdateForm({
     </form>
   );
 }
-
-export { ProductList };
