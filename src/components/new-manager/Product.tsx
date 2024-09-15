@@ -51,7 +51,7 @@ export default function SheetSide() {
   const handleProductSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true); // Set submitting state to true
-    e.stopPropagation();
+    // e.stopPropagation();
 
     // Validate that all fields are filled
     if (!name || !modelNo || !specification || !productCategoryId) {

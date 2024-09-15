@@ -91,6 +91,8 @@ const ViewRFP: React.FC = () => {
 
   return (
     <form className="space-y-6">
+     
+      <Card>
       <div className="flex justify-end pb-5">
         <Link href="/dashboard/manager">
           <Button
@@ -103,7 +105,6 @@ const ViewRFP: React.FC = () => {
           </Button>{" "}
         </Link>
       </div>
-      <Card>
         <CardHeader>
           <CardTitle>View RFP</CardTitle>
         </CardHeader>
