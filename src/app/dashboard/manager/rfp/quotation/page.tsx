@@ -25,7 +25,9 @@ const Page = () => {
 
           setRfpId(rfpResult[0].id);
 
-          console.log("rfpResult from fetch: ", rfpResult);
+          console.log("rfpResult from fetch: ", rfpResult[0]);
+
+          setRfpData(rfpResult[0]);
 
           if (rfpResult[0]) {
             setRfpData(rfpResult[0]);

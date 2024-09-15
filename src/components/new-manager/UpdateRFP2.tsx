@@ -31,14 +31,7 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 
-
-
 // Add quotation ref number (Quotation table)
-
-
-
-
-
 
 type Product = {
   id: string;
@@ -959,241 +952,245 @@ export default function RFPUpdateForm({
   rfpId,
   initialData,
 }: RFPUpdateFormProps) {
+  console.log("test");
   console.log("initialData in form: ", initialData?.quotations);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [files, setFiles] = useState<{ [key: string]: File }>({});
 
-  const { control, handleSubmit, setValue, getValues } = useForm<
-    initialFormData | FormData | any
-  >({
-    defaultValues: {
-      quotations: initialData?.quotations.map((quotation) => ({
-        vendorId: quotation.vendorId,
-        products: quotation.vendorPricings.map((pricing) => ({
-          id: pricing.id,
-          rfpProductId: pricing.rfpProductId,
-          price: pricing.price,
-        })),
-        otherCharges: quotation.otherCharges.map((charge) => ({
-          id: charge.id,
-          name: charge.name,
-          price: charge.price,
-          gst: charge.gst,
-        })),
-        total: {
-          withGST: parseFloat(quotation.totalAmount),
-          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
-        },
-        supportingDocuments: quotation.supportingDocuments.map((doc) => ({
-          id: doc.id,
-          documentType: doc.documentType,
-          documentName: doc.documentName,
-          location: doc.location,
-        })),
-      })) || [
-        {
-          vendorId: "",
-          products: [],
-          otherCharges: [],
-          total: { withGST: 0, withoutGST: 0 },
-          supportingDocuments: [],
-        },
-      ],
-    },
-  });
+  return <div></div>;
 
-  // const initData = initialData?.quotations[0].vendorPricings;
-  // console.log(initData);
+  // const [isLoading, setIsLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
+  // const [success, setSuccess] = useState(false);
+  // const [files, setFiles] = useState<{ [key: string]: File }>({});
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "quotations",
-  });
+  // const { control, handleSubmit, setValue, getValues } = useForm<
+  //   initialFormData | FormData | any
+  // >({
+  //   defaultValues: {
+  //     quotations: initialData?.quotations.map((quotation) => ({
+  //       vendorId: quotation.vendorId,
+  //       products: quotation.vendorPricings.map((pricing) => ({
+  //         id: pricing.id,
+  //         rfpProductId: pricing.rfpProductId,
+  //         price: pricing.price,
+  //       })),
+  //       otherCharges: quotation.otherCharges.map((charge) => ({
+  //         id: charge.id,
+  //         name: charge.name,
+  //         price: charge.price,
+  //         gst: charge.gst,
+  //       })),
+  //       total: {
+  //         withGST: parseFloat(quotation.totalAmount),
+  //         withoutGST: parseFloat(quotation.totalAmountWithoutGST),
+  //       },
+  //       supportingDocuments: quotation.supportingDocuments.map((doc) => ({
+  //         id: doc.id,
+  //         documentType: doc.documentType,
+  //         documentName: doc.documentName,
+  //         location: doc.location,
+  //       })),
+  //     })) || [
+  //       {
+  //         vendorId: "",
+  //         products: [],
+  //         otherCharges: [],
+  //         total: { withGST: 0, withoutGST: 0 },
+  //         supportingDocuments: [],
+  //       },
+  //     ],
+  //   },
+  // });
 
-  useEffect(() => {
-    globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-  }, [getValues().quotations]);
+  // // const initData = initialData?.quotations[0].vendorPricings;
+  // // console.log(initData);
 
-  const onSubmit = async (data: FormData) => {
-    setIsLoading(true);
-    setError(null);
-    setSuccess(false);
+  // const { fields, append, remove } = useFieldArray({
+  //   control,
+  //   name: "quotations",
+  // });
 
-    console.log("Text data to be sent:", data);
+  // useEffect(() => {
+  //   globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+  // }, [getValues().quotations]);
 
-    try {
-      const formData = new FormData();
+  // const onSubmit = async (data: FormData) => {
+  //   setIsLoading(true);
+  //   setError(null);
+  //   setSuccess(false);
 
-      // Add rfpId to formData
-      formData.append("rfpId", rfpId);
+  //   console.log("Text data to be sent:", data);
 
-      // Serialize the form data (excluding files) to JSON
-      const serializedData = JSON.stringify(data);
-      formData.append("data", serializedData);
+  //   try {
+  //     const formData = new FormData();
 
-      console.log(files);
+  //     // Add rfpId to formData
+  //     formData.append("rfpId", rfpId);
 
-      // Append files to formData
-      Object.entries(files).forEach(([key, file]) => {
-        formData.append(key, file);
-      });
+  //     // Serialize the form data (excluding files) to JSON
+  //     const serializedData = JSON.stringify(data);
+  //     formData.append("data", serializedData);
 
-      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
-        method: "PUT",
-        body: formData,
-      });
+  //     console.log(files);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     // Append files to formData
+  //     Object.entries(files).forEach(([key, file]) => {
+  //       formData.append(key, file);
+  //     });
 
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
-      setSuccess(true);
-    } catch (err) {
-      console.error("Error updating RFP:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle>Update RFP</CardTitle>
-          <Link href="/dashboard/manager">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="text-black-500 bg-red-400"
-            >
-              <X className="h-4 w-4" />
-            </Button>{" "}
-          </Link>
-        </CardHeader>
+  //     const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+  //       method: "PUT",
+  //       body: formData,
+  //     });
 
-        <CardContent>
-          {fields.map((field, index) => (
-            <Accordion
-              key={field.id}
-              type="single"
-              collapsible
-              defaultValue={index === 0 ? `quotation-0` : undefined}
-              className="mb-4"
-            >
-              <AccordionItem value={`quotation-${index}`}>
-                <AccordionTrigger>
-                  {index === 0
-                    ? "Primary Quotation"
-                    : `Secondary Quotation ${index}`}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="m-2">
-                    <VendorSelector
-                      setValue={setValue}
-                      index={index}
-                      control={control}
-                    />
-                  </div>
-                  <div className="m-2">
-                    <ProductList
-                      rfpId={rfpId}
-                      setValue={setValue}
-                      getValues={getValues}
-                      control={control}
-                      index={index}
-                    />
-                  </div>
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-                  <OtherChargesList
-                    control={control}
-                    index={index}
-                    formData={FormData}
-                  />
+  //     const result = await response.json();
+  //     console.log("RFP updated successfully:", result);
+  //     setSuccess(true);
+  //   } catch (err) {
+  //     console.error("Error updating RFP:", err);
+  //     setError(
+  //       err instanceof Error ? err.message : "An unknown error occurred"
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+  // return (
+  //   <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+  //     <Card>
+  //       <CardHeader className="flex flex-row justify-between items-center">
+  //         <CardTitle>Update RFP</CardTitle>
+  //         <Link href="/dashboard/manager">
+  //           <Button
+  //             type="button"
+  //             variant="outline"
+  //             size="icon"
+  //             className="text-black-500 bg-red-400"
+  //           >
+  //             <X className="h-4 w-4" />
+  //           </Button>{" "}
+  //         </Link>
+  //       </CardHeader>
 
-                  <div className="m-2">
-                    <TotalComponent
-                      setValue={setValue}
-                      control={control}
-                      index={index}
-                    />
-                  </div>
-                  <div className="m-2">
-                    <SupportingDocumentsList
-                      control={control}
-                      index={index}
-                      setValue={setValue}
-                      files={files}
-                      setFiles={setFiles}
-                      getValue={getValues}
-                    />
-                  </div>
+  //       <CardContent>
+  //         {fields.map((field, index) => (
+  //           <Accordion
+  //             key={field.id}
+  //             type="single"
+  //             collapsible
+  //             defaultValue={index === 0 ? `quotation-0` : undefined}
+  //             className="mb-4"
+  //           >
+  //             <AccordionItem value={`quotation-${index}`}>
+  //               <AccordionTrigger>
+  //                 {index === 0
+  //                   ? "Primary Quotation"
+  //                   : `Secondary Quotation ${index}`}
+  //               </AccordionTrigger>
+  //               <AccordionContent>
+  //                 <div className="m-2">
+  //                   <VendorSelector
+  //                     setValue={setValue}
+  //                     index={index}
+  //                     control={control}
+  //                   />
+  //                 </div>
+  //                 <div className="m-2">
+  //                   <ProductList
+  //                     rfpId={rfpId}
+  //                     setValue={setValue}
+  //                     getValues={getValues}
+  //                     control={control}
+  //                     index={index}
+  //                   />
+  //                 </div>
 
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      console.log("Removing index:", index);
-                      remove(index);
-                    }}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          ))}
+  //                 <OtherChargesList
+  //                   control={control}
+  //                   index={index}
+  //                   formData={FormData}
+  //                 />
 
-          {fields.length < 3 && (
-            <Button
-              type="button"
-              onClick={() =>
-                append({
-                  vendorId: "",
-                  products: [],
-                  otherCharges: [],
-                  total: { withGST: 0, withoutGST: 0 },
-                  supportingDocuments: [],
-                })
-              }
-            >
-              Add Quotation
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {success && (
-        <Alert>
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>RFP updated successfully.</AlertDescription>
-        </Alert>
-      )}
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Updating...
-          </>
-        ) : (
-          "Update RFP"
-        )}
-      </Button>
-    </form>
-  );
+  //                 <div className="m-2">
+  //                   <TotalComponent
+  //                     setValue={setValue}
+  //                     control={control}
+  //                     index={index}
+  //                   />
+  //                 </div>
+  //                 <div className="m-2">
+  //                   <SupportingDocumentsList
+  //                     control={control}
+  //                     index={index}
+  //                     setValue={setValue}
+  //                     files={files}
+  //                     setFiles={setFiles}
+  //                     getValue={getValues}
+  //                   />
+  //                 </div>
+
+  //                 <Button
+  //                   type="button"
+  //                   onClick={() => {
+  //                     console.log("Removing index:", index);
+  //                     remove(index);
+  //                   }}
+  //                   variant="outline"
+  //                   size="icon"
+  //                   className="text-red-500"
+  //                 >
+  //                   <X className="h-4 w-4" />
+  //                 </Button>
+  //               </AccordionContent>
+  //             </AccordionItem>
+  //           </Accordion>
+  //         ))}
+
+  //         {fields.length < 3 && (
+  //           <Button
+  //             type="button"
+  //             onClick={() =>
+  //               append({
+  //                 vendorId: "",
+  //                 products: [],
+  //                 otherCharges: [],
+  //                 total: { withGST: 0, withoutGST: 0 },
+  //                 supportingDocuments: [],
+  //               })
+  //             }
+  //           >
+  //             Add Quotation
+  //           </Button>
+  //         )}
+  //       </CardContent>
+  //     </Card>
+  //     {error && (
+  //       <Alert variant="destructive">
+  //         <AlertTitle>Error</AlertTitle>
+  //         <AlertDescription>{error}</AlertDescription>
+  //       </Alert>
+  //     )}
+  //     {success && (
+  //       <Alert>
+  //         <AlertTitle>Success</AlertTitle>
+  //         <AlertDescription>RFP updated successfully.</AlertDescription>
+  //       </Alert>
+  //     )}
+  //     <Button type="submit" disabled={isLoading}>
+  //       {isLoading ? (
+  //         <>
+  //           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+  //           Updating...
+  //         </>
+  //       ) : (
+  //         "Update RFP"
+  //       )}
+  //     </Button>
+  //   </form>
+  // );
 }
 
 export { ProductList };
