@@ -25,8 +25,8 @@ export async function PUT(request: NextRequest) {
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
     const { quotations } = data;
-    //console.log("quotations", quotations);
-    //console.log("formData", formData);
+    console.log("quotations", quotations);
+    console.log("formData", formData);
     const supDocs = Array.from(formData.entries()).slice(2);
     //console.log("supDocs", supDocs);
 

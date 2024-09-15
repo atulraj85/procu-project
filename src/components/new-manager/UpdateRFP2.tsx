@@ -31,16 +31,10 @@ import {
 } from "@/components/ui/select";
 import Link from "next/link";
 
-
-
 // Add quotation ref number (Quotation table)
 
-
-
-
-
-
 type Product = {
+  vendorPricing?: any;
   id: string;
   name: string;
   modelNo: string;
@@ -52,14 +46,20 @@ type Product = {
 };
 
 type OtherCharge = {
+  id: any;
+  price: any;
   name: string;
   gst: string;
   unitPrice: number;
 };
 
 type SupportingDocument = {
-  name: string;
-  fileName: string;
+  id?: any;
+  documentType?: any;
+  documentName?: any;
+  location?: any;
+  name?: string;
+  fileName?: string;
 };
 
 type Total = {
@@ -68,6 +68,9 @@ type Total = {
 };
 
 type Quotation = {
+  vendor: any;
+  totalAmount(totalAmount: any): number;
+  totalAmountWithoutGST(totalAmountWithoutGST: any): number;
   vendorId: string;
   products: Product[];
   otherCharges: OtherCharge[];
@@ -319,13 +322,11 @@ const ProductList = ({
   index,
   getValues,
   setValue,
-  rfpId,
 }: {
   control: any;
   index: number;
   getValues: any;
   setValue: any;
-  rfpId: string;
 }) => {
   const { fields } = useFieldArray({
     control,
@@ -334,79 +335,18 @@ const ProductList = ({
 
   const products = useWatch({
     control,
-    name: `quotations.${index}.products`,
+    name: `products`,
   });
 
-  // console.log("products", products)
+  console.log(products);
 
   const [error, setError] = useState<string | null>(null);
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    async function fetchRFPProducts() {
-      setIsLoading(true);
-      if (rfpId) {
-        try {
-          const rfpProductsData = await fetch(`/api/rfpProduct?rfpId=${rfpId}`);
-          const data = await rfpProductsData.json();
-
-          const productsWithDetails: Product[] = await Promise.all(
-            data.map(async (rfpProduct: any) => {
-              const productData = await fetch(
-                `/api/product?id=${rfpProduct.productId}`
-              );
-
-              const responseData = await productData.json();
-
-              if (Array.isArray(responseData) && responseData.length > 0) {
-                return responseData.map((product: any) => ({
-                  id: product.id || null,
-                  name: product.name || null,
-                  modelNo: product.modelNo || null,
-                  quantity: rfpProduct.quantity || 0,
-                  amount: 0,
-                  unitPrice: product.unitPrice || null,
-                  gst: product.gst || null,
-                  totalPriceWithoutGST: product.totalPriceWithoutGST || null,
-                  totalPriceWithGST: product.totalPriceWithGST || null,
-                }));
-              }
-              return []; // Return an empty array if responseData is not valid
-            })
-          );
-
-          const flattenedProductsWithDetails = productsWithDetails.flat();
-          setRfpProducts(flattenedProductsWithDetails);
-          setValue(
-            `quotations.${index}.products`,
-            flattenedProductsWithDetails
-          );
-
-          if (globalFormData.has("quotations")) {
-            const quotations = JSON.parse(
-              globalFormData.get("quotations") as string
-            );
-            quotations[index] = {
-              ...quotations[index],
-              products: flattenedProductsWithDetails,
-            };
-            globalFormData.set("quotations", JSON.stringify(quotations));
-          }
-
-          setError(null);
-        } catch (err) {
-          setError(
-            err instanceof Error ? err.message : "An unknown error occurred"
-          );
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchRFPProducts();
-  }, [rfpId]);
+    if (products) setRfpProducts(products);
+  }, [products]);
 
   const calculateTotals = (
     unitPrice: number,
@@ -843,8 +783,8 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
       ) || 0);
 
     const newTotal = {
-      withoutGST: Number(totalWithoutGST.toFixed(2)),
-      withGST: Number(totalWithGST.toFixed(2)),
+      withoutGST: Number(totalWithoutGST),
+      withGST: Number(totalWithGST),
     };
 
     // Only update if the total has changed
@@ -874,17 +814,19 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
         <CardContent>
           <div>
             <Label>Total Without GST</Label>
-            <Input
+            {/* <Input
               value={quotation.total?.withoutGST?.toFixed(2) || "0.00"}
               readOnly
-            />
+            />{" "} */}
+            <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
           </div>
           <div>
             <Label>Total With GST</Label>
-            <Input
+            {/* <Input
               value={quotation.total?.withGST?.toFixed(2) || "0.00"}
               readOnly
-            />
+            /> */}
+            <Input value={quotation.total?.withGST || "0.00"} readOnly />
           </div>
         </CardContent>
       </Card>
@@ -894,118 +836,123 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
 
 // Step 7: Create Main RFP Update Form Component
 
-interface RFPUpdateFormProps {
-  rfpId: string;
-  initialData?: {
-    quotations: Array<{
-      id: string;
-      rfpId: string;
-      vendorId: string;
-      isPrimary: boolean;
-      totalAmount: string;
-      totalAmountWithoutGST: string;
-      supportingDocuments: Array<{
-        id: string;
-        quotationId: string;
-        documentType: string;
-        documentName: string;
-        location: string;
-      }>;
-      vendorPricings: Array<{
-        id: string;
-        quotationId: string;
-        rfpProductId: string;
-        price: string;
-      }>;
-      otherCharges: Array<{
-        id: string;
-        quotationId: string;
-        name: string;
-        price: string;
-        gst: string;
-      }>;
-    }>;
-  };
-}
+// type Approver = {
+//   name: string;
+//   email: string;
+//   mobile: string;
+// };
 
-interface initialFormData {
-  quotations: Array<{
-    vendorId: string;
-    products: Array<{
-      id: string;
-      rfpProductId: string;
-      price: string;
-    }>;
-    otherCharges: Array<{
-      id: string;
-      name: string;
-      price: string;
-      gst: string;
-    }>;
-    total: {
-      withGST: number;
-      withoutGST: number;
-    };
-    supportingDocuments: Array<{
-      id: string;
-      documentType: string;
-      documentName: string;
-      location: string;
-    }>;
-  }>;
-}
+// type SupportingDocument = {
+//   id: string;
+//   documentType: string;
+//   documentName: string;
+//   location: string;
+// };
+
+// type Product = {
+//   vendorPricing: any;
+//   id: string;
+//   rfpProductId: string;
+//   price: number;
+// };
+
+// type OtherCharge = {
+//   id: string;
+//   name: string;
+//   price: number;
+//   gst: number;
+// };
+
+// type Total = {
+//   withGST: number;
+//   withoutGST: number;
+// };
+
+// type Quotation = {
+//   totalAmount: number;
+//   totalAmountWithoutGST: number;
+//   vendor: any;
+//   products: Product[];
+//   otherCharges: OtherCharge[];
+//   total: Total;
+//   supportingDocuments: SupportingDocument[];
+// };
+
+// type RFPData = {
+//   rfpId: string;
+//   requirementType: string;
+//   dateOfOrdering: string;
+//   deliveryLocation: string;
+//   deliveryByDate: string;
+//   rfpStatus: string;
+//   preferredQuotationId: string | null;
+//   created_at: string;
+//   updated_at: string;
+//   approvers: Approver[];
+//   quotations: Quotation[];
+//   createdBy: Approver;
+// };
 
 export default function RFPUpdateForm({
   rfpId,
   initialData,
-}: RFPUpdateFormProps) {
-  console.log("initialData in form: ", initialData?.quotations);
+}: {
+  rfpId: string;
+  initialData: any;
+}) {
+  console.log("RFPUpdateForm - Received rfpId:", rfpId);
+  console.log("RFPUpdateForm - Received initialData:", initialData);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
 
-  const { control, handleSubmit, setValue, getValues } = useForm<
-    initialFormData | FormData | any
-  >({
-    defaultValues: {
-      quotations: initialData?.quotations.map((quotation) => ({
-        vendorId: quotation.vendorId,
-        products: quotation.vendorPricings.map((pricing) => ({
-          id: pricing.id,
-          rfpProductId: pricing.rfpProductId,
-          price: pricing.price,
-        })),
-        otherCharges: quotation.otherCharges.map((charge) => ({
-          id: charge.id,
-          name: charge.name,
-          price: charge.price,
-          gst: charge.gst,
-        })),
-        total: {
-          withGST: parseFloat(quotation.totalAmount),
-          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
-        },
-        supportingDocuments: quotation.supportingDocuments.map((doc) => ({
-          id: doc.id,
-          documentType: doc.documentType,
-          documentName: doc.documentName,
-          location: doc.location,
-        })),
-      })) || [
-        {
-          vendorId: "",
-          products: [],
-          otherCharges: [],
-          total: { withGST: 0, withoutGST: 0 },
-          supportingDocuments: [],
-        },
-      ],
-    },
-  });
+  const { control, handleSubmit, setValue, getValues } = useForm<any>();
 
-  // const initData = initialData?.quotations[0].vendorPricings;
-  // console.log(initData);
+  // {
+  // defaultValues: {
+  //   rfpId: initialData.rfpId,
+  //   // requirementType: initialData.requirementType,
+  //   // dateOfOrdering: initialData.dateOfOrdering,
+  //   // deliveryLocation: initialData.deliveryLocation,
+  //   // deliveryByDate: initialData.deliveryByDate,
+  //   rfpStatus: initialData.rfpStatus,
+  //   preferredQuotationId: initialData.preferredQuotationId,
+  //   // created_at: initialData.created_at,
+  //   // updated_at: initialData.updated_at,
+  //   // approvers: initialData.approvers,
+  //   // products: initialData.products,
+
+  //   quotations: initialData.quotations.map((quotation: any) => ({
+  //     totalAmount: quotation.totalAmount,
+  //     totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+  //     vendor: quotation.vendor,
+  //     products: quotation.products.map((product: any) => ({
+  //       id: product.id,
+  //       rfpProductId: product.id,
+  //       price: product.vendorPricing?.price || 0,
+  //     })),
+  //     otherCharges: quotation.otherCharges.map((charge: any) => ({
+  //       id: charge.id,
+  //       name: charge.name,
+  //       price: charge.price,
+  //       gst: charge.gst,
+  //     })),
+  //     total: {
+  //       withGST: quotation.totalAmount,
+  //       withoutGST: quotation.totalAmountWithoutGST,
+  //     },
+  //     supportingDocuments: quotation.supportingDocuments.map((doc: any) => ({
+  //       id: doc.id,
+  //       documentType: doc.documentType,
+  //       documentName: doc.documentName,
+  //       location: doc.location,
+  //     })),
+  //   })),
+  //   // createdBy: initialData.createdBy,
+  // },
+  // }
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1040,7 +987,7 @@ export default function RFPUpdateForm({
         formData.append(key, file);
       });
 
-      const response = await fetch(`/api/rfp/quotation?id=${rfpId}`, {
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
         body: formData,
       });
@@ -1081,18 +1028,14 @@ export default function RFPUpdateForm({
         <CardContent>
           {fields.map((field, index) => (
             <Accordion
-              key={field.id}
               type="single"
               collapsible
-              defaultValue={index === 0 ? `quotation-0` : undefined}
+              defaultValue={fields.length > 0 ? `quotation-0` : undefined}
               className="mb-4"
             >
-              <AccordionItem value={`quotation-${index}`}>
-                <AccordionTrigger>
-                  {index === 0
-                    ? "Primary Quotation"
-                    : `Secondary Quotation ${index}`}
-                </AccordionTrigger>
+              <AccordionItem value={`quotation-${index + 1}`}>
+                <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
+
                 <AccordionContent>
                   <div className="m-2">
                     <VendorSelector
@@ -1101,9 +1044,9 @@ export default function RFPUpdateForm({
                       control={control}
                     />
                   </div>
+
                   <div className="m-2">
                     <ProductList
-                      rfpId={rfpId}
                       setValue={setValue}
                       getValues={getValues}
                       control={control}
