@@ -61,7 +61,7 @@ const Page: React.FC = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        const response = await fetch(`/api/company?rfpId=${encodeURIComponent(rfp)}`);
+        const response = await fetch(`/api/company?rfpId=${(rfp)}`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -79,7 +79,7 @@ const Page: React.FC = () => {
   useEffect(() => {
     const fetchRfpData = async () => {
       try {
-        const response = await fetch(`/api/rfp?rfpId=${encodeURIComponent(rfp)}`);
+        const response = await fetch(`/api/rfp?rfpId=${(rfp)}`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }

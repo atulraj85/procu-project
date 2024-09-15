@@ -1,316 +1,315 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import { useSearchParams } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { X } from "lucide-react";
-import Loader from "@/components/shared/Loader";
-
-interface Approver {
-  id: string;
-  userId: string;
-  approved: boolean;
-  approvedAt: string | null;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  };
+"use client"
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { useSearchParams } from "next/navigation";
+import { Input } from '@/components/ui/input';
+// Define types for the RFP data structure
+interface Vendor {
+  companyName: string;
+  email: string;
+  mobile: string;
+  address: string;
+  customerState: string;
+  customerCity: string;
+  country: string;
+  zip: string;
+  gstin: string;
+  pan: string;
 }
 
-interface RfpProduct {
+interface Product {
   id: string;
-  productId: string;
+  name: string;
+  modelNo: string;
   quantity: number;
-  product: {
-    id: string;
-    name: string;
-    modelNo: string;
-    specification: string;
-  };
+}
+
+interface SupportingDocument {
+  documentName: string;
+  location: string;
 }
 
 interface Quotation {
   id: string;
-  rfpId: string;
-  vendorId: string;
-  isPrimary: boolean;
   totalAmount: string;
   totalAmountWithoutGST: string;
-  created_at: string;
-  updated_at: string;
-  supportingDocuments: Array<{
-    id: string;
-    quotationId: string;
-    documentType: string;
-    documentName: string;
-    location: string;
-    created_at: string;
-    updated_at: string;
-  }>;
-  vendorPricings: Array<{
-    id: string;
-    quotationId: string;
-    rfpProductId: string;
-    price: string;
-    GST: number;
-    created_at: string;
-    updated_at: string;
-  }>;
-  otherCharges: Array<{
-    id: string;
-    quotationId: string;
-    name: string;
-    price: string;
-    gst: string;
-    created_at: string;
-    updated_at: string;
-  }>;
+  vendor: Vendor;
+  products: Product[];
+  supportingDocuments: SupportingDocument[]; // Add supporting documents to the quotation
 }
 
-interface RfpData {
-  id: string;
+interface Approver {
+  name: string;
+  email: string;
+  mobile: string;
+}
+
+interface RFPData {
   rfpId: string;
   requirementType: string;
   dateOfOrdering: string;
   deliveryLocation: string;
   deliveryByDate: string;
-  userId: string;
   rfpStatus: string;
-  preferredQuotationId: string | null;
-  created_at: string;
-  updated_at: string;
-  approversList: Approver[];
-  rfpProducts: RfpProduct[];
-  quotations: Quotation[]; // Add quotations field
-  user: {
-    name: string;
-    email: string;
-    mobile: string;
-  };
+  approvers: Approver[];
+  quotations: Quotation[];
 }
 
-const RfpDetails: React.FC = () => {
-  const [rfpData, setRfpData] = useState<RfpData | null>(null);
+const ViewRFP: React.FC = () => {
+  const searchPrams=useSearchParams() // Get rfpId from URL parameters
+  const rfp=searchPrams.get("rfp")
+  const [rfpData, setRfpData] = useState<RFPData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const rfpId = searchParams.get('rfp');
 
   useEffect(() => {
-    const fetchRfpDetails = async () => {
+    const fetchRFP = async () => {
       try {
-        setLoading(true);
-        const response = await fetch(`/api/rfp?rfpId=${encodeURIComponent(rfpId)}`);
-        const data = await response.json();
-        console.log("data",data[0]);
-        
-        if (Array.isArray(data) && data.length > 0) {
-          setRfpData(data[0]);
-        } else {
-          setError("No RFP data found");
+        const response = await fetch(`/api/rfp?rfpId=${rfp}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch RFP data');
         }
+        const data: RFPData[] = await response.json();
+        setRfpData(data[0]); // Assuming the API returns an array
       } catch (err) {
-        setError("An error occurred while fetching RFP data");
-        toast.error("Failed to fetch RFP details");
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRfpDetails();
-  }, [rfpId]);
+    fetchRFP();
+  }, [rfp]);
 
-  if (loading) {
-    return <Loader />;
-  }
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
-  if (!rfpData) {
-    return <div>No RFP data available</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!rfpData) return <div>No RFP data found.</div>;
 
   return (
-    <>
-      <div className="text-lg font-bold">View RFP</div>
+    <form className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>View RFP</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Request for Product</CardTitle>
+              <div className="flex justify-between">
+                <p className="text-md text-muted-foreground">RFP ID: {rfpData.rfpId}</p>
+                <p>Date of Ordering: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}</p>
+              </div>
+            </CardHeader>
+            <CardContent className="grid grid-cols-4 gap-2">
+              <div className="space-y-3 text-[19px]">
+                <Label>Requirement Type</Label>
+                <p>{rfpData.requirementType}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Delivery By Date</Label>
+                <p>{new Date(rfpData.deliveryByDate).toLocaleString()}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="flex justify-end mt-6 mr-20">
-        <Link href="/dashboard/manager">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="text-black-500 bg-red-400"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </Link>
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Approver Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {rfpData.approvers.map((approver, index) => (
+                <div key={index} className="flex items-center space-x-2 mb-2">
+                  <div className="flex flex-col">
+                    <Label>Approver Name</Label>
+                    <Input
+                      type="text"
+                      value={approver.name}
+                      disabled
+                      // className="border border-gray-300 p-2 rounded"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <Label>Email</Label>
+                    <Input
+                      type="text"
+                      value={approver.email}
+                      disabled
+                      // className="border border-gray-300 p-2 rounded"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <Label>Phone</Label>
+                    <Input
+                      type="text"
+                      value={approver.mobile}
+                      disabled
+                      // className="border border-gray-300 p-2 rounded"
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-4">
+  <CardHeader>
+    <CardTitle>Product Details</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {rfpData.quotations.map((quotation, index) => (
+      <div key={index} className="mb-4">
+        <div className="flex flex-col mb-4">
+          <Label>Quotation ID</Label>
+          <Input
+            type="text"
+            value={quotation.id}
+            disabled
+            className="border border-gray-300 p-2 rounded"
+          />
+        </div>
+        <div className="flex flex-col mb-4">
+          <Label>Total Amount</Label>
+          <Input
+            type="text"
+            value={quotation.totalAmount}
+            disabled
+            className="border border-gray-300 p-2 rounded"
+          />
+        </div>
+        <div className="flex flex-col mb-4">
+          <Label>Total Amount Without GST</Label>
+          <Input
+            type="text"
+            value={quotation.totalAmountWithoutGST}
+            disabled
+            className="border border-gray-300 p-2 rounded"
+          />
+        </div>
+        <h4 className="font-semibold">Vendor Details</h4>
+        <div className="flex items-center space-x-2 mb-2">
+          <div className="flex flex-col">
+            <Label>Company Name</Label>
+            <Input
+              type="text"
+              value={quotation.vendor.companyName}
+              disabled
+              className="border border-gray-300 p-2 rounded"
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label>Email</Label>
+            <Input
+              type="text"
+              value={quotation.vendor.email}
+              disabled
+              className="border border-gray-300 p-2 rounded"
+            />
+          </div>
+          <div className="flex flex-col">
+            <Label>Mobile</Label>
+            <Input
+              type="text"
+              value={quotation.vendor.mobile}
+              disabled
+              className="border border-gray-300 p-2 rounded"
+            />
+          </div>
+        </div>
+        <h4 className="font-semibold">Products</h4>
+        {quotation.products.map((product, idx) => (
+          <div key={idx} className="flex items-center space-x-2 mb-2">
+            <div className="flex flex-col">
+              <Label>Product Name</Label>
+              <Input
+                type="text"
+                value={product.name}
+                disabled
+                className="border border-gray-300 p-2 rounded"
+              />
+            </div>
+            <div className="flex flex-col">
+              <Label>Model No</Label>
+              <Input
+                type="text"
+                value={product.modelNo}
+                disabled
+                className="border border-gray-300 p-2 rounded"
+              />
+            </div>
+            <div className="flex flex-col">
+              <Label>Quantity</Label>
+              <Input
+                type="number"
+                value={product.quantity}
+                disabled
+                className="border border-gray-300 p-2 rounded"
+              />
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="p-5">
-        <form className="flex flex-wrap w-full gap-7">
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">RFP ID</label>
-            <h1 className="text-[15px]">{rfpData.rfpId}</h1>
-          </div>
+    ))}
+  </CardContent>
+</Card>
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Requirement Type</label>
-            <h1 className="text-[15px]">{rfpData.requirementType}</h1>
-          </div>
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Date of Ordering</label>
-            <h1 className="text-[15px]">
-              {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
-            </h1>
-          </div>
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Delivery Location</label>
-            <h1 className="text-[15px]">{rfpData.deliveryLocation}</h1>
-          </div>
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Supporting Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <table className="min-w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr>
+                    <th className="border border-gray-300 p-2">Document Name</th>
+                    <th className="border border-gray-300 p-2">Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rfpData.quotations.flatMap((quotation) => 
+                    quotation.supportingDocuments.map((doc, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-gray-300 p-2">
+                          <input
+                            type="text"
+                            value={doc.documentName}
+                            disabled
+                            className="w-full bg-gray-100"
+                          />
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          <input
+                            type="text"
+                            value={doc.location}
+                            disabled
+                            className="w-full bg-gray-100"
+                          />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
 
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Delivery By Date</label>
-            <h1 className="text-[15px]">
-              {new Date(rfpData.deliveryByDate).toLocaleDateString()}
-            </h1>
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">RFP Status</label>
-            <h1 className="text-[15px]">{rfpData.rfpStatus}</h1>
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Created At</label>
-            <h1 className="text-[15px]">
-              {new Date(rfpData.created_at).toLocaleString()}
-            </h1>
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Updated At</label>
-            <h1 className="text-[15px]">
-              {new Date(rfpData.updated_at).toLocaleString()}
-            </h1>
-          </div>
-
-          <div className="flex flex-col gap-3 w-60 text-base">
-            <label className="font-bold">Created By</label>
-            <h1 className="text-[15px]">{rfpData.user.name}</h1>
-            <h1 className="text-[15px]">{rfpData.user.email}</h1>
-            <h1 className="text-[15px]">{rfpData.user.mobile}</h1>
-          </div>
-        </form>
-
-        <div className="mt-8">
-          <h2 className="text-lg font-bold mb-4">Approvers List</h2>
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                {/* <th className="border border-gray-300 p-2">Approver ID</th> */}
-                <th className="border border-gray-300 p-2">Name</th>
-                <th className="border border-gray-300 p-2">Email</th>
-                {/* <th className="border border-gray-300 p-2">Role</th> */}
-                <th className="border border-gray-300 p-2">Approved</th>
-                <th className="border border-gray-300 p-2">Approved At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rfpData.approversList.map((approver) => (
-                <tr key={approver.id}>
-                  {/* <td className="border border-gray-300 p-2">{approver.userId}</td> */}
-                  <td className="border border-gray-300 p-2">{approver.user.name}</td>
-                  <td className="border border-gray-300 p-2">{approver.user.email}</td>
-                  {/* <td className="border border-gray-300 p-2">{approver.user.role}</td> */}
-                  <td className="border border-gray-300 p-2">{approver.approved ? 'Yes' : 'No'}</td>
-                  <td className="border border-gray-300 p-2">
-                    {approver.approvedAt ? new Date(approver.approvedAt).toLocaleString() : 'N/A'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-8">
-          <h2 className="text-lg font-bold mb-4">Products List</h2>
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                {/* <th className="border border-gray-300 p-2">Product ID</th> */}
-                <th className="border border-gray-300 p-2">Name</th>
-                <th className="border border-gray-300 p-2">Model No</th>
-                <th className="border border-gray-300 p-2">Specification</th>
-                <th className="border border-gray-300 p-2">Quantity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {/* <h1>{rfpData.rfpProducts}</h1> */}
-              {rfpData.rfpProducts.map((product) => (
-                <tr key={product.id}>
-                  {/* <td className="border border-gray-300 p-2">{product.productId}</td> */}
-                  <td className="border border-gray-300 p-2">{product.product.name}</td>
-                  <td className="border border-gray-300 p-2">{product.product.modelNo}</td>
-                  <td className="border border-gray-300 p-2">{product.product.specification}</td>
-                  <td className="border border-gray-300 p-2">{product.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-         
-        <div className="mt-8">
-          <h2 className="text-lg font-bold mb-4">Quotations List</h2>
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 p-2">Vendor ID</th>
-                <th className="border border-gray-300 p-2">Total Amount</th>
-                <th className="border border-gray-300 p-2">Total Amount Without GST</th>
-                <th className="border border-gray-300 p-2">Created At</th>
-                <th className="border border-gray-300 p-2">Supporting Documents</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rfpData.quotations.map((quotation) => (
-                <tr key={quotation.id}>
-                  <td className="border border-gray-300 p-2">{quotation.vendorId}</td>
-                  <td className="border border-gray-300 p-2">{quotation.totalAmount}</td>
-                  <td className="border border-gray-300 p-2">{quotation.totalAmountWithoutGST}</td>
-                  <td className="border border-gray-300 p-2">
-                    {new Date(quotation.created_at).toLocaleString()}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {quotation.supportingDocuments.length > 0 ? (
-                      <ul>
-                        {quotation.supportingDocuments.map(doc => (
-                          <li key={doc.id}>
-                            <a href={doc.location} target="_blank" rel="noopener noreferrer">
-                              {doc.documentName}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      'N/A'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-       
-      </div>
-    </>
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Delivery Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Delivery Location</Label>
+                <p>{rfpData.deliveryLocation}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+    </form>
   );
 };
 
-export default RfpDetails;
+export default ViewRFP;
