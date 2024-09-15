@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
+import { Textarea } from "../ui/textarea";
 
 // Add quotation ref number (Quotation table)
 
@@ -954,6 +955,11 @@ export default function RFPUpdateForm({
   const [files, setFiles] = useState<{ [key: string]: File }>({});
   const { control, handleSubmit, setValue, getValues } = useForm<any>();
 
+  const [showReasonPrompt, setShowReasonPrompt] = useState(false);
+  const [reason, setReason] = useState("");
+  const quotationLimit = 3;
+  const [quotes, setQuotes] = useState(0);
+
   const products = initialData.products;
 
   // {
@@ -1005,9 +1011,10 @@ export default function RFPUpdateForm({
     name: "quotations",
   });
 
-  useEffect(() => {
-    globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-  }, [getValues().quotations]);
+  // Be aware of this
+  // useEffect(() => {
+  //   globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+  // }, [getValues().quotations]);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -1054,6 +1061,8 @@ export default function RFPUpdateForm({
       setIsLoading(false);
     }
   };
+
+  console.log(quotes);
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -1074,12 +1083,13 @@ export default function RFPUpdateForm({
         <CardContent>
           {fields.map((field, index) => (
             <Accordion
+              key={field.id}
               type="single"
               collapsible
-              defaultValue={fields.length > 0 ? `quotation-0` : undefined}
+              defaultValue={index === 0 ? `quotation-0` : undefined}
               className="mb-4"
             >
-              <AccordionItem value={`quotation-${index + 1}`}>
+              <AccordionItem value={`quotation-${index}`}>
                 <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
 
                 <AccordionContent>
@@ -1130,6 +1140,7 @@ export default function RFPUpdateForm({
                     onClick={() => {
                       console.log("Removing index:", index);
                       remove(index);
+                      setQuotes(quotes - 1);
                     }}
                     variant="outline"
                     size="icon"
@@ -1142,18 +1153,25 @@ export default function RFPUpdateForm({
             </Accordion>
           ))}
 
-          {fields.length < 3 && (
+          {fields.length < quotationLimit && (
             <Button
+              className="bg-primary"
               type="button"
-              onClick={() =>
-                append({
-                  vendorId: "",
-                  products: [],
-                  otherCharges: [],
-                  total: { withGST: 0, withoutGST: 0 },
-                  supportingDocuments: [],
-                })
-              }
+              onClick={() => {
+                if (fields.length < quotationLimit) {
+                  append({
+                    vendorId: "",
+                    products: [],
+                    otherCharges: [],
+                    total: { withGST: 0, withoutGST: 0 },
+                    supportingDocuments: [],
+                  });
+                  setQuotes(quotes + 1);
+                  setShowReasonPrompt(true);
+                } else {
+                  setShowReasonPrompt(false);
+                }
+              }}
             >
               Add Quotation
             </Button>
@@ -1172,16 +1190,50 @@ export default function RFPUpdateForm({
           <AlertDescription>RFP updated successfully.</AlertDescription>
         </Alert>
       )}
-      <Button type="submit" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Updating...
-          </>
-        ) : (
-          "Update RFP"
-        )}
-      </Button>
+
+      {/* {showReasonPrompt && (
+        
+      )} */}
+
+      {quotes === 3 ? (
+        <Button className="bg-primary" type="submit" disabled={isLoading} onClick={() => {}}>
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            "Submit RFP"
+          )}
+        </Button>
+      ) : (
+        <div>
+          <Textarea
+            className="w-1/3 mb-2"
+            placeholder="Reason for adding less than 3 quotations"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <Button
+            className="bg-primary"
+            onClick={() => {
+              if (reason) {
+                append({
+                  vendorId: "",
+                  products: [],
+                  otherCharges: [],
+                  total: { withGST: 0, withoutGST: 0 },
+                  supportingDocuments: [],
+                });
+                setShowReasonPrompt(false);
+                setReason("");
+              }
+            }}
+          >
+            Submit Reason and Add Quotation
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
