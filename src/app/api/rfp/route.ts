@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 
 function formatRFPData(inputData: any[]) {
   return inputData.map((rfp: any) => ({
+    id: rfp.id,
     rfpId: rfp.rfpId,
     requirementType: rfp.requirementType,
     dateOfOrdering: rfp.dateOfOrdering,
@@ -20,6 +21,13 @@ function formatRFPData(inputData: any[]) {
       name: approver.user.name,
       email: approver.user.email,
       mobile: approver.user.mobile,
+    })),
+    products: rfp.rfpProducts.map((product: any) => ({
+      id: product.product.id,
+      name: product.product.name,
+      modelNo: product.product.modelNo,
+      quantity: product.quantity,
+      vendorPricing: product.vendorPricings[0], // Assuming there's only one vendor pricing
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -187,6 +195,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       orderBy: orderByClause,
       select: {
+        id:true,
         rfpId: true,
         requirementType: true,
         dateOfOrdering: true,
@@ -235,6 +244,7 @@ export async function GET(request: NextRequest) {
             updated_at: true,
             vendor: {
               select: {
+                id: true,
                 companyName: true,
                 email: true,
                 mobile: true,

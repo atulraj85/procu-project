@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@radix-ui/react-label";
 import { X } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 
@@ -129,8 +129,28 @@ const Page = () => {
           />
         </CardContent>
       </Card>
+
+      <Card className="mt-4">
+<CardHeader>
+  <CardTitle className="text-lg text-slate-700">Shipping Information</CardTitle>
+</CardHeader>
+<CardContent>
+  <div className="flex flex-wrap">
+    <div className="mx-4 flex-1">
+      <Label className="font-bold text-[16px] text-slate-700 pb-2">Billing Address</Label>
+      <Textarea className="text-[14px]" />
+    </div>
+    <div className="mx-4 flex-1">
+      <Label className="font-bold text-[16px] text-slate-700 pb-2">Shipping Address</Label>
+      <Textarea className="text-[14px]" />
+    </div>
+  </div>
+</CardContent>
+</Card>
     </div>
   );
 };
+
+
 
 export default Page;
