@@ -120,6 +120,7 @@ model PO {
   user        User      @relation(fields: [userId], references: [id])
   userId      String    @db.Uuid
   invoice     Invoice?
+  remarks     String
   companyId   String    @db.Uuid // Field for company ID
   company     Company   @relation(fields: [companyId], references: [id]) // Relation to Company
   rfpId       String    @unique @db.Uuid // New field for RFP ID
