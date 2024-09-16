@@ -32,11 +32,12 @@ function formatRFPData(inputData: any[]) {
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
       totalAmount: quotation.totalAmount,
+      refNo: quotation.refNo,
       totalAmountWithoutGST: quotation.totalAmountWithoutGST,
       created_at: quotation.created_at,
       updated_at: quotation.updated_at,
       vendor: quotation.vendor,
-      products: quotation.vendorPricings.map((pricing: any) => ({
+      products: quotation?.vendorPricings.map((pricing: any) => ({
         id: pricing.rfpProduct.product.id,
         name: pricing.rfpProduct.product.name,
         modelNo: pricing.rfpProduct.product.modelNo,
@@ -149,6 +150,7 @@ export async function GET(request: NextRequest) {
         quotations: {
           select: {
             id: true,
+            refNo: true,
             totalAmount: true,
             totalAmountWithoutGST: true,
             created_at: true,
@@ -213,8 +215,6 @@ export async function GET(request: NextRequest) {
         },
       },
     });
-
-    console.log("records", records[0].quotations[0].vendorPricings[0]);
 
     const formattedData = formatRFPData(records);
     console.log("formattedData", formattedData);
