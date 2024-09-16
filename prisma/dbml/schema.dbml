@@ -5,7 +5,7 @@
 Table Company {
   id String [pk]
   name String [not null]
-  GST String
+  GST String [unique]
   logo String
   stamp String
   email String [unique]

@@ -325,6 +325,14 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
+  console.log(products);
+
+  if (products.length == 0) {
+    console.log("tes");
+    const data = getValues(`quotations.products`);
+    console.log(data);
+  }
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
 
@@ -950,7 +958,7 @@ export default function RFPUpdateForm({
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
-      products: initialData.products,
+      // products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
         refNo: quotation.refNo,
@@ -1030,17 +1038,17 @@ export default function RFPUpdateForm({
 
       console.log("FormData to be sent:", Object.fromEntries(formData));
 
-      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
 
-      // if (!response.ok) {
-      //   throw new Error(`HTTP error! status: ${response.status}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      // const result = await response.json();
-      // console.log("RFP updated successfully:", result);
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -1146,7 +1154,11 @@ export default function RFPUpdateForm({
 
                     <div className="m-2">
                       <ProductList
-                        products={quotation.products}
+                        products={
+                          quotation.products.length === 0
+                            ? initialData.products
+                            : quotation.products
+                        }
                         setValue={setValue}
                         getValues={getValues}
                         control={control}
