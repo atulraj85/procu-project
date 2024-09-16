@@ -113,8 +113,6 @@ const VendorSelector = ({
   const [approvedVendor, setApprovedVendor] = useState<Vendor | null>(null);
   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  console.log("approvedVendor", approvedVendor);
   useEffect(() => {
     if (vendor) {
       setApprovedVendor(vendor);
@@ -322,60 +320,43 @@ const ProductList = ({
   getValues: any;
   setValue: any;
 }) => {
-  const { fields } = useFieldArray({
+  const { fields, replace } = useFieldArray({
     control,
     name: `quotations.${index}.products`,
   });
 
-  console.log("products from RFPUpdate", products, index);
-
-  console.log(
-    `quotations.${index}.products`,
-    getValues(`quotations.${index}.products`)
-  );
-
-  // if (products === null) {
-  //   products = getValues(`quotations.0.products`);
-  // }
-
   const [error, setError] = useState<string | null>(null);
-  const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
   const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
 
-    let mappedProducts;
-
-    if (Array.isArray(products) && products.length > 0) {
-      mappedProducts = products.map((product: any) => ({
-        id: product.id || null,
-        name: product.name || null,
-        modelNo: product.modelNo || null,
-        quantity: product.quantity || 0,
-        amount: 0,
-        unitPrice: product.unitPrice || null,
-        gst: product.gst || null,
-        totalPriceWithoutGST: product.totalPriceWithoutGST || null,
-        totalPriceWithGST: product.totalPriceWithGST || null,
-      }));
-
-      console.log("mappedProducts", mappedProducts);
-    }
     try {
-      const flattenedProductsWithDetails = mappedProducts!.flat();
-      console.log("productsWithDetails", flattenedProductsWithDetails);
-      setRfpProducts(flattenedProductsWithDetails);
-      setValue(`quotations.${index}.products`, flattenedProductsWithDetails);
-      if (globalFormData.has("quotations")) {
-        const quotations = JSON.parse(
-          globalFormData.get("quotations") as string
-        );
-        quotations[index] = {
-          ...quotations[index],
-          products: flattenedProductsWithDetails,
-        };
-        globalFormData.set("quotations", JSON.stringify(quotations));
+      if (Array.isArray(products) && products.length > 0) {
+        const mappedProducts = products.map((product: any) => ({
+          id: product.id || null,
+          name: product.name || "",
+          modelNo: product.modelNo || "",
+          quantity: product.quantity || 0,
+          unitPrice: product.unitPrice || 0,
+          gst: product.gst || "NILL",
+          totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
+          totalPriceWithGST: product.totalPriceWithGST || 0,
+        }));
+
+        replace(mappedProducts);
+
+        // Update global form data
+        if (globalFormData.has("quotations")) {
+          const quotations = JSON.parse(
+            globalFormData.get("quotations") as string
+          );
+          quotations[index] = {
+            ...quotations[index],
+            products: mappedProducts,
+          };
+          globalFormData.set("quotations", JSON.stringify(quotations));
+        }
       }
       setError(null);
     } catch (err) {
@@ -385,7 +366,7 @@ const ProductList = ({
     } finally {
       setIsLoading(false);
     }
-  }, [products]);
+  }, [products, replace, index]);
 
   const calculateTotals = (
     unitPrice: number,
@@ -396,6 +377,44 @@ const ProductList = ({
     const gstValue = gst === "NILL" ? 0 : parseFloat(gst);
     const totalWithGST = totalWithoutGST * (1 + gstValue / 100);
     return { totalWithoutGST, totalWithGST };
+  };
+
+  const updateProductTotals = (productIndex: number) => {
+    const unitPrice = getValues(
+      `quotations.${index}.products.${productIndex}.unitPrice`
+    );
+    const quantity = getValues(
+      `quotations.${index}.products.${productIndex}.quantity`
+    );
+    const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
+
+    const { totalWithoutGST, totalWithGST } = calculateTotals(
+      unitPrice,
+      quantity,
+      gst
+    );
+
+    setValue(
+      `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+      totalWithoutGST
+    );
+    setValue(
+      `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+      totalWithGST
+    );
+
+    // Update global form data
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].products[productIndex] = {
+        ...quotations[index].products[productIndex],
+        unitPrice,
+        gst,
+        totalPriceWithoutGST: totalWithoutGST,
+        totalPriceWithGST: totalWithGST,
+      };
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
   };
 
   return (
@@ -447,41 +466,8 @@ const ProductList = ({
                       type="number"
                       {...field}
                       onChange={(e) => {
-                        const unitPrice = parseFloat(e.target.value);
-                        field.onChange(unitPrice);
-                        const quantity = getValues(
-                          `quotations.${index}.products.${productIndex}.quantity`
-                        );
-                        const gst = getValues(
-                          `quotations.${index}.products.${productIndex}.gst`
-                        );
-                        const { totalWithoutGST, totalWithGST } =
-                          calculateTotals(unitPrice, quantity, gst);
-
-                        const quotations = JSON.parse(
-                          globalFormData.get("quotations") as string
-                        );
-                        quotations[index].products[productIndex].unitPrice =
-                          unitPrice;
-                        quotations[index].products[
-                          productIndex
-                        ].totalPriceWithoutGST = totalWithoutGST;
-                        quotations[index].products[
-                          productIndex
-                        ].totalPriceWithGST = totalWithGST;
-                        globalFormData.set(
-                          "quotations",
-                          JSON.stringify(quotations)
-                        );
-
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-                          totalWithoutGST
-                        );
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-                          totalWithGST
-                        );
+                        field.onChange(parseFloat(e.target.value));
+                        updateProductTotals(productIndex);
                       }}
                     />
                   )}
@@ -493,22 +479,7 @@ const ProductList = ({
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
-                        const unitPrice = getValues(
-                          `quotations.${index}.products.${productIndex}.unitPrice`
-                        );
-                        const quantity = getValues(
-                          `quotations.${index}.products.${productIndex}.quantity`
-                        );
-                        const { totalWithoutGST, totalWithGST } =
-                          calculateTotals(unitPrice, quantity, value);
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-                          totalWithoutGST
-                        );
-                        setValue(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-                          totalWithGST
-                        );
+                        updateProductTotals(productIndex);
                       }}
                       value={field.value}
                     >
@@ -561,6 +532,7 @@ const ProductList = ({
     </Card>
   );
 };
+
 export { ProductList };
 
 // Step 4: Create Other Charges List Component
@@ -972,11 +944,13 @@ export default function RFPUpdateForm({
   const [quotes, setQuotes] = useState(0);
   const [preferredVendorId, setPreferredVendorId] = useState("");
   const [showCheckbox, setShowCheckbox] = useState(true);
+
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
+      products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
         refNo: quotation.refNo,
@@ -984,24 +958,23 @@ export default function RFPUpdateForm({
         vendor: quotation.vendor,
         totalAmount: quotation.totalAmount,
         totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-        // products: quotation.products.map((product: any) => ({
-        //   id: product.id,
-        //   name: product.name,
-        //   modelNo: product.modelNo,
-        //   quantity: product.quantity,
-        //   unitPrice: product.vendorPricing?.price || 0,
-        //   gst: product.vendorPricing?.GST.toString() || "0",
-        //   totalPriceWithoutGST:
-        //     product.quantity * (product.vendorPricing?.price || 0),
-        //   totalPriceWithGST:
-        //     product.quantity *
-        //     (product.vendorPricing?.price || 0) *
-        //     (1 + (product.vendorPricing?.GST || 0) / 100),
-        // })),
+        products: quotation.products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          modelNo: product.modelNo,
+          quantity: product.quantity,
+          unitPrice: parseFloat(product.price),
+          gst: product.GST.toString(),
+          totalPriceWithoutGST: parseFloat(product.price) * product.quantity,
+          totalPriceWithGST:
+            parseFloat(product.price) *
+            product.quantity *
+            (1 + product.GST / 100),
+        })),
         otherCharges: quotation.otherCharges.map((charge: any) => ({
           id: charge.id,
           name: charge.name,
-          unitPrice: charge.price,
+          unitPrice: parseFloat(charge.price),
           gst: charge.gst,
         })),
         total: {
@@ -1017,10 +990,6 @@ export default function RFPUpdateForm({
       })),
     },
   });
-
-  const products = initialData.products;
-
-  console.log("products from main", products);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1061,17 +1030,17 @@ export default function RFPUpdateForm({
 
       console.log("FormData to be sent:", Object.fromEntries(formData));
 
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
+      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+      //   method: "PUT",
+      //   body: formData,
+      // });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
+      // const result = await response.json();
+      // console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -1082,7 +1051,6 @@ export default function RFPUpdateForm({
       setIsLoading(false);
     }
   };
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -1096,7 +1064,7 @@ export default function RFPUpdateForm({
               className="text-black-500 bg-red-400"
             >
               <X className="h-4 w-4" />
-            </Button>{" "}
+            </Button>
           </Link>
         </CardHeader>
 
@@ -1166,7 +1134,7 @@ export default function RFPUpdateForm({
                         </CardContent>
                       </Card>
                     </div>
-                    {/* 
+
                     <div className="m-2">
                       <VendorSelector
                         setValue={setValue}
@@ -1174,11 +1142,11 @@ export default function RFPUpdateForm({
                         setShowCheckbox={setShowCheckbox}
                         vendor={quotation.vendor}
                       />
-                    </div> */}
+                    </div>
 
                     <div className="m-2">
                       <ProductList
-                        products={products}
+                        products={quotation.products}
                         setValue={setValue}
                         getValues={getValues}
                         control={control}
@@ -1186,7 +1154,7 @@ export default function RFPUpdateForm({
                       />
                     </div>
 
-                    {/* <OtherChargesList
+                    <OtherChargesList
                       control={control}
                       index={index}
                       formData={FormData}
@@ -1209,7 +1177,7 @@ export default function RFPUpdateForm({
                         setFiles={setFiles}
                         getValue={getValues}
                       />
-                    </div> */}
+                    </div>
 
                     <Button
                       type="button"
