@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 // Define types for the RFP data structure
 interface Vendor {
+  price: string | number | readonly string[] | undefined;
   companyName: string;
   email: string;
   mobile: string;
@@ -22,6 +23,8 @@ interface Vendor {
 }
 
 interface Product {
+  GST: string | number | readonly string[] | undefined;
+  price: string | number | readonly string[] | undefined;
   id: string;
   name: string;
   modelNo: string;
@@ -231,6 +234,7 @@ const ViewRFP: React.FC = () => {
               className="border border-gray-300 p-2 rounded"
             />
           </div>
+         
         </div>
         <h4 className="font-semibold">Products</h4>
         {quotation.products.map((product, idx) => (
@@ -258,6 +262,24 @@ const ViewRFP: React.FC = () => {
               <Input
                 type="number"
                 value={product.quantity}
+                disabled
+                className="border border-gray-300 p-2 rounded"
+              />
+            </div>
+            <div className="flex flex-col">
+              <Label>Price</Label>
+              <Input
+                type="number"
+                value={product.price}
+                disabled
+                className="border border-gray-300 p-2 rounded"
+              />
+            </div>
+            <div className="flex flex-col">
+              <Label>GST</Label>
+              <Input
+                type="number"
+                value={product.GST}
                 disabled
                 className="border border-gray-300 p-2 rounded"
               />

@@ -1,4 +1,6 @@
 "use client";
+import { ProductList } from "@/components/new-manager/UpdateRFP2";
+import Loader from "@/components/shared/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +12,6 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import Loader from "@/components/shared/Loader";
 
 const Page = () => {
   const { control, setValue, getValues, register } = useForm();
@@ -56,7 +57,7 @@ const Page = () => {
     };
 
     fetchData();
-  }, [setValue, rfp]);
+  }, [setValue]);
 
   if (loading) {
     return <Loader />;
@@ -65,8 +66,6 @@ const Page = () => {
   if (error) {
     return <div>Error: {error.message}</div>;
   }
-
-  const products = getValues("products") || [];
 
   return (
     <div>
@@ -194,32 +193,13 @@ const Page = () => {
             </CardContent>
           </Card>
 
-          {/* Product Display Section */}
-          <Card className="mb-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Products</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {products.length > 0 ? (
-                products.map((product, index) => (
-                  <div key={index} className="border-b py-2">
-                    <div className="flex justify-between">
-                      <span className="font-bold">{product.name}</span>
-                      <span className="text-gray-500">{product.price}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">{product.description}</div>
-                    <div className="flex justify-between mt-2">
-                      <span>Quantity: {product.quantity}</span>
-                      <span>Total: {product.totalPrice}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div>No products available.</div>
-              )}
-            </CardContent>
-          </Card>
-
+          <ProductList
+            control={control}
+            index={0}
+            getValues={getValues}
+            setValue={setValue}
+            products={getValues("products") || []}
+          />
         </CardContent>
       </Card>
 
@@ -241,7 +221,7 @@ const Page = () => {
               <Label className="font-bold text-[16px] text-slate-700 pb-2">Shipping Address</Label>
               <Textarea
                 disabled
-                {...register("deliveryLocation")} // Set  delivery location
+                {...register("deliveryLocation")} // Set delivery location
                 className="text-[14px]"
               />
             </div>
