@@ -39,6 +39,7 @@ function formatRFPData(inputData: any[]) {
       vendor: quotation.vendor,
       products: quotation?.vendorPricings.map((pricing: any) => ({
         id: pricing.rfpProduct.product.id,
+        rfpProductId: pricing.rfpProduct.id,
         name: pricing.rfpProduct.product.name,
         modelNo: pricing.rfpProduct.product.modelNo,
         quantity: pricing.rfpProduct.quantity,
@@ -176,6 +177,7 @@ export async function GET(request: NextRequest) {
                 GST: true,
                 rfpProduct: {
                   select: {
+                    id: true,
                     product: {
                       select: {
                         id: true,

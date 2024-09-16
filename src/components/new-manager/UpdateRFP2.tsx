@@ -39,6 +39,7 @@ type Product = {
   vendorPricing?: any;
   id: string;
   name: string;
+  rfpProductId?: string;
   modelNo: string;
   quantity: number;
   unitPrice?: number;
@@ -325,7 +326,7 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  console.log(products);
+  console.log("products", products);
 
   if (products.length == 0) {
     console.log("tes");
@@ -347,6 +348,7 @@ const ProductList = ({
           modelNo: product.modelNo || "",
           quantity: product.quantity || 0,
           unitPrice: product.unitPrice || 0,
+          rfpProductId: product.rfpProductId || "",
           gst: product.gst || "NILL",
           totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
           totalPriceWithGST: product.totalPriceWithGST || 0,
@@ -661,6 +663,8 @@ const OtherChargesList = ({
   );
 };
 // Step 5: Create Supporting Documents List Component
+import { Eye } from "lucide-react";
+
 const SupportingDocumentsList = ({
   control,
   index,
@@ -681,7 +685,6 @@ const SupportingDocumentsList = ({
     name: `quotations.${index}.supportingDocuments`,
   });
 
-  // Use useWatch to get the current values of the quotation
   const quotation = useWatch({
     control,
     name: `quotations.${index}`,
@@ -693,23 +696,12 @@ const SupportingDocumentsList = ({
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("File", file);
-
-      console.log(
-        "FILENAME",
-        getValue(`quotations.${index}.supportingDocuments.${docIndex}.name`)
-      );
-
       const documentName = getValue(
         `quotations.${index}.supportingDocuments.${docIndex}.name`
       );
-      console.log("documentName", documentName);
-      console.log(getValue(`quotations.${index}.vendorId`));
       const fileKey = `${getValue(
         `quotations.${index}.vendorId`
       )}/${documentName}`;
-      console.log("fileKey", fileKey);
-
       setFiles((prevFiles) => ({
         ...prevFiles,
         [fileKey]: file,
@@ -721,41 +713,76 @@ const SupportingDocumentsList = ({
     }
   };
 
+  const handlePreview = (location: string) => {
+    window.open(`/${location}`, "_blank");
+  };
+
   return (
     <div>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
-
         <CardContent>
-          <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="grid grid-cols-3 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
+            <Label>Actions</Label>
           </div>
-          {fields.map((field, docIndex) => (
-            <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
-              <Input
-                {...control.register(
-                  `quotations.${index}.supportingDocuments.${docIndex}.name`
-                )}
-                placeholder="Enter document name"
-              />
-              <Input
-                type="file"
-                onChange={(e) => handleFileChange(e, docIndex)}
-              />
-              <Button
-                type="button"
-                onClick={() => remove(docIndex)}
-                variant="outline"
-                size="icon"
-                className="text-red-500"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
+          {fields.map((field, docIndex) => {
+            const location = getValue(
+              `quotations.${index}.supportingDocuments.${docIndex}.location`
+            );
+            const isFileUploaded = !!location;
+
+            return (
+              <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
+                <Input
+                  {...control.register(
+                    `quotations.${index}.supportingDocuments.${docIndex}.name`
+                  )}
+                  placeholder="Enter document name"
+                />
+                <div>
+                  {isFileUploaded ? (
+                    <Input
+                      type="text"
+                      value={location}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                  ) : (
+                    <Input
+                      type="file"
+                      onChange={(e) => handleFileChange(e, docIndex)}
+                    />
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  {isFileUploaded && (
+                    <Button
+                      type="button"
+                      onClick={() => handlePreview(location)}
+                      variant="outline"
+                      size="icon"
+                      className="text-blue-500"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    onClick={() => remove(docIndex)}
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
           <Button
             type="button"
             className="bg-primary mt-2"
@@ -768,7 +795,6 @@ const SupportingDocumentsList = ({
     </div>
   );
 };
-
 // Step 6: Create Total Component
 interface TotalComponentProps {
   control: Control<any>;
@@ -968,6 +994,7 @@ export default function RFPUpdateForm({
         totalAmountWithoutGST: quotation.totalAmountWithoutGST,
         products: quotation.products.map((product: any) => ({
           id: product.id,
+          rfpProductId: product.rfpProductId,
           name: product.name,
           modelNo: product.modelNo,
           quantity: product.quantity,
