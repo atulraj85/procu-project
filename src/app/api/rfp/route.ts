@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       orderBy: orderByClause,
       select: {
-        id:true,
+        id: true,
         rfpId: true,
         requirementType: true,
         dateOfOrdering: true,

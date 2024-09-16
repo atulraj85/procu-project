@@ -90,7 +90,6 @@ const globalFormData = new FormData();
 
 type Vendor = {
   id: string;
-  primaryName: string;
   companyName: string;
   contactDisplayName: string;
   email: string;
@@ -98,239 +97,30 @@ type Vendor = {
   gstin: string;
 };
 
-// const VendorSelector = ({
-//   index,
-//   setValue,
-//   setShowCheckbox,
-// }: {
-//   index: number;
-//   setValue: any;
-//   setShowCheckbox: any;
-// }) => {
-//   const [searchTerm, setSearchTerm] = useState("");
-//   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
-//   const [approvedVendors, setApprovedVendors] = useState<Vendor[]>([]);
-//   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-
-//   // const vendorId = useWatch({
-//   //   control,
-//   //   name: `quotations.${index}.vendorId`,
-//   // });
-
-//   // useEffect(() => {
-//   //   const fetchVendorDetails = async () => {
-//   //     if (vendorId) {
-//   //       try {
-//   //         const response = await fetch(`/api/vendor?id=${vendorId}`);
-//   //         const vendorData = await response.json();
-//   //         const formattedVendors = vendorData.map((vendor: any) => ({
-//   //           ...vendor,
-//   //           vendorId: vendor.productId || vendor.id || String(vendor._id),
-//   //         }));
-//   //         // console.log("formattedVendors", formattedVendors);
-//   //         addVendor(formattedVendors[0]);
-//   //         if (vendorData) {
-//   //           setApprovedVendors([formattedVendors[0]]);
-//   //           setDisableVendorSearch(true);
-//   //         }
-//   //       } catch (error) {
-//   //         setError("Failed to fetch vendor details");
-//   //       }
-//   //     }
-//   //   };
-
-//   //   fetchVendorDetails();
-//   // }, [vendorId]);
-
-//   const handleSearchChange = useCallback(
-//     async (e: ChangeEvent<HTMLInputElement>) => {
-//       const value = e.target.value;
-//       setSearchTerm(value);
-
-//       if (value) {
-//         try {
-//           const response = await fetch(`/api/ajax/vendors?q=${value}`);
-//           const responseData = await response.json();
-//           console.log("responseData", responseData);
-//           const formattedVendors = responseData.map((vendor: any) => ({
-//             ...vendor,
-//             vendorId: vendor.productId || vendor.id || String(vendor._id),
-//           }));
-//           setFetchedVendors(formattedVendors);
-//         } catch (error) {
-//           setError("Failed to fetch vendors");
-//         }
-//       } else {
-//         setFetchedVendors([]);
-//       }
-//     },
-//     []
-//   );
-//   const addVendor = useCallback(
-//     (vendor: Vendor) => {
-//       // console.log("approvedVendors", approvedVendors);
-//       if (!vendor.id) {
-//         setError("Vendor ID is missing");
-//         return;
-//       }
-
-//       if (!approvedVendors.some((p) => p.id === vendor.id)) {
-//         setApprovedVendors((prev) => [...prev, vendor]);
-//         setDisableVendorSearch(true);
-//         setSearchTerm("");
-//         setFetchedVendors([]);
-
-//         const vendorData = {
-//           vendorId: vendor.id,
-//         };
-
-//         if (!globalFormData.has("quotations")) {
-//           globalFormData.set("quotations", JSON.stringify([]));
-//         }
-
-//         const quotations = JSON.parse(
-//           globalFormData.get("quotations") as string
-//         );
-//         quotations[index] = { ...quotations[index], ...vendorData };
-//         globalFormData.set("quotations", JSON.stringify(quotations));
-//       } else {
-//         setError(`Vendor with ID ${vendor.id} already exists.`);
-//       }
-//     },
-//     [approvedVendors, index]
-//   );
-
-//   const removeVendor = (vendorId: string) => {
-//     setApprovedVendors((prev) => prev.filter((v) => v.id !== vendorId));
-//     setValue(`quotations.${index}.vendorId`, "");
-//     setDisableVendorSearch(false);
-
-//     // Remove vendor data from global FormData
-//     if (globalFormData.has("quotations")) {
-//       const quotations = JSON.parse(globalFormData.get("quotations") as string);
-//       if (quotations[index]) {
-//         delete quotations[index].vendorId;
-//       }
-//       globalFormData.set("quotations", JSON.stringify(quotations));
-//     }
-//   };
-
-//   return (
-//     <Card>
-//       <CardHeader>
-//         <CardTitle className="text-lg">Vendor Details</CardTitle>
-//       </CardHeader>
-//       <CardContent>
-//         <Input
-//           disabled={disableVendorSearch}
-//           className="w-1/2"
-//           type="text"
-//           placeholder="Search Vendors..."
-//           value={searchTerm}
-//           onChange={handleSearchChange}
-//         />
-//         {error && <div className="text-red-500">{error}</div>}
-//         {fetchedVendors.length > 0 && (
-//           <div className="mt-2">
-//             <h3 className="font-semibold">Fetched Vendors:</h3>
-//             <ul>
-//               {fetchedVendors.map((vendor) => (
-//                 <li
-//                   key={vendor.id}
-//                   className="py-1 cursor-pointer hover:bg-gray-200"
-//                   onClick={() => {
-//                     addVendor(vendor);
-//                     setValue(`quotations.${index}.vendorId`, vendor.id);
-//                     setFetchedVendors([]);
-//                     setError(null);
-//                   }}
-//                 >
-//                   {vendor.primaryName} | {vendor.email}
-//                 </li>
-//               ))}
-//             </ul>
-//           </div>
-//         )}
-//         {approvedVendors.map((vendor) => (
-//           <div key={vendor.id} className="flex items-center space-x-2 mb-2">
-//             <div className="flex flex-col">
-//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
-//                 Vendor Name
-//               </Label>
-//               <Input
-//                 disabled
-//                 value={vendor.primaryName}
-//                 placeholder="Name"
-//                 className="flex-1"
-//               />
-//             </div>
-//             <div className="flex flex-col">
-//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
-//                 Email
-//               </Label>
-//               <Input
-//                 disabled
-//                 value={vendor.email}
-//                 placeholder="Email"
-//                 className="flex-1"
-//               />
-//             </div>
-//             <div className="flex flex-col">
-//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
-//                 Phone
-//               </Label>
-//               <Input
-//                 disabled
-//                 value={vendor.mobile}
-//                 placeholder="Phone"
-//                 className="flex-1"
-//               />
-//             </div>
-//             <div className="flex flex-col">
-//               <Label className="mb-2 font-bold text-[16px] text-slate-700">
-//                 GSTIN
-//               </Label>
-//               <Input
-//                 disabled
-//                 value={vendor.gstin}
-//                 placeholder="GSTIN"
-//                 className="flex-1"
-//               />
-//             </div>
-//             <div className="flex flex-col">
-//               <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
-//               <Button
-//                 type="button"
-//                 onClick={() => removeVendor(vendor.id)}
-//                 variant="outline"
-//                 size="icon"
-//                 className="text-red-500"
-//               >
-//                 <X className="h-4 w-4" />
-//               </Button>
-//             </div>
-//           </div>
-//         ))}
-//       </CardContent>
-//     </Card>
-//   );
-// };
-
 const VendorSelector = ({
   index,
   setValue,
   setShowCheckbox,
+  vendor,
 }: {
   index: number;
   setValue: any;
   setShowCheckbox: any;
+  vendor: any;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
   const [approvedVendor, setApprovedVendor] = useState<Vendor | null>(null);
   const [disableVendorSearch, setDisableVendorSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  console.log("approvedVendor", approvedVendor);
+  useEffect(() => {
+    if (vendor) {
+      setApprovedVendor(vendor);
+      setDisableVendorSearch(true);
+    }
+  }, [vendor]);
 
   const handleSearchChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -446,7 +236,7 @@ const VendorSelector = ({
                     setError(null);
                   }}
                 >
-                  {vendor.primaryName} | {vendor.email}
+                  {vendor.companyName} | {vendor.email}
                 </li>
               ))}
             </ul>
@@ -460,7 +250,7 @@ const VendorSelector = ({
               </Label>
               <Input
                 disabled
-                value={approvedVendor.primaryName}
+                value={approvedVendor.companyName}
                 placeholder="Name"
                 className="flex-1"
               />
@@ -537,12 +327,11 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  // const products = useWatch({
-  //   control,
-  //   name: `products`,
-  // });
+  console.log("products", products, index);
 
-  // console.log(products);
+  // if (products === null) {
+  //   products = getValues(`quotations.0.products`);
+  // }
 
   const [error, setError] = useState<string | null>(null);
   const [rfpProducts, setRfpProducts] = useState<Product[]>([]);
@@ -554,8 +343,6 @@ const ProductList = ({
     let mappedProducts;
 
     if (Array.isArray(products) && products.length > 0) {
-      console.log("products", products);
-
       mappedProducts = products.map((product: any) => ({
         id: product.id || null,
         name: product.name || null,
@@ -682,14 +469,14 @@ const ProductList = ({
                           JSON.stringify(quotations)
                         );
 
-                        // setValue(
-                        //   `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-                        //   totalWithoutGST
-                        // );
-                        // setValue(
-                        //   `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-                        //   totalWithGST
-                        // );
+                        setValue(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+                          totalWithoutGST
+                        );
+                        setValue(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+                          totalWithGST
+                        );
                       }}
                     />
                   )}
@@ -741,8 +528,10 @@ const ProductList = ({
                   )}
                   readOnly
                   value={(
-                    getValues(
-                      `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                    parseFloat(
+                      getValues(
+                        `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                      )
                     ) || 0
                   ).toFixed(2)}
                 />
@@ -752,8 +541,10 @@ const ProductList = ({
                   )}
                   readOnly
                   value={(
-                    getValues(
-                      `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                    parseFloat(
+                      getValues(
+                        `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                      )
                     ) || 0
                   ).toFixed(2)}
                 />
@@ -786,8 +577,18 @@ const OtherChargesList = ({
   const updateGlobalFormData = useCallback(() => {
     if (globalFormData.has("quotations")) {
       const quotations = JSON.parse(globalFormData.get("quotations") as string);
+
+      // Ensure the quotation at this index exists
+      if (!quotations[index]) {
+        quotations[index] = { otherCharges: [] };
+      }
+
       quotations[index].otherCharges = fields;
       globalFormData.set("quotations", JSON.stringify(quotations));
+    } else {
+      // If "quotations" doesn't exist in globalFormData, initialize it
+      const newQuotations = [{ otherCharges: fields }];
+      globalFormData.set("quotations", JSON.stringify(newQuotations));
     }
   }, [fields, index]);
 
@@ -809,8 +610,8 @@ const OtherChargesList = ({
             <Label>Unit Price</Label>
           </div>
           {fields.map((field, chargeIndex) => (
-            <div className="space-y-2 m-2">
-              <div key={field.id} className="grid grid-cols-4 gap-2">
+            <div className="space-y-2 m-2" key={field.id}>
+              <div className="grid grid-cols-4 gap-2">
                 <Input
                   {...control.register(
                     `quotations.${index}.otherCharges.${chargeIndex}.name`
@@ -874,7 +675,6 @@ const OtherChargesList = ({
     </div>
   );
 };
-
 // Step 5: Create Supporting Documents List Component
 const SupportingDocumentsList = ({
   control,
@@ -1074,7 +874,10 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
               value={quotation.total?.withGST?.toFixed(2) || "0.00"}
               readOnly
             /> */}
-            <Input value={quotation.total?.withGST || "0.00"} readOnly />
+            <Input
+              value={(quotation.total?.withGST || 0).toFixed(2)}
+              readOnly
+            />
           </div>
         </CardContent>
       </Card>
@@ -1155,7 +958,51 @@ export default function RFPUpdateForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
-  const { control, handleSubmit, setValue, getValues } = useForm<any>();
+  const { control, handleSubmit, setValue, getValues } = useForm<any>({
+    defaultValues: {
+      rfpId: initialData.rfpId,
+      rfpStatus: initialData.rfpStatus,
+      preferredQuotationId: initialData.preferredQuotationId,
+      quotations: initialData.quotations.map((quotation: any) => ({
+        id: quotation.id,
+        refNo: quotation.refNo,
+        vendorId: quotation.vendor?.id,
+        vendor: quotation.vendor,
+        totalAmount: quotation.totalAmount,
+        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+        products: quotation.products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          modelNo: product.modelNo,
+          quantity: product.quantity,
+          unitPrice: product.vendorPricing?.price || 0,
+          gst: product.vendorPricing?.GST.toString() || "0",
+          totalPriceWithoutGST:
+            product.quantity * (product.vendorPricing?.price || 0),
+          totalPriceWithGST:
+            product.quantity *
+            (product.vendorPricing?.price || 0) *
+            (1 + (product.vendorPricing?.GST || 0) / 100),
+        })),
+        otherCharges: quotation.otherCharges.map((charge: any) => ({
+          id: charge.id,
+          name: charge.name,
+          unitPrice: charge.price,
+          gst: charge.gst,
+        })),
+        total: {
+          withGST: parseFloat(quotation.totalAmount),
+          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
+        },
+        supportingDocuments: quotation.supportingDocuments.map((doc: any) => ({
+          id: doc.id,
+          name: doc.documentName,
+          fileName: doc.documentName,
+          location: doc.location,
+        })),
+      })),
+    },
+  });
   const [preferredVendorIndex, setPreferredVendorIndex] = useState<
     number | null
   >(null);
@@ -1165,61 +1012,23 @@ export default function RFPUpdateForm({
   const [quotes, setQuotes] = useState(0);
   const [preferredVendorId, setPreferredVendorId] = useState("");
   const [showCheckbox, setShowCheckbox] = useState(true);
+
   const products = initialData.products;
 
-  // {
-  // defaultValues: {
-  //   rfpId: initialData.rfpId,
-  //   // requirementType: initialData.requirementType,
-  //   // dateOfOrdering: initialData.dateOfOrdering,
-  //   // deliveryLocation: initialData.deliveryLocation,
-  //   // deliveryByDate: initialData.deliveryByDate,
-  //   rfpStatus: initialData.rfpStatus,
-  //   preferredQuotationId: initialData.preferredQuotationId,
-  //   // created_at: initialData.created_at,
-  //   // updated_at: initialData.updated_at,
-  //   // approvers: initialData.approvers,
-  //   // products: initialData.products,
-
-  //   quotations: initialData.quotations.map((quotation: any) => ({
-  //     totalAmount: quotation.totalAmount,
-  //     totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-  //     vendor: quotation.vendor,
-  //     products: quotation.products.map((product: any) => ({
-  //       id: product.id,
-  //       rfpProductId: product.id,
-  //       price: product.vendorPricing?.price || 0,
-  //     })),
-  //     otherCharges: quotation.otherCharges.map((charge: any) => ({
-  //       id: charge.id,
-  //       name: charge.name,
-  //       price: charge.price,
-  //       gst: charge.gst,
-  //     })),
-  //     total: {
-  //       withGST: quotation.totalAmount,
-  //       withoutGST: quotation.totalAmountWithoutGST,
-  //     },
-  //     supportingDocuments: quotation.supportingDocuments.map((doc: any) => ({
-  //       id: doc.id,
-  //       documentType: doc.documentType,
-  //       documentName: doc.documentName,
-  //       location: doc.location,
-  //     })),
-  //   })),
-  //   // createdBy: initialData.createdBy,
-  // },
-  // }
+  console.log("products from main", products);
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "quotations",
   });
 
-  // Be aware of this
-  // useEffect(() => {
-  //   globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-  // }, [getValues().quotations]);
+  useEffect(() => {
+    setQuotes(fields.length);
+  }, [fields]);
+
+  useEffect(() => {
+    globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+  }, [getValues().quotations]);
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -1234,14 +1043,18 @@ export default function RFPUpdateForm({
       // Add rfpId to formData
       formData.append("rfpId", rfpId);
 
-      if (quotes < 3) {
-        formData.append("rfpStatus", "DRAFT");
-      } else {
-        formData.append("rfpStatus", "SUBMITTED");
-      }
+      // if (quotes < 3) {
+      //   formData.append("rfpStatus", "DRAFT");
+      // } else {
+      //   formData.append("rfpStatus", "SUBMITTED");
+      // }
 
       // Serialize the form data (excluding files) to JSON
-      const serializedData = JSON.stringify(data);
+      const serializedData = JSON.stringify({
+        ...data,
+        rfpStatus: quotes < 3 ? "DRAFT" : "SUBMITTED",
+      });
+      formData.append("data", serializedData);
       formData.append("data", serializedData);
 
       console.log(files);
@@ -1250,6 +1063,8 @@ export default function RFPUpdateForm({
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
+
+      console.log("FormData to be sent:", Object.fromEntries(formData));
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
@@ -1291,127 +1106,134 @@ export default function RFPUpdateForm({
         </CardHeader>
 
         <CardContent>
-          {fields.map((field, index) => (
-            <Accordion
-              key={field.id}
-              type="single"
-              collapsible
-              defaultValue={index === 0 ? `quotation-0` : undefined}
-              className="mb-4"
-            >
-              <AccordionItem value={`quotation-${index}`}>
-                <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
+          {fields.map((field, index) => {
+            const quotation = getValues(`quotations.${index}`);
+            return (
+              <Accordion
+                key={field.id}
+                type="single"
+                collapsible
+                defaultValue={`quotation-${index}`}
+                className="mb-4"
+              >
+                <AccordionItem value={`quotation-${index}`}>
+                  <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
 
-                <AccordionContent>
-                  <div className="m-2">
-                    <Card className="w-1/2">
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
-                            <Checkbox
-                              checked={preferredVendorIndex === index}
-                              disabled={
-                                preferredVendorIndex !== null &&
-                                preferredVendorIndex !== index
-                              }
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setValue(
-                                    "preferredVendorId",
-                                    getValues(`quotations.${index}.vendorId`)
-                                  );
-                                  setPreferredVendorId(
-                                    getValues(`quotations.${index}.vendorId`)
-                                  );
-                                  setPreferredVendorIndex(index); // Set the current index as preferred
-                                } else {
-                                  setPreferredVendorId("");
-                                  setPreferredVendorIndex(null); // Reset preferred vendor index
+                  <AccordionContent>
+                    <div className="m-2">
+                      <Card className="w-1/2">
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
+                              <Checkbox
+                                checked={preferredVendorIndex === index}
+                                disabled={
+                                  preferredVendorIndex !== null &&
+                                  preferredVendorIndex !== index
                                 }
-                              }}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setValue(
+                                      "preferredVendorId",
+                                      quotation.vendorId
+                                    );
+                                    setPreferredVendorId(quotation.vendorId);
+                                    setPreferredVendorIndex(index);
+                                  } else {
+                                    setPreferredVendorId("");
+                                    setPreferredVendorIndex(null);
+                                  }
+                                }}
+                              />
+                              <Label className="font-bold text-[16px] text-slate-700">
+                                Preferred Quote
+                              </Label>
+                            </div>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {preferredVendorIndex === index && (
+                            <div>
+                              <Textarea
+                                className="mb-2"
+                                placeholder="Reason for preferring this vendor"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                              />
+                            </div>
+                          )}
+                          <div className="w-1/2">
+                            <Label>Ref No.</Label>
+                            <Input
+                              {...control.register(`quotations.${index}.refNo`)}
                             />
-                            <Label className="font-bold text-[16px] text-slate-700">
-                              Preferred Quote
-                            </Label>
                           </div>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {preferredVendorId ? (
-                          <div>
-                            <Textarea
-                              className=" mb-2"
-                              placeholder="Reason for preferring this vendor"
-                              value={reason}
-                              onChange={(e) => setReason(e.target.value)}
-                            />
-                          </div>
-                        ) : (
-                          <></>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
+                        </CardContent>
+                      </Card>
+                    </div>
 
-                  <div className="m-2">
-                    <VendorSelector
-                      setValue={setValue}
-                      index={index}
-                      setShowCheckbox={setShowCheckbox}
-                    />
-                  </div>
+                    <div className="m-2">
+                      <VendorSelector
+                        setValue={setValue}
+                        index={index}
+                        setShowCheckbox={setShowCheckbox}
+                        vendor={quotation.vendor}
+                      />
+                    </div>
 
-                  <div className="m-2">
-                    <ProductList
-                      products={products}
-                      setValue={setValue}
-                      getValues={getValues}
+                    <div className="m-2">
+                      <ProductList
+                        products={products}
+                        setValue={setValue}
+                        getValues={getValues}
+                        control={control}
+                        index={index}
+                      />
+                    </div>
+
+                    <OtherChargesList
                       control={control}
                       index={index}
+                      formData={FormData}
                     />
-                  </div>
 
-                  <OtherChargesList
-                    control={control}
-                    index={index}
-                    formData={FormData}
-                  />
+                    <div className="m-2">
+                      <TotalComponent
+                        setValue={setValue}
+                        control={control}
+                        index={index}
+                      />
+                    </div>
 
-                  <div className="m-2">
-                    <TotalComponent
-                      setValue={setValue}
-                      control={control}
-                      index={index}
-                    />
-                  </div>
-                  <div className="m-2">
-                    <SupportingDocumentsList
-                      control={control}
-                      index={index}
-                      setValue={setValue}
-                      files={files}
-                      setFiles={setFiles}
-                      getValue={getValues}
-                    />
-                  </div>
+                    <div className="m-2">
+                      <SupportingDocumentsList
+                        control={control}
+                        index={index}
+                        setValue={setValue}
+                        files={files}
+                        setFiles={setFiles}
+                        getValue={getValues}
+                      />
+                    </div>
 
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      console.log("Removing index:", index);
-                      remove(index);
-                      setQuotes(quotes - 1);
-                    }}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          ))}
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        console.log("Removing index:", index);
+                        remove(index);
+                        setQuotes(quotes - 1);
+                      }}
+                      variant="outline"
+                      size="icon"
+                      className="text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            );
+          })}
 
           {fields.length < quotationLimit && (
             <Button

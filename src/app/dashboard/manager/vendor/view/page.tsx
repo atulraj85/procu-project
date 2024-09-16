@@ -31,11 +31,7 @@ interface VendorData {
   productCategoryId: string | null;
 }
 
-interface VendorDetailsProps {
-  gstin1: string | null;
-}
-
-const VendorDetails: React.FC<VendorDetailsProps> = () => {
+const VendorDetails = () => {
   const [vendorData, setVendorData] = useState<VendorData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +42,7 @@ const VendorDetails: React.FC<VendorDetailsProps> = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/vendor?gstin=${encodeURIComponent(gstin1)}`
+          `/api/vendor?gstin=${(gstin1)}`
         );
         const data = await response.json();
         console.log("data", data);
@@ -68,7 +64,7 @@ const VendorDetails: React.FC<VendorDetailsProps> = () => {
   }, [gstin1]);
 
   if (loading) {
-    return <Loader/>;
+    return <Loader />;
   }
 
   if (error) {

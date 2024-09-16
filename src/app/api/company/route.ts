@@ -3,12 +3,12 @@ import { prisma } from "@/lib/prisma"; // Adjust the import based on your projec
 import fs from "fs";
 import path from "path";
 
-// Ensure the API route does not use bodyParser
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// // Ensure the API route does not use bodyParser
+// export const config = {
+//   api: {
+//     bodyParser: false,
+//   },
+// };
 
 async function saveFile(file: File, directory: string) {
   const filePath = path.join(directory, file.name);

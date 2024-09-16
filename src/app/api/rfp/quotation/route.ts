@@ -34,8 +34,14 @@ export async function PUT(request: NextRequest) {
     // Process quotations and their supporting documents
     const processedQuotations = await Promise.all(
       (quotations || []).map(async (quotation: any) => {
-        const { vendorId, products, otherCharges, total, supportingDocuments } =
-          quotation;
+        const {
+          vendorId,
+          products,
+          otherCharges,
+          total,
+          supportingDocuments,
+          refNo,
+        } = quotation;
 
         if (!isValidUUID(vendorId)) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
@@ -132,6 +138,7 @@ export async function PUT(request: NextRequest) {
         }));
 
         return {
+          refNo,
           vendorId,
           totalAmount: parseFloat(total.withGST) || 0, // Default to 0 if total.withGST is null
           totalAmountWithoutGST: parseFloat(total.withoutGST) || 0, // Default to 0 if total.withoutGST is null

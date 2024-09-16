@@ -38,10 +38,10 @@ interface Errors {
   pan: string;
 }
 
-const VendorDetails: React.FC = () => {
+const VendorDetails = () => {
   const [vendorArray, setVendorArray] = useState<VendorData[]>([]);
   const [vendorData, setVendorData] = useState<VendorData>({
-    id:"",
+    id: "",
     primaryName: "",
     vendor_gstn: "",
     company_name: "",
@@ -56,7 +56,7 @@ const VendorDetails: React.FC = () => {
     pan_card: "",
   });
   const searchParams = useSearchParams();
-  const gstin1: string | null = searchParams.get('gstin');
+  const gstin1: string | null = searchParams.get("gstin");
 
   const [errors, setErrors] = useState<Errors>({
     gstn: "",
@@ -73,7 +73,7 @@ const VendorDetails: React.FC = () => {
   });
 
   const [states, setStates] = useState<{ value: string; label: string }[]>([]);
-  const router = useRouter()
+  const router = useRouter();
 
   const validateFields = (): boolean => {
     const newErrors: Errors = {
@@ -142,12 +142,14 @@ const VendorDetails: React.FC = () => {
 
   const fetchVendorDetails = async (gstn: string) => {
     try {
-      const response = await fetch(`/api/vendor?gstin=${encodeURIComponent(gstn)}`);
-      const result: VendorData[] = await response.json();
-      
+      const response = await fetch(
+        `/api/vendor?gstin=${encodeURIComponent(gstn)}`
+      );
+      const result = await response.json();
+
       if (result && result.length > 0) {
         const data = result[0]; // Assuming the response is an array and we take the first item
-        
+
         setVendorData({
           ...data,
           id: data.id || "",
@@ -174,12 +176,14 @@ const VendorDetails: React.FC = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch('/api/address/states/IN');
+      const response = await fetch("/api/address/states/IN");
       const result = await response.json();
-      const formattedStates = result.map((state: { code: string; name: string }) => ({
-        value: state.code,
-        label: state.name,
-      }));
+      const formattedStates = result.map(
+        (state: { code: string; name: string }) => ({
+          value: state.code,
+          label: state.name,
+        })
+      );
       setStates(formattedStates);
     } catch (error) {
       toast.error("An error occurred while fetching states.");
@@ -193,19 +197,25 @@ const VendorDetails: React.FC = () => {
     fetchStates(); // Fetch states on component mount
   }, [gstin1]); // Fetch vendor details when gstin1 changes
 
-  const handleChangeVendorDetails = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChangeVendorDetails = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setVendorData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const handleStateChange = (selectedOption: { value: string; label: string } | null) => {
-    setVendorData((prevData) => ({ ...prevData, state: selectedOption ? selectedOption.value : "" }));
+  const handleStateChange = (
+    selectedOption: { value: string; label: string } | null
+  ) => {
+    setVendorData((prevData) => ({
+      ...prevData,
+      state: selectedOption ? selectedOption.value : "",
+    }));
   };
 
   const onSubmitVendorDetails = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("inside submite");
-    
 
     if (!validateFields()) {
       toast.error("Please correct the errors in the form.");
@@ -230,10 +240,9 @@ const VendorDetails: React.FC = () => {
       country: "India",
       pan: vendorData.pan_card,
     };
-    
-    
- console.log("new",newVendor);
- 
+
+    console.log("new", newVendor);
+
     try {
       const response = await fetch(`/api/vendor?id=${vendorData.id}`, {
         method: "PUT",
@@ -247,10 +256,10 @@ const VendorDetails: React.FC = () => {
       if (result.success) {
         setVendorArray((prevData) => [...prevData, result.vendor]);
         toast.success("Vendor updated successfully.");
-        return router.push('/dashboard');
+        return router.push("/dashboard");
       } else {
         toast.error(result.message || "Failed to update vendor.");
-        return router.push('/dashboard'); 
+        return router.push("/dashboard");
       }
     } catch (error) {
       toast.error("An error occurred while updating the vendor.");
@@ -260,9 +269,14 @@ const VendorDetails: React.FC = () => {
   return (
     <div className="p-5">
       <div className="flex justify-end pb-8">
-        <Link href="/dashboard"><Button>Cancel</Button></Link>
+        <Link href="/dashboard">
+          <Button>Cancel</Button>
+        </Link>
       </div>
-      <form onSubmit={onSubmitVendorDetails} className="flex flex-wrap w-full gap-7">
+      <form
+        onSubmit={onSubmitVendorDetails}
+        className="flex flex-wrap w-full gap-7"
+      >
         <div className="flex flex-col gap-3 w-60 text-base relative">
           <label className="font-bold">GSTN</label>
           <Input
@@ -390,13 +404,15 @@ const VendorDetails: React.FC = () => {
         <div className="flex flex-col gap-3 w-60 text-base">
           <label className="font-bold">State</label>
           <Select
-  options={states}
-  value={states.find(state => state.value === vendorData.state) || null} // This will set the selected state
-  onChange={handleStateChange}
-  placeholder="Select State"
-  className="basic-single"
-  classNamePrefix="select"
-/>
+            options={states}
+            value={
+              states.find((state) => state.value === vendorData.state) || null
+            } // This will set the selected state
+            onChange={handleStateChange}
+            placeholder="Select State"
+            className="basic-single"
+            classNamePrefix="select"
+          />
 
           {errors.state && <p className="text-red-500">{errors.state}</p>}
         </div>
