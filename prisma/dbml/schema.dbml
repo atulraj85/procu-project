@@ -93,6 +93,7 @@ Table PO {
   user User [not null]
   userId String [not null]
   invoice Invoice
+  remarks String [not null]
   companyId String [not null]
   company Company [not null]
   rfpId String [unique, not null]

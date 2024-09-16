@@ -14,6 +14,7 @@ export async function POST(request: Request) {
         userId: body.userId,
         companyId: body.companyId,
         rfpId: body.rfpId,
+        remarks: body.remarks,
       },
     });
     return NextResponse.json(po, { status: 201 });
@@ -22,31 +23,30 @@ export async function POST(request: Request) {
   }
 }
 
-// GET /api/po
-// export async function GET() {
-//   try {
-//     const pos = await prisma.pO.findMany();
-//     return NextResponse.json(pos);
-//   } catch (error) {
-//     return NextResponse.json({ error: "Error fetching POs" }, { status: 500 });
-//   }
-// }
-
-// GET /api/po/[id]
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id?: string } }
 ) {
   try {
-    const po = await prisma.pO.findUnique({
-      where: { id: params.id },
-    });
-    if (!po) {
-      return NextResponse.json({ error: "PO not found" }, { status: 404 });
+    if (params.id) {
+      // Fetch a specific PO if an ID is provided
+      const po = await prisma.pO.findUnique({
+        where: { id: params.id },
+      });
+      if (!po) {
+        return NextResponse.json({ error: "PO not found" }, { status: 404 });
+      }
+      return NextResponse.json(po);
+    } else {
+      // Fetch all POs if no ID is provided
+      const pos = await prisma.pO.findMany();
+      return NextResponse.json(pos);
     }
-    return NextResponse.json(po);
   } catch (error) {
-    return NextResponse.json({ error: "Error fetching PO" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Error fetching PO(s)" },
+      { status: 500 }
+    );
   }
 }
 
