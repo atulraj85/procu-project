@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { generateRFPId, rfpModel } from "@/lib/prisma";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
+import { vendorList } from "@/lib/sidebarLinks";
 
 const prisma = new PrismaClient();
 
@@ -27,7 +28,6 @@ function formatRFPData(inputData: any[]) {
       name: product.product.name,
       modelNo: product.product.modelNo,
       quantity: product.quantity,
-      vendorPricing: product.vendorPricings[0], // Assuming there's only one vendor pricing
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -36,12 +36,13 @@ function formatRFPData(inputData: any[]) {
       created_at: quotation.created_at,
       updated_at: quotation.updated_at,
       vendor: quotation.vendor,
-      products: rfp.rfpProducts.map((product: any) => ({
-        id: product.product.id,
-        name: product.product.name,
-        modelNo: product.product.modelNo,
-        quantity: product.quantity,
-        vendorPricing: product.vendorPricings[0], // Assuming there's only one vendor pricing
+      products: quotation.vendorPricings.map((pricing: any) => ({
+        id: pricing.rfpProduct.product.id,
+        name: pricing.rfpProduct.product.name,
+        modelNo: pricing.rfpProduct.product.modelNo,
+        quantity: pricing.rfpProduct.quantity,
+        price: pricing.price,
+        GST: pricing.GST,
       })),
       otherCharges: quotation.otherCharges || [],
       supportingDocuments: quotation.supportingDocuments || [],
@@ -52,90 +53,6 @@ function formatRFPData(inputData: any[]) {
       mobile: rfp.user.mobile,
     },
   }));
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const {
-      requirementType,
-      dateOfOrdering,
-      deliveryLocation,
-      deliveryByDate,
-      userId,
-      rfpProducts,
-      approvers,
-      rfpStatus,
-    }: RequestBody = await request.json();
-
-    console.log(dateOfOrdering);
-
-    // Check if the user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: "User does not exist" },
-        { status: 404 }
-      );
-    }
-
-    // Validate the status
-    if (!Object.values(RFPStatus).includes(rfpStatus)) {
-      return NextResponse.json(
-        { error: `Invalid status value: ${rfpStatus}` },
-        { status: 400 }
-      );
-    }
-
-    // Generate RFP ID
-    const rfpId = await generateRFPId();
-
-    // Create RFP inside the transaction
-    const newRFP = await prisma.$transaction(async (prisma) => {
-      // Create the RFP first
-      const createdRFP = await prisma.rFP.create({
-        data: {
-          rfpId,
-          requirementType,
-          dateOfOrdering: new Date(),
-          deliveryLocation,
-          deliveryByDate: new Date(deliveryByDate),
-          userId,
-          rfpStatus,
-        },
-      });
-
-      // Create RFP products and approvers
-      await Promise.all([
-        prisma.rFPProduct.createMany({
-          data: rfpProducts.map((rfpProduct) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            quantity: rfpProduct.quantity,
-            productId: rfpProduct.productId, // Ensure this is the correct type
-          })),
-        }),
-        prisma.approversList.createMany({
-          data: approvers.map((approver) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            userId: approver.approverId,
-            approved: false,
-          })),
-        }),
-      ]);
-
-      return createdRFP;
-    });
-
-    return NextResponse.json({ data: newRFP }, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating RFP:", error);
-    return NextResponse.json(
-      { error: `Failed to create RFP: ${error.message}` },
-      { status: 500 }
-    );
-  }
 }
 
 export async function GET(request: NextRequest) {
@@ -227,12 +144,6 @@ export async function GET(request: NextRequest) {
             },
             // description: true, TODO
             quantity: true,
-            vendorPricings: {
-              select: {
-                price: true,
-                GST: true,
-              },
-            },
           },
         },
         quotations: {
@@ -255,6 +166,25 @@ export async function GET(request: NextRequest) {
                 zip: true,
                 gstin: true,
                 pan: true,
+              },
+            },
+            vendorPricings: {
+              select: {
+                price: true,
+                GST: true,
+                rfpProduct: {
+                  select: {
+                    product: {
+                      select: {
+                        id: true,
+                        name: true,
+                        modelNo: true,
+                      },
+                    },
+                    // description: true, TODO
+                    quantity: true,
+                  },
+                },
               },
             },
             otherCharges: {
@@ -284,8 +214,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    console.log("records", records[0].quotations[0].vendorPricings[0]);
+
     const formattedData = formatRFPData(records);
-    console.log(formattedData);
+    console.log("formattedData", formattedData);
 
     console.log(`Found ${records.length} records`);
 
@@ -301,6 +233,90 @@ export async function GET(request: NextRequest) {
     console.error("Detailed error:", error);
     return NextResponse.json(
       { error: "Error fetching records", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const {
+      requirementType,
+      dateOfOrdering,
+      deliveryLocation,
+      deliveryByDate,
+      userId,
+      rfpProducts,
+      approvers,
+      rfpStatus,
+    }: RequestBody = await request.json();
+
+    console.log(dateOfOrdering);
+
+    // Check if the user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "User does not exist" },
+        { status: 404 }
+      );
+    }
+
+    // Validate the status
+    if (!Object.values(RFPStatus).includes(rfpStatus)) {
+      return NextResponse.json(
+        { error: `Invalid status value: ${rfpStatus}` },
+        { status: 400 }
+      );
+    }
+
+    // Generate RFP ID
+    const rfpId = await generateRFPId();
+
+    // Create RFP inside the transaction
+    const newRFP = await prisma.$transaction(async (prisma) => {
+      // Create the RFP first
+      const createdRFP = await prisma.rFP.create({
+        data: {
+          rfpId,
+          requirementType,
+          dateOfOrdering: new Date(),
+          deliveryLocation,
+          deliveryByDate: new Date(deliveryByDate),
+          userId,
+          rfpStatus,
+        },
+      });
+
+      // Create RFP products and approvers
+      await Promise.all([
+        prisma.rFPProduct.createMany({
+          data: rfpProducts.map((rfpProduct) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            quantity: rfpProduct.quantity,
+            productId: rfpProduct.productId, // Ensure this is the correct type
+          })),
+        }),
+        prisma.approversList.createMany({
+          data: approvers.map((approver) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            userId: approver.approverId,
+            approved: false,
+          })),
+        }),
+      ]);
+
+      return createdRFP;
+    });
+
+    return NextResponse.json({ data: newRFP }, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating RFP:", error);
+    return NextResponse.json(
+      { error: `Failed to create RFP: ${error.message}` },
       { status: 500 }
     );
   }

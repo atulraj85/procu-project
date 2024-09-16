@@ -45,8 +45,6 @@ const Page = () => {
     }
   }, [searchParams]);
 
-  console.log("Current rfpId:", rfpId);
-  console.log("Current rfpData:", rfpData);
 
   if (loading) return <Loader />;
   if (error) return <div>Error: {error}</div>;

@@ -327,7 +327,12 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  console.log("products", products, index);
+  console.log("products from RFPUpdate", products, index);
+
+  console.log(
+    `quotations.${index}.products`,
+    getValues(`quotations.${index}.products`)
+  );
 
   // if (products === null) {
   //   products = getValues(`quotations.0.products`);
@@ -958,6 +963,15 @@ export default function RFPUpdateForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
+  const [preferredVendorIndex, setPreferredVendorIndex] = useState<
+    number | null
+  >(null);
+  const [showReasonPrompt, setShowReasonPrompt] = useState(false);
+  const [reason, setReason] = useState("");
+  const quotationLimit = 3;
+  const [quotes, setQuotes] = useState(0);
+  const [preferredVendorId, setPreferredVendorId] = useState("");
+  const [showCheckbox, setShowCheckbox] = useState(true);
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
       rfpId: initialData.rfpId,
@@ -970,20 +984,20 @@ export default function RFPUpdateForm({
         vendor: quotation.vendor,
         totalAmount: quotation.totalAmount,
         totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-        products: quotation.products.map((product: any) => ({
-          id: product.id,
-          name: product.name,
-          modelNo: product.modelNo,
-          quantity: product.quantity,
-          unitPrice: product.vendorPricing?.price || 0,
-          gst: product.vendorPricing?.GST.toString() || "0",
-          totalPriceWithoutGST:
-            product.quantity * (product.vendorPricing?.price || 0),
-          totalPriceWithGST:
-            product.quantity *
-            (product.vendorPricing?.price || 0) *
-            (1 + (product.vendorPricing?.GST || 0) / 100),
-        })),
+        // products: quotation.products.map((product: any) => ({
+        //   id: product.id,
+        //   name: product.name,
+        //   modelNo: product.modelNo,
+        //   quantity: product.quantity,
+        //   unitPrice: product.vendorPricing?.price || 0,
+        //   gst: product.vendorPricing?.GST.toString() || "0",
+        //   totalPriceWithoutGST:
+        //     product.quantity * (product.vendorPricing?.price || 0),
+        //   totalPriceWithGST:
+        //     product.quantity *
+        //     (product.vendorPricing?.price || 0) *
+        //     (1 + (product.vendorPricing?.GST || 0) / 100),
+        // })),
         otherCharges: quotation.otherCharges.map((charge: any) => ({
           id: charge.id,
           name: charge.name,
@@ -1003,15 +1017,6 @@ export default function RFPUpdateForm({
       })),
     },
   });
-  const [preferredVendorIndex, setPreferredVendorIndex] = useState<
-    number | null
-  >(null);
-  const [showReasonPrompt, setShowReasonPrompt] = useState(false);
-  const [reason, setReason] = useState("");
-  const quotationLimit = 3;
-  const [quotes, setQuotes] = useState(0);
-  const [preferredVendorId, setPreferredVendorId] = useState("");
-  const [showCheckbox, setShowCheckbox] = useState(true);
 
   const products = initialData.products;
 
@@ -1039,17 +1044,7 @@ export default function RFPUpdateForm({
 
     try {
       const formData = new FormData();
-
-      // Add rfpId to formData
       formData.append("rfpId", rfpId);
-
-      // if (quotes < 3) {
-      //   formData.append("rfpStatus", "DRAFT");
-      // } else {
-      //   formData.append("rfpStatus", "SUBMITTED");
-      // }
-
-      // Serialize the form data (excluding files) to JSON
       const serializedData = JSON.stringify({
         ...data,
         rfpStatus: quotes < 3 ? "DRAFT" : "SUBMITTED",
@@ -1171,7 +1166,7 @@ export default function RFPUpdateForm({
                         </CardContent>
                       </Card>
                     </div>
-
+                    {/* 
                     <div className="m-2">
                       <VendorSelector
                         setValue={setValue}
@@ -1179,7 +1174,7 @@ export default function RFPUpdateForm({
                         setShowCheckbox={setShowCheckbox}
                         vendor={quotation.vendor}
                       />
-                    </div>
+                    </div> */}
 
                     <div className="m-2">
                       <ProductList
@@ -1191,7 +1186,7 @@ export default function RFPUpdateForm({
                       />
                     </div>
 
-                    <OtherChargesList
+                    {/* <OtherChargesList
                       control={control}
                       index={index}
                       formData={FormData}
@@ -1214,7 +1209,7 @@ export default function RFPUpdateForm({
                         setFiles={setFiles}
                         getValue={getValues}
                       />
-                    </div>
+                    </div> */}
 
                     <Button
                       type="button"
