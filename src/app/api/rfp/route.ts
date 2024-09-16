@@ -32,6 +32,7 @@ function formatRFPData(inputData: any[]) {
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
       totalAmount: quotation.totalAmount,
+      refNo: quotation.refNo,
       totalAmountWithoutGST: quotation.totalAmountWithoutGST,
       created_at: quotation.created_at,
       updated_at: quotation.updated_at,
@@ -149,6 +150,7 @@ export async function GET(request: NextRequest) {
         quotations: {
           select: {
             id: true,
+            refNo: true,
             totalAmount: true,
             totalAmountWithoutGST: true,
             created_at: true,
