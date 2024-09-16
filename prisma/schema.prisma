@@ -14,7 +14,7 @@ datasource db {
 model Company {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
-  GST         String?
+  GST         String?   @unique
   logo        String?
   stamp       String?
   email       String?   @unique // Optional and unique email address
