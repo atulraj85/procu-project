@@ -132,6 +132,61 @@ export const columns2: ColumnDef<TableRow>[] = [
   },
 ];
 
+export const Po: ColumnDef<TableRow>[] = [
+  { header: "PoId", accessorKey: "poId" },
+  { header: "Vendor Name", accessorKey: "vendor.companyName" },
+  { header: "Vendor Mobile", accessorKey: "vendor.mobile" },
+  { header: "Taxable Amount", accessorKey: "totalAmountWithoutGST" },
+  { header: "Total Amount ", accessorKey: "totalAmount" },
+ 
+  
+  // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
+  { header: "PO Status", accessorKey: "poStatus" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const columns1 = row.original;
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+            <Link
+              href={`/dashboard/manager/rfp/quotation?rfp=${encodeURIComponent(
+                columns1.rfpId
+              )}`}
+            >
+              {" "}
+              <DropdownMenuItem> Create Quotation</DropdownMenuItem>{" "}
+            </Link>
+            <Link
+              href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(
+                columns1.rfpId
+              )}`}
+            >
+              <DropdownMenuItem> View</DropdownMenuItem>
+            </Link>
+            <Link
+              href={`/dashboard/manager/rfp/edit?rfp=${encodeURIComponent(
+                columns1.rfpId
+              )}`}
+            >
+              <DropdownMenuItem> Edit </DropdownMenuItem>
+            </Link>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
+
 export const columns: ColumnDef<Vendor>[] = [
   {
     accessorKey: "gstin",

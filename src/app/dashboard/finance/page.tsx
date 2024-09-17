@@ -54,11 +54,14 @@ const Dashboard = () => {
   ];
 
   const [rfps, setRfps] = useState<RfpData[]>([]);
+  const [po, setPo] = useState<any>([]);
   const [content, setContent] = useState<RfpData[]>([]);
   const [header, setHeader] = useState<TableColumn[]>([]);
   const [title, setTitle] = useState("PO Due");
   const [loading, setLoading] = useState(true);
 
+  console.log("po",po);
+  
   const rfpHeaders: TableColumn[] = [
     { key: "rfpId", header: "RFP ID" },
     { key: "requirementType", header: "Requirement Type" },
@@ -98,6 +101,41 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+  useEffect(()=>{
+    const fetchPo = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/po");
+        const data = await response.json();
+
+        setPo(data)
+  
+        // const formattedData: RfpData[] = data.map((item: any) => ({
+        //   rfpId: item.rfpId,
+        //   requirementType: item.requirementType,
+        //   dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
+        //   deliveryLocation: item.deliveryLocation,
+        //   deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
+        //   lastDateToRespond: new Date(
+        //     item.lastDateToRespond
+        //   ).toLocaleDateString(),
+        //   rfpStatus: item.rfpStatus,
+        // }));
+  
+        // setRfps(formattedData);
+        // setContent(
+        //   formattedData.filter((item) => item.rfpStatus === "SUBMITTED")
+        // ); // Set initial content to pending RFPs
+        // setHeader(rfpHeaders);
+      } catch (error) {
+        console.error("Error fetching RFP data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPo();
+  
+  },[])
 
   const handleInfoCardClick = (value: string) => {
     setTitle(value.toUpperCase());
@@ -105,16 +143,18 @@ const Dashboard = () => {
       setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED")); // Show pending RFPs
     } else if (value === "complete") {
       setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE")); // Show complete RFPs
-    } else if (value === "open_po") {
-      setContent(
-        rfps.filter(
-          (item) =>
-            item.rfpStatus !== "SUBMITTED" &&
-          item.rfpStatus !== "DRAFT" &&
-            item.rfpStatus !== "PAYMENT_DONE" 
-        )
-      ); // Show open RFPs
-    } else {
+    } 
+    // else if (value === "open_po") {
+    //   setContent(
+    //     rfps.filter(
+    //       (item) =>
+    //         item.rfpStatus !== "SUBMITTED" &&
+    //       item.rfpStatus !== "DRAFT" &&
+    //         item.rfpStatus !== "PAYMENT_DONE" 
+    //     )
+    //   ); // Show open RFPs
+    // }
+     else {
       const heading = headerData.find((data) => data.value === value);
       if (heading) {
         setHeader(heading.titles);

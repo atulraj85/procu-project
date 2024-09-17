@@ -11,13 +11,19 @@ import jsPDF from "jspdf";
 interface CompanyAddress {
   street: string;
   city: string;
+  state: string;
   postalCode: string;
+  country: string;
+  addressType: string;
+  companyId: string;
 }
 
 interface Company {
   id: string;
   name: string;
   addresses: CompanyAddress[];
+  logo: string;
+  stamp: string;
 }
 
 interface Vendor {
@@ -32,12 +38,11 @@ const Page: React.FC = () => {
   const [rfpData, setRfpData] = useState<any>({});
   const [company, setCompany] = useState<Company | null>(null);
   const [vendor, setVendor] = useState<Vendor | null>(null);
-  const [product, setProduct] = useState<any | null>(null);
   const searchParams = useSearchParams();
   const poId = searchParams.get("poId");
   const pageRef = useRef<HTMLDivElement>(null);
   const date = new Date();
-console.log("vendor",vendor);
+  console.log("vendor", vendor);
 
   let day = date.getDate();
   let month = date.getMonth() + 1;
@@ -54,15 +59,15 @@ console.log("vendor",vendor);
         }
         const data = await response.json();
         const poData = data[0];
-        console.log("data",poData);
-        setRfpData(poData)
+        console.log("data", poData);
+        setRfpData(poData);
 
         // Set company data
         setCompany(poData.company);
 
-        // Set vendor data from the first quotation
-        if (poData.quotations.length > 0) {
-          const quotation = poData.quotations[0];
+        // Set vendor data from the quotation
+        if (poData.quotation) {
+          const quotation = poData.quotation;
           setVendor({
             id: quotation.vendor.id,
             companyName: quotation.vendor.companyName,
@@ -130,7 +135,6 @@ console.log("vendor",vendor);
           <div>
             <div>
               <h1 className="font-bold">{company?.name}</h1>
-              {/* <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p> */}
             </div>
           </div>
         </section>
@@ -141,7 +145,11 @@ console.log("vendor",vendor);
         <section className="flex justify-between">
           <div className="w-[30%]">
             <h1 className="font-bold">{vendor?.companyName}</h1>
-            <h1 className="text-[14px]">{vendor?.address}</h1>
+            {company?.addresses.map((address) => (
+              <h1 key={address.id} className="text-[14px]">
+                {`${address.street}, ${address.city}, ${address.state}, ${address.postalCode}, ${address.country}`}
+              </h1>
+            ))}
             <p className="font-bold">
               GSTIN: <span className="font-sans text-[14px]"> {vendor?.gstin}</span>
             </p>
@@ -153,7 +161,7 @@ console.log("vendor",vendor);
             </div>
             <div className="flex">
               <label className="font-bold">Ref :-</label>
-              {/* <h1 className="text-[14px]">{rfpData.quotations[0]?.refNo}</h1> */}
+              <h1 className="text-[14px]">{rfpData.quotation?.refNo}</h1>
             </div>
             <div className="flex">
               <label className="font-bold">Date :-</label>
@@ -176,16 +184,16 @@ console.log("vendor",vendor);
               </tr>
             </thead>
             <tbody>
-              {/* {rfpData.quotations.products.map((product, index) => (
+              {rfpData.quotation?.vendorPricings.map((pricing, index) => (
                 <tr key={index}>
                   <td className="text-[14px] border border-gray-300 p-4">
-                    {product.name} (Model No: {product.modelNo})
+                    {pricing.rfpProduct.product.name} (Model No: {pricing.rfpProduct.product.modelNo})
                   </td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.price}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.quantity}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(product.price) * product.quantity).toFixed(2)}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.price}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.rfpProduct.quantity}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(pricing.price) * pricing.rfpProduct.quantity).toFixed(2)}</td>
                 </tr>
-              ))} */}
+              ))}
             </tbody>
           </table>
         </section>
@@ -208,7 +216,7 @@ console.log("vendor",vendor);
             </div>
             <div className="mb-8">
               <label className="font-bold">Ship To:</label>
-              {/* <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p> */}
+              <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p>
             </div>
           </div>
         </section>
