@@ -1,6 +1,7 @@
 "use client";
 
-import { login } from "@/actions/login";
+import { resetPassword } from "@/actions/reset-password";
+import MainButton from "@/components/common/MainButton";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import {
@@ -11,50 +12,37 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LoginSchema } from "@/schemas";
+import { ResetPasswordSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
-import MainButton from "../common/MainButton";
-import { Button } from "../ui/button";
+import { z } from "zod";
 
-function LoginForm({ api }: any) {
+export function ResetPasswordForm() {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+
+  const form = useForm<z.infer<typeof ResetPasswordSchema>>({
+    resolver: zodResolver(ResetPasswordSchema),
   });
 
-  async function onSubmit(data: z.infer<typeof LoginSchema>) {
+  const onSubmit = (values: z.infer<typeof ResetPasswordSchema>) => {
     setError("");
     setSuccess("");
 
     startTransition(() => {
-      login(data)
-        .then((data) => {
-          if (data?.error) {
-            form.reset();
-            setError(data.error);
-          }
-
-          if (data?.success) {
-            form.reset();
-            setSuccess(data?.success);
-          }
-        })
-        .catch(() => {
-          setError("Something went wrong!");
-        });
+      resetPassword(values, token).then((data) => {
+        setError(data?.error);
+        setSuccess(data?.success);
+      });
     });
-  }
+  };
 
   return (
     <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
@@ -62,32 +50,13 @@ function LoginForm({ api }: any) {
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
         </p>
-        <p className="text-[#333] text-[1.125rem]">Welcome Back</p>
+        <p className="text-[#333] text-[1.125rem]">Enter a new password</p>
       </div>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="w-full space-y-6"
         >
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Email Address"
-                    {...field}
-                    className="h-[3.75rem] w-full rounded-large"
-                    startIcon="email"
-                    type="email"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
           <FormField
             control={form.control}
             name="password"
@@ -103,18 +72,13 @@ function LoginForm({ api }: any) {
                   />
                 </FormControl>
                 <FormMessage />
-                <Button asChild size="sm" variant="link" className="px-0">
-                  <Link href="/forgot-password">Forgot password?</Link>
-                </Button>
               </FormItem>
             )}
           />
-
           <FormError message={error} />
           <FormSuccess message={success} />
-
           <MainButton
-            text="Login"
+            text="Reset password"
             classes="h-[3.31rem] rounded-large"
             width="full_width"
             isSubmitable
@@ -122,12 +86,10 @@ function LoginForm({ api }: any) {
           />
 
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/register">Register Instead?</Link>
+            <Link href="/login">Back to login</Link>
           </div>
         </form>
       </Form>
     </div>
   );
 }
-
-export default LoginForm;

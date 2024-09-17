@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { error_response, success_response } from "@/lib/response";
 import { CreateUserInputValidation } from "@/lib/validations";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 export async function POST(req: Request) {
   try {

@@ -50,6 +50,7 @@ enum AddressType {
 model User {
   id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email            String            @unique
+  emailVerified    DateTime?
   password         String
   name             String?
   mobile           String?
@@ -63,8 +64,30 @@ model User {
   rfps             RFP[]
   Vendor           Vendor[]
   approversList    ApproversList[]
+  accounts         Account[]
 
   @@index([name, email, mobile]) // Add index for searching by name
+}
+
+model Account {
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
 }
 
 enum Role {
@@ -292,4 +315,22 @@ model QualityAssurance {
   goodStatuses GoodStatus[]
   created_at   DateTime     @default(now())
   updated_at   DateTime     @default(now())
+}
+
+model EmailVerificationToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique @db.Uuid
+  expiresAt DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique @db.Uuid
+  expiresAt DateTime
+
+  @@unique([email, token])
 }

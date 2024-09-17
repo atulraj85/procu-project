@@ -1,6 +1,6 @@
 "use client";
 
-import { login } from "@/actions/login";
+import { forgotPassword } from "@/actions/forgot-password";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import {
@@ -11,50 +11,34 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LoginSchema } from "@/schemas";
+import { ForgotPasswordSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { z } from "zod";
 import MainButton from "../common/MainButton";
-import { Button } from "../ui/button";
 
-function LoginForm({ api }: any) {
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
+export function ForgotPasswordForm() {
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [success, setSuccess] = useState<string | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  const form = useForm<z.infer<typeof ForgotPasswordSchema>>({
+    resolver: zodResolver(ForgotPasswordSchema),
   });
 
-  async function onSubmit(data: z.infer<typeof LoginSchema>) {
+  const onSubmit = (values: z.infer<typeof ForgotPasswordSchema>) => {
     setError("");
     setSuccess("");
 
     startTransition(() => {
-      login(data)
-        .then((data) => {
-          if (data?.error) {
-            form.reset();
-            setError(data.error);
-          }
-
-          if (data?.success) {
-            form.reset();
-            setSuccess(data?.success);
-          }
-        })
-        .catch(() => {
-          setError("Something went wrong!");
-        });
+      forgotPassword(values).then((data) => {
+        setError(data?.error);
+        setSuccess(data?.success);
+      });
     });
-  }
+  };
 
   return (
     <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
@@ -62,7 +46,7 @@ function LoginForm({ api }: any) {
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
         </p>
-        <p className="text-[#333] text-[1.125rem]">Welcome Back</p>
+        <p className="text-[#333] text-[1.125rem]">Forgot your password?</p>
       </div>
       <Form {...form}>
         <form
@@ -87,47 +71,20 @@ function LoginForm({ api }: any) {
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Password"
-                    {...field}
-                    className="h-[3.75rem] w-full rounded-large"
-                    startIcon="padlock"
-                    type="password"
-                  />
-                </FormControl>
-                <FormMessage />
-                <Button asChild size="sm" variant="link" className="px-0">
-                  <Link href="/forgot-password">Forgot password?</Link>
-                </Button>
-              </FormItem>
-            )}
-          />
-
           <FormError message={error} />
           <FormSuccess message={success} />
-
           <MainButton
-            text="Login"
+            text="Send password reset email"
             classes="h-[3.31rem] rounded-large"
             width="full_width"
             isSubmitable
             isLoading={isPending}
           />
-
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/register">Register Instead?</Link>
+            <Link href="/login">Back to login</Link>
           </div>
         </form>
       </Form>
     </div>
   );
 }
-
-export default LoginForm;
