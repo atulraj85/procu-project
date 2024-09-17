@@ -22,10 +22,13 @@ export async function forgotPassword(
   }
 
   const passwordResetToken = await generatePasswordResetToken(email);
-  await sendPasswordResetEmail(
-    passwordResetToken.email,
-    passwordResetToken.token
-  );
+  if (passwordResetToken) {
+    await sendPasswordResetEmail(
+      passwordResetToken.email,
+      passwordResetToken.token
+    );
+    return { success: "Reset email sent!" } as const;
+  }
 
-  return { success: "Reset email sent!" } as const;
+  return { error: "Email not sent!" } as const;
 }
