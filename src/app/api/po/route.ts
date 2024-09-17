@@ -189,7 +189,17 @@ export async function GET(request: NextRequest) {
         },
         remarks: true, // Added remarks
         company: {
-          include: {},
+          select: {
+            id: true,
+            name: true,
+            GST: true,
+            logo: true,
+            stamp: true,
+            email: true,
+            phone: true,
+            website: true,
+            addresses: true,
+          },
         },
         rfpId: true,
       },
@@ -207,7 +217,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(serializePrismaModel(formattedData));
+    return NextResponse.json(serializePrismaModel(records));
   } catch (error: unknown) {
     console.error("Detailed error:", error);
     return NextResponse.json(
