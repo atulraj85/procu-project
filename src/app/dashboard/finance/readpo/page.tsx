@@ -22,32 +22,22 @@ interface Company {
 
 interface Vendor {
   id: string;
-  customerCode: string;
-  primaryName: string;
   companyName: string;
   email: string;
   gstin: string;
   address: string;
 }
 
-const vendor: Vendor = {
-  id: "b5b7988e-c18f-4193-9737-cc35ae3c557c",
-  customerCode: "CUST-001",
-  primaryName: "Ashutosh Kumar Mishra",
-  companyName: "GROWW AND BECONSCIOUS PRIVATE LIMITED",
-  email: "ashutoshmishra8796@gmail.com",
-  gstin: "27AAECG8478M1ZT",
-  address:
-    "GROUND FLOOR, FLAT NO. 001,, DADARKAR ARCADE N L PARELKAR, PAREL VILLAGE, PAREL, Mumbai, Maharashtra, 400012",
-};
-
 const Page: React.FC = () => {
   const [rfpData, setRfpData] = useState<any>({});
   const [company, setCompany] = useState<Company | null>(null);
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [product, setProduct] = useState<any | null>(null);
   const searchParams = useSearchParams();
-  const rfp = searchParams.get("rfp");
+  const poId = searchParams.get("poId");
   const pageRef = useRef<HTMLDivElement>(null);
   const date = new Date();
+console.log("vendor",vendor);
 
   let day = date.getDate();
   let month = date.getMonth() + 1;
@@ -56,40 +46,38 @@ const Page: React.FC = () => {
   let currentDate = `${day}/${month}/${year}`;
 
   useEffect(() => {
-    const fetchCompanyData = async () => {
+    const fetchPoData = async () => {
       try {
-        const response = await fetch(`/api/company?rfpId=${(rfp)}`);
+        const response = await fetch(`/api/po?poId=PO-2024-09-17-0000`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log("company", data[0].addresses);
-        setCompany(data[0]);
-      } catch (error) {
-        console.error("Error fetching company data:", error);
-      }
-    };
+        const poData = data[0];
+        console.log("data",poData);
+        setRfpData(poData)
 
-    fetchCompanyData();
-  }, [rfp]);
+        // Set company data
+        setCompany(poData.company);
 
-  useEffect(() => {
-    const fetchRfpData = async () => {
-      try {
-        const response = await fetch(`/api/rfp?rfpId=${(rfp)}`);
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
+        // Set vendor data from the first quotation
+        if (poData.quotations.length > 0) {
+          const quotation = poData.quotations[0];
+          setVendor({
+            id: quotation.vendor.id,
+            companyName: quotation.vendor.companyName,
+            email: quotation.vendor.email,
+            gstin: quotation.vendor.gstin,
+            address: quotation.vendor.address,
+          });
         }
-        const data = await response.json();
-        console.log(data[0]);
-        setRfpData(data[0]);
       } catch (error) {
-        console.error("Error fetching RFP data:", error);
+        console.error("Error fetching PO data:", error);
       }
     };
 
-    fetchRfpData();
-  }, [rfp]);
+    fetchPoData();
+  }, [poId]);
 
   const downloadPDF = async () => {
     if (pageRef.current) {
@@ -137,12 +125,12 @@ const Page: React.FC = () => {
         </div>
         <section className="flex justify-between pb-7">
           <div>
-            <Image className="rounded-full" height={100} width={100} alt="Company logo" src="/company/logo.png" />
+            <Image className="rounded-full" height={100} width={100} alt="Company logo" src={company?.logo || "/company/logo.png"} />
           </div>
           <div>
             <div>
               <h1 className="font-bold">{company?.name}</h1>
-              <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p>
+              {/* <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p> */}
             </div>
           </div>
         </section>
@@ -152,20 +140,20 @@ const Page: React.FC = () => {
         </div>
         <section className="flex justify-between">
           <div className="w-[30%]">
-            <h1 className="font-bold">{vendor.companyName}</h1>
-            <h1 className="text-[14px]">{vendor.address}</h1>
+            <h1 className="font-bold">{vendor?.companyName}</h1>
+            <h1 className="text-[14px]">{vendor?.address}</h1>
             <p className="font-bold">
-              GSTIN: <span className="font-sans text-[14px]"> {vendor.gstin}</span>
+              GSTIN: <span className="font-sans text-[14px]"> {vendor?.gstin}</span>
             </p>
           </div>
           <div>
             <div className="flex">
               <label className="font-bold">Order No :</label>
-              <h1 className="text-[14px]">MM-PO-2024-25-190</h1>
+              <h1 className="text-[14px]">{rfpData.poId}</h1>
             </div>
             <div className="flex">
               <label className="font-bold">Ref :-</label>
-              <h1 className="text-[14px]">SO-24-00012</h1>
+              {/* <h1 className="text-[14px]">{rfpData.quotations[0]?.refNo}</h1> */}
             </div>
             <div className="flex">
               <label className="font-bold">Date :-</label>
@@ -188,17 +176,16 @@ const Page: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className="text-[14px] border border-gray-300 p-4">
-                  GSTIN: Render Farm : <a href="https://www.foxrenderfarm.com/" target="_blank" rel="noopener noreferrer">https://www.foxrenderfarm.com/</a><br />
-                  Credits Required: Rs 169340 (USD 2000 * 84.67)<br />
-                  Handling cost: 18% INR 30,481.<br />
-                  Total cost: 199821
-                </td>
-                <td className="text-[14px] border border-gray-300 p-4 text-right">1,99,821.00</td>
-                <td className="text-[14px] border border-gray-300 p-4 text-right">1</td>
-                <td className="text-[14px] border border-gray-300 p-4 text-right">1,99,821.00</td>
-              </tr>
+              {/* {rfpData.quotations.products.map((product, index) => (
+                <tr key={index}>
+                  <td className="text-[14px] border border-gray-300 p-4">
+                    {product.name} (Model No: {product.modelNo})
+                  </td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.price}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.quantity}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(product.price) * product.quantity).toFixed(2)}</td>
+                </tr>
+              ))} */}
             </tbody>
           </table>
         </section>
@@ -207,21 +194,21 @@ const Page: React.FC = () => {
           <div>
             <div className="w-[50%] mt-7 mb-3">
               <label className="font-bold">{company?.name}</label>
-              <Image height={80} width={100} alt="Signature" src="/company/sign.png" />
+              <Image height={80} width={100} alt="Signature" src={company?.stamp} />
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
             <div className="flex justify-between">
               <div className="w-[50%] mt-7 mb-3">
                 <label className="font-bold">Invoice To:</label>
-                <h1 className="text-[14px]">{vendor.address}</h1>
+                <h1 className="text-[14px]">{vendor?.address}</h1>
               </div>
               <div className="pr-6">
-                <Image height={150} width={150} alt="Company logo" src="/company/stamp-transparent-19.png" />
+                {/* <Image height={150} width={150} alt="Company logo" src={company?.logo || "/company/stamp-transparent-19.png"} /> */}
               </div>
             </div>
             <div className="mb-8">
               <label className="font-bold">Ship To:</label>
-              <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p>
+              {/* <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p> */}
             </div>
           </div>
         </section>
