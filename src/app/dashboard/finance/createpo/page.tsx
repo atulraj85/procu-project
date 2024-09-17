@@ -9,7 +9,9 @@ import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
 import { X } from "lucide-react";
+import { useRouter } from "next/navigation";  
 
 const Page = () => {
   const [formData, setFormData] = useState({
@@ -116,6 +118,7 @@ const Page = () => {
       companyId: formData.companyId,
       rfpId: formData.rfpid,
       remarks: formData.remarks,
+      rfpStatus:"PO_CREATED"
     };
     console.log("paylod",payload);
     
@@ -130,7 +133,13 @@ const Page = () => {
       if (!response.ok) throw new Error('Network response was not ok');
 
       const result = await response.json();
-      console.log('Success:', result);
+      toast({
+        title: "🎉 Vendor added successfully.",
+        
+      });
+     
+      window.location.reload()
+      return router.push("/dashboard");
       // Handle success (e.g., show a success message, redirect, etc.)
     } catch (error) {
       console.error('Error:', error);
