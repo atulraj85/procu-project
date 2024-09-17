@@ -14,41 +14,74 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
 const Page = () => {
-  const { control, setValue, getValues, register } = useForm();
+  const { control, setValue, getValues, register, handleSubmit } = useForm();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
-
+  const USER_ID = localStorage.getItem("USER_ID");
+ console.log("register",register);
+ 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/rfp?rfpId=${rfp}`);
-        if (!response.ok) {
+        // Fetch RFP data
+        const rfpResponse = await fetch(`/api/rfp?rfpId=${rfp}`);
+        if (!rfpResponse.ok) {
           throw new Error("Network response was not ok");
         }
-        const data = await response.json();
-        const rfpData = data[0];
+        const rfpData = await rfpResponse.json();
+        const rfpDetails = rfpData[0];
+        console.log("rfpDetails",rfpDetails);
+        
 
-        // Set form values directly from the fetched data
-        setValue("companyName", rfpData.quotations[0]?.vendor?.companyName || "");
-        setValue("companyGST", rfpData.quotations[0]?.vendor?.gstin || "");
-        setValue("companyAddress", rfpData.quotations[0]?.vendor?.address || "");
-        setValue("poId", rfpData.rfpId || "");
+        // Set form values directly from the fetched RFP data
+        setValue("companyName", rfpDetails.quotations[0]?.vendor?.companyName || "");
+        setValue("companyGST", rfpDetails.quotations[0]?.vendor?.gstin || "");
+        setValue("companyAddress", rfpDetails.quotations[0]?.vendor?.address || "");
+        setValue("qutationid", rfpDetails.quotations[0]?.id || "");
+        setValue("poId", rfpDetails.rfpId || ""); // This will be updated later
         setValue("orderNo", ""); // Set this based on your requirements
-        setValue("ref", ""); // Set this based on your requirements
+        setValue("ref", rfpDetails.quotations[0]?.refNo || ""); // Set this based on your requirements
         setValue("date", new Date().toISOString().split("T")[0]); // Set current date or any specific date
-
-        // Set delivery location and remarks
-        setValue("deliveryLocation", rfpData.deliveryLocation || ""); // Set delivery location
+        setValue("deliveryLocation", rfpDetails.deliveryLocation || ""); // Set delivery location
+        
         setValue("remarks", ""); // Initialize remarks field
 
         // Populate products if needed
-        const preferredQuotationId = rfpData.preferredQuotationId;
-        const preferredQuotation = rfpData.quotations.find(q => q.id === preferredQuotationId);
+        const preferredQuotationId = rfpDetails.preferredQuotationId;
+        const preferredQuotation = rfpDetails.quotations.find(q => q.id === preferredQuotationId);
         if (preferredQuotation) {
           setValue("products", preferredQuotation.products || []);
         }
+
+        // Fetch company details
+        const companyResponse = await fetch('/api/company');
+        if (!companyResponse.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const companyData = await companyResponse.json();
+        const company = companyData[0]; // Assuming you want the first company
+        console.log("company", company);
+        
+        // Set company details in the form
+        setValue("companyName", company.name || "");
+        setValue("companyGST", company.GST || "");
+        setValue("companyid", company.id || "");
+        setValue("companylogo", company.logo || "");
+        
+        setValue("companyAddress", company.addresses[0]?.street || ""); // Assuming you want the first address
+
+        // Fetch PO ID from the API
+        const poResponse = await fetch(`/api/po/poId`);
+        if (!poResponse.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const poData = await poResponse.json();
+        console.log("po",poData);
+        
+        setValue("poId", poData || ""); // Assuming the response has a field named poId
+
       } catch (error) {
         setError(error);
       } finally {
@@ -57,7 +90,42 @@ const Page = () => {
     };
 
     fetchData();
-  }, [setValue]);
+  }, [setValue, rfp]);
+  
+
+  const onSubmit = async (data) => {
+    console.log("data",data);
+    
+    const payload = {
+      poId: data.poId,
+      quotationId: data.qutationid, // Correctly access the quotation ID from the form data
+      userId: USER_ID, // Replace with actual user ID
+      companyId: data.companyid, // Use the company ID from the form data
+      rfpId: rfp, // Use the rfp directly from the search params
+      remarks: data.remarks,
+    };
+    console.log(payload);
+    try {
+      const response = await fetch('/api/po', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const result = await response.json();
+      console.log('Success:', result);
+      // Handle success (e.g., show a success message, redirect, etc.)
+    } catch (error) {
+      console.error('Error:', error);
+      // Handle error (e.g., show an error message)
+    }
+  };
 
   if (loading) {
     return <Loader />;
@@ -67,7 +135,7 @@ const Page = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  return (
+  return ( 
     <div>
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
@@ -87,20 +155,20 @@ const Page = () => {
         <CardContent>
           <Card className="mb-2">
             <CardHeader>
-              <CardTitle className="text-lg">Company Details</CardTitle>
+              {/* <CardTitle className="text-lg">Company Details</CardTitle> */}
             </CardHeader>
             <CardContent className="grid grid-cols-3 gap-4">
               <div>
                 <Label className="font-bold text-[16px] text-slate-700">
                   Company Logo
                 </Label>
-                <div className="w-[150px] h-[150px] overflow-hidden rounded-full">
+                <div className="w-[50px] h-[50px] overflow-hidden ">
                   <Image
-                    src={"/company/logo.png"}
+                    src={getValues("companylogo")} // Use the logo from the company data
                     alt={"logo"}
-                    height={50}
-                    width={50}
-                    className="object-cover w-full h-full"
+                    height={20}
+                    width={20}
+                    className="object-cover w-full h-full rounded-full"
                   />
                 </div>
               </div>
@@ -235,6 +303,10 @@ const Page = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Button type="submit" onClick={handleSubmit(onSubmit)} className="mt-4">
+        Submit
+      </Button>
     </div>
   );
 };

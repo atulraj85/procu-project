@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState ,useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import html2canvas from 'html2canvas';
 import jsPDF from "jspdf";
 
@@ -18,7 +18,6 @@ interface Company {
   id: string;
   name: string;
   addresses: CompanyAddress[];
-  // Add other fields as necessary
 }
 
 interface Vendor {
@@ -29,7 +28,6 @@ interface Vendor {
   email: string;
   gstin: string;
   address: string;
-  // Add other fields as necessary
 }
 
 const vendor: Vendor = {
@@ -55,7 +53,6 @@ const Page: React.FC = () => {
   let month = date.getMonth() + 1;
   let year = date.getFullYear();
   
-  // This arrangement can be altered based on how we want the date's format to appear.
   let currentDate = `${day}/${month}/${year}`;
 
   useEffect(() => {
@@ -66,8 +63,8 @@ const Page: React.FC = () => {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log("company", data[0].addresses); // Log the fetched data
-        setCompany(data[0]); // Store the data in state if needed
+        console.log("company", data[0].addresses);
+        setCompany(data[0]);
       } catch (error) {
         console.error("Error fetching company data:", error);
       }
@@ -84,8 +81,8 @@ const Page: React.FC = () => {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
-        console.log(data[0]); // Log the fetched data
-        setRfpData(data[0]); // Store the data in state if needed
+        console.log(data[0]);
+        setRfpData(data[0]);
       } catch (error) {
         console.error("Error fetching RFP data:", error);
       }
@@ -95,25 +92,36 @@ const Page: React.FC = () => {
   }, [rfp]);
 
   const downloadPDF = async () => {
-  if (pageRef.current) {
-    const canvas = await html2canvas(pageRef.current, {
-      scale: 2, // Increase scale for better quality
-      useCORS: true, // This might be necessary for loading images
-    });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'px',
-      format: [canvas.width, canvas.height]
-    });
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-    pdf.save("purchase_order_full_page.pdf");
-  }
-}
+    if (pageRef.current) {
+      try {
+        const canvas = await html2canvas(pageRef.current, {
+          scale: 2,
+          useCORS: true, // Ensure CORS is enabled
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.save("purchase_order_full_page.pdf");
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+      }
+    }
+  };
+
+  const shareViaEmail = () => {
+    const subject = encodeURIComponent("Purchase Order");
+    const body = encodeURIComponent(`Please find the purchase order attached.\n\nLink: ${window.location.href}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  };
 
   return (
-    <div>
+    <div ref={pageRef}>
       <div className="mx-20 mt-4">
         <div className="flex justify-end pb-8">
           <Link href="/dashboard/finance">
@@ -124,13 +132,12 @@ const Page: React.FC = () => {
               className="text-black-500 bg-red-400"
             >
               <X className="h-4 w-4" />
-            </Button>{" "}
+            </Button>
           </Link>
         </div>
         <section className="flex justify-between pb-7">
-          <div >
-            {/* <label className="font-bold">Company Logo</label> */}
-            <Image className=" rounded-full" height={100} width={100} alt="Company logo" src="/company/logo.png" />
+          <div>
+            <Image className="rounded-full" height={100} width={100} alt="Company logo" src="/company/logo.png" />
           </div>
           <div>
             <div>
@@ -140,7 +147,6 @@ const Page: React.FC = () => {
           </div>
         </section>
 
-        {/* Another section for Purchase Order */}
         <div className="font-bold flex justify-center">
           <h1>Purchase Order</h1>
         </div>
@@ -205,11 +211,13 @@ const Page: React.FC = () => {
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
             <div className="flex justify-between">
-            <div className="w-[50%] mt-7 mb-3">
-              <label className="font-bold">Invoice To:</label>
-              <h1 className="text-[14px]">{vendor.address}</h1>
-            </div>
-            <div className="pr-6"> <Image height={150} width={150} alt="Company logo" src="/company/stamp-transparent-19.png" /></div>
+              <div className="w-[50%] mt-7 mb-3">
+                <label className="font-bold">Invoice To:</label>
+                <h1 className="text-[14px]">{vendor.address}</h1>
+              </div>
+              <div className="pr-6">
+                <Image height={150} width={150} alt="Company logo" src="/company/stamp-transparent-19.png" />
+              </div>
             </div>
             <div className="mb-8">
               <label className="font-bold">Ship To:</label>
@@ -219,9 +227,12 @@ const Page: React.FC = () => {
         </section>
 
         <div className="flex justify-center mt-4">
-        {/* <Button onClick={downloadPDF} className="bg-blue-500 text-white">
+          <Button onClick={downloadPDF} className="bg-blue-500 text-white mr-4">
             Download PDF
-          </Button> */}
+          </Button>
+          <Button onClick={shareViaEmail} className="bg-green-500 text-white">
+            Share via Email
+          </Button>
         </div>
       </div>
     </div>
@@ -229,5 +240,3 @@ const Page: React.FC = () => {
 };
 
 export default Page;
-
-

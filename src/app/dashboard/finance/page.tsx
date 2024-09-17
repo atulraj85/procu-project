@@ -110,6 +110,7 @@ const Dashboard = () => {
         rfps.filter(
           (item) =>
             item.rfpStatus !== "SUBMITTED" &&
+          item.rfpStatus !== "DRAFT" &&
             item.rfpStatus !== "PAYMENT_DONE" 
         )
       ); // Show open RFPs

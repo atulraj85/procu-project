@@ -115,7 +115,7 @@ export const columns2: ColumnDef<TableRow>[] = [
               )}`}
             >
               {" "}
-              <DropdownMenuItem> Create Order</DropdownMenuItem>{" "}
+              <DropdownMenuItem> Create PO</DropdownMenuItem>{" "}
             </Link>
             <Link
               href={`/dashboard/finance/readpo?rfp=${encodeURIComponent(
