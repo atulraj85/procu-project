@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import MainButton from "../common/MainButton";
+import MainButton from "@/components/common/MainButton";
 import Link from "next/link";
 import { CreateUserInputValidation } from "@/lib/validations";
 import { useState } from "react";
@@ -40,7 +40,7 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
       company: "",
       email: "",
       mobile: "",
-      password: "",
+      password: "",   
     },
   });
 
@@ -48,9 +48,17 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
     try {
       setLoading(true);
 
+      const dataWithRole = {
+        ...data,
+        role: "ADMIN",
+      };
+
+      
+      console.log(dataWithRole);
+
       const response = await makeApiCallService<ICreateUserResponse>(apiUrl, {
         method: "POST",
-        body: data,
+        body: dataWithRole,
       });
 
       if (response?.response?.meta?.success) {
@@ -59,7 +67,7 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
           description: response?.response?.meta?.message,
         });
 
-        router.push("/login");
+        router.push("/register/company/admin/login");
       }
 
       setLoading(false);

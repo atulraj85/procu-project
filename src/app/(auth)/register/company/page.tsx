@@ -1,100 +1,318 @@
-// app/companies/page.tsx
 "use client";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { toast } from "@/components/ui/use-toast";
+import { IoIosSearch } from "react-icons/io";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { CompanyForm } from "@/components/admin/CompanyForm";
+import { validateGstn } from "@/lib/Validation";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
 
-interface Company {
-  id: string;
-  name: string;
-  // Add other fields as needed
+6
+
+interface Error {
+  gstn: string;
+  company: string;
+  pin: string;
+  address: string;
+  pan: string;
 }
 
-export default function CompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+interface CompanyData {
+  company_gstn: string;
+  company_name: string;
+  pin_code: string;
+  address: string;
+  pan_card: string;
+}
 
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
+const Company: React.FC = () => {
+  const [companyData, setCompanyData] = useState<CompanyData>({
+    company_gstn: "",
+    company_name: "",
+    pin_code: "",
+    address: "",
+    pan_card: "",
+  });
 
-  async function fetchCompanies() {
-    const response = await fetch("/api/company");
-    const data = await response.json();
-    setCompanies(data);
-  }
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const router = useRouter();
+  const [errors, setErrors] = useState<Error>({
+    gstn: "",
+    company: "",
+    pin: "",
+    address: "",
+    pan: "",
+  });
 
-  async function handleSubmit(data: any) {
-    // const formData = new FormData();
+  const validateFields = (): boolean => {
+    const newErrors = {
+      gstn: "",
+      company: "",
+      pin: "",
+      address: "",
+      pan: "",
+    };
+    let isValid = true;
 
-    // // Append the company data to FormData
-    // for (const key in data) {
-    //   formData.append(key, data[key]);
-    // }
-
-    console.log("From page", data);
-    const formData = data;
-
-    if (selectedCompany) {
-      // Update existing company
-      formData.append("id", selectedCompany.id); // Append the company ID for updating
-      await fetch("/api/company", {
-        method: "PUT",
-        body: formData, // Use FormData directly
-      });
-    } else {
-      // Create new company
-      await fetch("/api/company", {
-        method: "POST",
-        body: formData, // Use FormData directly
-      });
+    if (!validateGstn(companyData.company_gstn)) {
+      newErrors.gstn = "Invalid GSTN.";
+      isValid = false;
     }
 
-    fetchCompanies(); // Refresh the list of companies
-    setSelectedCompany(null); // Reset the selected company
-  }
+    setErrors(newErrors);
+    return isValid;
+  };
 
-  async function handleDelete(id: string) {
-    await fetch("/api/company", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    fetchCompanies();
-  }
+  const handleChangeVendorDetails = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setCompanyData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const fetchCompanyDetails = async (gstn: string) => {
+    try {
+      const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
+      const result1 = await response1.json();
+
+    //   if (!result1.error) {
+    //     toast({
+    //       title: "Error",
+    //       description: "User already exists.",
+    //     });
+
+    //     window.location.reload();
+    //     return router.push("/dashboard");
+    //   } else {
+        const response = await fetch(`/api/vendor/gst/${gstn}`);
+        const result = await response.json();
+        
+        console.log(result);
+        if (result.flag) {
+          const data = result.data;
+          setCompanyData({
+            ...companyData,
+            company_name: data.lgnm || "",
+            pin_code: data.pradr.addr.pncd || "",
+            address: data.pradr.adr || "",
+            pan_card: data.gstin.slice(2, 12) || "",
+          });
+         
+        } else {
+          toast({
+            title: "Failed to fetch conamy details.",
+          });
+        }
+    //   }
+    } catch (error) {
+      toast({
+        title: "An error occurred while fetching vendor details.",
+      });
+    }
+  };
+
+  const handleSearchGSTN = () => {
+    if (validateGstn(companyData.company_gstn)) {
+      fetchCompanyDetails(companyData.company_gstn);
+    } else {
+      toast({
+        title: "Invalid GSTN.",
+      });
+    }
+  };
+
+  const onSubmitDetails = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!validateFields()) {
+      toast({
+        title: "Please correct the errors in the form.",
+      });
+      return;
+    }
+
+    // Create FormData object
+    const formData = new FormData();
+    formData.append("GST", companyData.company_gstn);
+    formData.append("name", companyData.company_name);
+    // formData.append("pincode", companyData.pin_code);
+    formData.append("gstAddress", companyData.address);
+    // formData.append("pancard", companyData.pan_card);
+
+   
+
+
+
+    try {
+        console.log(companyData);
+        
+      // Send form data to the API
+      const response = await fetch("/api/company", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast({
+          title: "company details submitted successfully.",
+        });
+        setCompanyData({
+          company_gstn: "",
+          company_name: "",
+          pin_code: "",
+          address: "",
+          pan_card: "",
+        });
+        router.push("/register/company/admin/register");
+      } else {
+        toast({
+          title: "Failed to submit company details.",
+        });
+      }
+    } catch (error) {
+        // if(error == "Validation")
+      toast({
+        title: `An error occurred while submitting the form. ${error}`,
+      });
+    }
+  };
+
+    
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Company Details</h1>
-      <CompanyForm
-        initialData={selectedCompany || undefined}
-        onSubmit={handleSubmit}
-      />
-      {/* <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-2">Company List</h2>
-        <ul>
-          {companies.map((company) => (
-            <li key={company.id} className="mb-2 flex items-center">
-              <span>{company.name}</span>
-              <Button
-                onClick={() => setSelectedCompany(company)}
-                className="ml-2"
-                variant="outline"
+    <div className="h-[90vh]">
+    <h1 className="text-center text-4xl font-semibold mt-12">Create Company</h1>
+  
+    <div className="flex h-[80vh]  items-center gap-16 ">
+      <div className="relative flex justify-end">
+        <img
+          src="/images/pick-pages.png"
+          alt="large auth splash image"
+          className="w-[80%] rounded-xl"
+        />
+        <div className="absolute top-[60%] left-[30%]">
+          <p className="text-[2.5rem] text-white font-[700]">
+            Pr<span className="text-[#03B300]">o</span>cu
+          </p>
+          <p className="text-white text-[1.25rem] font-[700]">
+            We&apos;re here to Increase your{" "}
+            <span className="text-white">Productivity</span>
+          </p>
+        </div>
+      </div>
+  
+      <div>
+        <h2 className="container mx-auto p-4 text-2xl font-bold mb-4">Company Details</h2>
+        <form
+          onSubmit={onSubmitDetails}
+          className="flex flex-col gap-7 w-[90%] container mx-auto mt-6"
+        >
+          {/* GSTN and Company Name in one row */}
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-3 w-60 text-base relative">
+              <label className="font-bold">GSTN</label>
+              <Input
+                type="text"
+                name="company_gstn"
+                value={companyData.company_gstn}
+                onChange={handleChangeVendorDetails}
+                placeholder="GSTN"
+                className="p-2"
+              />
+              <button
+                type="button"
+                onClick={handleSearchGSTN}
+                className="absolute right-0 top-14 transform -translate-y-1/2 px-1 py-1 rounded"
               >
-                Edit
-              </Button>
-              <Button
-                onClick={() => handleDelete(company.id)}
-                className="ml-2"
-                variant="destructive"
-              >
-                Delete
-              </Button>
-            </li>
-          ))}
-        </ul>
-      </div> */}
+                <IoIosSearch />
+              </button>
+              {errors.gstn && <p className="text-red-500">{errors.gstn}</p>}
+            </div>
+  
+            <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Company Name</label>
+              <Input
+                disabled
+                type="text"
+                name="company_name"
+                value={companyData.company_name}
+                placeholder="Company Name"
+                className="p-2"
+              />
+              {errors.company && <p className="text-red-500">{errors.company}</p>}
+            </div>
+          </div>
+  
+          {/* PAN Card and Address in one row */}
+          <div className="flex gap-8">
+            {/* <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">PAN Card</label>
+              <Input
+                disabled
+                type="text"
+                name="pan_card"
+                value={companyData.pan_card}
+                placeholder="PAN Card"
+                className="p-2"
+              />
+              {errors.pan && <p className="text-red-500">{errors.pan}</p>}
+            </div> */}
+  
+            <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Address</label>
+              <Input
+                disabled
+                type="text"
+                name="address"
+                value={companyData.address}
+                placeholder="Address"
+                className="p-2"
+              />
+              {errors.address && <p className="text-red-500">{errors.address}</p>}
+            </div>
+            <div className="flex gap-4">
+            <button
+              type="submit"
+              className="bg-primary text-white mt-8 py-2 px-4 rounded"
+            >
+              {isEditing ? "Update Vendor" : "Register"}
+            </button>
+          </div>
+          </div>
+          
+  
+          {/* Pin Code */}
+          <div className="flex gap-8">
+            {/* <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Pin Code</label>
+              <Input
+                disabled
+                type="text"
+                name="pin_code"
+                value={companyData.pin_code}
+                placeholder="Pin Code"
+                className="p-2"
+              />
+              {errors.pin && <p className="text-red-500">{errors.pin}</p>}
+            </div> */}
+          
+  
+          {/* Submit Button */}
+          {/* <div className="flex gap-4">
+            <button
+              type="submit"
+              className="bg-primary text-white mt-8 py-2 px-4 rounded"
+            >
+              {isEditing ? "Update Vendor" : "Register"}
+            </button>
+          </div> */}
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
+  
   );
-}
+};
+
+export default Company;

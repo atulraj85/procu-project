@@ -32,6 +32,7 @@ const CreateUserInputValidation = z.object({
     .max(25, {
       message: "Password must be at most 25 characters.",
     }),
+    
 });
 
 const LoginUserInputValidation = z.object({

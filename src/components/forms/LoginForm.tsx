@@ -26,7 +26,7 @@ const FormSchema = z.object({
       message: "Enter a valid email",
     })
     .min(2, {
-      message: "email must be at least 2 characters.",
+      message: "Email must be at least 2 characters.",
     }),
   password: z
     .string()
@@ -38,7 +38,12 @@ const FormSchema = z.object({
     }),
 });
 
-function LoginForm({ api }: any) {
+interface LoginFormProps {
+  api: string; // The API endpoint for the login request
+  registerPage: string; // The URL for the register page
+}
+
+function LoginForm({ api, registerPage}: LoginFormProps) {
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -53,16 +58,16 @@ function LoginForm({ api }: any) {
     try {
       setLoading(true);
 
-      const response = await makeApiCallService<ILoginUserResponse>("api/login", {
+      const response = await makeApiCallService<ILoginUserResponse>(api, {
         method: "POST",
         body: data,
       });
+
       if (response?.response?.meta?.success) {
         // Store the token and role in local storage
         localStorage.setItem("TOKEN", response?.response?.data?.token);
         localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
         localStorage.setItem("USER_ID", response?.response?.data?.userId);
-        //  console.log(userId);
 
         toast({
           title: "🎉 Login success",
@@ -83,7 +88,7 @@ function LoginForm({ api }: any) {
   }
 
   return (
-    <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
+    <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16">
       <div className="self-start">
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
@@ -142,7 +147,7 @@ function LoginForm({ api }: any) {
           />
 
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/register">Register Instead?</Link>
+            <Link href={registerPage}>Register Instead?</Link>
           </div>
         </form>
       </Form>
