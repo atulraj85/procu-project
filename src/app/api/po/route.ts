@@ -7,6 +7,18 @@ const prisma = new PrismaClient();
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    console.log("Body reciveived: ", body);
+
+    const updateRFP = await prisma.rFP.update({
+      where: {
+        id: body.rfpId,
+      },
+      data: {
+        rfpStatus: body.rfpStatus,
+      },
+    });
+
     const po = await prisma.pO.create({
       data: {
         poId: body.poId,
@@ -17,9 +29,16 @@ export async function POST(request: Request) {
         remarks: body.remarks,
       },
     });
-    return NextResponse.json(po, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: "Error creating PO" }, { status: 500 });
+
+    const rfp_po = {
+      po: po,
+      rfp: updateRFP,
+    };
+
+    console.log("After prisma: ", po);
+    return NextResponse.json(rfp_po, { status: 201 });
+  } catch (error:any) {
+    return NextResponse.json({ error: `Error creating PO ${error.message}` }, { status: 500 });
   }
 }
 
