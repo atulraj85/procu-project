@@ -220,6 +220,7 @@ export async function GET(request: NextRequest) {
 function formatPOData(inputData: any[]): any[] {
   return inputData.map((po: any) => ({
     id: po.id,
+    poId: po.poId,
     rfpId: po.rfpId,
     quotations: [
       {
@@ -278,9 +279,6 @@ function formatPOData(inputData: any[]): any[] {
     },
   }));
 }
-
-
-
 
 // PUT /api/po/[id]
 export async function PUT(
