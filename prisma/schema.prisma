@@ -15,6 +15,7 @@ model Company {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String
   GST         String?   @unique
+  gstAddress  String?
   logo        String?
   stamp       String?
   email       String?   @unique // Optional and unique email address
