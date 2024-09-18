@@ -1,27 +1,34 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import { Inter } from 'next/font/google'
-import { Toaster } from '@/components/ui/toaster'
+import { auth } from "@/auth";
+import { Toaster } from "@/components/ui/toaster";
+import type { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
+import { Inter } from "next/font/google";
+import "./globals.css";
 
-
-const inter = Inter({ subsets: ['latin'], weight: ["400", "500", "600", "700"] })
-
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 export const metadata: Metadata = {
-  title: 'Fullstack Procu',
+  title: "Fullstack Procu",
   description: "We're here to Increase your Productivity",
-}
+};
 
-
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  return (   
-    <html lang="en">
-      <body  className={inter.className} >{children}   <Toaster /></body>
-    </html>
-  )
+  const session = await auth();
+
+  return (
+    <SessionProvider session={session}>
+      <html lang="en">
+        <body className={inter.className}>
+          {children} <Toaster />
+        </body>
+      </html>
+    </SessionProvider>
+  );
 }

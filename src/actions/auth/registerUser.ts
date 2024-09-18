@@ -4,14 +4,12 @@ import { findUserByEmail } from "@/data/user";
 import { db } from "@/lib/db";
 import { sendEmailVerificationEmail } from "@/lib/mail";
 import { generateEmailVerificationToken } from "@/lib/token";
-import { CreateUserInputValidation } from "@/lib/validations";
+import { RegisterUserSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
-export async function register(
-  values: z.infer<typeof CreateUserInputValidation>
-) {
-  const validation = CreateUserInputValidation.safeParse(values);
+export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
+  const validation = RegisterUserSchema.safeParse(values);
   if (!validation.success) {
     return { error: "Invalid fields!" } as const;
   }
@@ -20,7 +18,7 @@ export async function register(
 
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    return { error: "Email already in use!" } as const;
+    return { error: "User with this email already exists!" } as const;
   }
 
   // Retrieve companyId from the company table using findFirst
@@ -51,8 +49,10 @@ export async function register(
       verificationToken.email,
       verificationToken.token
     );
-    return { success: "Confirmation email sent!" } as const;
+    return {
+      success: "User created successfully and confirmation email sent!",
+    } as const;
   } else {
-    return { error: "Confirmation email not sent!" } as const;
+    return { error: "Some error occurred!" } as const;
   }
 }

@@ -14,7 +14,7 @@ export async function findUserById(id: string) {
 
 export async function findUserByEmail(email: string) {
   try {
-    console.log(`Finding user by id: ${email}`);
+    console.log(`Finding user by email: ${email}`);
     return await db.user.findUnique({
       where: { email },
     });

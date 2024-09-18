@@ -1,6 +1,6 @@
 "use client";
 
-import { forgotPassword } from "@/actions/forgot-password";
+import { initiatePasswordReset } from "@/actions/auth";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import {
@@ -33,10 +33,21 @@ export function ForgotPasswordForm() {
     setSuccess("");
 
     startTransition(() => {
-      forgotPassword(values).then((data) => {
-        setError(data?.error);
-        setSuccess(data?.success);
-      });
+      initiatePasswordReset(values)
+        .then((data) => {
+          if (data?.error) {
+            form.reset();
+            setError(data.error);
+          }
+
+          if (data?.success) {
+            form.reset();
+            setSuccess(data?.success);
+          }
+        })
+        .catch(() => {
+          setError("Something went wrong!");
+        });
     });
   };
 
@@ -81,7 +92,7 @@ export function ForgotPasswordForm() {
             isLoading={isPending}
           />
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/login">Back to login</Link>
+            <Link href="/auth/login">Back to login</Link>
           </div>
         </form>
       </Form>

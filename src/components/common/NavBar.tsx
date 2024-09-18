@@ -15,7 +15,7 @@ function NavBar() {
   };
 
   const handleSignupNavigation = () => {
-    router.push("/register");
+    router.push("/auth/register");
   };
 
   return (
@@ -24,7 +24,9 @@ function NavBar() {
       <div className=" hidden lg:block animate-in fade-in zoom-in  p-4">
         <div className="flex justify-between mx-[41px] items-center">
           <div className="cursor-pointer">
-            <h1 className="font-bold text-[20px]">Pr<span className="text-[#03B300]">o</span>cu</h1>
+            <h1 className="font-bold text-[20px]">
+              Pr<span className="text-[#03B300]">o</span>cu
+            </h1>
             {/* <img
               src="/images/procu_logo.png"
               alt="logo"
@@ -63,7 +65,7 @@ function NavBar() {
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               <Link
-                href="/login"
+                href="/auth/login"
                 className="hover:text-black cursor-pointer flex items-center gap-2 "
               >
                 Login
@@ -82,11 +84,7 @@ function NavBar() {
       >
         <div className="flex justify-between mx-[10px]">
           <div className="flex gap-[50px] text-[16px] items-center select-none">
-            <img
-              src="/images/procu_logo.png"
-              alt="logo"
-              className="w-[7rem]"
-            />
+            <img src="/images/procu_logo.png" alt="logo" className="w-[7rem]" />
           </div>
           <div className="flex items-center gap-[40px]">
             {menu ? (
@@ -138,7 +136,7 @@ function NavBar() {
                   className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
                 >
                   <Link
-                    href="/login"
+                    href="/auth/login"
                     className="hover:text-black cursor-pointer flex items-center gap-2 "
                   >
                     Login

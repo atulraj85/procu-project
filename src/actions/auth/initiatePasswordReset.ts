@@ -6,7 +6,7 @@ import { generatePasswordResetToken } from "@/lib/token";
 import { ForgotPasswordSchema } from "@/schemas";
 import { z } from "zod";
 
-export async function forgotPassword(
+export async function initiatePasswordReset(
   values: z.infer<typeof ForgotPasswordSchema>
 ) {
   const validation = ForgotPasswordSchema.safeParse(values);

@@ -1,22 +1,14 @@
-import { auth, signOut } from "@/auth";
+"use client";
+
+import { withRole } from "@/components/auth/with-role";
 
 async function SettingsPage() {
-  const session = await auth();
-
-  return (
-    <div>
-      {JSON.stringify(session)}
-      <form
-        action={async () => {
-          "use server";
-
-          await signOut();
-        }}
-      >
-        <button type="submit">Sign Out</button>
-      </form>
-    </div>
-  );
+  return <div>Settings Page</div>;
 }
 
-export default SettingsPage;
+// export default SettingsPage;
+export default withRole({
+  children: <SettingsPage />,
+  // allowedRoles: ["USER", "ADMIN"],
+  allowedRoles: ["ADMIN"],
+});

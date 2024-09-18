@@ -23,3 +23,21 @@ export const ForgotPasswordSchema = z.object({
 export const ResetPasswordSchema = z.object({
   password: passwordSchema,
 });
+
+export const RegisterUserSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: z
+    .string({ required_error: "Full name is required!" })
+    .min(1, { message: "Full name is required!" })
+    .min(3, { message: "Full name must be at least 3 characters." })
+    .max(50, { message: "Full name must be at most 50 characters." }),
+  company: z
+    .string({ required_error: "Company is required!" })
+    .min(1, { message: "Company is required!" })
+    .min(2, { message: "Company must be at least 2 characters." }),
+  mobile: z
+    .string({ required_error: "Number is required!" })
+    .min(1, { message: "Number is required!" })
+    .min(10, { message: "Number must be at least 10 characters." }),
+});

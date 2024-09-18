@@ -1,6 +1,6 @@
 "use client";
 
-import { login } from "@/actions/login";
+import { loginUser } from "@/actions/auth/";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import {
@@ -21,8 +21,8 @@ import MainButton from "../common/MainButton";
 import { Button } from "../ui/button";
 
 function LoginForm({ api }: any) {
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [success, setSuccess] = useState<string | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
@@ -34,11 +34,11 @@ function LoginForm({ api }: any) {
   });
 
   async function onSubmit(data: z.infer<typeof LoginSchema>) {
-    setError("");
-    setSuccess("");
+    setError(undefined);
+    setSuccess(undefined);
 
     startTransition(() => {
-      login(data)
+      loginUser(data)
         .then((data) => {
           if (data?.error) {
             form.reset();
@@ -57,7 +57,7 @@ function LoginForm({ api }: any) {
   }
 
   return (
-    <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
+    <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16">
       <div className="self-start">
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
@@ -76,18 +76,18 @@ function LoginForm({ api }: any) {
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Email Address"
                     {...field}
+                    placeholder="Email Address"
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="email"
                     type="email"
+                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="password"
@@ -100,19 +100,18 @@ function LoginForm({ api }: any) {
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="padlock"
                     type="password"
+                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
                 <Button asChild size="sm" variant="link" className="px-0">
-                  <Link href="/forgot-password">Forgot password?</Link>
+                  <Link href="/auth/forgot-password">Forgot password?</Link>
                 </Button>
               </FormItem>
             )}
           />
-
           <FormError message={error} />
           <FormSuccess message={success} />
-
           <MainButton
             text="Login"
             classes="h-[3.31rem] rounded-large"
@@ -120,9 +119,8 @@ function LoginForm({ api }: any) {
             isSubmitable
             isLoading={isPending}
           />
-
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/register">Register Instead?</Link>
+            <Link href="/auth/register">Register Instead?</Link>
           </div>
         </form>
       </Form>

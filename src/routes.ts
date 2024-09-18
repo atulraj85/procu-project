@@ -1,17 +1,26 @@
-// Routes which are accessible to all.
-export const publicRoutes: string[] = ["/", "/verify-email"];
+import { Role } from "@prisma/client";
 
-// Routes which are used for authentication.
-export const authRoutes: string[] = [
-  "/login",
-  "/register",
-  "/register/company",
-  "/error",
-  "/forgot-password",
-  "/reset-password",
-];
+export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
 
 // Prefix for API authentication routes.
 export const apiAuthPrefix: string = "/api/auth";
 
-export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
+// Routes which are accessible to all.
+export const publicRoutes: string[] = ["/", "/auth/verify-email"];
+
+// Routes which are used for authentication.
+export const authRoutes: string[] = [
+  "/auth/error",
+  "/auth/login",
+  "/auth/register",
+  "/auth/register/company",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+];
+
+// This can we be a way to handle role-base access.
+// Routes which are protected with diffferent roles
+export const protectedRoutes: Record<string, Role[]> = {
+  "/dashboard/admin": ["ADMIN"],
+  "/dashboard/finance": ["FINANCE_MANAGER"],
+};

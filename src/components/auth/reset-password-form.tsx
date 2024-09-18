@@ -1,6 +1,6 @@
 "use client";
 
-import { resetPassword } from "@/actions/reset-password";
+import { resetPassword } from "@/actions/auth";
 import MainButton from "@/components/common/MainButton";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
@@ -86,7 +86,7 @@ export function ResetPasswordForm() {
           />
 
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href="/login">Back to login</Link>
+            <Link href="/auth/login">Back to login</Link>
           </div>
         </form>
       </Form>

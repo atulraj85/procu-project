@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IUserProfileResponse } from "@/types";
+import { signOut } from "next-auth/react";
 
 interface IProps {
   loading: boolean;
@@ -23,10 +24,8 @@ function getInitials(inputString: string) {
 }
 
 function DashboardNavBar({ loading, userProfile }: IProps) {
-  const router = useRouter();
-  const handleLogout = () => {
-    localStorage.clear();
-    router.push("/");
+  const handleLogout = async () => {
+    await signOut({ redirectTo: "/auth/login" });
   };
 
   return (

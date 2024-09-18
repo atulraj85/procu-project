@@ -9,7 +9,7 @@ import { LoginSchema } from "@/schemas";
 import { AuthError } from "next-auth";
 import * as z from "zod";
 
-export async function login(values: z.infer<typeof LoginSchema>) {
+export async function loginUser(values: z.infer<typeof LoginSchema>) {
   const validation = LoginSchema.safeParse(values);
 
   if (!validation.success) {
