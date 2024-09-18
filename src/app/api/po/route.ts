@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, RFPStatus } from "@prisma/client";
 import { serializePrismaModel } from "@/types";
 
 const prisma = new PrismaClient();
@@ -189,9 +189,24 @@ export async function GET(request: NextRequest) {
         },
         remarks: true, // Added remarks
         company: {
-          include: {},
+          select: {
+            id: true,
+            name: true,
+            GST: true,
+            logo: true,
+            stamp: true,
+            email: true,
+            phone: true,
+            website: true,
+            addresses: true,
+          },
         },
-        rfpId: true,
+        rfp: {
+          select: {
+            rfpStatus: true,
+            rfpId: true,
+          },
+        },
       },
     });
 
@@ -222,6 +237,7 @@ function formatPOData(inputData: any[]): any[] {
     id: po.id,
     poId: po.poId,
     rfpId: po.rfpId,
+    RFPStatus: po.rfp.rfpStatus,
     quotations: [
       {
         id: po.quotation.id,
