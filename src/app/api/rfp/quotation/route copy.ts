@@ -65,7 +65,7 @@ export async function PUT(request: NextRequest) {
         console.log("Processed documents:", processedDocuments);
 
         return {
-          id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
+          id: quotationId,
           vendorId,
           refNo,
           totalAmount: new Prisma.Decimal(total.withGST),
@@ -92,83 +92,48 @@ export async function PUT(request: NextRequest) {
     );
     console.log("Processed quotations:", processedQuotations);
 
-    const updatedRecord = await prisma.$transaction(async (prisma) => {
-      // First, fetch the existing RFP with its quotations
-      const existingRFP = await prisma.rFP.findUnique({
-        where: { id },
-        include: {
-          quotations: {
-            include: {
-              vendorPricings: true,
-              otherCharges: true,
-              supportingDocuments: true,
+    const updatedRecord = await prisma.rFP.update({
+      where: { id },
+      data: {
+        rfpStatus: rfpStatus,
+        quotations: {
+          upsert: processedQuotations.map((q) => ({
+            where: { id: q.id || "" },
+            create: {
+              vendorId: q.vendorId,
+              refNo: q.refNo,
+              totalAmount: q.totalAmount,
+              totalAmountWithoutGST: q.totalAmountWithoutGST,
+              vendorPricings: q.vendorPricings,
+              otherCharges: q.otherCharges,
+              supportingDocuments: q.supportingDocuments,
             },
-          },
-        },
-      });
-
-      if (!existingRFP) {
-        throw new Error(`RFP with id ${id} not found`);
-      }
-
-      // Delete existing related records
-      for (const quotation of existingRFP.quotations) {
-        await prisma.vendorPricing.deleteMany({
-          where: { quotationId: quotation.id },
-        });
-        await prisma.otherCharge.deleteMany({
-          where: { quotationId: quotation.id },
-        });
-        await prisma.supportingDocument.deleteMany({
-          where: { quotationId: quotation.id },
-        });
-      }
-
-      // Now update the RFP and its quotations
-      return prisma.rFP.update({
-        where: { id },
-        data: {
-          rfpStatus: rfpStatus,
-          quotations: {
-            upsert: processedQuotations.map((q) => ({
-              where: { id: q.id || "" }, // Use an empty string if the id is null or undefined
-              update: {
-                vendorId: q.vendorId,
-                refNo: q.refNo,
-                totalAmount: q.totalAmount,
-                totalAmountWithoutGST: q.totalAmountWithoutGST,
-                vendorPricings: q.vendorPricings,
-                otherCharges: q.otherCharges,
-                supportingDocuments: q.supportingDocuments,
-              },
-              create: {
-                vendorId: q.vendorId,
-                refNo: q.refNo,
-                totalAmount: q.totalAmount,
-                totalAmountWithoutGST: q.totalAmountWithoutGST,
-                vendorPricings: q.vendorPricings,
-                otherCharges: q.otherCharges,
-                supportingDocuments: q.supportingDocuments,
-              },
-            })),
-          },
-          preferredQuotationId: preferredVendorId
-            ? processedQuotations.find((q) => q.vendorId === preferredVendorId)
-                ?.id
-            : undefined,
-        },
-        include: {
-          quotations: {
-            include: {
-              supportingDocuments: true,
-              vendorPricings: true,
-              otherCharges: true,
+            update: {
+              vendorId: q.vendorId,
+              refNo: q.refNo,
+              totalAmount: q.totalAmount,
+              totalAmountWithoutGST: q.totalAmountWithoutGST,
+              vendorPricings: q.vendorPricings,
+              otherCharges: q.otherCharges,
+              supportingDocuments: q.supportingDocuments,
             },
+          })),
+        },
+        preferredQuotationId: preferredVendorId
+          ? processedQuotations.find((q) => q.vendorId === preferredVendorId)
+              ?.id
+          : undefined,
+      },
+      include: {
+        quotations: {
+          include: {
+            supportingDocuments: true,
+            vendorPricings: true,
+            otherCharges: true,
           },
         },
-      });
+      },
     });
-
     console.log("Updated RFP record:", updatedRecord);
 
     return NextResponse.json(serializePrismaModel(updatedRecord), {
@@ -182,7 +147,7 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
+// ... (keep the existing helper functions)
 async function processDocuments(
   rfpId: string,
   vendorId: string,
@@ -231,4 +196,106 @@ async function processDocuments(
       };
     })
   );
+}
+
+async function updateQuotation(existingQuotation: any, quotationData: any) {
+  console.log("Updating quotation:", existingQuotation.id);
+  console.log("Quotation data:", quotationData);
+
+  const {
+    vendorId,
+    products,
+    otherCharges,
+    total,
+    refNo,
+    supportingDocuments,
+  } = quotationData;
+
+  const updatedQuotation = await prisma.quotation.update({
+    where: { id: existingQuotation.id },
+    data: {
+      vendorId,
+      refNo,
+      totalAmount: parseFloat(total.withGST) || 0,
+      totalAmountWithoutGST: parseFloat(total.withoutGST) || 0,
+      vendorPricings: {
+        deleteMany: {},
+        create: products.map((product: any) => ({
+          price: parseFloat(product.unitPrice) || 0,
+          GST: parseInt(product.gst) || 0,
+          rfpProduct: { connect: { id: product.rfpProductId } },
+        })),
+      },
+      otherCharges: {
+        deleteMany: {},
+        create: otherCharges.map((charge: any) => ({
+          name: charge.name,
+          price: parseFloat(charge.unitPrice) || 0,
+          gst: parseFloat(charge.gst) || 0,
+        })),
+      },
+      supportingDocuments: {
+        deleteMany: {},
+        create: supportingDocuments,
+      },
+    },
+    include: {
+      vendorPricings: true,
+      otherCharges: true,
+      supportingDocuments: true,
+    },
+  });
+
+  console.log("Updated quotation:", updatedQuotation);
+  return updatedQuotation;
+}
+
+async function createQuotation(quotationData: any) {
+  console.log("Creating new quotation");
+  console.log("Quotation data:", quotationData);
+
+  const {
+    rfpId,
+    vendorId,
+    products,
+    otherCharges,
+    total,
+    refNo,
+    supportingDocuments,
+  } = quotationData;
+
+  const newQuotation = await prisma.quotation.create({
+    data: {
+      rfp: { connect: { id: rfpId } },
+      vendor: { connect: { id: vendorId } },
+      refNo,
+      totalAmount: parseFloat(total.withGST) || 0,
+      totalAmountWithoutGST: parseFloat(total.withoutGST) || 0,
+      vendorPricings: {
+        create: products.map((product: any) => ({
+          price: parseFloat(product.unitPrice) || 0,
+          GST: parseInt(product.gst) || 0,
+          rfpProduct: { connect: { id: product.id } },
+        })),
+      },
+      otherCharges: {
+        create: otherCharges.map((charge: any) => ({
+          name: charge.name,
+          price: parseFloat(charge.unitPrice) || 0,
+          gst: parseFloat(charge.gst) || 0,
+        })),
+      },
+      supportingDocuments: {
+        create: supportingDocuments,
+      },
+    },
+    include: {
+      vendorPricings: true,
+      otherCharges: true,
+      supportingDocuments: true,
+    },
+  });
+
+  console.log("Created new quotation:", newQuotation);
+  return newQuotation;
 }
