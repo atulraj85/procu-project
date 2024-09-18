@@ -39,7 +39,7 @@ const Page: React.FC = () => {
   const [company, setCompany] = useState<Company | null>(null);
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const searchParams = useSearchParams();
-  const poId = searchParams.get("poId");
+  const poId = searchParams.get("poid");
   const pageRef = useRef<HTMLDivElement>(null);
   const date = new Date();
   console.log("vendor", vendor);
@@ -53,7 +53,7 @@ const Page: React.FC = () => {
   useEffect(() => {
     const fetchPoData = async () => {
       try {
-        const response = await fetch(`/api/po?poId=PO-2024-09-17-0000`);
+        const response = await fetch(`/api/po?poId=${poId}`);
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
@@ -61,13 +61,13 @@ const Page: React.FC = () => {
         const poData = data[0];
         console.log("data", poData);
         setRfpData(poData);
-
+  
         // Set company data
         setCompany(poData.company);
-
-        // Set vendor data from the quotation
-        if (poData.quotation) {
-          const quotation = poData.quotation;
+  
+        // Set vendor data from the first quotation
+        if (poData.quotations && poData.quotations.length > 0) {
+          const quotation = poData.quotations[0]; // Access the first quotation
           setVendor({
             id: quotation.vendor.id,
             companyName: quotation.vendor.companyName,
@@ -80,9 +80,10 @@ const Page: React.FC = () => {
         console.error("Error fetching PO data:", error);
       }
     };
-
+  
     fetchPoData();
   }, [poId]);
+  
 
   const downloadPDF = async () => {
     if (pageRef.current) {
@@ -143,17 +144,21 @@ const Page: React.FC = () => {
           <h1>Purchase Order</h1>
         </div>
         <section className="flex justify-between">
-          <div className="w-[30%]">
-            <h1 className="font-bold">{vendor?.companyName}</h1>
-            {company?.addresses.map((address) => (
-              <h1 key={address.id} className="text-[14px]">
-                {`${address.street}, ${address.city}, ${address.state}, ${address.postalCode}, ${address.country}`}
-              </h1>
-            ))}
-            <p className="font-bold">
-              GSTIN: <span className="font-sans text-[14px]"> {vendor?.gstin}</span>
-            </p>
-          </div>
+        <div className="w-[30%]">
+  <h1 className="font-bold">{vendor?.companyName}</h1>
+  {company?.addresses && company.addresses.length > 0 ? (
+    company.addresses.map((address) => (
+      <h1 key={address.id} className="text-[14px]">
+        {`${address.street}, ${address.city}, ${address.state}, ${address.postalCode}, ${address.country}`}
+      </h1>
+    ))
+  ) : (
+    <h1 className="text-[14px]">No address available</h1>
+  )}
+  <p className="font-bold">
+    GSTIN: <span className="font-sans text-[14px]"> {vendor?.gstin}</span>
+  </p>
+</div>
           <div>
             <div className="flex">
               <label className="font-bold">Order No :</label>
@@ -184,17 +189,24 @@ const Page: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rfpData.quotation?.vendorPricings.map((pricing, index) => (
-                <tr key={index}>
-                  <td className="text-[14px] border border-gray-300 p-4">
-                    {pricing.rfpProduct.product.name} (Model No: {pricing.rfpProduct.product.modelNo})
-                  </td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.price}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.rfpProduct.quantity}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(pricing.price) * pricing.rfpProduct.quantity).toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
+  {rfpData.quotation?.vendorPricings.length > 0 ? (
+    rfpData.quotation.vendorPricings.map((pricing, index) => (
+      <tr key={index}>
+        <td className="text-[14px] border border-gray-300 p-4">
+          {pricing.rfpProduct?.product?.name} (Model No: {pricing.rfpProduct?.product?.modelNo})
+        </td>
+        <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.price}</td>
+        <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.rfpProduct?.quantity}</td>
+        <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(pricing.price) * pricing.rfpProduct?.quantity).toFixed(2)}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={4} className="text-center">No product details available</td>
+    </tr>
+  )}
+</tbody>
+
           </table>
         </section>
 
@@ -215,9 +227,13 @@ const Page: React.FC = () => {
               </div>
             </div>
             <div className="mb-8">
-              <label className="font-bold">Ship To:</label>
-              <p className="text-[14px]">{`${company?.addresses[0].street}, ${company?.addresses[0].city}, ${company?.addresses[0].postalCode}`}</p>
-            </div>
+  <label className="font-bold">Ship To:</label>
+  {company?.addresses && company.addresses.length > 0 ? (
+    <p className="text-[14px]">{`${company.addresses[0].street}, ${company.addresses[0].city}, ${company.addresses[0].postalCode}`}</p>
+  ) : (
+    <p className="text-[14px]">No shipping address available</p>
+  )}
+</div>
           </div>
         </section>
 

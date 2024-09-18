@@ -206,7 +206,7 @@ const Page = () => {
           <h1>Description: Render Farm</h1>
         </div>
 
-        {/* <section className="flex justify-center">
+        <section className="flex justify-center">
           <table className="w-full border border-collapse border-gray-300">
             <thead>
               <tr>
@@ -219,15 +219,16 @@ const Page = () => {
             <tbody>
               {formData.products.map((product, index) => (
                 <tr key={index}>
+                  
                   <td className="text-[14px] border border-gray-300 p-4">{formData.productName}</td>
                   <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.unitPrice}</td>
                   <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.productQuantity}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.unitPrice * product.quantity).toFixed(2)}</td>
+                  {/* <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.unitPrice * product.quantity).toFixed(2)}</td> */}
                 </tr>
               ))}
             </tbody>
           </table>
-        </section> */}
+        </section>
 
         <section className="flex justify-between mt-4">
           <div className="w-1/2">

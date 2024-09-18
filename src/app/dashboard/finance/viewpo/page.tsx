@@ -18,7 +18,7 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
-  const rfp = searchParams.get("rfp");
+  const rfp = searchParams.get("");
   const USER_ID = localStorage.getItem("USER_ID");
  console.log("register",register);
  

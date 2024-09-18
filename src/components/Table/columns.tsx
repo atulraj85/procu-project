@@ -4,6 +4,19 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { MoreHorizontal } from "lucide-react";
 
+interface TableRow {
+  id: string;
+  poId: string;
+  RFPStatus: string;
+  quotations: Array<{
+    totalAmount: string;
+    totalAmountWithoutGST: string;
+    vendor: {
+      companyName: string;
+      mobile: string;
+    };
+  }>;
+}
 export type Vendor = {
   gstin: string | number | boolean;
   vendor_gstn: string;
@@ -92,7 +105,7 @@ export const columns2: ColumnDef<TableRow>[] = [
   { header: "Delivery Location", accessorKey: "deliveryLocation" },
   { header: "Delivery By Date", accessorKey: "deliveryByDate" },
   // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
-  { header: "RFP Status", accessorKey: "rfpStatus" },
+  { header: "RFP Status", accessorKey: "RFPStatus" },
   {
     id: "actions",
     cell: ({ row }) => {
@@ -117,13 +130,13 @@ export const columns2: ColumnDef<TableRow>[] = [
               {" "}
               <DropdownMenuItem> Create PO</DropdownMenuItem>{" "}
             </Link>
-            <Link
+            {/* <Link
               href={`/dashboard/finance/readpo?rfp=${encodeURIComponent(
                 columns1.rfpId
               )}`}
             >
               <DropdownMenuItem> View</DropdownMenuItem>
-            </Link>
+            </Link> */}
             {/* <Link href={`/dashboard/manager/editrfp?rfp=${encodeURIComponent(columns1.rfpId)}`}><DropdownMenuItem >  Edit </DropdownMenuItem></Link> */}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -132,20 +145,31 @@ export const columns2: ColumnDef<TableRow>[] = [
   },
 ];
 
-export const Po: ColumnDef<TableRow>[] = [
+export const Po1: ColumnDef<TableRow>[] = [
   { header: "PoId", accessorKey: "poId" },
-  { header: "Vendor Name", accessorKey: "vendor.companyName" },
-  { header: "Vendor Mobile", accessorKey: "vendor.mobile" },
-  { header: "Taxable Amount", accessorKey: "totalAmountWithoutGST" },
-  { header: "Total Amount ", accessorKey: "totalAmount" },
- 
-  
-  // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
-  { header: "PO Status", accessorKey: "poStatus" },
+  { 
+    header: "Vendor Name", 
+    accessorFn: (row) => row.quotations[0]?.vendor.companyName 
+  },
+  { 
+    header: "Vendor Mobile", 
+    accessorFn: (row) => row.quotations[0]?.vendor.mobile 
+  },
+  { 
+    header: "Taxable Amount", 
+    accessorFn: (row) => row.quotations[0]?.totalAmountWithoutGST 
+  },
+  { 
+    header: "Total Amount", 
+    accessorFn: (row) => row.quotations[0]?.totalAmount 
+  },
+  { header: "PO Status", accessorKey: "RFPStatus" },
   {
     id: "actions",
     cell: ({ row }) => {
-      const columns1 = row.original;
+      const poData = row.original;
+      console.log("poData1",poData);
+      
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -156,36 +180,36 @@ export const Po: ColumnDef<TableRow>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
             <DropdownMenuSeparator />
             <Link
-              href={`/dashboard/manager/rfp/quotation?rfp=${encodeURIComponent(
-                columns1.rfpId
-              )}`}
-            >
-              {" "}
-              <DropdownMenuItem> Create Quotation</DropdownMenuItem>{" "}
-            </Link>
-            <Link
-              href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(
-                columns1.rfpId
+              href={`/dashboard/finance/readpo?poid=${encodeURIComponent(
+                poData.poId
+                
               )}`}
             >
               <DropdownMenuItem> View</DropdownMenuItem>
-            </Link>
-            <Link
-              href={`/dashboard/manager/rfp/edit?rfp=${encodeURIComponent(
-                columns1.rfpId
+            </Link> 
+            {/* <Link
+              href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(
+                poData.id
               )}`}
             >
-              <DropdownMenuItem> Edit </DropdownMenuItem>
-            </Link>
+              <DropdownMenuItem>View</DropdownMenuItem>
+            </Link> */}
+            {/* <Link
+              href={`/dashboard/manager/rfp/edit?rfp=${encodeURIComponent(
+                poData.id
+              )}`}
+            >
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+            </Link> */}
           </DropdownMenuContent>
         </DropdownMenu>
       );
     },
   },
 ];
+
 
 export const columns: ColumnDef<Vendor>[] = [
   {
