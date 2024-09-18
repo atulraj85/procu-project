@@ -12,26 +12,49 @@ import { Input } from "@/components/ui/input";
 interface Error {
   gstn: string;
   company: string;
-  pin: string;
+  // pin: string;
   address: string;
-  pan: string;
+  // pan: string;
+  email:string;
+  phone:string;
+}
+
+interface Data {
+  email:string;
+  phone:string;
 }
 
 interface CompanyData {
   company_gstn: string;
   company_name: string;
-  pin_code: string;
+  // pin_code: string;
   address: string;
-  pan_card: string;
+  // pan_card: string;
+  email:string;
+  phone:string;
 }
 
 const Company: React.FC = () => {
+
+    
+  const [data, setData] = useState<Data>(
+    {
+      email:"",
+      phone:"",
+
+    }
+  )
+
+    
+
   const [companyData, setCompanyData] = useState<CompanyData>({
     company_gstn: "",
     company_name: "",
-    pin_code: "",
+    // pin_code: "",
     address: "",
-    pan_card: "",
+    // pan_card: "",
+    email:"",
+    phone:"",
   });
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -39,18 +62,22 @@ const Company: React.FC = () => {
   const [errors, setErrors] = useState<Error>({
     gstn: "",
     company: "",
-    pin: "",
+    // pin: "",
     address: "",
-    pan: "",
+    // pan: "",
+    email:"",
+    phone:"",
   });
 
   const validateFields = (): boolean => {
     const newErrors = {
       gstn: "",
-      company: "",
-      pin: "",
-      address: "",
-      pan: "",
+    company: "",
+    // pin: "",
+    address: "",
+    // pan: "",
+    email:"",
+    phone:"",
     };
     let isValid = true;
 
@@ -70,21 +97,21 @@ const Company: React.FC = () => {
     setCompanyData((prevData) => ({ ...prevData, [name]: value }));
   };
 
-  const fetchCompanyDetails = async (gstn: string) => {
+  const fetchCompanyDetails = async (GST: string) => {
     try {
-      const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
+      const response1 = await fetch(`/api/company?gstin=${GST}`);
       const result1 = await response1.json();
 
-    //   if (!result1.error) {
-    //     toast({
-    //       title: "Error",
-    //       description: "User already exists.",
-    //     });
+      if (!result1.error) {
+        toast({
+          title: "Error",
+          description: "User already exists.",
+        });
 
-    //     window.location.reload();
-    //     return router.push("/dashboard");
-    //   } else {
-        const response = await fetch(`/api/vendor/gst/${gstn}`);
+        // window.location.reload();
+        // return router.push("/dashboard");
+      } else {
+        const response = await fetch(`/api/vendor/gst/${GST}`);
         const result = await response.json();
         
         console.log(result);
@@ -93,9 +120,9 @@ const Company: React.FC = () => {
           setCompanyData({
             ...companyData,
             company_name: data.lgnm || "",
-            pin_code: data.pradr.addr.pncd || "",
+            // pin_code: data.pradr.addr.pncd || "",
             address: data.pradr.adr || "",
-            pan_card: data.gstin.slice(2, 12) || "",
+            // pan_card: data.gstin.slice(2, 12) || "",
           });
          
         } else {
@@ -103,7 +130,7 @@ const Company: React.FC = () => {
             title: "Failed to fetch conamy details.",
           });
         }
-    //   }
+      }
     } catch (error) {
       toast({
         title: "An error occurred while fetching vendor details.",
@@ -138,6 +165,8 @@ const Company: React.FC = () => {
     // formData.append("pincode", companyData.pin_code);
     formData.append("gstAddress", companyData.address);
     // formData.append("pancard", companyData.pan_card);
+    formData.append("email", companyData.email);
+    formData.append("phone", companyData.phone);
 
    
 
@@ -145,12 +174,13 @@ const Company: React.FC = () => {
 
     try {
         console.log(companyData);
-        
       // Send form data to the API
       const response = await fetch("/api/company", {
         method: "POST",
         body: formData,
       });
+
+      console.log(response);
 
       if (response.ok) {
         toast({
@@ -159,18 +189,29 @@ const Company: React.FC = () => {
         setCompanyData({
           company_gstn: "",
           company_name: "",
-          pin_code: "",
+          // pin_code: "",
           address: "",
-          pan_card: "",
+          // pan_card: "",
+          email:"",
+          phone:"",
         });
         router.push("/register/company/admin/register");
       } else {
+
+        
         toast({
           title: "Failed to submit company details.",
         });
       }
-    } catch (error) {
+    } catch (error:unknown ) {
         // if(error == "Validation")
+        const prismaError = error as { code?: string };
+        if (prismaError.code === 'P2002') {
+          toast({
+            title: "User already exists",
+          });
+        }           
+        
       toast({
         title: `An error occurred while submitting the form. ${error}`,
       });
@@ -245,18 +286,7 @@ const Company: React.FC = () => {
   
           {/* PAN Card and Address in one row */}
           <div className="flex gap-8">
-            {/* <div className="flex flex-col gap-3 w-60 text-base">
-              <label className="font-bold">PAN Card</label>
-              <Input
-                disabled
-                type="text"
-                name="pan_card"
-                value={companyData.pan_card}
-                placeholder="PAN Card"
-                className="p-2"
-              />
-              {errors.pan && <p className="text-red-500">{errors.pan}</p>}
-            </div> */}
+           
   
             <div className="flex flex-col gap-3 w-60 text-base">
               <label className="font-bold">Address</label>
@@ -270,6 +300,38 @@ const Company: React.FC = () => {
               />
               {errors.address && <p className="text-red-500">{errors.address}</p>}
             </div>
+
+            <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Emial</label>
+              <Input
+                
+                type="email"
+                name="email"
+                value={companyData.email}
+                placeholder="email"
+                className="p-2"
+                onChange={handleChangeVendorDetails}
+              />
+              {errors.email && <p className="text-red-500">{errors.email}</p>}
+            </div>
+            </div>
+
+            <div className="flex gap-8">
+
+            <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Phone</label>
+              <Input
+                
+                type="phone"
+                name="phone"
+                value={companyData.phone}
+                placeholder="Phone"
+                className="p-2"
+                onChange={handleChangeVendorDetails}
+              />
+              {errors.email && <p className="text-red-500">{errors.email}</p>}
+            </div>
+
             <div className="flex gap-4">
             <button
               type="submit"
@@ -278,7 +340,10 @@ const Company: React.FC = () => {
               {isEditing ? "Update Vendor" : "Register"}
             </button>
           </div>
-          </div>
+            </div>
+
+           
+          
           
   
           {/* Pin Code */}
