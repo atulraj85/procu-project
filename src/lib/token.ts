@@ -71,8 +71,9 @@ export const validateToken = async (
 };
 
 export async function generateEmailVerificationToken(email: string) {
-  // TODO:  Move this to .env file and read it from there.
-  const EXPIRATION_TIME_IN_MS = 3600 * 1000; // 1 hour
+  const expirationTimeMs = parseInt(
+    process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_TIME_MS!
+  );
 
   try {
     const existingToken = await findEmailVerificationTokenByEmail(email);
@@ -81,16 +82,18 @@ export async function generateEmailVerificationToken(email: string) {
     }
 
     const token = uuidv4();
-    const expiresAt = new Date(new Date().getTime() + EXPIRATION_TIME_IN_MS);
+    const expiresAt = new Date(new Date().getTime() + expirationTimeMs);
     return await createEmailVerificationToken({ email, token, expiresAt });
   } catch (error) {
     console.error(`Error generating token`, error);
+    return null;
   }
 }
 
 export async function generatePasswordResetToken(email: string) {
-  // TODO:  Move this to .env file and read it from there.
-  const EXPIRATION_TIME_IN_MS = 3600 * 1000; // 1 hour
+  const expirationTimeMs = parseInt(
+    process.env.PASSWORD_RESET_TOKEN_EXPIRY_TIME_MS!
+  );
 
   try {
     const existingToken = await findPasswordResetTokenByEmail(email);
@@ -99,9 +102,10 @@ export async function generatePasswordResetToken(email: string) {
     }
 
     const token = uuidv4();
-    const expiresAt = new Date(new Date().getTime() + EXPIRATION_TIME_IN_MS);
+    const expiresAt = new Date(new Date().getTime() + expirationTimeMs);
     return await createPasswordResetToken({ email, token, expiresAt });
   } catch (error) {
     console.error(`Error generating token`, error);
+    return null;
   }
 }
