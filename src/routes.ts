@@ -18,9 +18,9 @@ export const authRoutes: string[] = [
   "/auth/reset-password",
 ];
 
-// This can we be a way to handle role-base access.
 // Routes which are protected with diffferent roles
 export const protectedRoutes: Record<string, Role[]> = {
-  "/dashboard/admin": ["ADMIN"],
-  "/dashboard/finance": ["FINANCE_MANAGER"],
+  "^/dashboard/admin(/.*)?$": ["ADMIN"],
+  "^/dashboard/finance(/.*)?$": ["FINANCE_MANAGER"],
+  "^/dashboard/manager(/.*)?$": ["PR_MANAGER"],
 };

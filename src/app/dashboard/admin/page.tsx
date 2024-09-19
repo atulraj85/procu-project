@@ -1,26 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { IUsersListingResponse, SidebarItem } from "@/types";
 import Loader from "@/components/shared/Loader";
-import { withRole } from "@/components/auth/with-role";
+import { IUsersListingResponse } from "@/types";
 
 function Page() {
-  const router = useRouter();
   const [usersListing, setUsersListing] =
     useState<IUsersListingResponse | null>(null);
-
-  // useEffect(() => {
-  //   const token = localStorage.getItem("TOKEN");
-  //   const role = localStorage.getItem("USER_ROLE");
-  //   if (!token) {
-  //     router.push("/login");
-  //   } else if (role?.toLowerCase() !== "admin") {
-  //     router.push("/dashboard/admin");
-  //   }
-  // }, [router]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -51,7 +39,4 @@ function Page() {
   );
 }
 
-export default withRole({
-  children: <Page />,
-  allowedRoles: ["ADMIN"],
-});
+export default Page;

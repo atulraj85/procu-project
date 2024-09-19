@@ -41,10 +41,13 @@ export default auth(async (req) => {
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
-    const roles = protectedRoutes[nextUrl.pathname];
-    if (roles) {
-      if (!roles.includes(token.role)) {
-        return NextResponse.redirect(new URL("/auth/login", req.url));
+    for (const pattern in protectedRoutes) {
+      const regex = new RegExp(pattern);
+      if (regex.test(nextUrl.pathname)) {
+        const roles = protectedRoutes[pattern];
+        if (!roles.includes(token.role)) {
+          return NextResponse.redirect(new URL("/auth/login", req.url));
+        }
       }
     }
   }
