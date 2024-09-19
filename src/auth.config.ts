@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { LoginUserInputValidation } from "@/lib/validations";
+import { LoginSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -8,7 +8,7 @@ export default {
   providers: [
     Credentials({
       async authorize(credentials) {
-        const validation = LoginUserInputValidation.safeParse(credentials);
+        const validation = LoginSchema.safeParse(credentials);
         if (!validation.success) {
           return null;
         }
