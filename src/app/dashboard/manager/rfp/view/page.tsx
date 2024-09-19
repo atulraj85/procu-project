@@ -1,13 +1,22 @@
-"use client"
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+"use client";
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { X, Star } from 'lucide-react';
-import Loader from '@/components/shared/Loader';
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { X, Star } from "lucide-react";
+import Loader from "@/components/shared/Loader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Image from "next/image";
 
 // Define types for the RFP data structure
 interface Vendor {
@@ -39,7 +48,7 @@ interface SupportingDocument {
 }
 
 interface Quotation {
-  refNo: string ;
+  refNo: string;
   id: string;
   totalAmount: string;
   totalAmountWithoutGST: string;
@@ -78,12 +87,12 @@ const ViewRFP: React.FC = () => {
       try {
         const response = await fetch(`/api/rfp?rfpId=${rfp}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch RFP data');
+          throw new Error("Failed to fetch RFP data");
         }
         const data: RFPData[] = await response.json();
         setRfpData(data[0]); // Assuming the API returns an array
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -91,8 +100,13 @@ const ViewRFP: React.FC = () => {
 
     fetchRFP();
   }, [rfp]);
-  
-  if (loading) return <div><Loader/></div>;
+
+  if (loading)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
   if (error) return <div className="text-red-500">{error}</div>;
   if (!rfpData) return <div>No RFP data found.</div>;
 
@@ -112,15 +126,20 @@ const ViewRFP: React.FC = () => {
           </Link>
         </div>
         <CardHeader>
-          {/* <CardTitle>View RFP</CardTitle> */}
+          <CardTitle>View RFP</CardTitle>
         </CardHeader>
         <CardContent>
           <Card className="mb-4">
             <CardHeader>
               <CardTitle>Request for Product</CardTitle>
               <div className="flex justify-between">
-                <p className="text-md text-muted-foreground">RFP ID: {rfpData.rfpId}</p>
-                <p>Date of Ordering: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}</p>
+                <p className="text-md text-muted-foreground">
+                  RFP ID: {rfpData.rfpId}
+                </p>
+                <p>
+                  Date of Ordering:{" "}
+                  {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+                </p>
               </div>
             </CardHeader>
             <CardContent className="grid grid-cols-4 gap-2">
@@ -144,27 +163,15 @@ const ViewRFP: React.FC = () => {
                 <div key={index} className="flex items-center space-x-2 mb-2">
                   <div className="flex flex-col">
                     <Label>Approver Name</Label>
-                    <Input
-                      type="text"
-                      value={approver.name}
-                      disabled
-                    />
+                    <Input type="text" value={approver.name} disabled />
                   </div>
                   <div className="flex flex-col">
                     <Label>Email</Label>
-                    <Input
-                      type="text"
-                      value={approver.email}
-                      disabled
-                    />
+                    <Input type="text" value={approver.email} disabled />
                   </div>
                   <div className="flex flex-col">
                     <Label>Phone</Label>
-                    <Input
-                      type="text"
-                      value={approver.mobile}
-                      disabled
-                    />
+                    <Input type="text" value={approver.mobile} disabled />
                   </div>
                 </div>
               ))}
@@ -177,7 +184,14 @@ const ViewRFP: React.FC = () => {
             </CardHeader>
             <CardContent>
               {rfpData.quotations.map((quotation, index) => (
-                <div key={index} className={`mb-16 p-4 rounded-lg ${quotation.id === rfpData.preferredQuotationId ? 'bg-yellow-100 border-2 border-yellow-400' : ''}`}>
+                <div
+                  key={index}
+                  className={`mb-16 p-4 rounded-lg ${
+                    quotation.id === rfpData.preferredQuotationId
+                      ? " border-2 border-yellow-400"
+                      : ""
+                  }`}
+                >
                   {quotation.id === rfpData.preferredQuotationId && (
                     <div className="flex items-center mb-2 text-yellow-600">
                       <Star className="mr-2" />
@@ -193,7 +207,7 @@ const ViewRFP: React.FC = () => {
                       className="border border-gray-300 p-2 rounded"
                     />
                   </div>
-                  <div className='flex '>
+                  <div className="flex ">
                     <div className="flex flex-col mb-4 mr-4">
                       <Label>Ref No</Label>
                       <Input
@@ -265,15 +279,6 @@ const ViewRFP: React.FC = () => {
                         />
                       </div>
                       <div className="flex flex-col">
-                        <Label>Description</Label>
-                        <Input
-                          type="text"
-                          value="des"
-                          disabled
-                          className="border border-gray-300 p-2 rounded"
-                        />
-                      </div>
-                      <div className="flex flex-col">
                         <Label>Quantity</Label>
                         <Input
                           type="number"
@@ -302,48 +307,50 @@ const ViewRFP: React.FC = () => {
                       </div>
                     </div>
                   ))}
+                  
+                  <h4 className="font-semibold">Supporting Documents</h4>
+                  <table className="min-w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-300 p-2">Document Name</th>
+                        <th className="border border-gray-300 p-2">Location</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quotation.supportingDocuments.map((doc, idx) => (
+                        <tr key={idx}>
+                          <td className="border border-gray-300 p-2">
+                            <input
+                              type="text"
+                              value={doc.documentName}
+                              disabled
+                              className="w-full bg-gray-100"
+                            />
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            <Dialog>
+                              <DialogTrigger>Open</DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>{doc.documentName}</DialogTitle>
+                                  <DialogDescription>
+                                    <Image
+                                      height={60}
+                                      width={60}
+                                      alt="Document"
+                                      src={doc.location}
+                                    />
+                                  </DialogDescription>
+                                </DialogHeader>
+                              </DialogContent>
+                            </Dialog>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Supporting Documents</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <table className="min-w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr>
-                    <th className="border border-gray-300 p-2">Document Name</th>
-                    <th className="border border-gray-300 p-2">Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rfpData.quotations.flatMap((quotation) => 
-                    quotation.supportingDocuments.map((doc, idx) => (
-                      <tr key={idx}>
-                        <td className="border border-gray-300 p-2">
-                          <input
-                            type="text"
-                            value={doc.documentName}
-                            disabled
-                            className="w-full bg-gray-100"
-                          />
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          <input
-                            type="text"
-                            value={doc.location}
-                            disabled
-                            className="w-full bg-gray-100"
-                          />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
             </CardContent>
           </Card>
 
