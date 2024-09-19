@@ -23,11 +23,13 @@ function formatRFPData(inputData: any[]) {
       email: approver.user.email,
       mobile: approver.user.mobile,
     })),
+
     products: rfp.rfpProducts.map((product: any) => ({
       id: product.product.id,
       name: product.product.name,
       modelNo: product.product.modelNo,
       quantity: product.quantity,
+      rfpProductId: product.id,
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -39,6 +41,7 @@ function formatRFPData(inputData: any[]) {
       vendor: quotation.vendor,
       products: quotation?.vendorPricings.map((pricing: any) => ({
         id: pricing.rfpProduct.product.id,
+        rfpProductId: pricing.rfpProduct.id,
         name: pricing.rfpProduct.product.name,
         modelNo: pricing.rfpProduct.product.modelNo,
         quantity: pricing.rfpProduct.quantity,
@@ -136,6 +139,7 @@ export async function GET(request: NextRequest) {
         },
         rfpProducts: {
           select: {
+            id: true,
             product: {
               select: {
                 id: true,
@@ -176,6 +180,7 @@ export async function GET(request: NextRequest) {
                 GST: true,
                 rfpProduct: {
                   select: {
+                    id: true,
                     product: {
                       select: {
                         id: true,

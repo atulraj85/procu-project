@@ -5,7 +5,8 @@
 Table Company {
   id String [pk]
   name String [not null]
-  GST String
+  GST String [unique]
+  gstAddress String
   logo String
   stamp String
   email String [unique]
@@ -183,6 +184,10 @@ Table OtherCharge {
   gst Decimal [not null]
   created_at DateTime [default: `now()`, not null]
   updated_at DateTime [not null]
+
+  indexes {
+    (quotationId, name) [unique]
+  }
 }
 
 Table RFP {
