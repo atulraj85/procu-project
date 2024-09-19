@@ -133,9 +133,13 @@ const Page: React.FC = () => {
           <div>
             <Image className="rounded-full" height={100} width={100} alt="Company logo" src={company?.logo || "/company/logo.png"} />
           </div>
-          <div>
+          <div className="w-[35%]">
             <div>
               <h1 className="font-bold">{company?.name}</h1>
+              
+            </div>
+            <div className="flex justify-end">
+            <h1 className="text-[14px]">{vendor?.address}</h1>
             </div>
           </div>
         </section>
@@ -147,14 +151,17 @@ const Page: React.FC = () => {
         <div className="w-[30%]">
   <h1 className="font-bold">{vendor?.companyName}</h1>
   {company?.addresses && company.addresses.length > 0 ? (
-    company.addresses.map((address) => (
+  company.addresses
+    .filter(address => address.addressType === "BUSINESS") // Filter for SHIPPING addresses
+    .map((address) => (
       <h1 key={address.id} className="text-[14px]">
         {`${address.street}, ${address.city}, ${address.state}, ${address.postalCode}, ${address.country}`}
       </h1>
     ))
-  ) : (
-    <h1 className="text-[14px]">No address available</h1>
-  )}
+) : (
+  <h1 className="text-[14px]">No address available</h1>
+)}
+
   <p className="font-bold">
     GSTIN: <span className="font-sans text-[14px]"> {vendor?.gstin}</span>
   </p>
@@ -166,7 +173,7 @@ const Page: React.FC = () => {
             </div>
             <div className="flex">
               <label className="font-bold">Ref :-</label>
-              <h1 className="text-[14px]">{rfpData.quotation?.refNo}</h1>
+              <h1 className="text-[14px]">{rfpData.quotations?.refNo}</h1>
             </div>
             <div className="flex">
               <label className="font-bold">Date :-</label>
@@ -179,36 +186,36 @@ const Page: React.FC = () => {
           <h1>Description: Render Farm</h1>
         </div>
         <section className="flex justify-center">
-          <table className="w-full border border-collapse border-gray-300">
-            <thead>
-              <tr>
-                <th className="font-bold p-1 border border-gray-300 text-center">Product Description</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Qty</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
-              </tr>
-            </thead>
-            <tbody>
-  {rfpData.quotation?.vendorPricings.length > 0 ? (
-    rfpData.quotation.vendorPricings.map((pricing, index) => (
-      <tr key={index}>
-        <td className="text-[14px] border border-gray-300 p-4">
-          {pricing.rfpProduct?.product?.name} (Model No: {pricing.rfpProduct?.product?.modelNo})
-        </td>
-        <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.price}</td>
-        <td className="text-[14px] border border-gray-300 p-4 text-right">{pricing.rfpProduct?.quantity}</td>
-        <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(pricing.price) * pricing.rfpProduct?.quantity).toFixed(2)}</td>
+  <table className="w-full border border-collapse border-gray-300">
+    <thead>
+      <tr>
+        <th className="font-bold p-1 border border-gray-300 text-center">Product Description</th>
+        <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
+        <th className="font-bold p-1 border border-gray-300 text-center">Qty</th>
+        <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
       </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={4} className="text-center">No product details available</td>
-    </tr>
-  )}
-</tbody>
+    </thead>
+    <tbody>
+      {rfpData.quotations?.[0]?.products.length > 0 ? (
+        rfpData.quotations[0].products.map((product, index) => (
+          <tr key={product.id || index}> {/* Use product.id if available, otherwise fallback to index */}
+            <td className="text-[14px] border border-gray-300 p-4">
+              {product.name} (Model No: {product.modelNo})
+            </td>
+            <td className="text-[14px] border border-gray-300 p-4 text-right">{product.price}</td>
+            <td className="text-[14px] border border-gray-300 p-4 text-right">{product.quantity}</td>
+            <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(product.price) * product.quantity).toFixed(2)}</td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan={4} className="text-center">No product details available</td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</section>
 
-          </table>
-        </section>
 
         <section className="flex justify-between">
           <div>
@@ -229,7 +236,7 @@ const Page: React.FC = () => {
             <div className="mb-8">
   <label className="font-bold">Ship To:</label>
   {company?.addresses && company.addresses.length > 0 ? (
-    <p className="text-[14px]">{`${company.addresses[0].street}, ${company.addresses[0].city}, ${company.addresses[0].postalCode}`}</p>
+    <p className="text-[14px]">{`${company.addresses[1].street}, ${company.addresses[1].city}, ${company.addresses[1].postalCode}`}</p>
   ) : (
     <p className="text-[14px]">No shipping address available</p>
   )}
