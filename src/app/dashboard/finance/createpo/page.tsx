@@ -1,54 +1,95 @@
 "use client";
-import { ProductList } from "@/components/new-manager/UpdateRFP2";
-import Loader from "@/components/shared/Loader";
+
+import React, { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import html2canvas from 'html2canvas';
+import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@radix-ui/react-label";
+import { toast } from "@/components/ui/use-toast";
 import { X } from "lucide-react";
-import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";  
 
 const Page = () => {
-  const { control, setValue, getValues, register } = useForm();
+  const [formData, setFormData] = useState({
+    companyName: "",
+    companyGST: "",
+    companyAddress: "",
+    companyLogo: "/company/logo.png",
+    companyId: "",
+    poId: "",
+    orderNo: "",
+    ref: "",
+    date: "",
+    rfpid:"",
+    unitPrice:"",
+    vendorName: "",
+    vendorAddress: "",
+    vendorGST: "",
+    deliveryLocation: "",
+    products: [],
+    remarks: "",
+    productQuantity:"",
+    productName:"",
+    quotationId: ""
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
+  const USER_ID = typeof window !== 'undefined' ? localStorage.getItem("USER_ID") : null;
+  const pageRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/rfp?rfpId=${rfp}`);
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        const rfpData = data[0];
+        // Fetch RFP data
+        const rfpResponse = await fetch(`/api/rfp?rfpId=${rfp}`);
+        if (!rfpResponse.ok) throw new Error("Network response was not ok");
+        const rfpData = await rfpResponse.json();
+        const rfpDetails = rfpData[0];
+         console.log("rfpDetails",rfpDetails);
+         
+        // Fetch company details
+        const companyResponse = await fetch('/api/company');
+        if (!companyResponse.ok) throw new Error("Network response was not ok");
+        const companyData = await companyResponse.json();
+        const company = companyData[0];
+        console.log("company",company);
+        
 
-        // Set form values directly from the fetched data
-        setValue("companyName", rfpData.quotations[0]?.vendor?.companyName || "");
-        setValue("companyGST", rfpData.quotations[0]?.vendor?.gstin || "");
-        setValue("companyAddress", rfpData.quotations[0]?.vendor?.address || "");
-        setValue("poId", rfpData.rfpId || "");
-        setValue("orderNo", ""); // Set this based on your requirements
-        setValue("ref", ""); // Set this based on your requirements
-        setValue("date", new Date().toISOString().split("T")[0]); // Set current date or any specific date
+        // Fetch PO ID
+        const poResponse = await fetch(`/api/po/poId`);
+        if (!poResponse.ok) throw new Error("Network response was not ok");
+        const poData = await poResponse.json();
 
-        // Set delivery location and remarks
-        setValue("deliveryLocation", rfpData.deliveryLocation || ""); // Set delivery location
-        setValue("remarks", ""); // Initialize remarks field
+        // Update form data
+        setFormData({
+          companyName: company.name || "",
+          companyGST: company.GST || "",
+          companyAddress: company.addresses[0]?.street || "",
+          companyLogo: company.logo || "/company/logo.png",
+          companyId: company.id || "",
+          poId: poData || "",
+          orderNo: `MM-PO-${new Date().getFullYear()}-${poData}`,
+          ref: rfpDetails.quotations[0]?.refNo || "",
+          date: new Date().toLocaleDateString(),
+          vendorName: rfpDetails.quotations[0]?.vendor?.companyName || "",
+          productName: rfpDetails.quotations[0]?.products.name || "",
+          productQuantity: rfpDetails.quotations[0]?.products.quantity || "",
+          unitPrice: rfpDetails.quotations[0]?.products.price || "",
+          rfpid: rfpDetails.id || "",
+          vendorAddress: rfpDetails.quotations[0]?.vendor?.address || "",
+          vendorGST: rfpDetails.quotations[0]?.vendor?.gstin || "",
+          deliveryLocation: rfpDetails.deliveryLocation || "",
+          products: rfpDetails.quotations[0]?.products || [],
+          remarks: "",
+          quotationId: rfpDetails.quotations[0]?.id || ""
+        });
 
-        // Populate products if needed
-        const preferredQuotationId = rfpData.preferredQuotationId;
-        const preferredQuotation = rfpData.quotations.find(q => q.id === preferredQuotationId);
-        if (preferredQuotation) {
-          setValue("products", preferredQuotation.products || []);
-        }
       } catch (error) {
         setError(error);
       } finally {
@@ -57,184 +98,175 @@ const Page = () => {
     };
 
     fetchData();
-  }, [setValue]);
+  }, [rfp]);
 
-  if (loading) {
-    return <Loader />;
-  }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value
+    }));
+  };
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  const onSubmit = async () => {
+    console.log("formData", formData);
+
+    const payload = {
+      poId: formData.poId,
+      quotationId: formData.quotationId,
+      userId: USER_ID,
+      companyId: formData.companyId,
+      rfpId: formData.rfpid,
+      remarks: formData.remarks,
+      rfpStatus:"PO_CREATED"
+    };
+    console.log("paylod",payload);
+    
+    
+    try {
+      const response = await fetch('/api/po', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error('Network response was not ok');
+
+      const result = await response.json();
+      toast({
+        title: "🎉 Vendor added successfully.",
+        
+      });
+     
+      window.location.reload()
+      return router.push("/dashboard");
+      // Handle success (e.g., show a success message, redirect, etc.)
+    } catch (error) {
+      console.error('Error:', error);
+      // Handle error (e.g., show an error message)
+    }
+  };
+
+ 
+
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div>
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle>Create Product Order</CardTitle>
+    <div ref={pageRef}>
+      <div className="mx-20 mt-4">
+        <div className="flex justify-end pb-8">
           <Link href="/dashboard/finance">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="text-black-500 bg-red-400"
-            >
+            <Button type="button" variant="outline" size="icon" className="text-black-500 bg-red-400">
               <X className="h-4 w-4" />
             </Button>
           </Link>
-        </CardHeader>
+        </div>
+        
+        <section className="flex justify-between pb-7">
+          <div>
+            <Image className="rounded-full" height={100} width={100} alt="Company logo" src={formData.companyLogo} />
+          </div>
+          <div>
+            <h1 className="font-bold">{formData.companyName}</h1>
+            <p className="text-[14px]">{formData.companyAddress}</p>
+          </div>
+        </section>
 
-        <CardContent>
-          <Card className="mb-2">
-            <CardHeader>
-              <CardTitle className="text-lg">Company Details</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-4">
-              <div>
-                <Label className="font-bold text-[16px] text-slate-700">
-                  Company Logo
-                </Label>
-                <div className="w-[150px] h-[150px] overflow-hidden rounded-full">
-                  <Image
-                    src={"/company/logo.png"}
-                    alt={"logo"}
-                    height={50}
-                    width={50}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              </div>
+        <div className="font-bold flex justify-center">
+          <h1>Purchase Order</h1>
+        </div>
 
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Company Name
-                </Label>
-                <Input
-                  disabled
-                  {...register("companyName")}
-                  placeholder="Name"
-                  className="flex-1"
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Company GST
-                </Label>
-                <Input
-                  disabled
-                  {...register("companyGST")}
-                  className="text-[14px]"
-                />
-              </div>
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Company Address
-                </Label>
-                <Textarea
-                  disabled
-                  {...register("companyAddress")}
-                  className="text-[14px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mb-2">
-            <CardHeader>
-              <CardTitle className="text-lg">PO Details</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2">
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  PO-ID:{" "}
-                </Label>
-                <Input
-                  disabled
-                  {...register("poId")}
-                  placeholder="POID"
-                  className="flex-1"
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Order No
-                </Label>
-                <Input
-                  disabled
-                  {...register("orderNo")}
-                  className="text-[14px]"
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Ref
-                </Label>
-                <Input
-                  disabled
-                  {...register("ref")}
-                  className="text-[14px]"
-                />
-              </div>
-
-              <div>
-                <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                  Date
-                </Label>
-                <Input
-                  disabled
-                  type="date"
-                  {...register("date")}
-                  className="text-[14px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <ProductList
-            control={control}
-            index={0}
-            getValues={getValues}
-            setValue={setValue}
-            products={getValues("products") || []}
-          />
-        </CardContent>
-      </Card>
-
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="text-lg text-slate-700">Shipping Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap">
-            <div className="mx-4 flex-1">
-              <Label className="font-bold text-[16px] text-slate-700 pb-2">Billing Address</Label>
-              <Textarea
-                disabled
-                {...register("companyAddress")}
-                className="text-[14px]"
-              />
+        <section className="flex justify-between">
+          <div className="w-[30%]">
+            <h1 className="font-bold">{formData.vendorName}</h1>
+            <h1 className="text-[14px]">{formData.vendorAddress}</h1>
+            <p className="font-bold">
+              GSTIN: <span className="font-sans text-[14px]">{formData.vendorGST}</span>
+            </p>
+          </div>
+          <div>
+            <div className="flex">
+              <label className="font-bold">Order No :</label>
+              <h1 className="text-[14px]">{formData.poId}</h1>
             </div>
-            <div className="mx-4 flex-1">
-              <Label className="font-bold text-[16px] text-slate-700 pb-2">Shipping Address</Label>
-              <Textarea
-                disabled
-                {...register("deliveryLocation")} // Set delivery location
-                className="text-[14px]"
+            <div className="flex">
+              <label className="font-bold">Ref :</label>
+              <h1 className="text-[14px]">{formData.ref}</h1>
+            </div>
+            <div className="flex">
+              <label className="font-bold">Date :</label>
+              <h1 className="text-[14px]">{formData.date}</h1>
+            </div>
+          </div>
+        </section>
+
+        <div className="font-bold mt-10 mb-4">
+          <h1>Description: Render Farm</h1>
+        </div>
+
+        <section className="flex justify-center">
+          <table className="w-full border border-collapse border-gray-300">
+            <thead>
+              <tr>
+                <th className="font-bold p-1 border border-gray-300 text-center">Product Description</th>
+                <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
+                <th className="font-bold p-1 border border-gray-300 text-center">Qty</th>
+                <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {formData.products.map((product, index) => (
+                <tr key={index}>
+                  
+                  <td className="text-[14px] border border-gray-300 p-4">{formData.productName}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.unitPrice}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.productQuantity}</td>
+                  {/* <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.unitPrice * product.quantity).toFixed(2)}</td> */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="flex justify-between mt-4">
+          <div className="w-1/2">
+            <div className="mt-7 mb-3">
+              <label className="font-bold">{formData.companyName}</label>
+              <Image height={80} width={100} alt="Signature" src="/company/sign.png" />
+              <h1 className="text-[14px]">Authorized Signatory</h1>
+            </div>
+            <div className="mt-7 mb-3">
+              <label className="font-bold">Invoice To:</label>
+              <h1 className="text-[14px]">{formData.vendorAddress}</h1>
+            </div>
+            <div className="mb-8">
+              <label className="font-bold">Ship To:</label>
+              <p className="text-[14px]">{formData.deliveryLocation}</p>
+            </div>
+          </div>
+          <div className="w-1/2 flex flex-col items-end">
+            {/* <Image height={150} width={150} alt="Company stamp" src="/company/stamp-transparent-19.png" /> */}
+            <div className="mt-4 w-full">
+              <label className="font-bold">Remarks:</label>
+              <Textarea 
+                name="remarks"
+                value={formData.remarks}
+                onChange={handleInputChange}
+                className="w-full mt-2"
               />
             </div>
           </div>
-          <div className="mt-4">
-            <Label className="font-bold text-[16px] text-slate-700 pb-2">Remarks</Label>
-            <Textarea
-              {...register("remarks")} // Register the remarks input
-              className="text-[14px]"
-            />
-          </div>
-        </CardContent>
-      </Card>
+        </section>
+
+        <div className="flex justify-center mt-4">
+          <Button onClick={onSubmit} className="bg-green-500 text-white mr-4">
+            Submit PO
+          </Button>
+         
+        </div>
+      </div>
     </div>
   );
 };

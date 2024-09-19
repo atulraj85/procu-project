@@ -1,12 +1,23 @@
-"use client"
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+"use client";
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { X, Star } from "lucide-react";
+import Loader from "@/components/shared/Loader";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Image from "next/image";
+
 // Define types for the RFP data structure
 interface Vendor {
   price: string | number | readonly string[] | undefined;
@@ -37,12 +48,13 @@ interface SupportingDocument {
 }
 
 interface Quotation {
+  refNo: string;
   id: string;
   totalAmount: string;
   totalAmountWithoutGST: string;
   vendor: Vendor;
   products: Product[];
-  supportingDocuments: SupportingDocument[]; // Add supporting documents to the quotation
+  supportingDocuments: SupportingDocument[];
 }
 
 interface Approver {
@@ -58,13 +70,14 @@ interface RFPData {
   deliveryLocation: string;
   deliveryByDate: string;
   rfpStatus: string;
+  preferredQuotationId: string;
   approvers: Approver[];
   quotations: Quotation[];
 }
 
 const ViewRFP: React.FC = () => {
-  const searchPrams=useSearchParams() // Get rfpId from URL parameters
-  const rfp=searchPrams.get("rfp")
+  const searchParams = useSearchParams();
+  const rfp = searchParams.get("rfp");
   const [rfpData, setRfpData] = useState<RFPData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,12 +87,12 @@ const ViewRFP: React.FC = () => {
       try {
         const response = await fetch(`/api/rfp?rfpId=${rfp}`);
         if (!response.ok) {
-          throw new Error('Failed to fetch RFP data');
+          throw new Error("Failed to fetch RFP data");
         }
         const data: RFPData[] = await response.json();
         setRfpData(data[0]); // Assuming the API returns an array
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -88,26 +101,30 @@ const ViewRFP: React.FC = () => {
     fetchRFP();
   }, [rfp]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
   if (error) return <div className="text-red-500">{error}</div>;
   if (!rfpData) return <div>No RFP data found.</div>;
 
   return (
     <form className="space-y-6">
-     
       <Card>
-      <div className="flex justify-end pb-5">
-        <Link href="/dashboard/manager">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="text-black-500 bg-red-400"
-          >
-            <X className="h-4 w-4" />
-          </Button>{" "}
-        </Link>
-      </div>
+        <div className="flex justify-end pb-5">
+          <Link href="/dashboard/manager">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="text-black-500 bg-red-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
         <CardHeader>
           <CardTitle>View RFP</CardTitle>
         </CardHeader>
@@ -116,12 +133,17 @@ const ViewRFP: React.FC = () => {
             <CardHeader>
               <CardTitle>Request for Product</CardTitle>
               <div className="flex justify-between">
-                <p className="text-md text-muted-foreground">RFP ID: {rfpData.rfpId}</p>
-                <p>Date of Ordering: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}</p>
+                <p className="text-md text-muted-foreground">
+                  RFP ID: {rfpData.rfpId}
+                </p>
+                <p>
+                  Date of Ordering:{" "}
+                  {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+                </p>
               </div>
             </CardHeader>
             <CardContent className="grid grid-cols-4 gap-2">
-              <div className="space-y-3 text-[19px]">
+              <div className=" ">
                 <Label>Requirement Type</Label>
                 <p>{rfpData.requirementType}</p>
               </div>
@@ -141,30 +163,15 @@ const ViewRFP: React.FC = () => {
                 <div key={index} className="flex items-center space-x-2 mb-2">
                   <div className="flex flex-col">
                     <Label>Approver Name</Label>
-                    <Input
-                      type="text"
-                      value={approver.name}
-                      disabled
-                      // className="border border-gray-300 p-2 rounded"
-                    />
+                    <Input type="text" value={approver.name} disabled />
                   </div>
                   <div className="flex flex-col">
                     <Label>Email</Label>
-                    <Input
-                      type="text"
-                      value={approver.email}
-                      disabled
-                      // className="border border-gray-300 p-2 rounded"
-                    />
+                    <Input type="text" value={approver.email} disabled />
                   </div>
                   <div className="flex flex-col">
                     <Label>Phone</Label>
-                    <Input
-                      type="text"
-                      value={approver.mobile}
-                      disabled
-                      // className="border border-gray-300 p-2 rounded"
-                    />
+                    <Input type="text" value={approver.mobile} disabled />
                   </div>
                 </div>
               ))}
@@ -172,164 +179,178 @@ const ViewRFP: React.FC = () => {
           </Card>
 
           <Card className="mb-4">
-  <CardHeader>
-    <CardTitle>Product Details</CardTitle>
-  </CardHeader>
-  <CardContent>
-    {rfpData.quotations.map((quotation, index) => (
-      <div key={index} className="mb-4">
-        <div className="flex flex-col mb-4">
-          <Label>Quotation ID</Label>
-          <Input
-            type="text"
-            value={quotation.id}
-            disabled
-            className="border border-gray-300 p-2 rounded"
-          />
-        </div>
-        <div className="flex flex-col mb-4">
-          <Label>Total Amount</Label>
-          <Input
-            type="text"
-            value={quotation.totalAmount}
-            disabled
-            className="border border-gray-300 p-2 rounded"
-          />
-        </div>
-        <div className="flex flex-col mb-4">
-          <Label>Total Amount Without GST</Label>
-          <Input
-            type="text"
-            value={quotation.totalAmountWithoutGST}
-            disabled
-            className="border border-gray-300 p-2 rounded"
-          />
-        </div>
-        <h4 className="font-semibold">Vendor Details</h4>
-        <div className="flex items-center space-x-2 mb-2">
-          <div className="flex flex-col">
-            <Label>Company Name</Label>
-            <Input
-              type="text"
-              value={quotation.vendor.companyName}
-              disabled
-              className="border border-gray-300 p-2 rounded"
-            />
-          </div>
-          <div className="flex flex-col">
-            <Label>Email</Label>
-            <Input
-              type="text"
-              value={quotation.vendor.email}
-              disabled
-              className="border border-gray-300 p-2 rounded"
-            />
-          </div>
-          <div className="flex flex-col">
-            <Label>Mobile</Label>
-            <Input
-              type="text"
-              value={quotation.vendor.mobile}
-              disabled
-              className="border border-gray-300 p-2 rounded"
-            />
-          </div>
-         
-        </div>
-        <h4 className="font-semibold">Products</h4>
-        {quotation.products.map((product, idx) => (
-          <div key={idx} className="flex items-center space-x-2 mb-2">
-            <div className="flex flex-col">
-              <Label>Product Name</Label>
-              <Input
-                type="text"
-                value={product.name}
-                disabled
-                className="border border-gray-300 p-2 rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label>Model No</Label>
-              <Input
-                type="text"
-                value={product.modelNo}
-                disabled
-                className="border border-gray-300 p-2 rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label>Quantity</Label>
-              <Input
-                type="number"
-                value={product.quantity}
-                disabled
-                className="border border-gray-300 p-2 rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label>Price</Label>
-              <Input
-                type="number"
-                value={product.price}
-                disabled
-                className="border border-gray-300 p-2 rounded"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label>GST</Label>
-              <Input
-                type="number"
-                value={product.GST}
-                disabled
-                className="border border-gray-300 p-2 rounded"
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-    ))}
-  </CardContent>
-</Card>
-
-
-
-          <Card className="mb-4">
             <CardHeader>
-              <CardTitle>Supporting Documents</CardTitle>
+              <CardTitle>Quotations</CardTitle>
             </CardHeader>
             <CardContent>
-              <table className="min-w-full border-collapse border border-gray-300">
-                <thead>
-                  <tr>
-                    <th className="border border-gray-300 p-2">Document Name</th>
-                    <th className="border border-gray-300 p-2">Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rfpData.quotations.flatMap((quotation) => 
-                    quotation.supportingDocuments.map((doc, idx) => (
-                      <tr key={idx}>
-                        <td className="border border-gray-300 p-2">
-                          <input
-                            type="text"
-                            value={doc.documentName}
-                            disabled
-                            className="w-full bg-gray-100"
-                          />
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          <input
-                            type="text"
-                            value={doc.location}
-                            disabled
-                            className="w-full bg-gray-100"
-                          />
-                        </td>
-                      </tr>
-                    ))
+              {rfpData.quotations.map((quotation, index) => (
+                <div
+                  key={index}
+                  className={`mb-16 p-4 rounded-lg ${
+                    quotation.id === rfpData.preferredQuotationId
+                      ? " border-2 border-yellow-400"
+                      : ""
+                  }`}
+                >
+                  {quotation.id === rfpData.preferredQuotationId && (
+                    <div className="flex items-center mb-2 text-yellow-600">
+                      <Star className="mr-2" />
+                      <span className="font-semibold">Preferred Vendor</span>
+                    </div>
                   )}
-                </tbody>
-              </table>
+                  <div className="flex flex-col mb-4">
+                    <Label>Quotation ID</Label>
+                    <Input
+                      type="text"
+                      value={quotation.id}
+                      disabled
+                      className="border border-gray-300 p-2 rounded"
+                    />
+                  </div>
+                  <div className="flex ">
+                    <div className="flex flex-col mb-4 mr-4">
+                      <Label>Ref No</Label>
+                      <Input
+                        type="text"
+                        value={quotation.refNo}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                    <div className="flex flex-col mb-4 mr-4">
+                      <Label>Total Amount Incl.GST(INR)</Label>
+                      <Input
+                        type="text"
+                        value={quotation.totalAmount}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                    <div className="flex flex-col mb-4">
+                      <Label>Taxable Amount (INR)</Label>
+                      <Input
+                        type="text"
+                        value={quotation.totalAmountWithoutGST}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                  </div>
+                  <h4 className="font-semibold">Vendor Details</h4>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="flex flex-col">
+                      <Label>Company Name</Label>
+                      <Input
+                        type="text"
+                        value={quotation.vendor.companyName}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <Label>Email</Label>
+                      <Input
+                        type="text"
+                        value={quotation.vendor.email}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <Label>Mobile</Label>
+                      <Input
+                        type="text"
+                        value={quotation.vendor.mobile}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                  </div>
+                  <h4 className="font-semibold">Products</h4>
+                  {quotation.products.map((product, idx) => (
+                    <div key={idx} className="flex items-center space-x-2 mb-2">
+                      <div className="flex flex-col">
+                        <Label>Product Name</Label>
+                        <Input
+                          type="text"
+                          value={product.name}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>Quantity</Label>
+                        <Input
+                          type="number"
+                          value={product.quantity}
+                          disabled
+                          className="border border-gray-300 p-2 rounded w-16"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>Unit Price (INR)</Label>
+                        <Input
+                          type="number"
+                          value={product.price}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>GST %</Label>
+                        <Input
+                          type="number"
+                          value={product.GST}
+                          disabled
+                          className="border border-gray-300 p-2 rounded w-16"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <h4 className="font-semibold">Supporting Documents</h4>
+                  <table className="min-w-full border-collapse border border-gray-300">
+                    <thead>
+                      <tr>
+                        <th className="border border-gray-300 p-2">Document Name</th>
+                        <th className="border border-gray-300 p-2">Location</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {quotation.supportingDocuments.map((doc, idx) => (
+                        <tr key={idx}>
+                          <td className="border border-gray-300 p-2">
+                            <input
+                              type="text"
+                              value={doc.documentName}
+                              disabled
+                              className="w-full bg-gray-100"
+                            />
+                          </td>
+                          <td className="border border-gray-300 p-2">
+                            <Dialog>
+                              <DialogTrigger>Open</DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>{doc.documentName}</DialogTitle>
+                                  <DialogDescription>
+                                    <Image
+                                      height={60}
+                                      width={60}
+                                      alt="Document"
+                                      src={doc.location}
+                                    />
+                                  </DialogDescription>
+                                </DialogHeader>
+                              </DialogContent>
+                            </Dialog>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
             </CardContent>
           </Card>
 

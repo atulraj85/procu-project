@@ -290,6 +290,7 @@ function formatPOData(inputData: any[]): any[] {
       industry: po.company.industry,
       foundedDate: po.company.foundedDate,
       status: po.company.status,
+      addresses: po.company.addresses,
       created_at: po.company.created_at,
       updated_at: po.company.updated_at,
     },
