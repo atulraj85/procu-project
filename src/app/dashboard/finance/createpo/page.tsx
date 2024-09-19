@@ -134,7 +134,7 @@ const Page = () => {
 
       const result = await response.json();
       toast({
-        title: "🎉 Vendor added successfully.",
+        title: "🎉 PO Created successfully.",
         
       });
      
@@ -220,10 +220,10 @@ const Page = () => {
               {formData.products.map((product, index) => (
                 <tr key={index}>
                   
-                  <td className="text-[14px] border border-gray-300 p-4">{formData.productName}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.unitPrice}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.productQuantity}</td>
-                  {/* <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.unitPrice * product.quantity).toFixed(2)}</td> */}
+                  <td className="text-[14px] border border-gray-300 p-4">{product.name}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.price}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{product.quantity}</td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.price * product.quantity).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

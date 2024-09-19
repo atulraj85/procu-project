@@ -135,7 +135,7 @@ const Page: React.FC = () => {
           </div>
           <div className="w-[35%]">
             <div>
-              <h1 className="font-bold">{company?.name}</h1>
+              <h1 className="font-bold flex justify-end">{company?.name}</h1>
               
             </div>
             <div className="flex justify-end">
@@ -221,7 +221,7 @@ const Page: React.FC = () => {
           <div>
             <div className="w-[50%] mt-7 mb-3">
               <label className="font-bold">{company?.name}</label>
-              <Image height={80} width={100} alt="Signature" src={company?.stamp} />
+              <Image height={80} width={100} alt="Signature" src={company?.stamp || "/company/logo.png"} />
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
             <div className="flex justify-between">
