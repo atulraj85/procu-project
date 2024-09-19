@@ -32,6 +32,15 @@ import {
 import Link from "next/link";
 import { Textarea } from "../ui/textarea";
 import { Checkbox } from "../ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Add quotation ref number (Quotation table)
 
@@ -978,6 +987,8 @@ export default function RFPUpdateForm({
   const [quotes, setQuotes] = useState(0);
   const [preferredVendorId, setPreferredVendorId] = useState("");
   const [showCheckbox, setShowCheckbox] = useState(true);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1038,6 +1049,20 @@ export default function RFPUpdateForm({
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
   }, [getValues().quotations]);
+
+  const handleDeleteClick = (index: number) => {
+    setDeleteIndex(index);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteIndex !== null) {
+      remove(deleteIndex);
+      setQuotes(quotes - 1);
+      setIsDeleteDialogOpen(false);
+      setDeleteIndex(null);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -1220,11 +1245,7 @@ export default function RFPUpdateForm({
 
                     <Button
                       type="button"
-                      onClick={() => {
-                        console.log("Removing index:", index);
-                        remove(index);
-                        setQuotes(quotes - 1);
-                      }}
+                      onClick={() => handleDeleteClick(index)}
                       variant="outline"
                       size="icon"
                       className="text-red-500"
@@ -1262,6 +1283,29 @@ export default function RFPUpdateForm({
           )}
         </CardContent>
       </Card>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this quotation? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>
