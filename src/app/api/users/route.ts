@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 // Import the Role enum if needed
 // GET: Retrieve all users
 export async function GET() {
+
   try {
     const users = await prisma.user.findMany();
     return NextResponse.json({ response: { data: users } });
@@ -64,15 +65,15 @@ export async function POST(request: Request) {
 
 // PUT: Update an existing user
 export async function PUT(request: Request) {
-  const { id, email, password, name, role } = await request.json();
+  const { id, role } = await request.json();
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        email,
-        password, // Make sure to hash the password before saving it
-        name,
+        // email,
+        // password, // Make sure to hash the password before saving it
+        // name,
         role,
       },
     });

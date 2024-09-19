@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
   FormControl,
@@ -30,7 +31,11 @@ interface RegisterFormProps {
 }
 
 function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -67,7 +72,16 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
           description: response?.response?.meta?.message,
         });
 
-        router.push("/register/company/admin/login");
+        form.reset({
+          name: "",
+          company: "",
+          email: "",
+          mobile: "",
+          password: "",
+        });
+  
+
+        router.push("/login");
       }
 
       setLoading(false);
@@ -158,24 +172,36 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Password"
-                    {...field}
-                    className="h-[3.75rem] w-full rounded-large"
-                    startIcon="padlock"
-                    type="password"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+<FormField
+  control={form.control}
+  name="password"
+  render={({ field }) => (
+     <div className="relative">
+      <FormItem>
+       
+          <FormControl>
+            <Input
+              placeholder="Password"
+              {...field}
+              startIcon="padlock"
+              className="h-[3.75rem] w-full rounded-large"
+              type={showPassword ? "text" : "password"}
+            />
+            
+          </FormControl>
+       
+        <FormMessage />
+      </FormItem>
+      <span
+              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? <IoEyeOff /> : <IoEye />}
+            </span>
+            </div>
+   
+  )}
+/>
 
           <MainButton
             text="Register"

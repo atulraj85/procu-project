@@ -6,6 +6,7 @@ import { IoIosSearch } from "react-icons/io";
 import { validateGstn } from "@/lib/Validation";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
+import { FiLoader } from "react-icons/fi";
 
 6
 
@@ -45,7 +46,7 @@ const Company: React.FC = () => {
     }
   )
 
-    
+  const [loader, setLoader] = useState<boolean>(false);
 
   const [companyData, setCompanyData] = useState<CompanyData>({
     company_gstn: "",
@@ -99,8 +100,9 @@ const Company: React.FC = () => {
 
   const fetchCompanyDetails = async (GST: string) => {
     try {
-      const response1 = await fetch(`/api/company?gstin=${GST}`);
+      const response1 = await fetch(`/api/company?GST=${GST}`);
       const result1 = await response1.json();
+      console.log(result1);
 
       if (!result1.error) {
         toast({
@@ -136,9 +138,11 @@ const Company: React.FC = () => {
         title: "An error occurred while fetching vendor details.",
       });
     }
+    setLoader(false);
   };
 
   const handleSearchGSTN = () => {
+    setLoader(true);
     if (validateGstn(companyData.company_gstn)) {
       fetchCompanyDetails(companyData.company_gstn);
     } else {
@@ -168,7 +172,9 @@ const Company: React.FC = () => {
     formData.append("email", companyData.email);
     formData.append("phone", companyData.phone);
 
-   
+    
+
+    
 
 
 
@@ -184,7 +190,7 @@ const Company: React.FC = () => {
 
       if (response.ok) {
         toast({
-          title: "company details submitted successfully.",
+          title: "Company Created Successfully.",
         });
         setCompanyData({
           company_gstn: "",
@@ -265,7 +271,7 @@ const Company: React.FC = () => {
                 onClick={handleSearchGSTN}
                 className="absolute right-0 top-14 transform -translate-y-1/2 px-1 py-1 rounded"
               >
-                <IoIosSearch />
+              {loader ? <FiLoader /> :  <IoIosSearch />}
               </button>
               {errors.gstn && <p className="text-red-500">{errors.gstn}</p>}
             </div>

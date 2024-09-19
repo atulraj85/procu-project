@@ -13,6 +13,7 @@ export default function Page() {
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
     const role = localStorage.getItem("USER_ROLE");
+    const userID = localStorage.getItem("USER_ID");
     if (!token) {
       router.push("/login");
     } else if (role?.toLowerCase() !== "admin") {

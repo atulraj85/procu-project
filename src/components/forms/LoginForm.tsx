@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
   FormControl,
@@ -44,6 +45,11 @@ interface LoginFormProps {
 }
 
 function LoginForm({ api, registerPage}: LoginFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -75,12 +81,13 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
         });
 
         console.log(localStorage.getItem("USER_ROLE"));
+          router.push("/dashboard/admin");
 
-        if(localStorage.getItem("USER_ROLE") == "ADMIN"){
-          router.push("/dashboard/admin/company");
-        } else {
-          router.push("/dashboard");
-        }
+        // if(localStorage.getItem("USER_ROLE") == "ADMIN"){
+        //   router.push("/dashboard/admin/company");
+        // } else {
+        //   router.push("/dashboard/admin/company");
+        // }
         
       }
 
@@ -130,6 +137,7 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
+              <div className="relative">
               <FormItem>
                 <FormControl>
                   <Input
@@ -137,11 +145,19 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
                     {...field}
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="padlock"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
+                    
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
+              <span
+              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? <IoEyeOff /> : <IoEye />}
+            </span>
+            </div>
             )}
           />
 

@@ -27,7 +27,6 @@ const formSchema = z.object({
   GST: z.string().optional(),
   email: z.string().optional().or(z.literal("")), //TODO email
   phone: z.string().optional(),
-  businessAddress: z.string().optional(),
   website: z.string().optional().or(z.literal("")), //TODO url()
   industry: z.string().optional(),
   foundedDate: z.string().optional(), // Use string for date input
@@ -58,7 +57,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       GST: "",
       email: "",
       phone: "",
-      businessAddress:"",
       website: "",
       industry: "",
       foundedDate: "",
@@ -78,9 +76,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     const storedUserId = localStorage.getItem("USER_ID");
     console.log(storedUserId);
     setUserId(storedUserId);
-
-
-
+    
     if (storedUserId) {
       getCompanyDetails(storedUserId);
     }
@@ -88,11 +84,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
   const getCompanyDetails = async (id: string) => {
     try {
-
-      console.log(id);
-      const response = await fetch(`/api/users?id=${id}`);
+      const response = await fetch(`/api/company?id=${id}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch company details");
+        throw new Error('Failed to fetch company details');
       }
       const data = await response.json();
       console.log(data);
@@ -122,29 +116,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         }
       }
 
-      formData.forEach((value, key) => {
-        console.log(`${key}:`, value);
-      });
-
-      form.reset({
-        name: "",
-        GST: "",
-        email: "",
-        phone: "",
-        businessAddress:"",
-        website: "",
-        industry: "",
-        foundedDate: "",
-        status: "active",
-        logo: undefined,
-        stamp: undefined,
-        address: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-      });
-
+      console.log(formData);
       toast({
         title: "Success",
         description: "Company saved successfully",
@@ -165,7 +137,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Company Information</CardTitle>
+            <CardTitle>Create Company</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-2">
@@ -178,7 +150,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   <FormItem>
                     <FormLabel>Company Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field}  />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -219,20 +191,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="businessAddress"
-                render={({ field }) => (
-                  <FormItem >
-                    <FormLabel>Business Address</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -362,7 +320,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
             <CardTitle>Delivery Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <FormField
                 control={form.control}
                 name="address"
@@ -377,68 +335,70 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 )}
               />
 
-              <div className="flex gap-20">
-                <FormField
-                  control={form.control}
-                  name="country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="state"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>State</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>City</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name="zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="zipCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Zip Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
 
-        <Button type="submit" disabled={isLoading} className="my-4 bg-primary">
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="my-4 bg-primary"
+        >
           {isLoading ? "Saving..." : "Save Company"}
         </Button>
       </form>
