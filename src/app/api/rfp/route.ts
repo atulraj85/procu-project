@@ -23,11 +23,13 @@ function formatRFPData(inputData: any[]) {
       email: approver.user.email,
       mobile: approver.user.mobile,
     })),
+
     products: rfp.rfpProducts.map((product: any) => ({
       id: product.product.id,
       name: product.product.name,
       modelNo: product.product.modelNo,
       quantity: product.quantity,
+      rfpProductId: product.id,
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -137,6 +139,7 @@ export async function GET(request: NextRequest) {
         },
         rfpProducts: {
           select: {
+            id: true,
             product: {
               select: {
                 id: true,
