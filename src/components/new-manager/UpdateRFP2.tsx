@@ -358,12 +358,14 @@ const ProductList = ({
   getValues,
   setValue,
   setErrors,
+  requirementType,
 }: {
   products: Product[];
   control: any;
   index: number;
   getValues: any;
   setValue: any;
+  requirementType: string;
   setErrors: (error: string) => void; // New prop type
 }) => {
   const { fields, replace } = useFieldArray({
@@ -475,37 +477,33 @@ const ProductList = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Products</CardTitle>
+        <CardTitle className="text-lg">
+          {requirementType || "Product/Service"} Details
+        </CardTitle>
       </CardHeader>
 
       <CardContent>
         <div className="space-y-2">
-          <div className="grid grid-cols-7 gap-2 mb-2">
+          <div className="grid grid-cols-6 gap-2 mb-2">
             <Label>Name</Label>
-            <Label>Model No.</Label>
-            <Label>Quantity</Label>
+            <Label>Qty.</Label>
             <Label>Unit Price</Label>
-            <Label>GST</Label>
-            <Label>Total (Without GST)</Label>
-            <Label>Total (With GST)</Label>
+            <Label>GST%</Label>
+            <Label>Taxable Amount (INR)</Label>
+            <Label>Total (incl. GST) (INR) </Label>
           </div>
           {loading ? (
             <>Fetching Data</>
           ) : (
             fields.map((field, productIndex) => (
-              <div key={field.id} className="grid grid-cols-7 gap-2 m-2">
+              <div key={field.id} className="grid grid-cols-6 gap-2 m-2">
                 <Input
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.name`
                   )}
                   readOnly
                 />
-                <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.modelNo`
-                  )}
-                  readOnly
-                />
+
                 <Input
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.quantity`
@@ -588,6 +586,10 @@ const ProductList = ({
               </div>
             ))
           )}
+          <div className="w-1/2">
+            <Label>Product Description:</Label>
+            <Textarea />
+          </div>
           {error && <div className="text-red-500">{error}</div>}{" "}
           {/* Display single error message */}
         </div>
@@ -724,6 +726,7 @@ const OtherChargesList = ({
 };
 // Step 5: Create Supporting Documents List Component
 import { Eye } from "lucide-react";
+import { getTodayDate } from "@/lib/getTodayDate";
 
 const SupportingDocumentsList = ({
   control,
@@ -784,7 +787,7 @@ const SupportingDocumentsList = ({
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-3 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
           </div>
@@ -1036,6 +1039,7 @@ export default function RFPUpdateForm({
   const [showCheckbox, setShowCheckbox] = useState(true);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [requirementType, setRequirementType] = useState("");
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1090,11 +1094,12 @@ export default function RFPUpdateForm({
   });
 
   useEffect(() => {
-    setQuotes(fields.length);
+    fields.length === 0 ? setQuotes(1) : setQuotes(fields.length);
   }, [fields]);
 
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
+    setRequirementType(initialData.requirementType);
   }, [getValues().quotations]);
 
   const handleDeleteClick = (index: number) => {
@@ -1242,6 +1247,7 @@ export default function RFPUpdateForm({
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>
+
           <Link href="/dashboard/manager">
             <Button
               type="button"
@@ -1255,6 +1261,13 @@ export default function RFPUpdateForm({
         </CardHeader>
 
         <CardContent>
+          {rfpId && (
+            <div className="flex justify-between">
+              <p className="text-md text-muted-foreground">RFP ID: {rfpId}</p>
+              <p>Date of Updating: {getTodayDate()}</p>
+            </div>
+          )}
+
           {fields.map((field, index) => {
             const quotation = getValues(`quotations.${index}`);
             const refNoError =
@@ -1351,6 +1364,7 @@ export default function RFPUpdateForm({
                       <CardContent>
                         <div className="mb-2">
                           <ProductList
+                            requirementType={requirementType}
                             setErrors={(error) => setError(error)} // Pass the error handler
                             products={
                               quotation.products.length === 0
@@ -1528,7 +1542,7 @@ export default function RFPUpdateForm({
                   Submitting...
                 </>
               ) : (
-                "Submit Reason and Add Quotation"
+                "Submit Reason and Save Quotation"
               )}
             </Button>
           </div>

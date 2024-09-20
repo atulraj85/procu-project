@@ -9,9 +9,7 @@ import { Plus, Sheet, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 import { useRouter } from "next/navigation";
-
-
-
+import { getTodayDate } from "@/lib/getTodayDate";
 
 interface RFPProduct {
   productId: string;
@@ -49,15 +47,6 @@ interface FormData {
     city: string;
     zipCode: string;
   };
-}
-
-function getTodayDate(): string {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1
-  const year = today.getFullYear(); // Get the full year
-
-  return `${day}/${month}/${year}`;
 }
 
 const RFPForm: React.FC = () => {
@@ -212,7 +201,7 @@ const RFPForm: React.FC = () => {
     }
   };
   const today = new Date();
-  const formattedToday = today.toISOString().slice(0, 16)
+  const formattedToday = today.toISOString().slice(0, 16);
   const handleProductChange = (
     index: number,
     field: keyof RFPProduct,
@@ -322,7 +311,7 @@ const RFPForm: React.FC = () => {
         description: response.ok,
       });
       // this is for relode form
-      window.location.reload()
+      window.location.reload();
       return router.push("/dashboard");
     } catch (err) {
       // toast({
@@ -397,17 +386,17 @@ const RFPForm: React.FC = () => {
               onChange={handleInputChange}
             />
           </div> */}
-               <div className="space-y-2">
-      <Label htmlFor="deliveryByDate">Delivery By Date</Label>
-      <Input
-        id="deliveryByDate"
-        name="deliveryByDate"
-        type="datetime-local"
-        min={formattedToday} // Set the minimum date
-        value={formData.deliveryByDate}
-        onChange={handleInputChange}
-      />
-    </div>
+              <div className="space-y-2">
+                <Label htmlFor="deliveryByDate">Delivery By Date</Label>
+                <Input
+                  id="deliveryByDate"
+                  name="deliveryByDate"
+                  type="datetime-local"
+                  min={formattedToday} // Set the minimum date
+                  value={formData.deliveryByDate}
+                  onChange={handleInputChange}
+                />
+              </div>
               {/* <div className="space-y-2">
             <Label htmlFor="lastDateToRespond">Last Date to Respond</Label>
             <Input
