@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { X } from "lucide-react";
+import Loader from "@/components/shared/Loader";
 
 interface Product {
   id: string;
@@ -150,14 +151,17 @@ const Page: React.FC = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error('Network response was not ok')
+        else{
 
       const result = await response.json();
       toast({
         title: "🎉 PO Created successfully.",
+       
       });
-     
-      router.push("/dashboard");
+      router.push("/dashboard")
+    }
+      
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -211,7 +215,7 @@ const Page: React.FC = () => {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div><Loader/> </div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
