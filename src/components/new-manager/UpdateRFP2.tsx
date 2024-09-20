@@ -1141,7 +1141,7 @@ export default function RFPUpdateForm({
     fields.forEach((_, quotationIndex) => {
       const products = getValues(`quotations.${quotationIndex}.products`);
       products.forEach((product: any, productIndex: number) => {
-        if (product.quantity <= 0 || !Number.isInteger(product.quantity)) {
+        if (product.quantity <= 0 || product.quantity) {
           newErrors[
             `quotations.${quotationIndex}.products.${productIndex}.quantity`
           ] = "Quantity must be a positive integer.";
