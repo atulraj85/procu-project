@@ -1111,10 +1111,62 @@ export default function RFPUpdateForm({
     }
   };
 
+  const [errors, setErrors] = useState<{
+    [key: string]: string;
+  }>({});
+
+  const validateForm = (data: FormData): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    // Validate preferred vendor
+    if (!preferredVendorId) {
+      newErrors.preferredVendor = "You must select a preferred quotation.";
+    }
+
+    // Validate reference numbers
+    fields.forEach((_, index) => {
+      const refNo = getValues(`quotations.${index}.refNo`);
+      if (!refNo || refNo.trim() === "") {
+        newErrors[`quotations.${index}.refNo`] =
+          "Reference number is required.";
+      }
+    });
+
+    // Validate products
+    fields.forEach((_, quotationIndex) => {
+      const products = getValues(`quotations.${quotationIndex}.products`);
+      products.forEach((product: any, productIndex: number) => {
+        if (product.quantity <= 0 || !Number.isInteger(product.quantity)) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.quantity`
+          ] = "Quantity must be a positive integer.";
+        }
+        if (product.unitPrice <= 0) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.unitPrice`
+          ] = "Unit Price must be a positive number.";
+        }
+        if (!["NILL", "0", "3", "5", "12", "18", "28"].includes(product.gst)) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.gst`
+          ] = "Invalid GST value.";
+        }
+      });
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
+
+    if (!validateForm(data)) {
+      setIsLoading(false);
+      return;
+    }
 
     console.log("Text data to be sent:", data);
 
@@ -1408,12 +1460,19 @@ export default function RFPUpdateForm({
         </DialogContent>
       </Dialog>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
+      {Object.keys(errors).length > 0 && (
+        <Alert variant="destructive" className="w-1/4">
+          <AlertTitle>Validation Errors</AlertTitle>
+          <AlertDescription>
+            <ul>
+              {Object.entries(errors).map(([key, value]) => (
+                <li key={key}>{value}</li>
+              ))}
+            </ul>
+          </AlertDescription>
         </Alert>
       )}
+
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
