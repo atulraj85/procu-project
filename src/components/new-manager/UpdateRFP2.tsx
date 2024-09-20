@@ -8,14 +8,13 @@ import {
   useWatch,
   Control,
   UseFormSetValue,
-  useController,
 } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Plus, X } from "lucide-react";
+import { AlertCircle, Loader2, Plus, PlusIcon, X } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -32,6 +31,15 @@ import {
 import Link from "next/link";
 import { Textarea } from "../ui/textarea";
 import { Checkbox } from "../ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Add quotation ref number (Quotation table)
 
@@ -208,99 +216,121 @@ const VendorSelector = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Vendor Details</CardTitle>
+        <div className="flex">
+          <CardTitle className="text-lg">Vendor Details</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
-        <Input
-          disabled={disableVendorSearch}
-          className="w-1/2"
-          type="text"
-          placeholder="Search Vendors..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-        {error && <div className="text-red-500">{error}</div>}
-        {fetchedVendors.length > 0 && (
-          <div className="mt-2">
-            <h3 className="font-semibold">Fetched Vendors:</h3>
-            <ul>
-              {fetchedVendors.map((vendor) => (
-                <li
-                  key={vendor.id}
-                  className="py-1 cursor-pointer hover:bg-gray-200"
-                  onClick={() => {
-                    addVendor(vendor);
-                    setValue(`quotations.${index}.vendorId`, vendor.id);
-                    setFetchedVendors([]);
-                    setError(null);
-                  }}
-                >
-                  {vendor.companyName} | {vendor.email}
-                </li>
-              ))}
-            </ul>
+        <div className="flex justify-between">
+          <div className="w-[70%]">
+            {error && <div className="text-red-500">{error}</div>}
+            {approvedVendor && (
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Vendor Name
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.companyName}
+                    placeholder="Name"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Email
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.email}
+                    placeholder="Email"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Phone
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.mobile}
+                    placeholder="Phone"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    GSTIN
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.gstin}
+                    placeholder="GSTIN"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
+                  <Button
+                    type="button"
+                    onClick={() => removeVendor()}
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {approvedVendor && (
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Vendor Name
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.companyName}
-                placeholder="Name"
-                className="flex-1"
-              />
+
+          <div className="w-[30%] pl-8">
+            <Input
+              className="border-2 border-green-700"
+              disabled={disableVendorSearch}
+              type="text"
+              placeholder="Search Vendors..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+            <div>
+              {fetchedVendors.length > 0 && (
+                <div className="mt-2">
+                  <h3 className="font-semibold">Fetched Vendors:</h3>
+                  <ul>
+                    {fetchedVendors.map((vendor) => (
+                      <li
+                        key={vendor.id}
+                        className="py-1 cursor-pointer hover:bg-gray-200"
+                        onClick={() => {
+                          addVendor(vendor);
+                          setValue(`quotations.${index}.vendorId`, vendor.id);
+                          setFetchedVendors([]);
+                          setError(null);
+                        }}
+                      >
+                        {vendor.companyName} | {vendor.email}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Email
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.email}
-                placeholder="Email"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Phone
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.mobile}
-                placeholder="Phone"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                GSTIN
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.gstin}
-                placeholder="GSTIN"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
-              <Button
-                type="button"
-                onClick={() => removeVendor()}
-                variant="outline"
-                size="icon"
-                className="text-red-500"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+
+            {disableVendorSearch && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  "You need to remove the current vendor first to modify
+                  existing vendor details."
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -591,72 +621,79 @@ const OtherChargesList = ({
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-4 gap-2 mb-2">
-            <Label>Name</Label>
-            <Label>GST</Label>
-            <Label>Unit Price</Label>
-          </div>
-          {fields.map((field, chargeIndex) => (
-            <div className="space-y-2 m-2" key={field.id}>
-              <div className="grid grid-cols-4 gap-2">
-                <Input
-                  {...control.register(
-                    `quotations.${index}.otherCharges.${chargeIndex}.name`
-                  )}
-                />
-                <Controller
-                  name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select GST" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["NILL", "0", "3", "5", "12", "18", "28"].map(
-                          (gst) => (
-                            <SelectItem key={gst} value={gst}>
-                              {gst}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <Input
-                  type="number"
-                  {...control.register(
-                    `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
-                  )}
-                />
-
-                <div className="flex flex-col">
-                  <Label className="font-bold text-[16px] text-slate-700"></Label>
-                  <Button
-                    type="button"
-                    onClick={() => remove(chargeIndex)}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+          <div className="flex justify-between">
+            <div className="grid grid-cols-1">
+              <div className="grid grid-cols-4 gap-2 mb-2">
+                <Label>Name</Label>
+                <Label>GST</Label>
+                <Label>Unit Price</Label>
               </div>
-            </div>
-          ))}
+              {fields.map((field, chargeIndex) => (
+                <div className="space-y-2 mb-2" key={field.id}>
+                  <div className="grid grid-cols-4 gap-2">
+                    <Input
+                      {...control.register(
+                        `quotations.${index}.otherCharges.${chargeIndex}.name`
+                      )}
+                    />
+                    <Controller
+                      name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select GST" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                              (gst) => (
+                                <SelectItem key={gst} value={gst}>
+                                  {gst}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <Input
+                      type="number"
+                      {...control.register(
+                        `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
+                      )}
+                    />
 
-          <Button
-            type="button"
-            className="bg-primary mt-2"
-            onClick={() => {
-              append({ name: "", gst: "NILL", unitPrice: 0 });
-              updateGlobalFormData();
-            }}
-          >
-            Add Other Charge
-          </Button>
+                    <div className="flex flex-col">
+                      <Label className="font-bold text-[16px] text-slate-700"></Label>
+                      <Button
+                        type="button"
+                        onClick={() => remove(chargeIndex)}
+                        variant="outline"
+                        size="icon"
+                        className="text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              className="bg-primary"
+              onClick={() => {
+                append({ name: "", gst: "NILL", unitPrice: 0 });
+                updateGlobalFormData();
+              }}
+            >
+              <PlusIcon />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -719,77 +756,86 @@ const SupportingDocumentsList = ({
 
   return (
     <div>
-      <Card>
+      <Card className="mr-2">
         <CardHeader>
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-4 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
-            <Label>Actions</Label>
           </div>
-          {fields.map((field, docIndex) => {
-            const location = getValue(
-              `quotations.${index}.supportingDocuments.${docIndex}.location`
-            );
-            const isFileUploaded = !!location;
 
-            return (
-              <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
-                <Input
-                  {...control.register(
-                    `quotations.${index}.supportingDocuments.${docIndex}.name`
-                  )}
-                  placeholder="Enter document name"
-                />
-                <div>
-                  {isFileUploaded ? (
+          <div className="flex">
+            <div className="grid grid-cols-1 justify-between">
+              {fields.map((field, docIndex) => {
+                const location = getValue(
+                  `quotations.${index}.supportingDocuments.${docIndex}.location`
+                );
+                const isFileUploaded = !!location;
+
+                return (
+                  <div key={field.id} className="grid grid-cols-3 gap-2 my-2">
                     <Input
-                      type="text"
-                      value={location}
-                      disabled
-                      className="bg-gray-100"
+                      {...control.register(
+                        `quotations.${index}.supportingDocuments.${docIndex}.name`
+                      )}
+                      placeholder="Enter document name"
                     />
-                  ) : (
-                    <Input
-                      type="file"
-                      onChange={(e) => handleFileChange(e, docIndex)}
-                    />
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  {isFileUploaded && (
-                    <Button
-                      type="button"
-                      onClick={() => handlePreview(location)}
-                      variant="outline"
-                      size="icon"
-                      className="text-blue-500"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    onClick={() => remove(docIndex)}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-          <Button
-            type="button"
-            className="bg-primary mt-2"
-            onClick={() => append({ name: "", fileName: "" })}
-          >
-            Add Supporting Document
-          </Button>
+                    <div>
+                      {isFileUploaded ? (
+                        <Input
+                          type="text"
+                          value={location}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      ) : (
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileChange(e, docIndex)}
+                        />
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      {isFileUploaded && (
+                        <Button
+                          type="button"
+                          onClick={() => handlePreview(location)}
+                          variant="outline"
+                          size="icon"
+                          className="text-blue-500"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      )}
+
+                      <div className="flex flex-col">
+                        <Label className="font-bold text-[16px] text-slate-700"></Label>
+                        <Button
+                          type="button"
+                          onClick={() => remove(docIndex)}
+                          variant="outline"
+                          size="icon"
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Button
+              type="button"
+              className="bg-primary mt-2"
+              onClick={() => append({ name: "", fileName: "" })}
+            >
+              <PlusIcon />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -865,34 +911,21 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   }, [quotation, setValue, index]);
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Total</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label>Total Without GST</Label>
-            {/* <Input
-              value={quotation.total?.withoutGST?.toFixed(2) || "0.00"}
-              readOnly
-            />{" "} */}
-            <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
-          </div>
-          <div>
-            <Label>Total With GST</Label>
-            {/* <Input
-              value={quotation.total?.withGST?.toFixed(2) || "0.00"}
-              readOnly
-            /> */}
-            <Input
-              value={(quotation.total?.withGST || 0).toFixed(2)}
-              readOnly
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Total</CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 gap-2">
+        <div>
+          <Label>Total Without GST</Label>
+          <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
+        </div>
+        <div>
+          <Label>Total With GST</Label>
+          <Input value={(quotation.total?.withGST || 0).toFixed(2)} readOnly />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -978,6 +1011,8 @@ export default function RFPUpdateForm({
   const [quotes, setQuotes] = useState(0);
   const [preferredVendorId, setPreferredVendorId] = useState("");
   const [showCheckbox, setShowCheckbox] = useState(true);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1038,6 +1073,20 @@ export default function RFPUpdateForm({
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
   }, [getValues().quotations]);
+
+  const handleDeleteClick = (index: number) => {
+    setDeleteIndex(index);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteIndex !== null) {
+      remove(deleteIndex);
+      setQuotes(quotes - 1);
+      setIsDeleteDialogOpen(false);
+      setDeleteIndex(null);
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -1120,11 +1169,19 @@ export default function RFPUpdateForm({
                   <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
 
                   <AccordionContent>
-                    <div className="m-2">
-                      <Card className="w-1/2">
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          <div className="flex flex-row items-center justify-between gap-2 mb-2">
+                            <div className="w-1/4">
+                              <Label>Ref No.</Label>
+                              <Input
+                                {...control.register(
+                                  `quotations.${index}.refNo`
+                                )}
+                              />
+                            </div>
+                            <div className="flex flex-row items-center gap-2">
                               <Checkbox
                                 checked={preferredVendorIndex === index}
                                 disabled={
@@ -1145,34 +1202,26 @@ export default function RFPUpdateForm({
                                   }
                                 }}
                               />
-                              <Label className="font-bold text-[16px] text-slate-700">
-                                Preferred Quote
-                              </Label>
+                              <div className="flex flex-col gap-1">
+                                <Label className="font-bold text-[16px] text-green-700">
+                                  Preferred Quote
+                                </Label>
+                                {preferredVendorIndex === index && (
+                                  <Input
+                                    className="mb-2"
+                                    placeholder="Reason for preferring this vendor"
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                  />
+                                )}
+                              </div>
                             </div>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {preferredVendorIndex === index && (
-                            <div>
-                              <Textarea
-                                className="mb-2"
-                                placeholder="Reason for preferring this vendor"
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
-                              />
-                            </div>
-                          )}
-                          <div className="w-1/2">
-                            <Label>Ref No.</Label>
-                            <Input
-                              {...control.register(`quotations.${index}.refNo`)}
-                            />
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
 
-                    <div className="m-2">
+                    <div className="my-2">
                       <VendorSelector
                         setValue={setValue}
                         index={index}
@@ -1181,52 +1230,60 @@ export default function RFPUpdateForm({
                       />
                     </div>
 
-                    <div className="m-2">
-                      <ProductList
-                        products={
-                          quotation.products.length === 0
-                            ? initialData.products
-                            : quotation.products
-                        }
-                        setValue={setValue}
-                        getValues={getValues}
-                        control={control}
-                        index={index}
-                      />
-                    </div>
+                    <Card className="my-2">
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Products / Services Details
+                        </CardTitle>
+                      </CardHeader>
 
-                    <OtherChargesList
-                      control={control}
-                      index={index}
-                      formData={FormData}
-                    />
+                      <CardContent>
+                        <div className="mb-2">
+                          <ProductList
+                            products={
+                              quotation.products.length === 0
+                                ? initialData.products
+                                : quotation.products
+                            }
+                            setValue={setValue}
+                            getValues={getValues}
+                            control={control}
+                            index={index}
+                          />
+                        </div>
 
-                    <div className="m-2">
-                      <TotalComponent
-                        setValue={setValue}
-                        control={control}
-                        index={index}
-                      />
-                    </div>
+                        <OtherChargesList
+                          control={control}
+                          index={index}
+                          formData={FormData}
+                        />
+                      </CardContent>
+                    </Card>
 
-                    <div className="m-2">
-                      <SupportingDocumentsList
-                        control={control}
-                        index={index}
-                        setValue={setValue}
-                        files={files}
-                        setFiles={setFiles}
-                        getValue={getValues}
-                      />
+                    <div className="flex mb-2">
+                      <div className="w-1/2">
+                        <SupportingDocumentsList
+                          control={control}
+                          index={index}
+                          setValue={setValue}
+                          files={files}
+                          setFiles={setFiles}
+                          getValue={getValues}
+                        />
+                      </div>
+
+                      <div className="w-1/2">
+                        <TotalComponent
+                          setValue={setValue}
+                          control={control}
+                          index={index}
+                        />
+                      </div>
                     </div>
 
                     <Button
                       type="button"
-                      onClick={() => {
-                        console.log("Removing index:", index);
-                        remove(index);
-                        setQuotes(quotes - 1);
-                      }}
+                      onClick={() => handleDeleteClick(index)}
                       variant="outline"
                       size="icon"
                       className="text-red-500"
@@ -1264,6 +1321,29 @@ export default function RFPUpdateForm({
           )}
         </CardContent>
       </Card>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this quotation? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Error</AlertTitle>

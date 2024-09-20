@@ -106,61 +106,60 @@ export async function PUT(request: NextRequest) {
       // await deleteExistingRecords(existingRFP.quotations);
 
       // Update or create quotations
-    const updatedQuotations = await Promise.all(
-      processedQuotations.map(async (q) => {
-        if (q.id) {
-          // Update existing quotation
-          console.log("Updating quotation:", q);
-          return prisma.quotation.update({
-            where: { id: q.id },
-            data: {
-              vendorId: q.vendorId,
-              refNo: q.refNo,
-              totalAmount: q.totalAmount,
-              totalAmountWithoutGST: q.totalAmountWithoutGST,
-              vendorPricings: {
-                deleteMany: { quotationId: q.id }, // Delete existing vendor pricing
-                create: q.vendorPricings.create, // Create new vendor pricing
+      const updatedQuotations = await Promise.all(
+        processedQuotations.map(async (q) => {
+          if (q.id) {
+            // Update existing quotation
+            console.log("Updating quotation:", q);
+            return prisma.quotation.update({
+              where: { id: q.id },
+              data: {
+                vendorId: q.vendorId,
+                refNo: q.refNo,
+                totalAmount: q.totalAmount,
+                totalAmountWithoutGST: q.totalAmountWithoutGST,
+                vendorPricings: {
+                  deleteMany: { quotationId: q.id }, // Delete existing vendor pricing
+                  create: q.vendorPricings.create, // Create new vendor pricing
+                },
+                otherCharges: {
+                  deleteMany: { quotationId: q.id }, // Delete existing other charges
+                  create: q.otherCharges.create, // Create new other charges
+                },
+                supportingDocuments: {
+                  deleteMany: { quotationId: q.id }, // Delete existing supporting documents
+                  create: q.supportingDocuments.create.filter(
+                    (doc: null) => doc !== null
+                  ),
+                },
               },
-              otherCharges: {
-                deleteMany: { quotationId: q.id }, // Delete existing other charges
-                create: q.otherCharges.create, // Create new other charges
+            });
+          } else {
+            // Create new quotation
+            console.log("Creating quotation:", q);
+            return prisma.quotation.create({
+              data: {
+                rfpId: id,
+                vendorId: q.vendorId,
+                refNo: q.refNo,
+                totalAmount: q.totalAmount,
+                totalAmountWithoutGST: q.totalAmountWithoutGST,
+                vendorPricings: {
+                  create: q.vendorPricings.create,
+                },
+                otherCharges: {
+                  create: q.otherCharges.create,
+                },
+                supportingDocuments: {
+                  create: q.supportingDocuments.create.filter(
+                    (doc: null) => doc !== null
+                  ),
+                },
               },
-              supportingDocuments: {
-                deleteMany: { quotationId: q.id }, // Delete existing supporting documents
-                create: q.supportingDocuments.create.filter(
-                  (doc: null) => doc !== null
-                ),
-              },
-            },
-          });
-        } else {
-          // Create new quotation
-          console.log("Creating quotation:", q);
-          return prisma.quotation.create({
-            data: {
-              rfpId: id,
-              vendorId: q.vendorId,
-              refNo: q.refNo,
-              totalAmount: q.totalAmount,
-              totalAmountWithoutGST: q.totalAmountWithoutGST,
-              vendorPricings: {
-                create: q.vendorPricings.create,
-              },
-              otherCharges: {
-                create: q.otherCharges.create,
-              },
-              supportingDocuments: {
-                create: q.supportingDocuments.create.filter(
-                  (doc: null) => doc !== null
-                ),
-              },
-            },
-          });
-        }
-      })
-    );
-
+            });
+          }
+        })
+      );
 
       return prisma.rFP.update({
         where: { id },
