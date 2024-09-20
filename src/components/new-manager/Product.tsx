@@ -109,7 +109,7 @@ export default function SheetSide() {
   const isFormValid = name && modelNo && specification && productCategoryId;
 
   return (
-    <Sheet>
+    
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Add Product</Button>
