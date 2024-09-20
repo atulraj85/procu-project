@@ -320,9 +320,9 @@ const VendorSelector = ({
             </div>
 
             {disableVendorSearch && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+              <Alert variant="default" className="mt-2 border-orange-500 text-orange-500">
+                <AlertCircle className="h-4 w-4"  color="orange"/>
+                <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
                   "You need to remove the current vendor first to modify
                   existing vendor details."

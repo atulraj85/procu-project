@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { toast } from "../ui/use-toast";
+import { PlusIcon } from "lucide-react";
 
 // Define the Product interface
 interface Product {
@@ -109,6 +110,7 @@ export default function SheetSide() {
 
   return (
     <Sheet>
+    <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Add Product</Button>
       </SheetTrigger>
@@ -161,20 +163,28 @@ export default function SheetSide() {
               <Label htmlFor="productCategoryId" className="mb-1 font-semibold">
                 Product Category
               </Label>
-              <select
-                id="productCategoryId"
-                value={productCategoryId}
-                onChange={(e) => setProductCategoryId(e.target.value)}
-                className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="" disabled>Select a product category</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.productCategoryId}>
-                    {product.name}
+
+              <div className="flex justify-between">
+                <select
+                  id="productCategoryId"
+                  value={productCategoryId}
+                  onChange={(e) => setProductCategoryId(e.target.value)}
+                  className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>
+                    Select a product category
                   </option>
-                ))}
-              </select>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.productCategoryId}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+                <Button type="button" className="bg-primary" onClick={() => {}}>
+                  <PlusIcon />
+                </Button>
+              </div>
             </div>
           </div>
           <SheetFooter>
