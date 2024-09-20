@@ -31,6 +31,8 @@ export default function SheetSide() {
   const [productCategoryId, setProductCategoryId] = useState<number | string>(""); // Allow number or string for initial state
   const [products, setProducts] = useState<Product[]>([]); // State to store fetched products
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // New state for submission status
+  console.log("pro",products);
+  
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -63,13 +65,13 @@ export default function SheetSide() {
       return; // Prevent submission
     }
 
-    const productData = {
+    const  productData = {
       name,
       modelNo,
       specification,
       productCategoryId: parseInt(productCategoryId as string), // Ensure this is an integer
     };
-
+    console.log("product",productData);
     try {
       const response = await fetch("/api/product", {
         method: "POST",
@@ -77,6 +79,8 @@ export default function SheetSide() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(productData),
+       
+        
       });
 
       if (!response.ok) {
@@ -159,24 +163,24 @@ export default function SheetSide() {
               />
             </div>
             <div className="flex flex-col">
-              <Label htmlFor="productCategoryId" className="mb-1 font-semibold">
-                Product Category
-              </Label>
-              <select
-                id="productCategoryId"
-                value={productCategoryId}
-                onChange={(e) => setProductCategoryId(e.target.value)}
-                className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="" disabled>Select a product category</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.productCategoryId}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+  <Label htmlFor="productCategoryId" className="mb-1 font-semibold">
+    Product Category
+  </Label>
+  <select
+    id="productCategoryId"
+    value={productCategoryId}
+    onChange={(e) => setProductCategoryId(e.target.value)}
+    className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    required
+  >
+    <option value="" disabled>Select a product category</option>
+    {products.map(product => (
+      <option key={product.id} value={product.id}> {/* Use product.id here */}
+        {product.name}
+      </option>
+    ))}
+  </select>
+</div>
           </div>
           <SheetFooter>
             <Button

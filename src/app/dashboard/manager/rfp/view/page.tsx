@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -6,12 +6,11 @@ import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { X, Star } from "lucide-react";
+import { X, Star, FileText, Image as ImageIcon } from "lucide-react";
 import Loader from "@/components/shared/Loader";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -48,6 +47,7 @@ interface SupportingDocument {
 }
 
 interface Quotation {
+  otherCharges: any;
   refNo: string;
   id: string;
   totalAmount: string;
@@ -101,14 +101,47 @@ const ViewRFP: React.FC = () => {
     fetchRFP();
   }, [rfp]);
 
-  if (loading)
-    return (
-      <div>
-        <Loader />
-      </div>
-    );
+  if (loading) return <div><Loader /></div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!rfpData) return <div>No RFP data found.</div>;
+
+  const isImageFile = (filename: string): boolean => {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
+    return imageExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+  };
+
+  const DocumentPreview: React.FC<{ document: SupportingDocument }> = ({ document }) => {
+    return (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            View
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{document.documentName}</DialogTitle>
+          </DialogHeader>
+          {isImageFile(document.location) ? (
+            <Image
+              src={document.location}
+              alt={document.documentName}
+              width={800}
+              height={600}
+              style={{ objectFit: 'contain' }}
+            />
+          ) : (
+            <iframe
+              src={document.location}
+              title={document.documentName}
+              width="100%"
+              height="600px"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return (
     <form className="space-y-6">
@@ -198,7 +231,7 @@ const ViewRFP: React.FC = () => {
                       <span className="font-semibold">Preferred Vendor</span>
                     </div>
                   )}
-                  <div className="flex flex-col mb-4">
+                  {/* <div className="flex flex-col mb-4">
                     <Label>Quotation ID</Label>
                     <Input
                       type="text"
@@ -206,9 +239,8 @@ const ViewRFP: React.FC = () => {
                       disabled
                       className="border border-gray-300 p-2 rounded"
                     />
-                  </div>
-                  <div className="flex ">
-                    <div className="flex flex-col mb-4 mr-4">
+                  </div> */}
+                  <div className="flex flex-col mb-4 w-[35%] mr-4">
                       <Label>Ref No</Label>
                       <Input
                         type="text"
@@ -217,25 +249,7 @@ const ViewRFP: React.FC = () => {
                         className="border border-gray-300 p-2 rounded"
                       />
                     </div>
-                    <div className="flex flex-col mb-4 mr-4">
-                      <Label>Total Amount Incl.GST(INR)</Label>
-                      <Input
-                        type="text"
-                        value={quotation.totalAmount}
-                        disabled
-                        className="border border-gray-300 p-2 rounded"
-                      />
-                    </div>
-                    <div className="flex flex-col mb-4">
-                      <Label>Taxable Amount (INR)</Label>
-                      <Input
-                        type="text"
-                        value={quotation.totalAmountWithoutGST}
-                        disabled
-                        className="border border-gray-300 p-2 rounded"
-                      />
-                    </div>
-                  </div>
+                 
                   <h4 className="font-semibold">Vendor Details</h4>
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="flex flex-col">
@@ -305,51 +319,123 @@ const ViewRFP: React.FC = () => {
                           className="border border-gray-300 p-2 rounded w-16"
                         />
                       </div>
+                      <div className="flex flex-col">
+                        <Label>Taxable Amount(INR)</Label>
+                        <Input
+                          type="number"
+                          value={(product.price)*(product.quantity)}
+                          disabled
+                          className="border border-gray-300 p-2 rounded "
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>Total Amount(INR)</Label>
+                        <Input
+                          type="number"
+                          value={((product.price)*(product.quantity))*(1+(product.GST/100))}
+                          disabled
+                          className="border border-gray-300 p-2 rounded "
+                        />
+                      </div>
                     </div>
                   ))}
+                  <h4 className="font-semibold pt-4">Other Charges</h4>
+                  {quotation.otherCharges.map((other, idx) => (
+                    <div key={idx} className="flex items-center space-x-2 mb-2">
+                      <div className="flex flex-col">
+                        <Label>Name</Label>
+                        <Input
+                          type="text"
+                          value={other.name}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>Unit Price</Label>
+                        <Input
+                          type="text"
+                          value={other.price}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>GST%</Label>
+                        <Input
+                          type="text"
+                          value={other.gst}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <Label>Total Amount</Label>
+                        <Input
+                          type="text"
+                          value={(other.price)*(1+(other.gst/100))}
+                          disabled
+                          className="border border-gray-300 p-2 rounded"
+                        />
+                      </div>
+                      
+                     
+                    </div>
+                  ))}
+                   <div className="flex  pt-4">
+                    
+                    <div className="flex flex-col mb-4 mr-4">
+                      <Label>Total Amount Incl.GST(INR)</Label>
+                      <Input
+                        type="text"
+                        value={quotation.totalAmount}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                    <div className="flex flex-col mb-4">
+                      <Label>Taxable Amount (INR)</Label>
+                      <Input
+                        type="text"
+                        value={quotation.totalAmountWithoutGST}
+                        disabled
+                        className="border border-gray-300 p-2 rounded"
+                      />
+                    </div>
+                  </div>
                   
-                  <h4 className="font-semibold">Supporting Documents</h4>
-                  <table className="min-w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr>
-                        <th className="border border-gray-300 p-2">Document Name</th>
-                        <th className="border border-gray-300 p-2">Location</th>
+                  
+                  <h4 className="font-semibold mt-4 mb-2">Supporting Documents</h4>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-2 text-left">Document Name</th>
+                      <th className="border border-gray-300 p-2 text-left">Type</th>
+                      <th className="border border-gray-300 p-2 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {quotation.supportingDocuments.map((doc, idx) => (
+                      <tr key={idx}>
+                        <td className="border border-gray-300 p-2">{doc.documentName}</td>
+                        <td className="border border-gray-300 p-2">
+                          {isImageFile(doc.location) ? (
+                            <ImageIcon className="inline-block mr-2" size={16} />
+                          ) : (
+                            <FileText className="inline-block mr-2" size={16} />
+                          )}
+                          {isImageFile(doc.location) ? 'Image' : 'PDF'}
+                        </td>
+                        <td className="border border-gray-300 p-2">
+                          <DocumentPreview document={doc} />
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {quotation.supportingDocuments.map((doc, idx) => (
-                        <tr key={idx}>
-                          <td className="border border-gray-300 p-2">
-                            <input
-                              type="text"
-                              value={doc.documentName}
-                              disabled
-                              className="w-full bg-gray-100"
-                            />
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <Dialog>
-                              <DialogTrigger>Open</DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>{doc.documentName}</DialogTitle>
-                                  <DialogDescription>
-                                    <Image
-                                      height={60}
-                                      width={60}
-                                      alt="Document"
-                                      src={doc.location}
-                                    />
-                                  </DialogDescription>
-                                </DialogHeader>
-                              </DialogContent>
-                            </Dialog>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
               ))}
             </CardContent>
           </Card>

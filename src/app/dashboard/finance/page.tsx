@@ -29,37 +29,37 @@ const Dashboard = () => {
     { value: "po_dues", titles: po_dues, content: po_dues_Data },
   ];
 
-  const infoLinks: InfoItem[] = [
+  const [infoLinks, setInfoLinks] = useState<InfoItem[]>([
     {
       value: "po_dues",
-      total: 5,
+      total: 0,
       label: "PO Due",
       price: 453000,
       route: `/vendor/dashboard/po-due`,
     },
     {
       value: "open_po",
-      total: 20,
+      total: 0,
       label: "Open PO",
       price: 2542000,
       route: `/vendor/dashboard/open-po`,
     },
     {
       value: "complete",
-      total: 8,
+      total: 0,
       label: "Complete PO",
       price: 453000,
       route: `/vendor/dashboard/payments-due`,
     },
-  ];
+  ]);
 
   const [rfps, setRfps] = useState<RfpData[]>([]);
-  const [po, setPo] = useState<any>([]);
+  const [po, setPo] = useState<any[]>([]);
   const [content, setContent] = useState<RfpData[]>([]);
   const [header, setHeader] = useState<TableColumn[]>([]);
   const [title, setTitle] = useState("PO Due");
   const [loading, setLoading] = useState(true);
-  const [activeTable, setActiveTable] = useState<string>("po_dues"); // State to track the active table
+  const [activeTable, setActiveTable] = useState<string>("po_dues");
 
   const rfpHeaders: TableColumn[] = [
     { key: "rfpId", header: "RFP ID" },
@@ -76,6 +76,7 @@ const Dashboard = () => {
     try {
       const response = await fetch("/api/rfp");
       const data = await response.json();
+      console.log("data", data);
 
       const formattedData: RfpData[] = data.map((item: any) => ({
         rfpId: item.rfpId,
@@ -83,16 +84,28 @@ const Dashboard = () => {
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
         deliveryLocation: item.deliveryLocation,
         deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
-        lastDateToRespond: new Date(
-          item.lastDateToRespond
-        ).toLocaleDateString(),
+        lastDateToRespond: new Date(item.lastDateToRespond).toLocaleDateString(),
         rfpStatus: item.rfpStatus,
       }));
 
       setRfps(formattedData);
-      setContent(
-        formattedData.filter((item) => item.rfpStatus === "SUBMITTED")
-      ); // Set initial content to pending RFPs
+      
+      // Count PO due (SUBMITTED status)
+      const poDueCount = formattedData.filter(item => item.rfpStatus === "SUBMITTED").length;
+      
+      // Count Complete PO (PAYMENT_DONE status)
+      const completePOCount = formattedData.filter(item => item.rfpStatus === "PAYMENT_DONE").length;
+
+      // Update the counts in infoLinks
+      setInfoLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.value === "po_dues" ? { ...link, total: poDueCount } :
+          link.value === "complete" ? { ...link, total: completePOCount } :
+          link
+        )
+      );
+
+      setContent(formattedData.filter((item) => item.rfpStatus === "SUBMITTED"));
       setHeader(rfpHeaders);
     } catch (error) {
       console.error("Error fetching RFP data:", error);
@@ -108,6 +121,13 @@ const Dashboard = () => {
         const response = await fetch("/api/po");
         const data = await response.json();
         setPo(data);
+        
+        // Update the "Open PO" count in infoLinks
+        setInfoLinks(prevLinks => 
+          prevLinks.map(link => 
+            link.value === "open_po" ? { ...link, total: data.length } : link
+          )
+        );
       } catch (error) {
         console.error("Error fetching PO data:", error);
       } finally {
@@ -119,14 +139,14 @@ const Dashboard = () => {
 
   const handleInfoCardClick = (value: string) => {
     setTitle(value.toUpperCase());
-    setActiveTable(value); // Set the active table based on the clicked info card
+    setActiveTable(value);
 
     if (value === "po_dues") {
-      setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED")); // Show pending RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED"));
     } else if (value === "complete") {
-      setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE")); // Show complete RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE"));
     } else if (value === "open_po") {
-      setContent(po); // Show the PO data when "Open PO" is clicked
+      setContent(po);
     } else {
       const heading = headerData.find((data) => data.value === value);
       if (heading) {
@@ -141,21 +161,24 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    handleInfoCardClick("po_dues"); // Set default view to "PO Due"
-  }, [rfps]); // Ensure this runs after RFPs are fetched
+    handleInfoCardClick("po_dues");
+  }, [rfps]);
 
   return (
     <div className="flex flex-col w-full">
-      {/* Render Info Cards Above the Table */}
-      <div className="flex items-center justify-evenly w-full mb-4"> {/* Added margin-bottom for spacing */}
+      <div className="flex items-center justify-evenly w-full mb-4">
         {infoLinks.map((info) => (
-          <div key={info.value} onClick={() => handleInfoCardClick(info.value)}>
-            <InfoCard info={info} />
+          <div 
+            key={info.value} 
+            onClick={() => handleInfoCardClick(info.value)}
+          >
+            <div className={activeTable === info.value ? "bg-green-100 rounded-2xl" : ""}>
+              <InfoCard info={info} />
+            </div>
           </div>
         ))}
       </div>
   
-      {/* Conditional Rendering of DataTable */}
       {activeTable === "open_po" ? (
         <DataTable columns={Po1} data={po} />
       ) : (
