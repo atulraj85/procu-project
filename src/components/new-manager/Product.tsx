@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { toast } from "../ui/use-toast";
+import { PlusIcon } from "lucide-react";
 
 // Define the Product interface
 interface Product {
@@ -28,7 +29,9 @@ export default function SheetSide() {
   const [name, setName] = useState<string>("");
   const [modelNo, setModelNo] = useState<string>("");
   const [specification, setSpecification] = useState<string>("");
-  const [productCategoryId, setProductCategoryId] = useState<number | string>(""); // Allow number or string for initial state
+  const [productCategoryId, setProductCategoryId] = useState<number | string>(
+    ""
+  ); // Allow number or string for initial state
   const [products, setProducts] = useState<Product[]>([]); // State to store fetched products
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // New state for submission status
 
@@ -38,8 +41,7 @@ export default function SheetSide() {
         const response = await fetch("/api/productCategory");
         const data: Product[] = await response.json(); // Type the response data
         setProducts(data);
-        console.log( data);
-        
+        console.log(data);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -109,7 +111,7 @@ export default function SheetSide() {
   const isFormValid = name && modelNo && specification && productCategoryId;
 
   return (
-    <Sheet >
+    <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Add Product</Button>
       </SheetTrigger>
@@ -162,20 +164,28 @@ export default function SheetSide() {
               <Label htmlFor="productCategoryId" className="mb-1 font-semibold">
                 Product Category
               </Label>
-              <select
-                id="productCategoryId"
-                value={productCategoryId}
-                onChange={(e) => setProductCategoryId(e.target.value)}
-                className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="" disabled>Select a product category</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.productCategoryId}>
-                    {product.name}
+
+              <div className="flex justify-between">
+                <select
+                  id="productCategoryId"
+                  value={productCategoryId}
+                  onChange={(e) => setProductCategoryId(e.target.value)}
+                  className="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>
+                    Select a product category
                   </option>
-                ))}
-              </select>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.productCategoryId}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
+                <Button type="button" className="bg-primary" onClick={() => {}}>
+                  <PlusIcon />
+                </Button>
+              </div>
             </div>
           </div>
           <SheetFooter>
