@@ -358,14 +358,12 @@ const ProductList = ({
   getValues,
   setValue,
   setErrors,
-  requirementType,
 }: {
   products: Product[];
   control: any;
   index: number;
   getValues: any;
   setValue: any;
-  requirementType: string;
   setErrors: (error: string) => void; // New prop type
 }) => {
   const { fields, replace } = useFieldArray({
@@ -475,156 +473,148 @@ const ProductList = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        {/* <CardTitle className="text-lg">
-          {requirementType || "Product/Service"} Details
-        </CardTitle> */}
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex space-x-4">
-            <div className="w-1/6">
-              <Label>Name</Label>
-            </div>
-            <div className="w-1/4">
-              <Label>Product Description</Label>
-            </div>
-            <div className="w-1/12 text-center">
-              <Label>Qty.</Label>
-            </div>
-            <div className="w-1/6 text-center">
-              <Label>Unit Price</Label>
-            </div>
-            <div className="w-1/12 text-center">
-              <Label>GST%</Label>
-            </div>
-            <div className="w-1/6 text-right">
-              <Label>Taxable Amount (INR)</Label>
-            </div>
-            <div className="w-1/6 text-right">
-              <Label>Total (incl. GST) (INR)</Label>
-            </div>
+    <div>
+      <div className="space-y-4">
+        <div className="flex space-x-4">
+          <div className="w-1/6">
+            <Label>Name</Label>
           </div>
-          {loading ? (
-            <div>Fetching Data...</div>
-          ) : (
-            fields.map((field, productIndex) => (
-              <div key={field.id} className="flex space-x-4 items-start">
-                <div className="w-1/6">
-                  <Input
-                    {...control.register(
-                      `quotations.${index}.products.${productIndex}.name`
-                    )}
-                    readOnly
-                  />
-                </div>
-                <div className="w-1/4">
-                  <Textarea className="w-full" rows={1} />
-                </div>
-                <div className="w-1/12">
-                  <Input
-                    type="number"
-                    className="text-center"
-                    {...control.register(
-                      `quotations.${index}.products.${productIndex}.quantity`
-                    )}
-                    onChange={(e) => {
-                      const value = parseInt(e.target.value, 10);
-                      setValue(
-                        `quotations.${index}.products.${productIndex}.quantity`,
-                        value
-                      );
-                      updateProductTotals(productIndex);
-                    }}
-                  />
-                </div>
-                <div className="w-1/6">
-                  <Controller
-                    name={`quotations.${index}.products.${productIndex}.unitPrice`}
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        step="0.01"
-                        className="text-right"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(parseFloat(e.target.value));
-                          updateProductTotals(productIndex);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-                <div className="w-1/12">
-                  <Controller
-                    name={`quotations.${index}.products.${productIndex}.gst`}
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          updateProductTotals(productIndex);
-                        }}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="GST" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {["NILL", "0", "3", "5", "12", "18", "28"].map(
-                            (gst) => (
-                              <SelectItem key={gst} value={gst}>
-                                {gst}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-                <div className="w-1/6">
-                  <Input
-                    className="text-right"
-                    {...control.register(
-                      `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
-                    )}
-                    readOnly
-                    value={(
-                      parseFloat(
-                        getValues(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
-                        )
-                      ) || 0
-                    ).toFixed(2)}
-                  />
-                </div>
-                <div className="w-1/6">
-                  <Input
-                    className="text-right"
-                    {...control.register(
-                      `quotations.${index}.products.${productIndex}.totalPriceWithGST`
-                    )}
-                    readOnly
-                    value={(
-                      parseFloat(
-                        getValues(
-                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`
-                        )
-                      ) || 0
-                    ).toFixed(2)}
-                  />
-                </div>
-              </div>
-            ))
-          )}
-          {error && <div className="text-red-500">{error}</div>}
+          <div className="w-1/4">
+            <Label>Product Description</Label>
+          </div>
+          <div className="w-1/12 text-center">
+            <Label>Qty.</Label>
+          </div>
+          <div className="w-1/6 text-center">
+            <Label>Unit Price</Label>
+          </div>
+          <div className="w-1/12 text-center">
+            <Label>GST%</Label>
+          </div>
+          <div className="w-1/6 text-right">
+            <Label>Taxable Amount (INR)</Label>
+          </div>
+          <div className="w-1/6 text-right">
+            <Label>Total (incl. GST) (INR)</Label>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+        {loading ? (
+          <div>Fetching Data...</div>
+        ) : (
+          fields.map((field, productIndex) => (
+            <div key={field.id} className="flex space-x-4 items-start">
+              <div className="w-1/6">
+                <Input
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.name`
+                  )}
+                  readOnly
+                />
+              </div>
+              <div className="w-1/4">
+                <Textarea className="w-full" rows={1} />
+              </div>
+              <div className="w-1/12">
+                <Input
+                  type="number"
+                  className="text-center"
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.quantity`
+                  )}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setValue(
+                      `quotations.${index}.products.${productIndex}.quantity`,
+                      value
+                    );
+                    updateProductTotals(productIndex);
+                  }}
+                />
+              </div>
+              <div className="w-1/6">
+                <Controller
+                  name={`quotations.${index}.products.${productIndex}.unitPrice`}
+                  control={control}
+                  render={({ field }) => (
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="text-right"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(parseFloat(e.target.value));
+                        updateProductTotals(productIndex);
+                      }}
+                    />
+                  )}
+                />
+              </div>
+              <div className="w-1/12">
+                <Controller
+                  name={`quotations.${index}.products.${productIndex}.gst`}
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        updateProductTotals(productIndex);
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="GST" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                          (gst) => (
+                            <SelectItem key={gst} value={gst}>
+                              {gst}
+                            </SelectItem>
+                          )
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+              <div className="w-1/6">
+                <Input
+                  className="text-right"
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                  )}
+                  readOnly
+                  value={(
+                    parseFloat(
+                      getValues(
+                        `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                      )
+                    ) || 0
+                  ).toFixed(2)}
+                />
+              </div>
+              <div className="w-1/6">
+                <Input
+                  className="text-right"
+                  {...control.register(
+                    `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                  )}
+                  readOnly
+                  value={(
+                    parseFloat(
+                      getValues(
+                        `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                      )
+                    ) || 0
+                  ).toFixed(2)}
+                />
+              </div>
+            </div>
+          ))
+        )}
+        {error && <div className="text-red-500">{error}</div>}
+      </div>
+    </div>
   );
 };
 
@@ -812,7 +802,7 @@ const SupportingDocumentsList = ({
 
   return (
     <div>
-      <Card className="mr-2">
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
@@ -967,21 +957,16 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   }, [quotation, setValue, index]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Total</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-2">
-        <div>
-          <Label>Taxable Amount (INR)</Label>
-          <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
-        </div>
-        <div>
-          <Label>Total (incl. GST) (INR)</Label>
-          <Input value={(quotation.total?.withGST || 0).toFixed(2)} readOnly />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-2 gap-2 p-2 bg-green-200 rounded">
+      <div>
+        <Label>Taxable Amount (INR)</Label>
+        <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
+      </div>
+      <div>
+        <Label>Total (incl. GST) (INR)</Label>
+        <Input value={(quotation.total?.withGST || 0).toFixed(2)} readOnly />
+      </div>
+    </div>
   );
 };
 
@@ -1374,6 +1359,14 @@ export default function RFPUpdateForm({
                                 )}
                               </div>
                             </div>
+
+                            <div className="w-1/3">
+                              <TotalComponent
+                                setValue={setValue}
+                                control={control}
+                                index={index}
+                              />
+                            </div>
                           </div>
                         </CardTitle>
                       </CardHeader>
@@ -1399,7 +1392,6 @@ export default function RFPUpdateForm({
                       <CardContent>
                         <div className="mb-2">
                           <ProductList
-                            requirementType={requirementType}
                             setErrors={(error) => setError(error)} // Pass the error handler
                             products={
                               quotation.products.length === 0
@@ -1421,26 +1413,14 @@ export default function RFPUpdateForm({
                       </CardContent>
                     </Card>
 
-                    <div className="flex">
-                      <div className="w-2/3">
-                        <SupportingDocumentsList
-                          control={control}
-                          index={index}
-                          setValue={setValue}
-                          files={files}
-                          setFiles={setFiles}
-                          getValue={getValues}
-                        />
-                      </div>
-
-                      <div className="w-1/3">
-                        <TotalComponent
-                          setValue={setValue}
-                          control={control}
-                          index={index}
-                        />
-                      </div>
-                    </div>
+                    <SupportingDocumentsList
+                      control={control}
+                      index={index}
+                      setValue={setValue}
+                      files={files}
+                      setFiles={setFiles}
+                      getValue={getValues}
+                    />
 
                     <div className="flex justify-end">
                       <Button
