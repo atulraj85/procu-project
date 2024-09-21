@@ -801,7 +801,7 @@ const SupportingDocumentsList = ({
                 const isFileUploaded = !!location;
 
                 return (
-                  <div key={field.id} className="grid grid-cols-3 gap-2 my-2">
+                  <div key={field.id} className="grid grid-cols-3 gap-2">
                     <Input
                       {...control.register(
                         `quotations.${index}.supportingDocuments.${docIndex}.name`
@@ -856,7 +856,7 @@ const SupportingDocumentsList = ({
 
             <Button
               type="button"
-              className="bg-primary mt-2"
+              className="bg-primary"
               onClick={() => append({ name: "", fileName: "" })}
             >
               <PlusIcon />
@@ -943,11 +943,11 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-2">
         <div>
-          <Label>Total Without GST</Label>
+          <Label>Taxable Amount (INR)</Label>
           <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
         </div>
         <div>
-          <Label>Total With GST</Label>
+          <Label>Total (incl. GST) (INR)</Label>
           <Input value={(quotation.total?.withGST || 0).toFixed(2)} readOnly />
         </div>
       </CardContent>
@@ -1021,8 +1021,8 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
-  console.log("RFPUpdateForm - Received rfpId:", rfpId);
-  console.log("RFPUpdateForm - Received initialData:", initialData);
+  // console.log("RFPUpdateForm - Received rfpId:", rfpId);
+  // console.log("RFPUpdateForm - Received initialData:", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1141,15 +1141,20 @@ export default function RFPUpdateForm({
     fields.forEach((_, quotationIndex) => {
       const products = getValues(`quotations.${quotationIndex}.products`);
       products.forEach((product: any, productIndex: number) => {
-        if (product.quantity <= 0 || product.quantity) {
+        if (!product.quantity) {
           newErrors[
             `quotations.${quotationIndex}.products.${productIndex}.quantity`
-          ] = "Quantity must be a positive integer.";
+          ] = `Quantity at Quotataion ${
+            quotationIndex + 1
+          } must be a positive integer.`;
+          console.log("here");
         }
         if (product.unitPrice <= 0) {
           newErrors[
             `quotations.${quotationIndex}.products.${productIndex}.unitPrice`
-          ] = "Unit Price must be a positive number.";
+          ] = `Unit price at Quotataion ${
+            quotationIndex + 1
+          } must be a positive integer.`;
         }
         if (!["NILL", "0", "3", "5", "12", "18", "28"].includes(product.gst)) {
           newErrors[
@@ -1386,8 +1391,8 @@ export default function RFPUpdateForm({
                       </CardContent>
                     </Card>
 
-                    <div className="flex mb-2">
-                      <div className="w-1/2">
+                    <div className="flex">
+                      <div className="w-2/3">
                         <SupportingDocumentsList
                           control={control}
                           index={index}
@@ -1398,7 +1403,7 @@ export default function RFPUpdateForm({
                         />
                       </div>
 
-                      <div className="w-1/2">
+                      <div className="w-1/3">
                         <TotalComponent
                           setValue={setValue}
                           control={control}
