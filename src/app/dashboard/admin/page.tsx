@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import Loader from "@/components/shared/Loader";
@@ -24,13 +23,6 @@ function Page() {
   if (!usersListing) {
     return <Loader />;
   }
-
-  const users = usersListing.response.data.map((user) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  }));
 
   return (
     <div className="flex">
