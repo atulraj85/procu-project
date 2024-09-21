@@ -36,12 +36,12 @@ export default function Page() {
     return <Loader />;
   }
 
-  const users = usersListing.response.data.map((user) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  }));
+  // const users = usersListing.response.data.map((user) => ({
+  //   id: user.id,
+  //   name: user.name,
+  //   email: user.email,
+  //   role: user.role,
+  // }));
 
   return (
     <div className="flex">

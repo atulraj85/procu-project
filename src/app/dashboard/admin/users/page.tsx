@@ -19,11 +19,19 @@ import {
 
 import { IUsersListingResponse } from "@/types";
 import Loader from "@/components/shared/Loader";
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [usersListing, setUsersListing] =
-    useState<IUsersListingResponse | null>(null);
+    useState<User[] | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
@@ -39,7 +47,7 @@ export default function AdminDashboard() {
     const fetchUsers = async () => {
       const response = await fetch("/api/users");
       if (response.ok) {
-        const data: IUsersListingResponse = await response.json();
+        const data = await response.json();
         setUsersListing(data);
       }
     };
@@ -50,7 +58,7 @@ export default function AdminDashboard() {
     return <Loader />;
   }
 
-  const users = usersListing.response.data.map((user) => ({
+  const users = usersListing.map((user) => ({
     id: user.id,
     name: user.name,
     email: user.email,
