@@ -4,14 +4,15 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { X } from "lucide-react";
-import { useRouter } from "next/navigation";  
+import { useRouter } from "next/navigation";
+import router from "next/router";
 
 const Page = () => {
   const [formData, setFormData] = useState({
@@ -24,23 +25,24 @@ const Page = () => {
     orderNo: "",
     ref: "",
     date: "",
-    rfpid:"",
-    unitPrice:"",
+    rfpid: "",
+    unitPrice: "",
     vendorName: "",
     vendorAddress: "",
     vendorGST: "",
     deliveryLocation: "",
     products: [],
     remarks: "",
-    productQuantity:"",
-    productName:"",
-    quotationId: ""
+    productQuantity: "",
+    productName: "",
+    quotationId: "",
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
-  const USER_ID = typeof window !== 'undefined' ? localStorage.getItem("USER_ID") : null;
+  const USER_ID =
+    typeof window !== "undefined" ? localStorage.getItem("USER_ID") : null;
   const pageRef = useRef(null);
 
   useEffect(() => {
@@ -51,15 +53,14 @@ const Page = () => {
         if (!rfpResponse.ok) throw new Error("Network response was not ok");
         const rfpData = await rfpResponse.json();
         const rfpDetails = rfpData[0];
-         console.log("rfpDetails",rfpDetails);
-         
+        console.log("rfpDetails", rfpDetails);
+
         // Fetch company details
-        const companyResponse = await fetch('/api/company');
+        const companyResponse = await fetch("/api/company");
         if (!companyResponse.ok) throw new Error("Network response was not ok");
         const companyData = await companyResponse.json();
         const company = companyData[0];
-        console.log("company",company);
-        
+        console.log("company", company);
 
         // Fetch PO ID
         const poResponse = await fetch(`/api/po/poId`);
@@ -87,10 +88,9 @@ const Page = () => {
           deliveryLocation: rfpDetails.deliveryLocation || "",
           products: rfpDetails.quotations[0]?.products || [],
           remarks: "",
-          quotationId: rfpDetails.quotations[0]?.id || ""
+          quotationId: rfpDetails.quotations[0]?.id || "",
         });
-
-      } catch (error) {
+      } catch (error: any) {
         setError(error);
       } finally {
         setLoading(false);
@@ -100,11 +100,11 @@ const Page = () => {
     fetchData();
   }, [rfp]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any } }) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -118,55 +118,61 @@ const Page = () => {
       companyId: formData.companyId,
       rfpId: formData.rfpid,
       remarks: formData.remarks,
-      rfpStatus:"PO_CREATED"
+      rfpStatus: "PO_CREATED",
     };
-    console.log("paylod",payload);
-    
-    
+    console.log("paylod", payload);
+
     try {
-      const response = await fetch('/api/po', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/po", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error("Network response was not ok");
 
       const result = await response.json();
       toast({
         title: "🎉 Vendor added successfully.",
-        
       });
-     
-      window.location.reload()
+
+      window.location.reload();
       return router.push("/dashboard");
       // Handle success (e.g., show a success message, redirect, etc.)
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       // Handle error (e.g., show an error message)
     }
   };
 
- 
-
-
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div ref={pageRef}>
       <div className="mx-20 mt-4">
         <div className="flex justify-end pb-8">
           <Link href="/dashboard/finance">
-            <Button type="button" variant="outline" size="icon" className="text-black-500 bg-red-400">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="text-black-500 bg-red-400"
+            >
               <X className="h-4 w-4" />
             </Button>
           </Link>
         </div>
-        
+
         <section className="flex justify-between pb-7">
           <div>
-            <Image className="rounded-full" height={100} width={100} alt="Company logo" src={formData.companyLogo} />
+            <Image
+              className="rounded-full"
+              height={100}
+              width={100}
+              alt="Company logo"
+              src={formData.companyLogo}
+            />
           </div>
           <div>
             <h1 className="font-bold">{formData.companyName}</h1>
@@ -183,7 +189,10 @@ const Page = () => {
             <h1 className="font-bold">{formData.vendorName}</h1>
             <h1 className="text-[14px]">{formData.vendorAddress}</h1>
             <p className="font-bold">
-              GSTIN: <span className="font-sans text-[14px]">{formData.vendorGST}</span>
+              GSTIN:{" "}
+              <span className="font-sans text-[14px]">
+                {formData.vendorGST}
+              </span>
             </p>
           </div>
           <div>
@@ -210,19 +219,32 @@ const Page = () => {
           <table className="w-full border border-collapse border-gray-300">
             <thead>
               <tr>
-                <th className="font-bold p-1 border border-gray-300 text-center">Product Description</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Qty</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
+                <th className="font-bold p-1 border border-gray-300 text-center">
+                  Product Description
+                </th>
+                <th className="font-bold p-1 border border-gray-300 text-center">
+                  Unit Price in INR
+                </th>
+                <th className="font-bold p-1 border border-gray-300 text-center">
+                  Qty
+                </th>
+                <th className="font-bold p-1 border border-gray-300 text-center">
+                  Total Price in INR
+                </th>
               </tr>
             </thead>
             <tbody>
               {formData.products.map((product, index) => (
                 <tr key={index}>
-                  
-                  <td className="text-[14px] border border-gray-300 p-4">{formData.productName}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.unitPrice}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{formData.productQuantity}</td>
+                  <td className="text-[14px] border border-gray-300 p-4">
+                    {formData.productName}
+                  </td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">
+                    {formData.unitPrice}
+                  </td>
+                  <td className="text-[14px] border border-gray-300 p-4 text-right">
+                    {formData.productQuantity}
+                  </td>
                   {/* <td className="text-[14px] border border-gray-300 p-4 text-right">{(product.unitPrice * product.quantity).toFixed(2)}</td> */}
                 </tr>
               ))}
@@ -234,7 +256,12 @@ const Page = () => {
           <div className="w-1/2">
             <div className="mt-7 mb-3">
               <label className="font-bold">{formData.companyName}</label>
-              <Image height={80} width={100} alt="Signature" src="/company/sign.png" />
+              <Image
+                height={80}
+                width={100}
+                alt="Signature"
+                src="/company/sign.png"
+              />
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
             <div className="mt-7 mb-3">
@@ -250,7 +277,7 @@ const Page = () => {
             {/* <Image height={150} width={150} alt="Company stamp" src="/company/stamp-transparent-19.png" /> */}
             <div className="mt-4 w-full">
               <label className="font-bold">Remarks:</label>
-              <Textarea 
+              <Textarea
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleInputChange}
@@ -264,7 +291,6 @@ const Page = () => {
           <Button onClick={onSubmit} className="bg-green-500 text-white mr-4">
             Submit PO
           </Button>
-         
         </div>
       </div>
     </div>
