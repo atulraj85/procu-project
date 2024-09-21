@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { z } from "zod";
 
 const emailSchema = z
@@ -24,6 +25,19 @@ export const ResetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+const RoleEnum = z.enum(
+  [
+    Role.ADMIN,
+    Role.PR_MANAGER,
+    Role.FINANCE_MANAGER,
+    Role.ACCOUNTANT,
+    Role.QUALITY_ASSURANCE,
+    Role.USER,
+    Role.VENDOR,
+  ],
+  { invalid_type_error: "Invalid role!" }
+);
+
 export const RegisterUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
@@ -40,4 +54,5 @@ export const RegisterUserSchema = z.object({
     .string({ required_error: "Number is required!" })
     .min(1, { message: "Number is required!" })
     .min(10, { message: "Number must be at least 10 characters." }),
+  role: RoleEnum.optional(),
 });

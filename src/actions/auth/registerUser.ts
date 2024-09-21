@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { sendEmailVerificationEmail } from "@/lib/mail";
 import { generateEmailVerificationToken } from "@/lib/token";
 import { RegisterUserSchema } from "@/schemas";
+import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -14,7 +15,14 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
     return { error: "Invalid fields!" } as const;
   }
 
-  const { email, name, password, company, mobile } = validation.data;
+  const {
+    email,
+    name,
+    password,
+    company,
+    mobile,
+    role = Role.USER,
+  } = validation.data;
 
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
@@ -40,6 +48,7 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
       name,
       mobile,
       password: hashedPassword,
+      role,
     },
   });
 
