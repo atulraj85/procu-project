@@ -29,7 +29,7 @@ function formatRFPData(inputData: any[]) {
       modelNo: product.product.modelNo,
       quantity: product.quantity,
       rfpProductId: product.id,
-      specification: product.product.specification,
+      description: product.product.specification,
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -47,7 +47,7 @@ function formatRFPData(inputData: any[]) {
           modelNo: pricing.rfpProduct.product.modelNo,
           quantity: pricing.rfpProduct.quantity,
           price: pricing.price,
-          specification: pricing.rfpProduct.specification,
+          description: pricing.rfpProduct.product.specification,
           gst: pricing.GST,
           type: "product",
         })),
