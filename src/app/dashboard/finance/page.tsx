@@ -1,16 +1,33 @@
 "use client";
+
+import React, { useEffect, useState } from "react";
 import InfoCard from "@/components/shared/InfoCard";
 import { InfoItem, TableColumn } from "@/types/index";
-import React, { useEffect, useState } from "react";
 import { grn_received, open_po, po_dues } from "@/lib/tableHeaders";
 import {
   po_dues_Data,
   grn_received_Data,
   open_po_Data,
 } from "@/lib/tableContent";
-import { columns2 } from "@/components/Table/columns"; // Ensure columns2 is defined correctly
+import { columns2, Po1 } from "@/components/Table/columns"; // Remove TableRow from this import
 import { DataTable } from "@/components/Table/data-table";
 import Loader from "@/components/shared/Loader";
+import { ColumnDef } from "@tanstack/react-table";
+
+// Define TableRow interface here
+interface TableRow {
+  id: string;
+  poId: string;
+  RFPStatus: string;
+  quotations: Array<{
+    totalAmount: string;
+    totalAmountWithoutGST: string;
+    vendor: {
+      companyName: string;
+      mobile: string;
+    };
+  }>;
+}
 
 interface RfpData {
   rfpId: string;
@@ -22,7 +39,10 @@ interface RfpData {
   rfpStatus: string;
 }
 
-const Dashboard = () => {
+// Define a union type for all possible data types
+type DataType = RfpData | TableRow;
+
+const Dashboard: React.FC = () => {
   const headerData: { value: string; titles: TableColumn[]; content: any }[] = [
     { value: "grn_received", titles: grn_received, content: grn_received_Data },
     { value: "open_po", titles: open_po, content: open_po_Data },
@@ -54,29 +74,16 @@ const Dashboard = () => {
   ]);
 
   const [rfps, setRfps] = useState<RfpData[]>([]);
-  const [po, setPo] = useState<any[]>([]);
-  const [content, setContent] = useState<RfpData[]>([]);
-  const [header, setHeader] = useState<TableColumn[]>([]);
-  const [title, setTitle] = useState("PO Due");
+  const [po, setPo] = useState<TableRow[]>([]);
+  const [content, setContent] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTable, setActiveTable] = useState<string>("po_dues");
-
-  const rfpHeaders: TableColumn[] = [
-    { key: "rfpId", header: "RFP ID" },
-    { key: "requirementType", header: "Requirement Type" },
-    { key: "dateOfOrdering", header: "Date of Ordering" },
-    { key: "deliveryLocation", header: "Delivery Location" },
-    { key: "deliveryByDate", header: "Delivery By Date" },
-    { key: "lastDateToRespond", header: "Last Date to Respond" },
-    { key: "rfpStatus", header: "RFP Status" },
-  ];
 
   const fetchRfpData = async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/rfp");
       const data = await response.json();
-      console.log("data", data);
 
       const formattedData: RfpData[] = data.map((item: any) => ({
         rfpId: item.rfpId,
@@ -90,13 +97,9 @@ const Dashboard = () => {
 
       setRfps(formattedData);
       
-      // Count PO due (SUBMITTED status)
       const poDueCount = formattedData.filter(item => item.rfpStatus === "SUBMITTED").length;
-      
-      // Count Complete PO (PAYMENT_DONE status)
       const completePOCount = formattedData.filter(item => item.rfpStatus === "PAYMENT_DONE").length;
 
-      // Update the counts in infoLinks
       setInfoLinks(prevLinks => 
         prevLinks.map(link => 
           link.value === "po_dues" ? { ...link, total: poDueCount } :
@@ -106,7 +109,6 @@ const Dashboard = () => {
       );
 
       setContent(formattedData.filter((item) => item.rfpStatus === "SUBMITTED"));
-      setHeader(rfpHeaders);
     } catch (error) {
       console.error("Error fetching RFP data:", error);
     } finally {
@@ -114,31 +116,26 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchPo = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/po");
-        const data = await response.json();
-        setPo(data);
-        
-        // Update the "Open PO" count in infoLinks
-        setInfoLinks(prevLinks => 
-          prevLinks.map(link => 
-            link.value === "open_po" ? { ...link, total: data.length } : link
-          )
-        );
-      } catch (error) {
-        console.error("Error fetching PO data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPo();
-  }, []);
+  const fetchPo = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/po");
+      const data: TableRow[] = await response.json();
+      setPo(data);
+      
+      setInfoLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.value === "open_po" ? { ...link, total: data.length } : link
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching PO data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInfoCardClick = (value: string) => {
-    setTitle(value.toUpperCase());
     setActiveTable(value);
 
     if (value === "po_dues") {
@@ -150,7 +147,6 @@ const Dashboard = () => {
     } else {
       const heading = headerData.find((data) => data.value === value);
       if (heading) {
-        setHeader(heading.titles);
         setContent(heading.content);
       }
     }
@@ -158,11 +154,20 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchRfpData();
+    fetchPo();
   }, []);
 
   useEffect(() => {
     handleInfoCardClick("po_dues");
   }, [rfps]);
+
+  const getColumns = (): ColumnDef<DataType>[] => {
+    if (activeTable === "open_po") {
+      return Po1 as ColumnDef<DataType>[];
+    } else {
+      return columns2 as ColumnDef<DataType>[];
+    }
+  };
 
   return (
     <div className="flex flex-col w-full">
@@ -179,12 +184,10 @@ const Dashboard = () => {
         ))}
       </div>
   
-      {activeTable === "open_po" ? (
-        <DataTable columns={Po1} data={po} />
+      {loading ? (
+        <Loader />
       ) : (
-        <div className="w-full">
-          {loading ? <Loader /> : <DataTable columns={columns2} data={content} />}
-        </div>
+        <DataTable columns={getColumns()} data={content} />
       )}
   
       <hr />

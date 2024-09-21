@@ -230,8 +230,8 @@ const Page: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rfpData?.quotations?.[0]?.products.length > 0 ? (
-                rfpData?.quotations[0].products.map((product, index) => (
+              {rfpData?.quotations?.[0]?.products && rfpData.quotations[0].products.length > 0 ? (
+                rfpData.quotations[0].products.map((product, index) => (
                   <tr key={product.id || index}>
                     <td className="text-[14px] border border-gray-300 p-4">
                       {product.name} (Model No: {product.modelNo})
@@ -274,8 +274,8 @@ const Page: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {rfpData?.quotations?.[0]?.otherCharges.length > 0 ? (
-                rfpData?.quotations[0].otherCharges.map((charge, index) => (
+              {rfpData?.quotations?.[0]?.otherCharges && rfpData.quotations[0].otherCharges.length > 0 ? (
+                rfpData.quotations[0].otherCharges.map((charge, index) => (
                   <tr key={charge.id || index}>
                     <td className="text-[14px] border border-gray-300 p-4">
                       {charge.name} 
