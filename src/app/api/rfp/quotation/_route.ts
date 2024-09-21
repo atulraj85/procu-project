@@ -10,6 +10,13 @@ function isValidUUID(uuid: string) {
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
   return uuidRegex.test(uuid);
 }
+
+interface SupportingDocument {
+  documentType: string;
+  documentName: string;
+  location: string;
+}
+
 export async function PUT(request: NextRequest) {
   console.log("PUT request started");
   try {
@@ -27,7 +34,7 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    console.log("Parsed form data:", JSON.stringify(data, null, 2));
+    console.log("Parsed form data:", data);
 
     const { quotations, preferredVendorId, rfpStatus } = data;
 
@@ -42,24 +49,14 @@ export async function PUT(request: NextRequest) {
           refNo,
         } = quotation;
 
-        console.log(
-          "Processing quotation:",
-          JSON.stringify(quotation, null, 2)
-        );
+        console.log("Processing quotation:", { quotationId, vendorId, refNo });
 
         if (!isValidUUID(vendorId)) {
           console.error(`Invalid vendorId: ${vendorId}`);
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        const processedDocuments = await processDocuments(
-          id,
-          vendorId,
-          Array.from(formData.entries()).slice(2)
-        );
-
         return {
-          id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
           vendorId,
           refNo,
           totalAmount: new Prisma.Decimal(total.withGST),
@@ -79,7 +76,11 @@ export async function PUT(request: NextRequest) {
             })),
           },
           supportingDocuments: {
-            create: processedDocuments,
+            create: await processDocuments(
+              id,
+              vendorId,
+              Array.from(formData.entries()).slice(2)
+            ),
           },
         };
       })
@@ -90,7 +91,7 @@ export async function PUT(request: NextRequest) {
       JSON.stringify(processedQuotations, null, 2)
     );
 
-    const createRecords = await prisma.$transaction(async (prisma) => {
+    const updatedRecord = await prisma.$transaction(async (prisma) => {
       const existingRFP = await prisma.rFP.findUnique({
         where: { id },
         include: { quotations: true },
@@ -100,76 +101,56 @@ export async function PUT(request: NextRequest) {
         throw new Error(`RFP with id ${id} not found`);
       }
 
-      console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
-
-      // Delete existing records for the quotations that are not in the new data
-      // await deleteExistingRecords(existingRFP.quotations);
-
-      // Update or create quotations
-      const updatedQuotations = await Promise.all(
-        processedQuotations.map(async (q) => {
-          if (q.id) {
-            // Update existing quotation
-            console.log("Updating quotation:", q);
-            return prisma.quotation.update({
-              where: { id: q.id },
-              data: {
-                vendorId: q.vendorId,
-                refNo: q.refNo,
-                totalAmount: q.totalAmount,
-                totalAmountWithoutGST: q.totalAmountWithoutGST,
-                vendorPricings: {
-                  deleteMany: { quotationId: q.id }, // Delete existing vendor pricing
-                  create: q.vendorPricings.create, // Create new vendor pricing
-                },
-                otherCharges: {
-                  deleteMany: { quotationId: q.id }, // Delete existing other charges
-                  create: q.otherCharges.create, // Create new other charges
-                },
-                supportingDocuments: {
-                  deleteMany: { quotationId: q.id }, // Delete existing supporting documents
-                  create: q.supportingDocuments.create.filter(
-                    (doc: null) => doc !== null
-                  ),
-                },
-              },
-            });
-          } else {
-            // Create new quotation
-            console.log("Creating quotation:", q);
-            return prisma.quotation.create({
-              data: {
-                rfpId: id,
-                vendorId: q.vendorId,
-                refNo: q.refNo,
-                totalAmount: q.totalAmount,
-                totalAmountWithoutGST: q.totalAmountWithoutGST,
-                vendorPricings: {
-                  create: q.vendorPricings.create,
-                },
-                otherCharges: {
-                  create: q.otherCharges.create,
-                },
-                supportingDocuments: {
-                  create: q.supportingDocuments.create.filter(
-                    (doc: null) => doc !== null
-                  ),
-                },
-              },
-            });
-          }
-        })
-      );
+      await deleteExistingRecords(existingRFP.quotations);
 
       return prisma.rFP.update({
         where: { id },
         data: {
           rfpStatus,
           quotations: {
-            connect: updatedQuotations.map((q) => ({ id: q.id })),
+            upsert: processedQuotations.map((q) => {
+              console.log("Upserting quotation:", q); // Log before upsert
+              return {
+                where: { id: q.id || "" }, // Ensure id is not undefined
+                update: {
+                  vendorId: q.vendorId,
+                  refNo: q.refNo,
+                  totalAmount: q.totalAmount,
+                  totalAmountWithoutGST: q.totalAmountWithoutGST,
+                  vendorPricings: {
+                    create: q.vendorPricings.create,
+                  },
+                  otherCharges: {
+                    create: q.otherCharges.create,
+                  },
+                  supportingDocuments: {
+                    create: q.supportingDocuments.create.filter(
+                      (doc: SupportingDocument | null) => doc !== null
+                    ),
+                  },
+                },
+                create: {
+                  vendorId: q.vendorId,
+                  refNo: q.refNo,
+                  totalAmount: q.totalAmount,
+                  totalAmountWithoutGST: q.totalAmountWithoutGST,
+                  vendorPricings: {
+                    create: q.vendorPricings.create,
+                  },
+                  otherCharges: {
+                    create: q.otherCharges.create,
+                  },
+                  supportingDocuments: {
+                    create: q.supportingDocuments.create.filter(
+                      (doc: SupportingDocument | null) => doc !== null
+                    ),
+                  },
+                },
+              };
+            }),
           },
           preferredQuotationId: preferredVendorId
-            ? updatedQuotations.find((q) => q.vendorId === preferredVendorId)
+            ? processedQuotations.find((q) => q.vendorId === preferredVendorId)
                 ?.id
             : undefined,
         },
@@ -185,7 +166,9 @@ export async function PUT(request: NextRequest) {
       });
     });
 
-    return NextResponse.json(serializePrismaModel(createRecords), {
+    console.log("Updated RFP record:", updatedRecord);
+
+    return NextResponse.json(serializePrismaModel(updatedRecord), {
       status: 200,
     });
   } catch (error: unknown) {
@@ -194,39 +177,6 @@ export async function PUT(request: NextRequest) {
       { error: "Error updating record", details: (error as Error).message },
       { status: 500 }
     );
-  }
-}
-
-async function deleteExistingRecords(existingQuotations: any[]) {
-  for (const quotation of existingQuotations) {
-    const quotationId = quotation.id;
-
-    console.log(`Deleting quotation ID: ${quotationId}`);
-
-    // Delete associated vendor pricing
-    console.log(`Deleting vendor pricing for quotation ID: ${quotationId}`);
-    await prisma.vendorPricing.deleteMany({
-      where: { quotationId },
-    });
-
-    // Delete associated other charges
-    console.log(`Deleting other charges for quotation ID: ${quotationId}`);
-    await prisma.otherCharge.deleteMany({
-      where: { quotationId },
-    });
-
-    // Delete associated supporting documents
-    console.log(
-      `Deleting supporting documents for quotation ID: ${quotationId}`
-    );
-    await prisma.supportingDocument.deleteMany({
-      where: { quotationId },
-    });
-
-    // Finally, delete the quotation itself
-    await prisma.quotation.delete({
-      where: { id: quotationId },
-    });
   }
 }
 
@@ -252,7 +202,7 @@ async function processQuotations(quotations: any[], supDocs: any[]) {
         supDocs
       );
 
-      const processedQuotation = {
+      return {
         id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
         vendorId,
         refNo,
@@ -276,36 +226,30 @@ async function processQuotations(quotations: any[], supDocs: any[]) {
           create: processedDocuments,
         },
       };
-
-      console.log(
-        "Processed quotation in processQuotations:",
-        JSON.stringify(processedQuotation, null, 2)
-      );
-      return processedQuotation;
     })
   );
 }
 
-// async function deleteExistingRecords(quotations: any[]) {
-//   for (const quotation of quotations) {
-//     console.log(`Deleting vendor pricing for quotation ID: ${quotation.id}`);
-//     await prisma.vendorPricing.deleteMany({
-//       where: { quotationId: quotation.id },
-//     });
+async function deleteExistingRecords(quotations: any[]) {
+  for (const quotation of quotations) {
+    console.log(`Deleting vendor pricing for quotation ID: ${quotation.id}`);
+    await prisma.vendorPricing.deleteMany({
+      where: { quotationId: quotation.id },
+    });
 
-//     console.log(`Deleting other charges for quotation ID: ${quotation.id}`);
-//     await prisma.otherCharge.deleteMany({
-//       where: { quotationId: quotation.id },
-//     });
+    console.log(`Deleting other charges for quotation ID: ${quotation.id}`);
+    await prisma.otherCharge.deleteMany({
+      where: { quotationId: quotation.id },
+    });
 
-//     console.log(
-//       `Deleting supporting documents for quotation ID: ${quotation.id}`
-//     );
-//     await prisma.supportingDocument.deleteMany({
-//       where: { quotationId: quotation.id },
-//     });
-//   }
-// }
+    console.log(
+      `Deleting supporting documents for quotation ID: ${quotation.id}`
+    );
+    await prisma.supportingDocument.deleteMany({
+      where: { quotationId: quotation.id },
+    });
+  }
+}
 
 async function processDocuments(
   rfpId: string,
@@ -322,9 +266,6 @@ async function processDocuments(
   await fs.mkdir(quotationDirPath, { recursive: true });
 
   const vendorDocs = supDocs.filter((doc) => doc[0].startsWith(vendorId));
-
-  console.log("Processing documents for vendor ID:", vendorId);
-  console.log("Vendor documents found:", JSON.stringify(vendorDocs, null, 2));
 
   return Promise.all(
     vendorDocs.map(async ([key, file]) => {
@@ -343,14 +284,11 @@ async function processDocuments(
       const fileBuffer = Buffer.from(await file.arrayBuffer());
       await fs.writeFile(filePath, fileBuffer);
 
-      const documentInfo = {
+      return {
         documentType: file.name,
         documentName: fileNameWithDate,
         location: `/assets/RFP-${rfpId}/${vendorId}/${fileNameWithDate}`,
       };
-
-      console.log("Processed document:", JSON.stringify(documentInfo, null, 2));
-      return documentInfo;
     })
   );
 }

@@ -16,11 +16,11 @@ import { PlusIcon } from "lucide-react";
 
 // Define the Product interface
 interface Product {
-  id: number;
+  id: string; // Changed to string to match the API response
   name: string;
   modelNo: string;
   specification: string;
-  productCategoryId: number;
+  productCategoryId: string; // Changed to string to match the API response
   created_at: string;
   updated_at: string;
 }
@@ -29,19 +29,19 @@ export default function SheetSide() {
   const [name, setName] = useState<string>("");
   const [modelNo, setModelNo] = useState<string>("");
   const [specification, setSpecification] = useState<string>("");
-  const [productCategoryId, setProductCategoryId] = useState<number | string>(
-    ""
-  ); // Allow number or string for initial state
+  const [productCategoryId, setProductCategoryId] = useState<string>(""); // Changed to string
   const [products, setProducts] = useState<Product[]>([]); // State to store fetched products
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false); // New state for submission status
+ 
 
+  console.log();
+  
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch("/api/productCategory");
+        const response = await fetch("/api/product");
         const data: Product[] = await response.json(); // Type the response data
         setProducts(data);
-        console.log(data);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -69,7 +69,7 @@ export default function SheetSide() {
       name,
       modelNo,
       specification,
-      productCategoryId: parseInt(productCategoryId as string), // Ensure this is an integer
+      productCategoryId, // This will now be the ID of the selected category
     };
 
     try {
@@ -85,7 +85,6 @@ export default function SheetSide() {
         throw new Error("Failed to create product");
       }
 
-      const result = await response.json();
       toast({
         title: "🎉 Product added successfully!",
         description: "",
@@ -104,13 +103,13 @@ export default function SheetSide() {
     } finally {
       setIsSubmitting(false); // Reset submitting state
     }
-    return;
   };
 
   // Check if the form is valid for enabling the submit button
   const isFormValid = name && modelNo && specification && productCategoryId;
 
   return (
+    
     <Sheet>
       <SheetTrigger asChild>
         <Button variant="outline">Add Product</Button>
@@ -194,7 +193,7 @@ export default function SheetSide() {
               className="w-full bg-primary text-white transition duration-200"
               disabled={isSubmitting || !isFormValid} // Disable button while submitting or if form is invalid
             >
-              {isSubmitting ? "Submitting..." : "Save Product"}{" "}
+              {isSubmitting ? "Submitting..." : "Save Product"}
             </Button>
           </SheetFooter>
         </form>

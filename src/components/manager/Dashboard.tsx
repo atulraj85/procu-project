@@ -130,7 +130,8 @@ const Dashboard = () => {
         {loading ? (
 <Loader/>        ) : (
           // <Table title={title} titles={headers} content={content} />
-          <DataTable columns={columns1} data={content}/>
+          <DataTable columns={columns1} data={content} />
+
         )}
       </div>
     </div>

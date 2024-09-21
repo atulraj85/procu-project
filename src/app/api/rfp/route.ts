@@ -23,7 +23,6 @@ function formatRFPData(inputData: any[]) {
       email: approver.user.email,
       mobile: approver.user.mobile,
     })),
-
     products: rfp.rfpProducts.map((product: any) => ({
       id: product.product.id,
       name: product.product.name,
@@ -39,16 +38,22 @@ function formatRFPData(inputData: any[]) {
       created_at: quotation.created_at,
       updated_at: quotation.updated_at,
       vendor: quotation.vendor,
-      products: quotation?.vendorPricings.map((pricing: any) => ({
-        id: pricing.rfpProduct.product.id,
-        rfpProductId: pricing.rfpProduct.id,
-        name: pricing.rfpProduct.product.name,
-        modelNo: pricing.rfpProduct.product.modelNo,
-        quantity: pricing.rfpProduct.quantity,
-        price: pricing.price,
-        GST: pricing.GST,
-      })),
-      otherCharges: quotation.otherCharges || [],
+      products: [
+        ...quotation?.vendorPricings.map((pricing: any) => ({
+          id: pricing.rfpProduct.product.id,
+          rfpProductId: pricing.rfpProduct.id,
+          name: pricing.rfpProduct.product.name,
+          modelNo: pricing.rfpProduct.product.modelNo,
+          quantity: pricing.rfpProduct.quantity,
+          price: pricing.price,
+          gst: pricing.GST,
+          type: "product",
+        })),
+        ...(quotation.otherCharges || []).map((charge: any) => ({
+          ...charge,
+          type: "otherCharge",
+        })),
+      ],
       supportingDocuments: quotation.supportingDocuments || [],
     })),
     createdBy: {
