@@ -19,6 +19,17 @@ import {
 
 import { IUsersListingResponse } from "@/types";
 import Loader from "@/components/shared/Loader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 interface User {
   id: number;
   name: string;
@@ -26,12 +37,14 @@ interface User {
   role: string;
 }
 
-
-
 export default function AdminDashboard() {
   const router = useRouter();
-  const [usersListing, setUsersListing] =
-    useState<User[] | null>(null);
+  const [usersListing, setUsersListing] = useState<User[] | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    role: string;
+    id: number;
+  } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
@@ -65,8 +78,11 @@ export default function AdminDashboard() {
     role: user.role,
   }));
 
-  // Function to handle role change
-  const handleRoleChange = async (role: string, id: number) => {
+  // Function to handle role change with confirmation
+  const handleRoleChange = async () => {
+    if (!pendingRoleChange) return;
+
+    const { role, id } = pendingRoleChange;
     console.log("User ID:", id);
     console.log("New Role:", role);
 
@@ -76,7 +92,7 @@ export default function AdminDashboard() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ role,id }),
+        body: JSON.stringify({ role, id }),
       });
 
       if (response.ok) {
@@ -87,6 +103,9 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Error updating role:", error);
+    } finally {
+      setIsDialogOpen(false); // Close dialog after the action
+      setPendingRoleChange(null); // Clear pending change
     }
   };
 
@@ -109,7 +128,10 @@ export default function AdminDashboard() {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Select
-                    onValueChange={(value) => handleRoleChange(value, user.id)}
+                    onValueChange={(value) => {
+                      setPendingRoleChange({ role: value, id: user.id });
+                      setIsDialogOpen(true); // Open the confirmation dialog
+                    }}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder={user.role} />
@@ -126,7 +148,29 @@ export default function AdminDashboard() {
             ))}
           </TableBody>
         </Table>
-      </>{" "}
+
+        {/* Confirmation AlertDialog */}
+        {pendingRoleChange && (
+          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-500">Confirm Role Change</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure, you want to change the role? 
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction className="bg-red-500" onClick={handleRoleChange}>
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </>
     </div>
   );
 }

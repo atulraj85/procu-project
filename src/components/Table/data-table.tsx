@@ -34,7 +34,7 @@ export function DataTable<TData, TValue>({
     []
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const table = useReactTable({
+  const table = useReactTable<TData>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
@@ -46,6 +46,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   });
+  
   // const table = useReactTable({
   //     data,
   //     columns,

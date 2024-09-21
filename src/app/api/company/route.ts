@@ -180,104 +180,106 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
-  try {
-    const reqData = await request.formData();
-    const { searchParams } = request.nextUrl;
-    const id = searchParams.get("id");
+// export async function PUT(request: NextRequest) {
+//   try {
+//     const reqData = await request.formData();
+//     const { searchParams } = request.nextUrl;
+//     const id = searchParams.get("id");
 
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID is required for updating a record" },
-        { status: 400 }
-      );
-    }
+//     console.log(reqData);
 
-    const foundedDate = reqData.get('foundedDate') as string;
+//     if (!id) {
+//       return NextResponse.json(
+//         { error: "ID is required for updating a record" },
+//         { status: 400 }
+//       );
+//     }
 
-    // Extract company fields from FormData
-    const fields: Record<string, string> = {};
-    const files: Record<string, File> = {};
+//     const foundedDate = reqData.get('foundedDate') as string;
 
-    const entries = Array.from(reqData.entries());
-    for (const [key, value] of entries) {
-      if (value instanceof File) {
-        files[key] = value;
-      } else {
-        fields[key] = value as string;
-      }
-    }
+//     // Extract company fields from FormData
+//     const fields: Record<string, string> = {};
+//     const files: Record<string, File> = {};
 
-    // Handle files (logo, stamp)
-    const companyAssetsPath = path.join(process.cwd(), "public/company");
-    if (!fs.existsSync(companyAssetsPath)) {
-      fs.mkdirSync(companyAssetsPath, { recursive: true });
-    }
+//     const entries = Array.from(reqData.entries());
+//     for (const [key, value] of entries) {
+//       if (value instanceof File) {
+//         files[key] = value;
+//       } else {
+//         fields[key] = value as string;
+//       }
+//     }
 
-    const logoPath = files.logo
-      ? await saveFile(files.logo, companyAssetsPath)
-      : undefined;
-    const stampPath = files.stamp
-      ? await saveFile(files.stamp, companyAssetsPath)
-      : undefined;
+//     // Handle files (logo, stamp)
+//     const companyAssetsPath = path.join(process.cwd(), "public/company");
+//     if (!fs.existsSync(companyAssetsPath)) {
+//       fs.mkdirSync(companyAssetsPath, { recursive: true });
+//     }
 
-    // Prepare update data for the company
-    const updateData = {
-      ...fields,
-      foundedDate: foundedDate ? new Date(foundedDate) : undefined, // Parse foundedDate
-      ...(logoPath && { logo: logoPath }),
-      ...(stampPath && { stamp: stampPath }),
-    };
+//     const logoPath = files.logo
+//       ? await saveFile(files.logo, companyAssetsPath)
+//       : undefined;
+//     const stampPath = files.stamp
+//       ? await saveFile(files.stamp, companyAssetsPath)
+//       : undefined;
 
-    // Now handle address data
-    const addressFields = {
-      street: reqData.get("street") as string,
-      city: reqData.get("city") as string,
-      state: reqData.get("state") as string,
-      postalCode: reqData.get("postalCode") as string,
-      country: reqData.get("country") as string,
-      addressType: reqData.get("addressType") as string, // Ensure that this matches your enum
-    };
+//     // Prepare update data for the company
+//     const updateData = {
+//       ...fields,
+//       foundedDate: foundedDate ? new Date(foundedDate) : undefined, // Parse foundedDate
+//       ...(logoPath && { logo: logoPath }),
+//       ...(stampPath && { stamp: stampPath }),
+//     };
 
-   const addressId = reqData.get("addressId") as string | null; // Ensure this is provided from frontend if address exists
+//     // Now handle address data
+//     const addressFields = {
+//       street: reqData.get("street") as string,
+//       city: reqData.get("city") as string,
+//       state: reqData.get("state") as string,
+//       postalCode: reqData.get("postalCode") as string,
+//       country: reqData.get("country") as string,
+//       addressType: reqData.get("addressType") as string, // Ensure that this matches your enum
+//     };
 
-const company = await prisma.company.update({
-  where: { id },
-  data: {
-    ...updateData,
-    addresses: {
-      upsert: {
-        where: { id: addressId || "" }, // Ensure to use the unique 'id' of the address
-        create: {
-          street: reqData.get("street") as string,
-          city: reqData.get("city") as string,
-          state: reqData.get("state") as string,
-          postalCode: reqData.get("postalCode") as string,
-          country: reqData.get("country") as string,
-          addressType: reqData.get("addressType") as string, // Ensure addressType is valid
-        },
-        update: {
-          street: reqData.get("street") as string,
-          city: reqData.get("city") as string,
-          state: reqData.get("state") as string,
-          postalCode: reqData.get("postalCode") as string,
-          country: reqData.get("country") as string,
-          addressType: reqData.get("addressType") as string, // Ensure addressType is valid
-        },
-      },
-    },
-  },
-});
+//    const addressId = reqData.get("addressId") as string | null; // Ensure this is provided from frontend if address exists
 
-    return NextResponse.json({ status: "success", data: company });
-  } catch (error: any) {
-    console.error(error);
-    return NextResponse.json(
-      { error: `Failed to update company: ${error.message}` },
-      { status: 500 }
-    );
-  }
-}
+// const company = await prisma.company.update({
+//   where: { id },
+//   data: {
+//     ...updateData,
+//     addresses: {
+//       upsert: {
+//         where: { id: addressId || "" }, // Ensure to use the unique 'id' of the address
+//         create: {
+//           street: reqData.get("street") as string,
+//           city: reqData.get("city") as string,
+//           state: reqData.get("state") as string,
+//           postalCode: reqData.get("postalCode") as string,
+//           country: reqData.get("country") as string,
+//           addressType: reqData.get("addressType") as string, // Ensure addressType is valid
+//         },
+//         update: {
+//           street: reqData.get("street") as string,
+//           city: reqData.get("city") as string,
+//           state: reqData.get("state") as string,
+//           postalCode: reqData.get("postalCode") as string,
+//           country: reqData.get("country") as string,
+//           addressType: reqData.get("addressType") as string, // Ensure addressType is valid
+//         },
+//       },
+//     },
+//   },
+// });
+
+//     return NextResponse.json({ status: "success", data: company });
+//   } catch (error: any) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { error: `Failed to update company: ${error.message}` },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 export async function DELETE(request: Request) {
   try {

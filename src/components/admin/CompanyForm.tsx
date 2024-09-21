@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Loader from "@/components/shared/Loader";
 import * as z from "zod";
+import { Upload } from "lucide-react";
+import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -43,8 +46,6 @@ interface Company {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  GST: z.string().optional(),
   email: z.string().optional().or(z.literal("")), //TODO email
   phone: z.string().optional(),
   website: z.string().optional().or(z.literal("")), //TODO url()
@@ -53,14 +54,7 @@ const formSchema = z.object({
   status: z.enum(["active", "inactive"]).optional(),
   logo: z.instanceof(File).optional(), // File input for logo
   stamp: z.instanceof(File).optional(), // File input for stamp
-  businessAddress: z.object({
-    street: z.string().optional(),
-    country: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
-    zipCode: z.string().optional(),
-    AddressType: z.string().optional(),
-  }),
+
   deliveryAddress: z.object({
     street: z.string().optional(),
     country: z.string().optional(),
@@ -83,12 +77,14 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [userid, setUserId] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyData, setCompanyData] = useState<Company | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [stampPreview, setStampPreview] = useState<string | null>(null);
 
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      GST: "",
+      // name: "",
+      // GST: "",
       email: "",
       phone: "",
       website: "",
@@ -97,14 +93,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       status: "active",
       logo: undefined,
       stamp: undefined,
-      businessAddress: {
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-        addressType: "BUSINESS",
-      },
+
       deliveryAddress: {
         street: "",
         country: "",
@@ -156,11 +145,11 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       const data = await response.json();
       setCompanyData(data[0]);
       const company = data[0];
+      setCompanyData(data[0]);
+      console.log(data[0]);
 
       // Update form values with company data
       form.reset({
-        name: company.name || "",
-        GST: company.GST || "",
         email: company.email || "",
         phone: company.phone || "",
         website: company.website || "",
@@ -169,14 +158,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         status: company.status || "active",
         logo: undefined,
         stamp: undefined,
-        businessAddress: {
-          street: company.addresses[0]?.address || "",
-          country: company.addresses[0]?.country || "",
-          state: company.addresses[0]?.state || "",
-          city: company.addresses[0]?.city || "",
-          zipCode: company.addresses[0]?.zipCode || "",
-          AddressType: "BUSINESS",
-        },
         deliveryAddress: {
           street: company.addresses[1]?.address || "",
           country: company.addresses[1]?.country || "",
@@ -207,6 +188,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         const value = data[key as keyof CompanyFormValues];
         if (value instanceof File) {
           formData.append(key, value);
+          console.log(value)
         } else if (key === "foundedDate" && value) {
           // Convert foundedDate to ISO format
           const date = new Date(value as string);
@@ -216,20 +198,16 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           formData.append(key, JSON.stringify(value) || "");
         }
       }
-     
 
-      
-  
-      
       // Add addresses as a JSON string
-      const addresses = [data.businessAddress, data.deliveryAddress];
+      const addresses = [data.deliveryAddress];
 
       formData.append("addresses", JSON.stringify(addresses));
 
       // Log formData contents (for debugging)
-      // newData.forEach((value, key) => {
-      //   console.log(`${key}: ${value}`);
-      // });
+      formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+      });
 
       console.log(formData);
       // Call the onSubmit prop function with the formData
@@ -261,44 +239,41 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     }
   }
 
+  if (!companyData) {
+    return <Loader />;
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <Card>
-          <CardHeader>
-            <CardTitle>Company Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              {/* Existing form fields */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Company Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* ... (Keep all the existing form fields here) ... */}
-              <FormField
-                control={form.control}
-                name="GST"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>GST Number</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <CardContent className="mt-4">
+            <div className="flex  justify-between mb-6">
+              <div>
+                <p>
+                  {" "}
+                  <strong>{companyData?.name}</strong>{" "}
+                </p>
+                <p>
+                  {" "}
+                  <strong>{companyData?.GST}</strong>{" "}
+                </p>
+              </div>
 
+              <div className="w-[30%]">
+                {" "}
+                <p></p>{" "}
+                <strong>
+                  {" "}
+                  <span className="text-xl">Address:</span> SECTOR 5, 3/38 A,
+                  RAJINDER NAGAR, SAHIBABAD, GHAZIABAD, Ghaziabad, Uttar
+                  Pradesh, 201005
+                </strong>{" "}
+                {companyData?.gstAddress}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -368,7 +343,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   </FormItem>
                 )}
               />
-
+              {/* 
               <FormField
                 control={form.control}
                 name="foundedDate"
@@ -381,7 +356,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               <FormField
                 control={form.control}
@@ -413,20 +388,61 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 control={form.control}
                 name="logo"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Logo</FormLabel>
+                  <FormItem className="relative">
+                    <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <p className="text-md mb-3 font-medium">Logo</p>
+                      <img
+                        src={
+                          logoPreview
+                            ? logoPreview
+                            : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
+                        }
+                        alt="Preview"
+                        className="w-14 h-14 object-cover rounded-full"
+                      />
+                     
+                    </FormLabel>
                     <FormControl>
                       <Input
+                        className="hidden"
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
-                          if (e.target.files) {
-                            field.onChange(e.target.files[0]);
+                          let count = 0;
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setLogoPreview(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                            field.onChange(file);
+                            count++;
                           }
                         }}
                       />
                     </FormControl>
-                    <FormMessage />
+                    {logoPreview && (
+                      // <Button
+                      //   type="button"
+                      //   variant="outline"
+                      //   size="sm"
+                      //   className="mt-6"
+                      //   onClick={() => {
+                      //     setPreview(null);
+                      //     field.onChange(null);
+                      //   }}
+                      // >
+                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                        // variant="outline"
+                        size="sm"
+                        
+                        onClick={() => {
+                          setLogoPreview(null);
+                          field.onChange(null);
+                        }} />
+                      
+                    )}
                   </FormItem>
                 )}
               />
@@ -436,20 +452,61 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 control={form.control}
                 name="stamp"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stamp</FormLabel>
+                  <FormItem className="relative">
+                    <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <p className="text-md mb-3 font-medium">Stamp</p>
+                      <img
+                        src={
+                          stampPreview
+                            ? stampPreview
+                            : "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
+                        }
+                        alt="Preview"
+                        className="w-14 h-14 object-cover rounded-full"
+                      />
+                     
+                    </FormLabel>
                     <FormControl>
                       <Input
+                        className="hidden"
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
-                          if (e.target.files) {
-                            field.onChange(e.target.files[0]);
+                          let count = 0;
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setStampPreview(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                            field.onChange(file);
+                            count++;
                           }
                         }}
                       />
                     </FormControl>
-                    <FormMessage />
+                    {stampPreview && (
+                      // <Button
+                      //   type="button"
+                      //   variant="outline"
+                      //   size="sm"
+                      //   className="mt-6"
+                      //   onClick={() => {
+                      //     setPreview(null);
+                      //     field.onChange(null);
+                      //   }}
+                      // >
+                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                        // variant="outline"
+                        size="sm"
+                        
+                        onClick={() => {
+                          setStampPreview(null);
+                          field.onChange(null);
+                        }} />
+                      
+                    )}
                   </FormItem>
                 )}
               />
@@ -457,7 +514,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Business Address</CardTitle>
           </CardHeader>
@@ -536,7 +593,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <Card>
           <CardHeader>
@@ -558,7 +615,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 )}
               />
 
-              <div className="flex gap-20">
+              <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
                   name="deliveryAddress.country"
