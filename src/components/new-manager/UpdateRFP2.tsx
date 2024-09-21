@@ -477,121 +477,151 @@ const ProductList = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">
+        {/* <CardTitle className="text-lg">
           {requirementType || "Product/Service"} Details
-        </CardTitle>
+        </CardTitle> */}
       </CardHeader>
 
       <CardContent>
-        <div className="space-y-2">
-          <div className="grid grid-cols-6 gap-2 mb-2">
-            <Label>Name</Label>
-            <Label>Qty.</Label>
-            <Label>Unit Price</Label>
-            <Label>GST%</Label>
-            <Label>Taxable Amount (INR)</Label>
-            <Label>Total (incl. GST) (INR) </Label>
+        <div className="space-y-4">
+          <div className="flex space-x-4">
+            <div className="w-1/6">
+              <Label>Name</Label>
+            </div>
+            <div className="w-1/4">
+              <Label>Product Description</Label>
+            </div>
+            <div className="w-1/12 text-center">
+              <Label>Qty.</Label>
+            </div>
+            <div className="w-1/6 text-center">
+              <Label>Unit Price</Label>
+            </div>
+            <div className="w-1/12 text-center">
+              <Label>GST%</Label>
+            </div>
+            <div className="w-1/6 text-right">
+              <Label>Taxable Amount (INR)</Label>
+            </div>
+            <div className="w-1/6 text-right">
+              <Label>Total (incl. GST) (INR)</Label>
+            </div>
           </div>
           {loading ? (
-            <>Fetching Data</>
+            <div>Fetching Data...</div>
           ) : (
             fields.map((field, productIndex) => (
-              <div key={field.id} className="grid grid-cols-6 gap-2 m-2">
-                <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.name`
-                  )}
-                  readOnly
-                />
-
-                <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.quantity`
-                  )}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value, 10);
-                    setValue(
-                      `quotations.${index}.products.${productIndex}.quantity`,
-                      value
-                    );
-                    updateProductTotals(productIndex);
-                  }}
-                />
-                <Controller
-                  name={`quotations.${index}.products.${productIndex}.unitPrice`}
-                  control={control}
-                  render={({ field }) => (
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(parseFloat(e.target.value));
-                        updateProductTotals(productIndex);
-                      }}
-                    />
-                  )}
-                />
-                <Controller
-                  name={`quotations.${index}.products.${productIndex}.gst`}
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        updateProductTotals(productIndex);
-                      }}
-                      value={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select GST" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["NILL", "0", "3", "5", "12", "18", "28"].map(
-                          (gst) => (
-                            <SelectItem key={gst} value={gst}>
-                              {gst}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
-                  )}
-                  readOnly
-                  value={(
-                    parseFloat(
-                      getValues(
-                        `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
-                      )
-                    ) || 0
-                  ).toFixed(2)}
-                />
-                <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.totalPriceWithGST`
-                  )}
-                  readOnly
-                  value={(
-                    parseFloat(
-                      getValues(
-                        `quotations.${index}.products.${productIndex}.totalPriceWithGST`
-                      )
-                    ) || 0
-                  ).toFixed(2)}
-                />
+              <div key={field.id} className="flex space-x-4 items-start">
+                <div className="w-1/6">
+                  <Input
+                    {...control.register(
+                      `quotations.${index}.products.${productIndex}.name`
+                    )}
+                    readOnly
+                  />
+                </div>
+                <div className="w-1/4">
+                  <Textarea className="w-full" rows={1} />
+                </div>
+                <div className="w-1/12">
+                  <Input
+                    type="number"
+                    className="text-center"
+                    {...control.register(
+                      `quotations.${index}.products.${productIndex}.quantity`
+                    )}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      setValue(
+                        `quotations.${index}.products.${productIndex}.quantity`,
+                        value
+                      );
+                      updateProductTotals(productIndex);
+                    }}
+                  />
+                </div>
+                <div className="w-1/6">
+                  <Controller
+                    name={`quotations.${index}.products.${productIndex}.unitPrice`}
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        className="text-right"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(parseFloat(e.target.value));
+                          updateProductTotals(productIndex);
+                        }}
+                      />
+                    )}
+                  />
+                </div>
+                <div className="w-1/12">
+                  <Controller
+                    name={`quotations.${index}.products.${productIndex}.gst`}
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          updateProductTotals(productIndex);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="GST" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                            (gst) => (
+                              <SelectItem key={gst} value={gst}>
+                                {gst}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div className="w-1/6">
+                  <Input
+                    className="text-right"
+                    {...control.register(
+                      `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                    )}
+                    readOnly
+                    value={(
+                      parseFloat(
+                        getValues(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
+                        )
+                      ) || 0
+                    ).toFixed(2)}
+                  />
+                </div>
+                <div className="w-1/6">
+                  <Input
+                    className="text-right"
+                    {...control.register(
+                      `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                    )}
+                    readOnly
+                    value={(
+                      parseFloat(
+                        getValues(
+                          `quotations.${index}.products.${productIndex}.totalPriceWithGST`
+                        )
+                      ) || 0
+                    ).toFixed(2)}
+                  />
+                </div>
               </div>
             ))
           )}
-          <div className="w-1/2">
-            <Label>Product Description:</Label>
-            <Textarea />
-          </div>
-          {error && <div className="text-red-500">{error}</div>}{" "}
-          {/* Display single error message */}
+          {error && <div className="text-red-500">{error}</div>}
         </div>
       </CardContent>
     </Card>
