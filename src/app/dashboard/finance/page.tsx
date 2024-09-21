@@ -8,7 +8,7 @@ import {
   grn_received_Data,
   open_po_Data,
 } from "@/lib/tableContent";
-import { columns2, Po1 } from "@/components/Table/columns";
+import { columns2 } from "@/components/Table/columns"; // Ensure columns2 is defined correctly
 import { DataTable } from "@/components/Table/data-table";
 import Loader from "@/components/shared/Loader";
 

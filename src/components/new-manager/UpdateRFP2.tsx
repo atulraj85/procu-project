@@ -324,8 +324,8 @@ const VendorSelector = ({
                 <AlertCircle className="h-4 w-4"  color="orange"/>
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  "You need to remove the current vendor first to modify
-                  existing vendor details."
+                  You need to remove the current vendor first to modify
+                  existing vendor details.
                 </AlertDescription>
               </Alert>
             )}
