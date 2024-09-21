@@ -75,6 +75,7 @@ export async function POST(request: Request) {
       data: {
         name: fields.name,
         GST: fields.GST,
+        gstAddress: fields.gstAddress,
         email: fields.email,
         phone: fields.phone,
         website: fields.website,
