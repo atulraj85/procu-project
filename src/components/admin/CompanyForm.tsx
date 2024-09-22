@@ -269,7 +269,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   RAJINDER NAGAR, SAHIBABAD, GHAZIABAD, Ghaziabad, Uttar
                   Pradesh, 201005
                 </strong>{" "}
-                {companyData?.gstAddress}
+                {/* {companyData} */}
               </div>
             </div>
 
