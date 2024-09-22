@@ -11,7 +11,7 @@ type RequestData = {
 export async function saveAuditTrail(data: RequestData) {
   const user = await currentUser();
   if (!user || !user.id || !user.role) {
-    return { error: "Inavlid user!" } as const;
+    return { error: "Invalid user!" } as const;
   }
 
   const { eventName, details } = data;
@@ -21,18 +21,22 @@ export async function saveAuditTrail(data: RequestData) {
     return { error: "Invalid auditable event!" } as const;
   }
 
-  await createAuditTrail({
-    userId: user.id,
-    eventId: existingEvent.id,
-    details: {
-      ...details,
-      performedBy: {
-        userId: user.id,
-        name: user.name,
-        role: user.role,
+  try {
+    await createAuditTrail({
+      userId: user.id,
+      eventId: existingEvent.id,
+      details: {
+        ...details,
+        user: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+        },
       },
-    },
-  });
-
-  return { success: "Saved successfully!" };
+    });
+    return { success: "Saved successfully!" };
+  } catch (err) {
+    console.error("Failed to create audit trail", err);
+    return { error: "Failed to save audit trail." };
+  }
 }

@@ -1,36 +1,15 @@
 import { db } from "@/lib/db";
-import { User } from "@prisma/client";
-
-/**
- * {
-     "id": 1,
-     "eventId": 1,
-     "details": {
-       "rfpNumber": "RFP-2024-001",
-       "rfpDescription": "Supply of Office Equipment",
-       "createdBy": {
-          "userId": 101,
-          "name": "Laura Grey",
-          "role": "FINANCE_TEAM_MEMBER"
-        }
-     },
-     "userId": 101,
-     
-     "createdAt": "2024-09-20T10:15:00Z",
-    }
-
- */
 
 interface AuditTrailInput {
   eventId: string;
-  details: Record<string, any>; // Flexible structure for event details
-  userId: string; // UUID of the User creating the audit entry
+  userId: string;
+  details: Record<string, any>;
 }
 
 export async function createAuditTrail(data: AuditTrailInput) {
   try {
     const { eventId, details, userId } = data;
-    await db.auditTrail.create({
+    return await db.auditTrail.create({
       data: {
         eventId,
         details,
@@ -45,10 +24,11 @@ export async function createAuditTrail(data: AuditTrailInput) {
 
 export async function findAuditableEventByName(name: string) {
   try {
-    return db.auditableEvent.findUnique({
+    return await db.auditableEvent.findUnique({
       where: { name },
     });
   } catch (err) {
-    throw err;
+    console.error(`Error finding event by name: ${name}`, err);
+    throw new Error(`Failed to retrieve auditable event: ${err}`);
   }
 }

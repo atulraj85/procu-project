@@ -49,23 +49,25 @@ enum AddressType {
 }
 
 model User {
-  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email            String            @unique
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String             @unique
   emailVerified    DateTime?
   password         String
   name             String?
   mobile           String?
-  role             Role              @default(USER)
-  company          Company           @relation(fields: [companyId], references: [id])
-  companyId        String            @db.Uuid
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
+  role             Role               @default(USER)
+  company          Company            @relation(fields: [companyId], references: [id])
+  companyId        String             @db.Uuid
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
   qualityAssurance QualityAssurance?
   pos              PO[]
   rfps             RFP[]
   Vendor           Vendor[]
   approversList    ApproversList[]
   AuditTrail       AuditTrail[]
+  RFPQuery         RFPQuery[]
+  RFPQueryResponse RFPQueryResponse[]
 
   @@index([name, email, mobile]) // Add index for searching by name
 }
@@ -221,7 +223,7 @@ model OtherCharge {
 
 model RFP {
   id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfpId                String          @unique
+  rfpId                String          @unique @db.VarChar(255)
   requirementType      String
   dateOfOrdering       DateTime
   deliveryLocation     String
@@ -236,6 +238,9 @@ model RFP {
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
   po                   PO?
+  RFPQuery             RFPQuery[]
+
+  @@index([rfpId])
 }
 
 enum RFPStatus {
@@ -261,6 +266,34 @@ model RFPProduct {
   updated_at     DateTime        @updatedAt
 
   @@unique([rfpId, productId])
+}
+
+model RFPQuery {
+  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content   String             @db.VarChar(255)
+  rfpId     String             @db.Uuid
+  rfp       RFP                @relation(fields: [rfpId], references: [id])
+  userId    String             @db.Uuid
+  user      User               @relation(fields: [userId], references: [id])
+  responses RFPQueryResponse[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model RFPQueryResponse {
+  id                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  content               String             @db.VarChar(255)
+  queryId               String             @db.Uuid
+  query                 RFPQuery           @relation(fields: [queryId], references: [id])
+  userId                String             @db.Uuid
+  user                  User               @relation(fields: [userId], references: [id]) // Tracks who is responding
+  parentQueryResponseId String?            @db.Uuid
+  parentQueryResponse   RFPQueryResponse?  @relation("ResponseToResponse", fields: [parentQueryResponseId], references: [id])
+  childQueryResponses   RFPQueryResponse[] @relation("ResponseToResponse")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model VendorPricing {
@@ -319,22 +352,25 @@ model PasswordResetToken {
 }
 
 model AuditableEvent {
-  id       String @id @default(uuid()) @db.Uuid
-  name     String @unique @db.VarChar(255)
-  priority Int
-
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String       @unique @db.VarChar(255)
+  priority   Int
   AuditTrail AuditTrail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AuditTrail {
-  id        String         @id @default(uuid()) @db.Uuid
-  event     AuditableEvent @relation(fields: [eventId], references: [id])
+  id        String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   eventId   String         @db.Uuid
+  event     AuditableEvent @relation(fields: [eventId], references: [id])
   details   Json
-  createdBy User           @relation(fields: [userId], references: [id])
   userId    String         @db.Uuid
+  createdBy User           @relation(fields: [userId], references: [id])
 
-  createdAt DateTime @default(now()) // This is the time when this entry is getting saved.
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@index([userId])
 }
