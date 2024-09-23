@@ -1,16 +1,33 @@
 "use client";
+
+import React, { useEffect, useState } from "react";
 import InfoCard from "@/components/shared/InfoCard";
 import { InfoItem, TableColumn } from "@/types/index";
-import React, { useEffect, useState } from "react";
 import { grn_received, open_po, po_dues } from "@/lib/tableHeaders";
 import {
   po_dues_Data,
   grn_received_Data,
   open_po_Data,
 } from "@/lib/tableContent";
-import { columns2, Po1 } from "@/components/Table/columns";
+import { columns2, Po1 } from "@/components/Table/columns"; // Remove TableRow from this import
 import { DataTable } from "@/components/Table/data-table";
 import Loader from "@/components/shared/Loader";
+import { ColumnDef } from "@tanstack/react-table";
+
+// Define TableRow interface here
+interface TableRow {
+  id: string;
+  poId: string;
+  RFPStatus: string;
+  quotations: Array<{
+    totalAmount: string;
+    totalAmountWithoutGST: string;
+    vendor: {
+      companyName: string;
+      mobile: string;
+    };
+  }>;
+}
 
 interface RfpData {
   rfpId: string;
@@ -22,54 +39,45 @@ interface RfpData {
   rfpStatus: string;
 }
 
-const Dashboard = () => {
+// Define a union type for all possible data types
+type DataType = RfpData | TableRow;
+
+const Dashboard: React.FC = () => {
   const headerData: { value: string; titles: TableColumn[]; content: any }[] = [
     { value: "grn_received", titles: grn_received, content: grn_received_Data },
     { value: "open_po", titles: open_po, content: open_po_Data },
     { value: "po_dues", titles: po_dues, content: po_dues_Data },
   ];
 
-  const infoLinks: InfoItem[] = [
+  const [infoLinks, setInfoLinks] = useState<InfoItem[]>([
     {
       value: "po_dues",
-      total: 5,
+      total: 0,
       label: "PO Due",
       price: 453000,
       route: `/vendor/dashboard/po-due`,
     },
     {
       value: "open_po",
-      total: 20,
+      total: 0,
       label: "Open PO",
       price: 2542000,
       route: `/vendor/dashboard/open-po`,
     },
     {
       value: "complete",
-      total: 8,
+      total: 0,
       label: "Complete PO",
       price: 453000,
       route: `/vendor/dashboard/payments-due`,
     },
-  ];
+  ]);
 
   const [rfps, setRfps] = useState<RfpData[]>([]);
-  const [po, setPo] = useState<any>([]);
-  const [content, setContent] = useState<RfpData[]>([]);
-  const [header, setHeader] = useState<TableColumn[]>([]);
-  const [title, setTitle] = useState("PO Due");
+  const [po, setPo] = useState<TableRow[]>([]);
+  const [content, setContent] = useState<DataType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTable, setActiveTable] = useState<string>("po_dues"); // State to track the active table
-
-  const rfpHeaders: TableColumn[] = [
-    { key: "rfpId", header: "RFP ID" },
-    { key: "requirementType", header: "Requirement Type" },
-    { key: "dateOfOrdering", header: "Date of Ordering" },
-    { key: "deliveryLocation", header: "Delivery Location" },
-    { key: "deliveryByDate", header: "Delivery By Date" },
-    { key: "lastDateToRespond", header: "Last Date to Respond" },
-    { key: "rfpStatus", header: "RFP Status" },
-  ];
+  const [activeTable, setActiveTable] = useState<string>("po_dues");
 
   const fetchRfpData = async () => {
     setLoading(true);
@@ -83,17 +91,24 @@ const Dashboard = () => {
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
         deliveryLocation: item.deliveryLocation,
         deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
-        lastDateToRespond: new Date(
-          item.lastDateToRespond
-        ).toLocaleDateString(),
+        lastDateToRespond: new Date(item.lastDateToRespond).toLocaleDateString(),
         rfpStatus: item.rfpStatus,
       }));
 
       setRfps(formattedData);
-      setContent(
-        formattedData.filter((item) => item.rfpStatus === "SUBMITTED")
-      ); // Set initial content to pending RFPs
-      setHeader(rfpHeaders);
+      
+      const poDueCount = formattedData.filter(item => item.rfpStatus === "SUBMITTED").length;
+      const completePOCount = formattedData.filter(item => item.rfpStatus === "PAYMENT_DONE").length;
+
+      setInfoLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.value === "po_dues" ? { ...link, total: poDueCount } :
+          link.value === "complete" ? { ...link, total: completePOCount } :
+          link
+        )
+      );
+
+      setContent(formattedData.filter((item) => item.rfpStatus === "SUBMITTED"));
     } catch (error) {
       console.error("Error fetching RFP data:", error);
     } finally {
@@ -101,36 +116,37 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchPo = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/po");
-        const data = await response.json();
-        setPo(data);
-      } catch (error) {
-        console.error("Error fetching PO data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPo();
-  }, []);
+  const fetchPo = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/po");
+      const data: TableRow[] = await response.json();
+      setPo(data);
+      
+      setInfoLinks(prevLinks => 
+        prevLinks.map(link => 
+          link.value === "open_po" ? { ...link, total: data.length } : link
+        )
+      );
+    } catch (error) {
+      console.error("Error fetching PO data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInfoCardClick = (value: string) => {
-    setTitle(value.toUpperCase());
-    setActiveTable(value); // Set the active table based on the clicked info card
+    setActiveTable(value);
 
     if (value === "po_dues") {
-      setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED")); // Show pending RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "SUBMITTED"));
     } else if (value === "complete") {
-      setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE")); // Show complete RFPs
+      setContent(rfps.filter((item) => item.rfpStatus === "PAYMENT_DONE"));
     } else if (value === "open_po") {
-      setContent(po); // Show the PO data when "Open PO" is clicked
+      setContent(po);
     } else {
       const heading = headerData.find((data) => data.value === value);
       if (heading) {
-        setHeader(heading.titles);
         setContent(heading.content);
       }
     }
@@ -138,30 +154,40 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchRfpData();
+    fetchPo();
   }, []);
 
   useEffect(() => {
-    handleInfoCardClick("po_dues"); // Set default view to "PO Due"
-  }, [rfps]); // Ensure this runs after RFPs are fetched
+    handleInfoCardClick("po_dues");
+  }, [rfps]);
+
+  const getColumns = (): ColumnDef<DataType>[] => {
+    if (activeTable === "open_po") {
+      return Po1 as ColumnDef<DataType>[];
+    } else {
+      return columns2 as ColumnDef<DataType>[];
+    }
+  };
 
   return (
     <div className="flex flex-col w-full">
-      {/* Render Info Cards Above the Table */}
-      <div className="flex items-center justify-evenly w-full mb-4"> {/* Added margin-bottom for spacing */}
+      <div className="flex items-center justify-evenly w-full mb-4">
         {infoLinks.map((info) => (
-          <div key={info.value} onClick={() => handleInfoCardClick(info.value)}>
-            <InfoCard info={info} />
+          <div 
+            key={info.value} 
+            onClick={() => handleInfoCardClick(info.value)}
+          >
+            <div className={activeTable === info.value ? "bg-green-100 rounded-2xl" : ""}>
+              <InfoCard info={info} />
+            </div>
           </div>
         ))}
       </div>
   
-      {/* Conditional Rendering of DataTable */}
-      {activeTable === "open_po" ? (
-        <DataTable columns={Po1} data={po} />
+      {loading ? (
+        <Loader />
       ) : (
-        <div className="w-full">
-          {loading ? <Loader /> : <DataTable columns={columns2} data={content} />}
-        </div>
+        <DataTable columns={getColumns()} data={content} />
       )}
   
       <hr />

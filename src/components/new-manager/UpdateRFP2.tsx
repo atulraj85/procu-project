@@ -111,13 +111,11 @@ const VendorSelector = ({
   setValue,
   setShowCheckbox,
   vendor,
-  setVendorError,
 }: {
   index: number;
   setValue: any;
   setShowCheckbox: any;
   vendor: any;
-  setVendorError: (error: string | null) => void; // New prop type
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
@@ -128,7 +126,6 @@ const VendorSelector = ({
     if (vendor) {
       setApprovedVendor(vendor);
       setDisableVendorSearch(true);
-      setVendorError(null); // Clear error when vendor is set
     }
   }, [vendor]);
 
@@ -216,13 +213,6 @@ const VendorSelector = ({
     }
   };
 
-  useEffect(() => {
-    if (!approvedVendor) {
-      setVendorError("You must select a vendor."); // Set error if no vendor is selected
-    } else {
-      setVendorError(null); // Clear error if a vendor is selected
-    }
-  }, [approvedVendor, setVendorError]);
   return (
     <Card>
       <CardHeader>
@@ -330,15 +320,12 @@ const VendorSelector = ({
             </div>
 
             {disableVendorSearch && (
-              <Alert
-                variant="default"
-                className="mt-2 border-orange-500 text-orange-500"
-              >
-                <AlertCircle className="h-4 w-4" color="orange" />
+              <Alert variant="default" className="mt-2 border-orange-500 text-orange-500">
+                <AlertCircle className="h-4 w-4"  color="orange"/>
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  &quot;You need to remove the current vendor first to modify
-                  existing vendor details.&quot;
+                  You need to remove the current vendor first to modify
+                  existing vendor details.
                 </AlertDescription>
               </Alert>
             )}
@@ -371,11 +358,20 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
+  console.log("products", products);
+
+  if (products.length == 0) {
+    console.log("tes");
+    const data = getValues(`quotations.products`);
+    console.log(data);
+  }
+
+  const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null); // Single error state
 
   useEffect(() => {
     setIsLoading(true);
+
     try {
       if (Array.isArray(products) && products.length > 0) {
         const mappedProducts = products.map((product: any) => ({
@@ -391,16 +387,28 @@ const ProductList = ({
         }));
 
         replace(mappedProducts);
+
+        // Update global form data
+        if (globalFormData.has("quotations")) {
+          const quotations = JSON.parse(
+            globalFormData.get("quotations") as string
+          );
+          quotations[index] = {
+            ...quotations[index],
+            products: mappedProducts,
+          };
+          globalFormData.set("quotations", JSON.stringify(quotations));
+        }
       }
-      setErrors(""); // Clear errors on successful load
+      setError(null);
     } catch (err) {
-      setErrors(
+      setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
     } finally {
       setIsLoading(false);
     }
-  }, [products, replace, index, setErrors]);
+  }, [products, replace, index]);
 
   const calculateTotals = (
     unitPrice: number,
@@ -413,41 +421,7 @@ const ProductList = ({
     return { totalWithoutGST, totalWithGST };
   };
 
-  const validateProduct = (productIndex: number) => {
-    const quantity = getValues(
-      `quotations.${index}.products.${productIndex}.quantity`
-    );
-    const unitPrice = getValues(
-      `quotations.${index}.products.${productIndex}.unitPrice`
-    );
-    const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
-
-    if (quantity <= 0 || !Number.isInteger(quantity)) {
-      setError(
-        `Quantity must be a positive integer for product ${productIndex + 1}.`
-      );
-      return false;
-    }
-
-    if (unitPrice < 0) {
-      setError(
-        `Unit Price must be a positive number for product ${productIndex + 1}.`
-      );
-      return false;
-    }
-
-    if (!["NILL", "0", "3", "5", "12", "18", "28"].includes(gst)) {
-      setError(`Invalid GST value for product ${productIndex + 1}.`);
-      return false;
-    }
-
-    setError(null); // Clear error if validation passes
-    return true;
-  };
-
   const updateProductTotals = (productIndex: number) => {
-    if (!validateProduct(productIndex)) return;
-
     const unitPrice = getValues(
       `quotations.${index}.products.${productIndex}.unitPrice`
     );
@@ -470,6 +444,19 @@ const ProductList = ({
       `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
       totalWithGST
     );
+
+    // Update global form data
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].products[productIndex] = {
+        ...quotations[index].products[productIndex],
+        unitPrice,
+        gst,
+        totalPriceWithoutGST: totalWithoutGST,
+        totalPriceWithGST: totalWithGST,
+      };
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
   };
 
   return (
@@ -743,7 +730,6 @@ const OtherChargesList = ({
 };
 // Step 5: Create Supporting Documents List Component
 import { Eye } from "lucide-react";
-import { getTodayDate } from "@/lib/getTodayDate";
 
 const SupportingDocumentsList = ({
   control,
@@ -804,7 +790,7 @@ const SupportingDocumentsList = ({
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-4 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
           </div>
@@ -1051,7 +1037,6 @@ export default function RFPUpdateForm({
   const [showCheckbox, setShowCheckbox] = useState(true);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [requirementType, setRequirementType] = useState("");
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1110,12 +1095,11 @@ export default function RFPUpdateForm({
   });
 
   useEffect(() => {
-    fields.length === 0 ? setQuotes(1) : setQuotes(fields.length);
+    setQuotes(fields.length);
   }, [fields]);
 
   useEffect(() => {
     globalFormData.set("quotations", JSON.stringify(getValues().quotations));
-    setRequirementType(initialData.requirementType);
   }, [getValues().quotations]);
 
   const handleDeleteClick = (index: number) => {
@@ -1189,36 +1173,7 @@ export default function RFPUpdateForm({
     setError(null);
     setSuccess(false);
 
-    if (!validateForm(data)) {
-      setIsLoading(false);
-      return;
-    }
-
     console.log("Text data to be sent:", data);
-
-    if (!preferredVendorId) {
-      setError("You must select a preferred quotation before submitting.");
-      setIsLoading(false);
-      return; // Exit the function if validation fails
-    }
-
-    const emptyRefNos = fields.reduce((acc: number[], _, index) => {
-      const refNo = getValues(`quotations.${index}.refNo`);
-      if (!refNo || refNo.trim() === "") {
-        acc.push(index + 1); // Store 1-based index for user-friendly message
-      }
-      return acc;
-    }, []);
-
-    if (emptyRefNos.length > 0) {
-      setError(
-        `Reference numbers are missing for quotation(s): ${emptyRefNos.join(
-          ", "
-        )}`
-      );
-      setIsLoading(false);
-      return; // Exit the function if validation fails
-    }
 
     try {
       const formData = new FormData();
@@ -1245,10 +1200,7 @@ export default function RFPUpdateForm({
       });
 
       if (!response.ok) {
-        const res = await response.json();
-
-        console.log("res", res);
-        throw new Error(`${res.error} ${res.reason}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
@@ -1268,7 +1220,6 @@ export default function RFPUpdateForm({
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>
-
           <Link href="/dashboard/manager">
             <Button
               type="button"
@@ -1281,21 +1232,11 @@ export default function RFPUpdateForm({
           </Link>
         </CardHeader>
 
-        <CardContent>
-          {rfpId && (
-            <div className="flex justify-between">
-              <p className="text-md text-muted-foreground">RFP ID: {rfpId}</p>
-              <p>Date of Updating: {getTodayDate()}</p>
-            </div>
-          )}
+        <h1>{}</h1>
 
+        <CardContent>
           {fields.map((field, index) => {
             const quotation = getValues(`quotations.${index}`);
-            const refNoError =
-              error &&
-              error.includes(
-                `Reference numbers are missing for quotation(s): ${index + 1}`
-              );
             return (
               <Accordion
                 key={field.id}
@@ -1319,11 +1260,6 @@ export default function RFPUpdateForm({
                                   `quotations.${index}.refNo`
                                 )}
                               />
-                              {refNoError && (
-                                <p className="text-red-500 text-sm">
-                                  Reference number is required.
-                                </p>
-                              )}
                             </div>
                             <div className="flex flex-row items-center gap-2">
                               <Checkbox
@@ -1375,7 +1311,6 @@ export default function RFPUpdateForm({
 
                     <div className="my-2">
                       <VendorSelector
-                        setVendorError={(error) => setError(error)} // Pass the error handler
                         setValue={setValue}
                         index={index}
                         setShowCheckbox={setShowCheckbox}
@@ -1441,29 +1376,27 @@ export default function RFPUpdateForm({
           })}
 
           {fields.length < quotationLimit && (
-            <div className="flex justify-end">
-              <Button
-                className="bg-primary flex justify-end"
-                type="button"
-                onClick={() => {
-                  if (fields.length < quotationLimit) {
-                    append({
-                      vendorId: "",
-                      products: [],
-                      otherCharges: [],
-                      total: { withGST: 0, withoutGST: 0 },
-                      supportingDocuments: [],
-                    });
-                    setQuotes(quotes + 1);
-                    setShowReasonPrompt(true);
-                  } else {
-                    setShowReasonPrompt(false);
-                  }
-                }}
-              >
-                Add Quotation
-              </Button>
-            </div>
+            <Button
+              className="bg-primary"
+              type="button"
+              onClick={() => {
+                if (fields.length < quotationLimit) {
+                  append({
+                    vendorId: "",
+                    products: [],
+                    otherCharges: [],
+                    total: { withGST: 0, withoutGST: 0 },
+                    supportingDocuments: [],
+                  });
+                  setQuotes(quotes + 1);
+                  setShowReasonPrompt(true);
+                } else {
+                  setShowReasonPrompt(false);
+                }
+              }}
+            >
+              Add Quotation
+            </Button>
           )}
         </CardContent>
       </Card>
@@ -1490,19 +1423,12 @@ export default function RFPUpdateForm({
         </DialogContent>
       </Dialog>
 
-      {Object.keys(errors).length > 0 && (
-        <Alert variant="destructive" className="w-1/4">
-          <AlertTitle>Validation Errors</AlertTitle>
-          <AlertDescription>
-            <ul>
-              {Object.entries(errors).map(([key, value]) => (
-                <li key={key}>{value}</li>
-              ))}
-            </ul>
-          </AlertDescription>
+      {error && (
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
@@ -1527,41 +1453,38 @@ export default function RFPUpdateForm({
           )}
         </Button>
       ) : (
-        <div className="flex">
-          <div>
-            <Textarea
-              className=" mb-2"
-              placeholder="Reason for adding less than 3 quotations"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-            />
-            <Button
-              type="submit"
-              className="bg-primary"
-              onClick={() => {
-                if (reason) {
-                  append({
-                    vendorId: "",
-                    products: [],
-                    otherCharges: [],
-                    total: { withGST: 0, withoutGST: 0 },
-                    supportingDocuments: [],
-                  });
-                  setShowReasonPrompt(false);
-                  setReason("");
-                }
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Reason and Save Quotation"
-              )}
-            </Button>
-          </div>
+        <div>
+          <Textarea
+            className="w-1/3 mb-2"
+            placeholder="Reason for adding less than 3 quotations"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <Button
+            className="bg-primary"
+            onClick={() => {
+              if (reason) {
+                append({
+                  vendorId: "",
+                  products: [],
+                  otherCharges: [],
+                  total: { withGST: 0, withoutGST: 0 },
+                  supportingDocuments: [],
+                });
+                setShowReasonPrompt(false);
+                setReason("");
+              }
+            }}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              "Submit Reason and Add Quotation"
+            )}
+          </Button>
         </div>
       )}
     </form>

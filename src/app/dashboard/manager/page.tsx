@@ -4,6 +4,7 @@ import { DataTable } from "@/components/Table/data-table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface TableRow {
   rfpId: string;
@@ -19,7 +20,7 @@ const Dashboard = () => {
   const [status, setStatus] = useState<"OPEN" | "COMPLETED" | "DRAFT">("DRAFT");
   const [content, setContent] = useState<TableRow[]>([]);
   const [title, setTitle] = useState("OPEN RFPs");
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
 
   const headers = [
     { key: "rfpId", header: "RFP ID" },
@@ -32,41 +33,34 @@ const Dashboard = () => {
   ];
 
   const fetchData = async () => {
-    setLoading(true); // Set loading to true before fetching data
+    setLoading(true);
     try {
       const response = await fetch("/api/rfp?orderBy=created_at,desc");
       const data = await response.json();
-      // console.log("Fetched data:", data); // Log fetched data
 
-      // Convert data to fit TableRow format and filter based on status
       const formattedData = data.map((item: any) => ({
         rfpId: item.rfpId,
         requirementType: item.requirementType,
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
         deliveryLocation: item.deliveryLocation,
         deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
-        lastDateToRespond: new Date(
-          item.lastDateToRespond
-        ).toLocaleDateString(),
+        lastDateToRespond: new Date(item.lastDateToRespond).toLocaleDateString(),
         rfpStatus: item.rfpStatus,
       }));
 
-      // Filter based on `status` state
-     const filteredData = formattedData.filter(
-       (item: { rfpStatus: string }) => {
-         return (
-           (status === "OPEN" && (item.rfpStatus === "SUBMITTED" || item.rfpStatus === "PO_CREATED" )) ||
-           (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
-           (status === "DRAFT" && item.rfpStatus === "DRAFT")
-         );
-       }
-     );
+      const filteredData = formattedData.filter((item: { rfpStatus: string }) => {
+        return (
+          (status === "OPEN" && (item.rfpStatus === "SUBMITTED" || item.rfpStatus === "PO_CREATED")) ||
+          (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
+          (status === "DRAFT" && item.rfpStatus === "DRAFT")
+        );
+      });
 
       setContent(filteredData);
-      setLoading(false); // Set loading to false after data is set
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setLoading(false); // Ensure loading is false if there's an error
+      setLoading(false);
     }
   };
 
@@ -75,7 +69,7 @@ const Dashboard = () => {
   }, [status]);
 
   const setData = () => {
-    fetchData(); // Fetch data when the component mounts or when `status` changes
+    fetchData();
 
     switch (status) {
       case "OPEN":
@@ -89,6 +83,9 @@ const Dashboard = () => {
         break;
     }
   };
+
+  // Define columns with correct type
+  const columns: ColumnDef<TableRow>[] = columns1 as ColumnDef<TableRow>[];
 
   return (
     <Card>
@@ -129,8 +126,7 @@ const Dashboard = () => {
             {loading ? (
               <Loader />
             ) : (
-              // <Table title={title} titles={headers} content={content} />
-              <DataTable columns={columns1} data={content} />
+              <DataTable columns={columns} data={content} />
             )}
           </div>
         </div>
