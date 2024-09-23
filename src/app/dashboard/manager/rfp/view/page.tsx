@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
+import { IoDocumentTextOutline } from "react-icons/io5";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
-import { Disclosure } from "@headlessui/react"; // Import Disclosure for accordion
+import { Disclosure } from "@headlessui/react";
 
 // Define types for the RFP data structure
 interface Vendor {
@@ -34,12 +35,23 @@ interface Vendor {
 }
 
 interface Product {
+
   GST: string | number | readonly string[] | undefined;
   price: string | number | readonly string[] | undefined;
   id: string;
   name: string;
   modelNo: string;
   quantity: number;
+  description?: string;
+  type: 'product' | 'otherCharge';
+}
+
+interface OtherCharge {
+  name: string;
+  price: string | number;
+  gst: string | number;
+  description?: string;
+  type: 'otherCharge';
 }
 
 interface SupportingDocument {
@@ -48,7 +60,7 @@ interface SupportingDocument {
 }
 
 interface Quotation {
-  otherCharges: any;
+  otherCharges: OtherCharge[];
   refNo: string;
   id: string;
   totalAmount: string;
@@ -82,11 +94,6 @@ const ViewRFP: React.FC = () => {
   const [rfpData, setRfpData] = useState<RFPData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  console.log("rfp",rfpData);
-  
-  // console.log("rfp",new Date(rfpData.deliveryByDate).toDateString("d-m-Y")  );
-  
-
 
   useEffect(() => {
     const fetchRFP = async () => {
@@ -107,12 +114,18 @@ const ViewRFP: React.FC = () => {
     fetchRFP();
   }, [rfp]);
 
-  if (loading)
-    return (
-      <div>
-        <Loader />
-      </div>
-    );
+  const calculateTaxableAmount = (item: Product | OtherCharge) => {
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price);
+    return price * (('quantity' in item && item.type !== 'otherCharge') ? item.quantity : 1);
+  };
+
+  const calculateTotalAmount = (item: Product | OtherCharge) => {
+    const taxableAmount = calculateTaxableAmount(item);
+    const gst = typeof item.GST === 'string' ? parseFloat(item.GST) : Number(item.GST || item.gst || 0);
+    return taxableAmount * (1 + gst / 100);
+  };
+
+  if (loading) return <div><Loader /></div>;
   if (error) return <div className="text-red-500">{error}</div>;
   if (!rfpData) return <div>No RFP data found.</div>;
 
@@ -128,7 +141,7 @@ const ViewRFP: React.FC = () => {
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
-            View
+          <IoDocumentTextOutline />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-3xl">
@@ -158,346 +171,172 @@ const ViewRFP: React.FC = () => {
 
   return (
     <form className="space-y-2">
-     
       <Card>
         <div className="flex justify-between mt-2 mb-3 px-6 ">
           <div className="flex items-center">
-          <Label className=" font-bold text-md border border-black  rounded-full mr-4 px-3 py-1 ">
-                p
-              </Label>
-            <Label >
-              RFP ID:  {rfpData.rfpId}
+            <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+              {rfpData.requirementType === "Product" ? "P" : "S"}
             </Label>
-
-           
-              
-              </div>
-             
-           
-<div className="flex">
+            <Label>
+              RFP ID: {rfpData.rfpId}
+            </Label>
+          </div>
+          <div className="flex">
             <div className="">
               <Label>
-                RFP Date:{" "}
-                {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+                RFP Date: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
               </Label>
               <div className="space-y-2">
                 <Label>
-                  Exp. Delivery Date:{" "}
-                  {new Date(rfpData.deliveryByDate).toLocaleDateString()}
-                  <h1></h1>
+                  Exp. Delivery Date: {new Date(rfpData.deliveryByDate).toLocaleDateString()}
                 </Label>
               </div>
             </div>
-            <div className="pl-3" >
-            <Link href="/dashboard/manager">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="text-black-500 bg-red-400"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </Link>
+            <div className="pl-3">
+              <Link href="/dashboard/manager">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="text-black-500 bg-red-400"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-            </div>
-            </div>
-          
-       
 
         <CardContent>
           <Card className="mb-4">
-           
-              
-            
             <CardContent>
-              <div  className="pt-2 pb-2" >
-            <Label className=" font-bold text-20">Quotations</Label>
-            </div>
-            <div >
-              {rfpData.quotations.map((quotation, index) => (
-                <Disclosure key={index} as="div" className="mb-4">
-                  {({ open }) => (
-                    <>
-                      <Disclosure.Button
-                        className={`flex justify-between w-full p-4 text-left text-sm font-medium ${
-                          open ? "bg-gray-200" : "bg-blue-100"
-                        }`}
-                      >
-                        <span className="flex">
-                          <span className="font-bold">Quot. Ref No : </span> {quotation.refNo}
-                          {quotation.id === rfpData.preferredQuotationId && (
-                            <span className="text-yellow-600 pl-4 font-semibold">
-                              <Star className="mr-2" />
-                            </span>
-                          )}
-                        </span>
-
-                        <div><span className="font-bold">Total Amount (INR) :</span> {quotation.totalAmount}</div>
-                        {/* <span>{open ? "-" : "+"}</span> */}
-                      </Disclosure.Button>
-                      <Disclosure.Panel className="p-4">
-                        {quotation.id === rfpData.preferredQuotationId && (
-                          <div className="flex items-center mb-2 text-yellow-600">
-                            {/* <Star className="mr-2" />
-                            <span className="font-semibold">
-                              Preferred Vendor
-                            </span> */}
-                          </div>
-                        )}
-                        {/* <div className="flex flex-col mb-4 w-[35%] mr-4">
-                          <Label>Ref No</Label>
-                          <Input
-                            type="text"
-                            value={quotation.refNo}
-                            disabled
-                            className="border border-gray-300 p-2 rounded"
-                          />
-                        </div> */}
-                        <h4 className="font-semibold">Vendor Details</h4>
-                        <div className="flex items-center space-x-2 mb-2">
-                          <div className="flex flex-col">
-                            <Label>{quotation.vendor.companyName} {quotation.vendor.email} {quotation.vendor.mobile}</Label>
-                            {/* <Label>Company Name</Label> */}
-                            {/* <Input
-                              type="text"
-                              value={quotation.vendor.companyName}
-                              disabled
-                              className="border border-gray-300 p-2 rounded"
-                            /> */}
-                          </div>
-                          <div className="flex flex-col">
-                            {/* <Label>Email</Label> */}
-                            <Input
-                              type="text"
-                              value={quotation.vendor.email}
-                              disabled
-                              className="border border-gray-300 p-2 rounded"
-                            />
-                          </div>
-                          <div className="flex flex-col">
-                            {/* <Label>Mobile</Label> */}
-                            <Input
-                              type="text"
-                              value={quotation.vendor.mobile}
-                              disabled
-                              className="border border-gray-300 p-2 rounded"
-                            />
-                          </div>
-                        </div>
-                        <h4 className="font-semibold">Products</h4>
-                        {quotation.products.map((product, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center space-x-2 mb-2"
-                          >
+              <div className="pt-2 pb-2">
+                <Label className="font-bold text-20">Quotations</Label>
+              </div>
+              <div>
+                {rfpData.quotations.map((quotation, index) => (
+                  <Disclosure key={index} as="div" className="mb-4">
+                    {({ open }) => (
+                      <>
+                        <Disclosure.Button
+                          className={`flex justify-between w-full p-4 text-left text-sm font-medium ${
+                            open ? "bg-gray-200" : "bg-blue-100"
+                          }`}
+                        >
+                          <span className="flex">
+                            <span className="font-bold">Quot. Ref No : </span> {quotation.refNo}
+                            {quotation.id === rfpData.preferredQuotationId && (
+                              <span className="text-yellow-600 pl-4 font-semibold">
+                                <Star className="mr-2" />
+                              </span>
+                            )}
+                          </span>
+                          <div><span className="font-bold">Total Amount (INR) :</span> {quotation.totalAmount}</div>
+                        </Disclosure.Button>
+                        <Disclosure.Panel className="p-4">
+                          <h4 className="font-semibold">Vendor Details</h4>
+                          <div className="flex items-center space-x-2 mb-2">
                             <div className="flex flex-col">
-                              <Label>Product Name</Label>
-                              <Input
-                                type="text"
-                                value={product.name}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Quantity</Label>
-                              <Input
-                                type="number"
-                                value={product.quantity}
-                                disabled
-                                className="border border-gray-300 p-2 rounded w-16"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Unit Price (INR)</Label>
-                              <Input
-                                type="number"
-                                value={product.price}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>GST %</Label>
-                              <Input
-                                type="number"
-                                value={product.GST}
-                                disabled
-                                className="border border-gray-300 p-2 rounded w-16"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Taxable Amount(INR)</Label>
-                              <Input
-                                type="number"
-                                value={product.price * product.quantity}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Total Amount(INR)</Label>
-                              <Input
-                                type="number"
-                                value={
-                                  product.price *
-                                  product.quantity *
-                                  (1 + product.GST / 100)
-                                }
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
+                              <Label>{quotation.vendor.companyName} {quotation.vendor.email} {quotation.vendor.mobile}</Label>
                             </div>
                           </div>
-                        ))}
-                        <h4 className="font-semibold pt-4">Other Charges</h4>
-                        {quotation.otherCharges.map((other, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center space-x-2 mb-2"
-                          >
-                            <div className="flex flex-col">
-                              <Label>Name</Label>
-                              <Input
-                                type="text"
-                                value={other.name}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Unit Price</Label>
-                              <Input
-                                type="text"
-                                value={other.price}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>GST%</Label>
-                              <Input
-                                type="text"
-                                value={other.gst}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                            <div className="flex flex-col">
-                              <Label>Total Amount</Label>
-                              <Input
-                                type="text"
-                                value={other.price * (1 + other.gst / 100)}
-                                disabled
-                                className="border border-gray-300 p-2 rounded"
-                              />
-                            </div>
-                          </div>
-                        ))}
-                        <div className="flex pt-4">
-                          <div className="flex flex-col mb-4 mr-4">
-                            <Label>Total Amount Incl.GST(INR)</Label>
-                            <Input
-                              type="text"
-                              value={quotation.totalAmount}
-                              disabled
-                              className="border border-gray-300 p-2 rounded"
-                            />
-                          </div>
-                          <div className="flex flex-col mb-4">
-                            <Label>Taxable Amount (INR)</Label>
-                            <Input
-                              type="text"
-                              value={quotation.totalAmountWithoutGST}
-                              disabled
-                              className="border border-gray-300 p-2 rounded"
-                            />
-                          </div>
-                        </div>
-                        <h4 className="font-semibold mt-4 mb-2">
-                          Supporting Documents
-                        </h4>
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full border-collapse border border-gray-300">
+                          <h4 className="font-semibold mt-4">Products and Other Charges</h4>
+                          <table className="min-w-full border-collapse border border-gray-300 mt-2">
                             <thead>
                               <tr className="bg-gray-100">
-                                <th className="border border-gray-300 p-2 text-left">
-                                  Document Name
-                                </th>
-                                <th className="border border-gray-300 p-2 text-left">
-                                  Type
-                                </th>
-                                <th className="border border-gray-300 p-2 text-left">
-                                  Action
-                                </th>
+                                <th className="border border-gray-300 p-2 text-left">Name</th>
+                                <th className="border border-gray-300 p-2 text-left">Description</th>
+                                <th className="border border-gray-300 p-2 text-left">Qty</th>
+                                <th className="border border-gray-300 p-2 text-left">Unit Price</th>
+                                <th className="border border-gray-300 p-2 text-left">GST %</th>
+                                <th className="border border-gray-300 p-2 text-left">Taxable Amt.</th>
+                                <th className="border border-gray-300 p-2 text-left">Total Amt.</th>
+                              </tr>
+                              <tr className="bg-gray-100">
+                                <th className="border border-gray-300 p-2 text-left"></th>
+                                <th className="border border-gray-300 p-2 text-left"></th>
+                                <th className="border border-gray-300 p-2 text-left"></th>
+                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
+                                <th className="border border-gray-300 p-2 text-left"></th>
+                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
+                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {quotation.supportingDocuments.map((doc, idx) => (
+                              {[
+                                ...quotation.products,
+                                ...(Array.isArray(quotation.otherCharges) ? quotation.otherCharges : [])
+                              ].map((item, idx) => (
                                 <tr key={idx}>
                                   <td className="border border-gray-300 p-2">
-                                    {doc.documentName}
+                                    {item.type === 'otherCharge' ? 'Other Charge' : item.name}
                                   </td>
                                   <td className="border border-gray-300 p-2">
-                                    {isImageFile(doc.location) ? (
-                                      <ImageIcon
-                                        className="inline-block mr-2"
-                                        size={16}
-                                      />
-                                    ) : (
-                                      <FileText
-                                        className="inline-block mr-2"
-                                        size={16}
-                                      />
-                                    )}
-                                    {isImageFile(doc.location)
-                                      ? "Image"
-                                      : "PDF"}
+                                    {item.type === 'otherCharge' ? '' : (item.description || 'N/A')}
                                   </td>
                                   <td className="border border-gray-300 p-2">
-                                    <DocumentPreview document={doc} />
+                                    {item.type === 'otherCharge' ? '' : (item.quantity || '')}
                                   </td>
+                                  <td className="border border-gray-300 p-2">{item.price}</td>
+                                  <td className="border border-gray-300 p-2">{item.GST || item.gst || 0}</td>
+                                  <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
+                                  <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
                                 </tr>
                               ))}
                             </tbody>
+                            <tfoot>
+                              <tr className="bg-gray-200">
+                                <td colSpan={5} className="border border-gray-300 p-2 font-bold text-right">Total:</td>
+                                <td className="border border-gray-300 p-2 font-bold">{quotation.totalAmountWithoutGST}</td>
+                                <td className="border border-gray-300 p-2 font-bold">{quotation.totalAmount}</td>
+                              </tr>
+                            </tfoot>
                           </table>
-                        </div>
-                      </Disclosure.Panel>
-                    </>
-                  )}
-                </Disclosure>
-              ))}
+                          
+                          <h4 className="font-semibold mt-4 mb-2">Supporting Documents</h4>
+                          <div className="flex flex-wrap gap-4">
+                            {quotation.supportingDocuments.map((doc, idx) => (
+                              <div key={idx} className="flex items-center space-x-2">
+                                <span>{doc.documentName}</span>
+                                <DocumentPreview document={doc} />
+                              </div>
+                            ))}
+                          </div>
+                        </Disclosure.Panel>
+                      </>
+                    )}
+                  </Disclosure>
+                ))}
               </div>
             </CardContent>
           </Card>
-           <div className="flex ">
-          <Card className="mb-4 mr-2 w-[70%]">
-            <CardHeader>
-              <CardTitle>Approver Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {rfpData.approvers.map((approver, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
-                  <div>
-                    <h1>{approver.name} | {approver.email} | {approver.mobile}</h1>
+          <div className="flex">
+            <Card className="mb-4 mr-2 w-[75%]">
+              <CardHeader>
+               
+                <Label className="font-bold text-20">Approver Details</Label>
+              </CardHeader>
+              <CardContent>
+                {rfpData.approvers.map((approver, index) => (
+                  <div key={index} className="flex items-center space-x-2 mb-2">
+                    <div>
+                      <h1>{approver.name} | {approver.email} | {approver.mobile}</h1>
+                    </div>
                   </div>
-                 
+                ))}
+              </CardContent>
+            </Card>
+            <Card className="mb-4">
+              <CardHeader>
+               
+                <Label className="font-bold text-20">Delivery Location</Label>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p>{rfpData.deliveryLocation}</p>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Delivery Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p>{rfpData.deliveryLocation}</p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           </div>
         </CardContent>
       </Card>
