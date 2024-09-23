@@ -320,12 +320,15 @@ const VendorSelector = ({
             </div>
 
             {disableVendorSearch && (
-              <Alert variant="default" className="mt-2 border-orange-500 text-orange-500">
-                <AlertCircle className="h-4 w-4"  color="orange"/>
+              <Alert
+                variant="default"
+                className="mt-2 border-orange-500 text-orange-500"
+              >
+                <AlertCircle className="h-4 w-4" color="orange" />
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
-                  You need to remove the current vendor first to modify
-                  existing vendor details.
+                  You need to remove the current vendor first to modify existing
+                  vendor details.
                 </AlertDescription>
               </Alert>
             )}
@@ -648,7 +651,7 @@ const OtherChargesList = ({
   return (
     <div>
       <hr />
-      <CardContent>
+      <div>
         <CardTitle className="text-lg">Other Charges (If any)</CardTitle>
 
         <div className="flex justify-between">
@@ -724,7 +727,7 @@ const OtherChargesList = ({
             <PlusIcon />
           </Button>
         </div>
-      </CardContent>
+      </div>
     </div>
   );
 };
@@ -827,7 +830,7 @@ const SupportingDocumentsList = ({
                       )}
                     </div>
                     <div className="flex space-x-2">
-                      {isFileUploaded && (
+                      {/* {isFileUploaded && (
                         <Button
                           type="button"
                           onClick={() => handlePreview(location)}
@@ -837,7 +840,7 @@ const SupportingDocumentsList = ({
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                      )}
+                      )} */}
 
                       <div className="flex flex-col">
                         <Label className="font-bold text-[16px] text-slate-700"></Label>
@@ -1172,6 +1175,8 @@ export default function RFPUpdateForm({
     setIsLoading(true);
     setError(null);
     setSuccess(false);
+
+    validateForm(data);
 
     console.log("Text data to be sent:", data);
 
