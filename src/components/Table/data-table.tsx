@@ -26,6 +26,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -46,20 +47,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
   });
-  // const table = useReactTable({
-  //     data,
-  //     columns,
-  //     // onSortingChange: setSorting,
-  //     getCoreRowModel: getCoreRowModel(),
-  //     // getPaginationRowModel: getPaginationRowModel(),
-  //     // getSortedRowModel: getSortedRowModel(),
-  //     onColumnFiltersChange: setColumnFilters,
-  //     getFilteredRowModel: getFilteredRowModel(),
-  //     state: {
-  //     //   sorting,
-  //       columnFilters,
-  //     },
-  //   })
+
   return (
     <div>
       <div className="flex items-center py-4">
@@ -72,16 +60,6 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
       </div>
-      {/* <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div> */}
 
       <div className="rounded-md border">
         <Table>
