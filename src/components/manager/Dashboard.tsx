@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Loader from "../shared/Loader";
 import { DataTable } from "../Table/data-table";
+<<<<<<< HEAD
 import { columns1 } from "../Table/columns";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -14,12 +15,16 @@ interface TableRow {
   lastDateToRespond: string;
   rfpStatus: string;
 }
+=======
+import { columns1, TableRow } from "../Table/columns";
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
 
 const Dashboard = () => {
   const [status, setStatus] = useState<'OPEN' | 'COMPLETED' | 'DRAFT'>('DRAFT');
   const [content, setContent] = useState<TableRow[]>([]);
   const [title, setTitle] = useState("OPEN RFPs");
   const [loading, setLoading] = useState(true);
+<<<<<<< HEAD
 
   const headers = [
     { key: "rfpId", header: "RFP ID" },
@@ -30,6 +35,8 @@ const Dashboard = () => {
     { key: "lastDateToRespond", header: "Last Date to Respond" },
     { key: "rfpStatus", header: "RFP Status" },
   ];
+=======
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
 
   const fetchData = async () => {
     setLoading(true);
@@ -37,7 +44,11 @@ const Dashboard = () => {
       const response = await fetch('/api/rfp');
       const data = await response.json();
 
+<<<<<<< HEAD
       const formattedData = data.map((item: any) => ({
+=======
+      const formattedData: TableRow[] = data.map((item: any) => ({
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
         rfpId: item.rfpId,
         requirementType: item.requirementType,
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
@@ -47,7 +58,11 @@ const Dashboard = () => {
         rfpStatus: item.rfpStatus,
       }));
 
+<<<<<<< HEAD
       const filteredData = formattedData.filter((item: { rfpStatus: string; }) =>
+=======
+      const filteredData = formattedData.filter((item) =>
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
         status === 'OPEN' ? item.rfpStatus === 'PENDING' :
         status === 'COMPLETED' ? item.rfpStatus === 'COMPLETED' :
         status === 'DRAFT' ? item.rfpStatus === 'DRAFT' :
@@ -124,7 +139,11 @@ const Dashboard = () => {
         {loading ? (
           <Loader />
         ) : (
+<<<<<<< HEAD
           <DataTable columns={typedColumns} data={content} />
+=======
+          <DataTable columns={columns1} data={content} />
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
         )}
       </div>
     </div>

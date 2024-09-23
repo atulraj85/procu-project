@@ -60,6 +60,19 @@ export function DataTable<TData, TValue>({
           className="max-w-sm"
         />
       </div>
+<<<<<<< HEAD
+=======
+      {/* <div className="flex items-center py-4">
+        <Input
+          placeholder="Filter emails..."
+          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("email")?.setFilterValue(event.target.value)
+          }
+          className="max-w-sm"
+        />
+      </div> */}
+>>>>>>> parent of 72b1dcf (Revert "Merge branch 'company-creation' into frontend-v0.2")
 
       <div className="rounded-md border">
         <Table>

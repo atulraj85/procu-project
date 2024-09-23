@@ -33,8 +33,11 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
                   ? "/images/user_icon.png"
                   : startIcon === "phone"
                   ? "/images/icons8-phone-16.png"
-                  : "/images/lock_icon.png"
+                  : startIcon === "padlock"
+                  ? "/images/lock_icon.png"
+                  : ""
               }
+              alt={`${startIcon} icon`}
             />
           </div>
         )}
@@ -42,6 +45,7 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
     );
   }
 );
+
 Input.displayName = "Input";
 
 export { Input };

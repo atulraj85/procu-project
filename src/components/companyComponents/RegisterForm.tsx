@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import MainButton from "../common/MainButton";
+import MainButton from "@/components/common/MainButton";
 import Link from "next/link";
 import { CreateUserInputValidation } from "@/lib/validations";
 import { useState } from "react";
@@ -31,12 +31,11 @@ interface RegisterFormProps {
 }
 
 function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
 
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -46,7 +45,7 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
       company: "",
       email: "",
       mobile: "",
-      password: "",
+      password: "",   
     },
   });
 
@@ -54,9 +53,17 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
     try {
       setLoading(true);
 
+      const dataWithRole = {
+        ...data,
+        role: "ADMIN",
+      };
+
+      
+      console.log(dataWithRole);
+
       const response = await makeApiCallService<ICreateUserResponse>(apiUrl, {
         method: "POST",
-        body: data,
+        body: dataWithRole,
       });
 
       if (response?.response?.meta?.success) {
@@ -64,6 +71,15 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
           title: "🎉 Registration success",
           description: response?.response?.meta?.message,
         });
+
+        form.reset({
+          name: "",
+          company: "",
+          email: "",
+          mobile: "",
+          password: "",
+        });
+  
 
         router.push("/login");
       }
@@ -186,7 +202,6 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
    
   )}
 />
-
 
           <MainButton
             text="Register"
