@@ -35,9 +35,10 @@ interface Vendor {
 }
 
 interface Product {
-  GST: string | number | readonly string[] | undefined;
+  GST: string ;
   price: string | number | readonly string[] | undefined;
   id: string;
+  gst:string;
   name: string;
   modelNo: string;
   quantity: number;
@@ -47,6 +48,7 @@ interface Product {
 
 interface OtherCharge {
   name: string;
+  GST : string;
   price: string | number;
   gst: string | number;
   description?: string;
