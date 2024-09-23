@@ -1,5 +1,5 @@
-"use client";
-import { useState, useEffect } from "react";
+"use client"
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -16,8 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { IUsersListingResponse } from "@/types";
 import Loader from "@/components/shared/Loader";
 import {
   AlertDialog,
@@ -29,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "react-toastify";
 
 interface User {
   id: number;
@@ -39,10 +38,11 @@ interface User {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [usersListing, setUsersListing] = useState<User[] | null>(null);
+  const [users, setUsers] = useState<User[] | null>(null);
   const [pendingRoleChange, setPendingRoleChange] = useState<{
     role: string;
     id: number;
+    currentRole: string;
   } | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -61,30 +61,20 @@ export default function AdminDashboard() {
       const response = await fetch("/api/users");
       if (response.ok) {
         const data = await response.json();
-        setUsersListing(data);
+        setUsers(data);
       }
     };
     fetchUsers();
   }, []);
 
-  if (!usersListing) {
+  if (!users) {
     return <Loader />;
   }
 
-  const users = usersListing.map((user) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  }));
-
-  // Function to handle role change with confirmation
   const handleRoleChange = async () => {
     if (!pendingRoleChange) return;
 
     const { role, id } = pendingRoleChange;
-    console.log("User ID:", id);
-    console.log("New Role:", role);
 
     try {
       const response = await fetch(`/api/users`, {
@@ -96,16 +86,22 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        console.log("Role updated successfully");
-        // Optionally, refetch users or update the local state to reflect the change
+        toast("Role updated successfully");
+        console.log("role changes");
+        // Update the local state to reflect the change
+        setUsers(users.map(user => 
+          user.id === id ? { ...user, role } : user
+        ));
       } else {
         console.error("Failed to update role");
+        toast.error("Failed to update role");
       }
     } catch (error) {
       console.error("Error updating role:", error);
+      toast.error("Error updating role");
     } finally {
-      setIsDialogOpen(false); // Close dialog after the action
-      setPendingRoleChange(null); // Clear pending change
+      setIsDialogOpen(false);
+      setPendingRoleChange(null);
     }
   };
 
@@ -128,9 +124,12 @@ export default function AdminDashboard() {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   <Select
+                    value={user.role}
                     onValueChange={(value) => {
-                      setPendingRoleChange({ role: value, id: user.id });
-                      setIsDialogOpen(true); // Open the confirmation dialog
+                      if (value !== user.role) {
+                        setPendingRoleChange({ role: value, id: user.id, currentRole: user.role });
+                        setIsDialogOpen(true);
+                      }
                     }}
                   >
                     <SelectTrigger className="w-[180px]">
@@ -149,20 +148,26 @@ export default function AdminDashboard() {
           </TableBody>
         </Table>
 
-        {/* Confirmation AlertDialog */}
         {pendingRoleChange && (
-          <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <AlertDialog open={isDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+              // Reset to the current role if dialog is closed without confirmation
+              setUsers(users.map(user => 
+                user.id === pendingRoleChange.id ? { ...user, role: pendingRoleChange.currentRole } : user
+              ));
+              setPendingRoleChange(null);
+            }
+            setIsDialogOpen(open);
+          }}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-red-500">Confirm Role Change</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure, you want to change the role? 
+                  Are you sure you want to change the role?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </AlertDialogCancel>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction className="bg-red-500" onClick={handleRoleChange}>
                   Continue
                 </AlertDialogAction>

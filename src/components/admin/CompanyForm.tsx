@@ -30,6 +30,7 @@ import { AddressType } from "@prisma/client";
 
 interface Company {
   GST: string;
+  gstAddress:string;
   addresses: any[];
   created_at: string;
   email: string;
@@ -265,11 +266,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 <p></p>{" "}
                 <strong>
                   {" "}
-                  <span className="text-xl">Address:</span> SECTOR 5, 3/38 A,
-                  RAJINDER NAGAR, SAHIBABAD, GHAZIABAD, Ghaziabad, Uttar
-                  Pradesh, 201005
-                </strong>{" "}
-                {/* {companyData} */}
+                  <span className="text-xl">Address:</span> {companyData.gstAddress}
+                </strong>{"default address , address not come from backend "}
+                
               </div>
             </div>
 
