@@ -13,7 +13,6 @@ export default function Page() {
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
     const role = localStorage.getItem("USER_ROLE");
-    const userID = localStorage.getItem("USER_ID");
     if (!token) {
       router.push("/login");
     } else if (role?.toLowerCase() !== "admin") {
@@ -36,12 +35,12 @@ export default function Page() {
     return <Loader />;
   }
 
-  // const users = usersListing.response.data.map((user) => ({
-  //   id: user.id,
-  //   name: user.name,
-  //   email: user.email,
-  //   role: user.role,
-  // }));
+  const users = usersListing.response.data.map((user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  }));
 
   return (
     <div className="flex">

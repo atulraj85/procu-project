@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
   FormControl,
@@ -27,7 +26,7 @@ const FormSchema = z.object({
       message: "Enter a valid email",
     })
     .min(2, {
-      message: "Email must be at least 2 characters.",
+      message: "email must be at least 2 characters.",
     }),
   password: z
     .string()
@@ -39,17 +38,7 @@ const FormSchema = z.object({
     }),
 });
 
-interface LoginFormProps {
-  api: string; // The API endpoint for the login request
-  registerPage: string; // The URL for the register page
-}
-
-function LoginForm({ api, registerPage}: LoginFormProps) {
-  const [showPassword, setShowPassword] = useState(false);
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
+function LoginForm({ api }: any) {
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -64,31 +53,23 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
     try {
       setLoading(true);
 
-      const response = await makeApiCallService<ILoginUserResponse>(api, {
+      const response = await makeApiCallService<ILoginUserResponse>("api/login", {
         method: "POST",
         body: data,
       });
-
       if (response?.response?.meta?.success) {
         // Store the token and role in local storage
         localStorage.setItem("TOKEN", response?.response?.data?.token);
         localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
         localStorage.setItem("USER_ID", response?.response?.data?.userId);
+        //  console.log(userId);
 
         toast({
           title: "🎉 Login success",
           description: response?.response?.meta?.message,
         });
 
-        console.log(localStorage.getItem("USER_ROLE"));
-          router.push("/dashboard/admin");
-
-        // if(localStorage.getItem("USER_ROLE") == "ADMIN"){
-        //   router.push("/dashboard/admin/company");
-        // } else {
-        //   router.push("/dashboard/admin/company");
-        // }
-        
+        router.push("/dashboard");
       }
 
       setLoading(false);
@@ -102,7 +83,7 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
   }
 
   return (
-    <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16">
+    <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
       <div className="self-start">
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
@@ -137,7 +118,6 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <div className="relative">
               <FormItem>
                 <FormControl>
                   <Input
@@ -145,19 +125,11 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
                     {...field}
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="padlock"
-                    type={showPassword ? "text" : "password"}
-                    
+                    type="password"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
-              <span
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? <IoEyeOff /> : <IoEye />}
-            </span>
-            </div>
             )}
           />
 
@@ -170,7 +142,7 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
           />
 
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href={registerPage}>Register Instead?</Link>
+            <Link href="/register">Register Instead?</Link>
           </div>
         </form>
       </Form>

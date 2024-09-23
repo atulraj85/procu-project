@@ -46,14 +46,8 @@ interface SupportingDocument {
   location: string;
 }
 
-type OtherCharge = {
-  price: number 
-  gst:  number 
-  name:string;
-};
-
 interface Quotation {
-  otherCharges: [];
+  otherCharges: any;
   refNo: string;
   id: string;
   totalAmount: string;
@@ -329,10 +323,7 @@ const ViewRFP: React.FC = () => {
                         <Label>Taxable Amount(INR)</Label>
                         <Input
                           type="number"
-                          value={
-                            Number(product?.price ?? 0) *
-                            Number(product?.quantity ?? 0)
-                          }
+                          value={(product.price)*(product.quantity)}
                           disabled
                           className="border border-gray-300 p-2 rounded "
                         />
@@ -341,11 +332,7 @@ const ViewRFP: React.FC = () => {
                         <Label>Total Amount(INR)</Label>
                         <Input
                           type="number"
-                          value={
-                            Number(product.price ?? 0) *
-                            Number(product.quantity ?? 0) *
-                            (1 + Number(product.GST ?? 0) / 100)
-                          }
+                          value={((product.price)*(product.quantity))*(1+(product.GST/100))}
                           disabled
                           className="border border-gray-300 p-2 rounded "
                         />
@@ -353,7 +340,7 @@ const ViewRFP: React.FC = () => {
                     </div>
                   ))}
                   <h4 className="font-semibold pt-4">Other Charges</h4>
-                  {quotation.otherCharges.map((other:OtherCharge, idx:number) => (
+                  {quotation.otherCharges.map((other, idx) => (
                     <div key={idx} className="flex items-center space-x-2 mb-2">
                       <div className="flex flex-col">
                         <Label>Name</Label>

@@ -7,10 +7,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { email, name, password, company, mobile , role} = body;
+    const { email, name, password, company, mobile } = body;
 
     const inputValidation = CreateUserInputValidation.safeParse(body);
-    console.log(body);
 
     if (!inputValidation.success) {
       return error_response(
@@ -52,7 +51,6 @@ export async function POST(req: Request) {
         name,
         mobile,
         password: hashedUserPassword,
-        role
       },
     });
 

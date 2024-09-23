@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
   FormControl,
@@ -20,23 +19,11 @@ import { useState } from "react";
 import makeApiCallService from "@/service/apiService";
 import { ICreateUserResponse } from "@/types";
 import { useRouter } from "next/navigation";
-import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
 
 const FormSchema = CreateUserInputValidation;
 
-interface RegisterFormProps {
-  apiUrl: string; // API URL passed as a prop
-  loginPage: string;
-  text:string;
-}
-
-function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
+function RegisterForm() {
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
 
   const router = useRouter();
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -54,10 +41,13 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
     try {
       setLoading(true);
 
-      const response = await makeApiCallService<ICreateUserResponse>(apiUrl, {
-        method: "POST",
-        body: data,
-      });
+      const response = await makeApiCallService<ICreateUserResponse>(
+        "/api/register",
+        {
+          method: "POST",
+          body: data,
+        }
+      );
 
       if (response?.response?.meta?.success) {
         toast({
@@ -78,7 +68,7 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
     <div className="w-full  flex flex-col gap-[2.81rem] justify-center items-center h-screen px-4 lg:px-[4rem] lg:mr-16  ">
       <div className="self-start">
         <p className="text-[#333] text-[1.625rem] font-[700]">Hello!</p>
-        <p className="text-[#333] text-[1.125rem]">{text}</p>
+        <p className="text-[#333] text-[1.125rem]">Sign Up to Get Started</p>
       </div>
       <Form {...form}>
         <form
@@ -156,37 +146,24 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
             )}
           />
 
-<FormField
-  control={form.control}
-  name="password"
-  render={({ field }) => (
-     <div className="relative">
-      <FormItem>
-       
-          <FormControl>
-            <Input
-              placeholder="Password"
-              {...field}
-              startIcon="padlock"
-              className="h-[3.75rem] w-full rounded-large"
-              type={showPassword ? "text" : "password"}
-            />
-            
-          </FormControl>
-       
-        <FormMessage />
-      </FormItem>
-      <span
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? <IoEyeOff /> : <IoEye />}
-            </span>
-            </div>
-   
-  )}
-/>
-
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="Password"
+                    {...field}
+                    className="h-[3.75rem] w-full rounded-large"
+                    startIcon="padlock"
+                    type="password"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <MainButton
             text="Register"
@@ -197,7 +174,7 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
           />
 
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href={loginPage}>Login Instead?</Link>
+            <Link href="/login">Login Instead?</Link>
           </div>
         </form>
       </Form>

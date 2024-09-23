@@ -146,15 +146,15 @@ export async function POST(request: Request) {
 
 // PUT: Update an existing user
 export async function PUT(request: Request) {
-  const { id, role } = await request.json();
+  const { id, email, password, name, role } = await request.json();
 
   try {
     const updatedUser = await prisma.user.update({
       where: { id },
       data: {
-        // email,
-        // password, // Make sure to hash the password before saving it
-        // name,
+        email,
+        password, // Make sure to hash the password before saving it
+        name,
         role,
       },
     });
