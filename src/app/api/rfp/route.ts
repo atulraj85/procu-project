@@ -29,6 +29,7 @@ function formatRFPData(inputData: any[]) {
       modelNo: product.product.modelNo,
       quantity: product.quantity,
       rfpProductId: product.id,
+      description: product.product.specification,
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -46,6 +47,7 @@ function formatRFPData(inputData: any[]) {
           modelNo: pricing.rfpProduct.product.modelNo,
           quantity: pricing.rfpProduct.quantity,
           price: pricing.price,
+          description: pricing.rfpProduct.product.specification,
           gst: pricing.GST,
           type: "product",
         })),
@@ -150,9 +152,9 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 modelNo: true,
+                specification: true, // Ensure this is included
               },
             },
-            // description: true, TODO
             quantity: true,
           },
         },
@@ -191,9 +193,9 @@ export async function GET(request: NextRequest) {
                         id: true,
                         name: true,
                         modelNo: true,
+                        specification: true, // Ensure this is included
                       },
                     },
-                    // description: true, TODO
                     quantity: true,
                   },
                 },
@@ -206,7 +208,6 @@ export async function GET(request: NextRequest) {
                 gst: true,
               },
             },
-
             supportingDocuments: {
               select: {
                 documentName: true,
@@ -215,7 +216,6 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-
         user: {
           select: {
             name: true,
