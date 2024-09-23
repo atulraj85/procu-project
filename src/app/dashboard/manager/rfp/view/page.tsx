@@ -35,7 +35,6 @@ interface Vendor {
 }
 
 interface Product {
-
   GST: string | number | readonly string[] | undefined;
   price: string | number | readonly string[] | undefined;
   id: string;
@@ -58,12 +57,6 @@ interface SupportingDocument {
   documentName: string;
   location: string;
 }
-
-type OtherCharge = {
-  price: number 
-  gst:  number 
-  name:string;
-};
 
 interface Quotation {
   otherCharges: OtherCharge[];
@@ -198,20 +191,6 @@ const ViewRFP: React.FC = () => {
                 </Label>
               </div>
             </div>
-            <div className="pl-3">
-              <Link href="/dashboard/manager">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="text-black-500 bg-red-400"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
             <div className="pl-3">
               <Link href="/dashboard/manager">
                 <Button
