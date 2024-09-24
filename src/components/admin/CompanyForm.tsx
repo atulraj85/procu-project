@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Upload } from "lucide-react";
 import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
+import { addresses } from "@/app/dashboard/admin/company/address";
 import {
   Form,
   FormControl,
@@ -28,9 +29,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { IoConstructOutline } from "react-icons/io5";
 import { AddressType } from "@prisma/client";
 
+import AddressForm from "./AddressForm";
+
 interface Company {
   GST: string;
-  gstAddress:string;
+  gstAddress: string;
   addresses: any[];
   created_at: string;
   email: string;
@@ -80,12 +83,30 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
+  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
+  // Address States
+  const [currentAddress, setCurrentAddress] = useState<{
+    title: string;
+    street: string;
+    country: string;
+    state: string;
+    city: string;
+    zipCode: string;
+  } | null>(null);
+
+  const handlecurrentAddress = (searchTitle: string) => {
+    let currAddress = addresses.filter((address) =>
+      address.title.toLowerCase().includes(searchTitle.toLowerCase())
+    );
+
+    setCurrentAddress(currAddress[0]);
+    console.log(addresses[0]);
+  };
 
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // name: "",
-      // GST: "",
+      
       email: "",
       phone: "",
       website: "",
@@ -189,12 +210,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         const value = data[key as keyof CompanyFormValues];
         if (value instanceof File) {
           formData.append(key, value);
-          console.log(value)
-        } else if (key === "foundedDate" && value) {
-          // Convert foundedDate to ISO format
-          const date = new Date(value as string);
-          const isoDate = date.toISOString();
-          formData.append(key, isoDate);
+          console.log(value);
+          // } else if (key === "foundedDate" && value) {
+          //   // Convert foundedDate to ISO format
+          //   const date = new Date(value as string);
+          //   const isoDate = date.toISOString();
+          //   formData.append(key, isoDate);
+          // }
         } else {
           formData.append(key, JSON.stringify(value) || "");
         }
@@ -245,6 +267,8 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   }
 
   return (
+    <>
+    
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <Card>
@@ -266,9 +290,11 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 <p></p>{" "}
                 <strong>
                   {" "}
-                  <span className="text-xl">Address:</span> {companyData.gstAddress}
-                </strong>{"default address , address not come from backend "}
-                
+                  <span className="text-xl">Address:</span>{" "}
+                  {companyData.gstAddress
+                    ? companyData.gstAddress
+                    : " address not come from backend "}
+                </strong>
               </div>
             </div>
 
@@ -399,7 +425,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         alt="Preview"
                         className="w-14 h-14 object-cover rounded-full"
                       />
-                     
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -432,15 +457,15 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       //     field.onChange(null);
                       //   }}
                       // >
-                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                      <CiCircleRemove
+                        className="w-12 absolute right-24 top-2"
                         // variant="outline"
                         size="sm"
-                        
                         onClick={() => {
                           setLogoPreview(null);
                           field.onChange(null);
-                        }} />
-                      
+                        }}
+                      />
                     )}
                   </FormItem>
                 )}
@@ -463,7 +488,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         alt="Preview"
                         className="w-14 h-14 object-cover rounded-full"
                       />
-                     
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -496,15 +520,15 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       //     field.onChange(null);
                       //   }}
                       // >
-                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                      <CiCircleRemove
+                        className="w-12 absolute right-24 top-2"
                         // variant="outline"
                         size="sm"
-                        
                         onClick={() => {
                           setStampPreview(null);
                           field.onChange(null);
-                        }} />
-                      
+                        }}
+                      />
                     )}
                   </FormItem>
                 )}
@@ -513,90 +537,29 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           </CardContent>
         </Card>
 
-        {/* <Card>
+       {isAddingAddress && <Card>
           <CardHeader>
-            <CardTitle>Business Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              <FormField
-                control={form.control}
-                name="businessAddress.street"
-                render={({ field }) => (
-                  <FormItem className="col-span-3">
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <CardTitle >Delivery Address</CardTitle>
+            <div className="flex justify-between items-center">
+              <Select
+                // value={}
+                onValueChange={(value) => {
+                  console.log(value);
+                  handlecurrentAddress(value);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Addresse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {addresses.map((item, idx) => (
+                    <SelectItem value={item.title}>{item.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <div className="flex gap-20">
-                <FormField
-                  control={form.control}
-                  name="businessAddress.country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Button type="button" onClick={()=>setIsAddingAddress(false)} className="my-4 bg-primary" >Add Address</Button>
             </div>
-          </CardContent>
-        </Card> */}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Delivery Address</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
@@ -607,7 +570,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   <FormItem className="col-span-3">
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={currentAddress?.street} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -622,7 +585,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.country} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -636,7 +599,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>State</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.state} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -650,7 +613,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.city} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -664,7 +627,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>Zip Code</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.zipCode} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -673,12 +636,17 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> } 
 
         <Button type="submit" disabled={isLoading} className="my-4 bg-primary">
-          {isLoading ? "Saving..." : "Save Company"}
+          {isLoading ? "Saving..." : "Save Changes"}
         </Button>
       </form>
-    </Form>
+    </Form >
+
+    <div className="mt-4">
+      {!isAddingAddress && <AddressForm  companyId={companyId} isAddingAddress={() => setIsAddingAddress(true)} />}
+    </div>
+    </>
   );
 }
