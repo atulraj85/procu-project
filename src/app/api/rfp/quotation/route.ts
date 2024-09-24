@@ -234,7 +234,6 @@ async function processDocuments(
 ) {
   const quotationDirPath = path.join(
     // process.cwd(),
-    "/",
     "public",
     "assets",
     `RFP-${rfpId}`,
@@ -242,7 +241,7 @@ async function processDocuments(
   );
 
   console.log("quotationDirPath", quotationDirPath);
-  
+
 
   await fs.mkdir(quotationDirPath, { recursive: true });
 
