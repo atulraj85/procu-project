@@ -1,5 +1,5 @@
-"use client";
-import { useState, useEffect } from "react";
+"use client"
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -9,13 +9,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { IUsersListingResponse, SidebarItem } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Loader from "@/components/shared/Loader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "react-toastify";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [usersListing, setUsersListing] =
-    useState<IUsersListingResponse | null>(null);
+  const [users, setUsers] = useState<User[] | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{
+    role: string;
+    id: number;
+    currentRole: string;
+  } | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("TOKEN");
@@ -31,23 +60,50 @@ export default function AdminDashboard() {
     const fetchUsers = async () => {
       const response = await fetch("/api/users");
       if (response.ok) {
-        const data: IUsersListingResponse = await response.json();
-        setUsersListing(data);
+        const data = await response.json();
+        setUsers(data);
       }
     };
     fetchUsers();
   }, []);
 
-  if (!usersListing) {
+  if (!users) {
     return <Loader />;
   }
 
-  const users = usersListing.response.data.map((user) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  }));
+  const handleRoleChange = async () => {
+    if (!pendingRoleChange) return;
+
+    const { role, id } = pendingRoleChange;
+
+    try {
+      const response = await fetch(`/api/users`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role, id }),
+      });
+
+      if (response.ok) {
+        toast("Role updated successfully");
+        console.log("role changes");
+        // Update the local state to reflect the change
+        setUsers(users.map(user => 
+          user.id === id ? { ...user, role } : user
+        ));
+      } else {
+        console.error("Failed to update role");
+        toast.error("Failed to update role");
+      }
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Error updating role");
+    } finally {
+      setIsDialogOpen(false);
+      setPendingRoleChange(null);
+    }
+  };
 
   return (
     <div className="flex">
@@ -66,12 +122,60 @@ export default function AdminDashboard() {
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role}
+                    onValueChange={(value) => {
+                      if (value !== user.role) {
+                        setPendingRoleChange({ role: value, id: user.id, currentRole: user.role });
+                        setIsDialogOpen(true);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder={user.role} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ADMIN">ADMIN</SelectItem>
+                      <SelectItem value="PR_MANAGER">PR_MANAGER</SelectItem>
+                      <SelectItem value="FINANCE_MANAGER">FINANCE_MANAGER</SelectItem>
+                      <SelectItem value="USER">USER</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </>{" "}
+
+        {pendingRoleChange && (
+          <AlertDialog open={isDialogOpen} onOpenChange={(open) => {
+            if (!open) {
+              // Reset to the current role if dialog is closed without confirmation
+              setUsers(users.map(user => 
+                user.id === pendingRoleChange.id ? { ...user, role: pendingRoleChange.currentRole } : user
+              ));
+              setPendingRoleChange(null);
+            }
+            setIsDialogOpen(open);
+          }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-red-500">Confirm Role Change</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to change the role?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-red-500" onClick={handleRoleChange}>
+                  Continue
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </>
     </div>
   );
 }

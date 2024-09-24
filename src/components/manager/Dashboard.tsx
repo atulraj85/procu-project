@@ -21,23 +21,13 @@ const Dashboard = () => {
   const [title, setTitle] = useState("OPEN RFPs");
   const [loading, setLoading] = useState(true);
 
-  const headers = [
-    { key: "rfpId", header: "RFP ID" },
-    { key: "requirementType", header: "Requirement Type" },
-    { key: "dateOfOrdering", header: "Date of Ordering" },
-    { key: "deliveryLocation", header: "Delivery Location" },
-    { key: "deliveryByDate", header: "Delivery By Date" },
-    { key: "lastDateToRespond", header: "Last Date to Respond" },
-    { key: "rfpStatus", header: "RFP Status" },
-  ];
-
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/rfp');
       const data = await response.json();
 
-      const formattedData = data.map((item: any) => ({
+      const formattedData: TableRow[] = data.map((item: any) => ({
         rfpId: item.rfpId,
         requirementType: item.requirementType,
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),

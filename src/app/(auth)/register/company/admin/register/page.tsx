@@ -1,4 +1,4 @@
-import RegisterForm from "@/components/forms/RegisterForm";
+import RegisterForm from "../../../../../../components/companyComponents/RegisterForm";
 import React from "react";
 
 function RegisterPage() {
@@ -19,7 +19,7 @@ function RegisterPage() {
         </div>
       </div>
       <div className="flex-grow">
-        <RegisterForm apiUrl="/api/register" loginPage="/login" text="Register to get started"/>
+        <RegisterForm apiUrl="/api/register" loginPage="/login" text="Register as Admin"/>
       </div>
     </div>
   );

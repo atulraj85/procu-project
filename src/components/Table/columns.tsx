@@ -4,7 +4,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { MoreHorizontal } from "lucide-react";
 
-interface TableRow {
+ interface TableRow {
   id: string;
   poId: string;
   RFPStatus: string;
