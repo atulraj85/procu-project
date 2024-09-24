@@ -1,5 +1,5 @@
 // Step 1: Define Types
-
+"use client"
 import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import {
   useForm,
@@ -40,7 +40,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 // Add quotation ref number (Quotation table)
 
