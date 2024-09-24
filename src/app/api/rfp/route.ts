@@ -49,7 +49,7 @@ function formatRFPData(inputData: any[]) {
           price: pricing.price,
           description: pricing.rfpProduct.product.specification,
           gst: pricing.GST,
-          type: "product",
+          type: "product", 
         })),
         ...(quotation.otherCharges || []).map((charge: any) => ({
           ...charge,
