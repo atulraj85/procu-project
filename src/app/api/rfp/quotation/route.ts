@@ -30,7 +30,6 @@ export async function PUT(request: NextRequest) {
     console.log("Parsed form data:", JSON.stringify(data, null, 2));
 
     const { quotations, preferredVendorId, rfpStatus } = data;
-
     const processedQuotations = await Promise.all(
       (quotations || []).map(async (quotation: any) => {
         const {
@@ -40,6 +39,7 @@ export async function PUT(request: NextRequest) {
           otherCharges,
           total,
           refNo,
+          supportingDocuments,
         } = quotation;
 
         console.log(
@@ -52,11 +52,45 @@ export async function PUT(request: NextRequest) {
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        const processedDocuments = await processDocuments(
-          id,
-          vendorId,
-          Array.from(formData.entries()).slice(2)
-        );
+        console.log("supportingDocuments", supportingDocuments);
+
+        let processedDocuments = [];
+        if (supportingDocuments && supportingDocuments.length > 0) {
+          processedDocuments = await Promise.all(
+            supportingDocuments.map(async (doc: any) => {
+              if (doc.location) {
+                console.log("doc.location", doc.location);
+                return {
+                  documentType: doc.fileName,
+                  documentName: doc.fileName,
+                  location: doc.location,
+                };
+              } else {
+                // Process new document only if it hasn't been processed yet
+                console.log("This is new file data starting");
+
+                const newDocuments = await processDocuments(
+                  id,
+                  vendorId,
+                  Array.from(formData.entries()).slice(2)
+                );
+
+                console.log("Create new document:", newDocuments);
+                return newDocuments; // Ensure you return the new documents
+              }
+            })
+          );
+
+          // Flatten the processedDocuments array and filter out null/undefined values
+          processedDocuments = processedDocuments
+            .flat()
+            .filter((doc) => doc !== null && doc !== undefined);
+        }
+
+        // Remove duplicates from processedDocuments
+        const uniqueDocuments = Array.from(
+          new Set(processedDocuments.map((doc) => JSON.stringify(doc)))
+        ).map((doc) => JSON.parse(doc));
 
         return {
           id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
@@ -79,7 +113,7 @@ export async function PUT(request: NextRequest) {
             })),
           },
           supportingDocuments: {
-            create: processedDocuments,
+            create: uniqueDocuments, // Use unique documents
           },
         };
       })
@@ -115,17 +149,17 @@ export async function PUT(request: NextRequest) {
               totalAmount: q.totalAmount,
               totalAmountWithoutGST: q.totalAmountWithoutGST,
               vendorPricings: {
-                deleteMany: { quotationId: q.id }, // Delete existing vendor pricing
-                create: q.vendorPricings.create, // Create new vendor pricing
+                deleteMany: { quotationId: q.id },
+                create: q.vendorPricings.create,
               },
               otherCharges: {
-                deleteMany: { quotationId: q.id }, // Delete existing other charges
-                create: q.otherCharges.create, // Create new other charges
+                deleteMany: { quotationId: q.id },
+                create: q.otherCharges.create,
               },
               supportingDocuments: {
-                deleteMany: { quotationId: q.id }, // Delete existing supporting documents
+                deleteMany: { quotationId: q.id },
                 create: q.supportingDocuments.create.filter(
-                  (doc: null) => doc !== null
+                  (doc: any) => doc !== null
                 ),
               },
             },
@@ -148,7 +182,7 @@ export async function PUT(request: NextRequest) {
               },
               supportingDocuments: {
                 create: q.supportingDocuments.create.filter(
-                  (doc: null) => doc !== null
+                  (doc: any) => doc !== null
                 ),
               },
             },
@@ -188,7 +222,7 @@ export async function PUT(request: NextRequest) {
     console.error("Error updating RFP:", errorMessage);
     return NextResponse.json(
       { error: "Error updating document", reason: errorMessage },
-      { status: 400 } // You can choose a different status code if needed
+      { status: 400 }
     );
   }
 }
