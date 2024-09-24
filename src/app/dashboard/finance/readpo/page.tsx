@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import Loader from "@/components/shared/Loader";
 
 interface CompanyAddress {
   id?: string;
@@ -41,6 +42,7 @@ interface Product {
   modelNo: string;
   price: string;
   quantity: number;
+  description:string;
   gst: number;
 }
 
@@ -66,6 +68,7 @@ interface RfpData {
   id?: string;
   poId: string;
   company: Company;
+  remarks:string;
   quotations: Quotation[];
 }
 
@@ -130,7 +133,7 @@ const Page = () => {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
-  if (!poData) return <div>Loading...</div>;
+  if (!poData) return <div><Loader/></div>;
 
   const { company, quotations } = poData;
   const quotation = quotations[0];
@@ -199,7 +202,7 @@ const Page = () => {
         <thead>
           <tr className="bg-gray-100">
             <th className="border border-gray-300 p-2 text-left">Name</th>
-            <th className="border border-gray-300 p-2 text-left">Model No</th>
+            <th className="border border-gray-300 p-2 text-left">Product Description</th>
             <th className="border border-gray-300 p-2 text-left">Qty</th>
             <th className="border border-gray-300 p-2 text-left">Unit Price</th>
             <th className="border border-gray-300 p-2 text-left">GST %</th>
@@ -213,7 +216,7 @@ const Page = () => {
           {quotation.products.map((item, idx) => (
             <tr key={idx}>
               <td className="border border-gray-300 p-2">{item.name}</td>
-              <td className="border border-gray-300 p-2">{item.modelNo}</td>
+              <td className="border border-gray-300 p-2">{item.description}</td>
               <td className="border border-gray-300 p-2">{item.quantity}</td>
               <td className="border border-gray-300 p-2">{item.price}</td>
               <td className="border border-gray-300 p-2">{item.gst}%</td>

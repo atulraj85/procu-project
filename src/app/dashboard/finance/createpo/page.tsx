@@ -234,7 +234,7 @@ const Page: React.FC = () => {
   };
 
  
-
+ 
   const preferredQuotation = rfpDetails?.quotations.find(q => q.id === rfpDetails.preferredQuotationId);
 
   if (!preferredQuotation) return <div>No preferred quotation found.</div>;
@@ -289,16 +289,11 @@ const Page: React.FC = () => {
       
       <section className="flex justify-between pb-7">
         <div>
-          <Image className="rounded-full" height={100} width={100} alt="Company logo" src={formData.companyLogo} />
+          <Image className="rounded-full" height={75} width={75} alt="Company logo" src={formData.companyLogo} />
+          <h1 className="font-bold flex justify-end">{formData.companyName}</h1>
+          <h1 className="text-[14px]">{formData.companyAddress}</h1>
         </div>
-        <div className="w-[35%]">
-          <div>
-            <h1 className="font-bold flex justify-end">{formData.companyName}</h1>
-          </div>
-          <div className="flex justify-end">
-            <h1 className="text-[14px]">{formData.companyAddress}</h1>
-          </div>
-        </div>
+        
       </section>
 
       <div className="font-bold flex justify-center">
@@ -409,7 +404,7 @@ const Page: React.FC = () => {
                         {'quantity' in item ? item.quantity : ''}
                       </td>
                       <td className="border border-gray-300 p-2">{item.price}</td>
-                      <td className="border border-gray-300 p-2">{'GST' in item ? item.GST : item.gst}</td>
+                      <td className="border border-gray-300 p-2">{item.gst}%</td>
                       <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
                       <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
                     </tr>

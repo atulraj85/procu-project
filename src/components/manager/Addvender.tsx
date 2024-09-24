@@ -266,7 +266,7 @@ const VendorDetails: React.FC = () => {
        
        
        window.location.reload()
-        return router.push("/dashboard");
+        return router.push("dashboard/manager/vendor");
         
       } else {
         console.log("hhh1");
@@ -372,14 +372,14 @@ const VendorDetails: React.FC = () => {
         });
        
         window.location.reload()
-        return router.push("/dashboard");
+        return router.push("dashboard/manager/vendor");
       } else {
         toast({
           title: "Failed to add vendor.",
           
         });
        
-        return router.push("/dashboard");
+        return router.push("dashboard/manager/vendor");
       }
     } catch (error) {
       toast({
