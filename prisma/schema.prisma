@@ -161,7 +161,7 @@ model Product {
   created_at        DateTime        @default(now())
   updated_at        DateTime        @updatedAt
 
-  @@index([name, modelNo, specification]) // Add index for searching
+  @@index([name, modelNo]) // Add index for searching
 }
 
 model Invoice {
