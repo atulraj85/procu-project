@@ -1,5 +1,5 @@
 // Step 1: Define Types
-"use client"
+"use client";
 import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import {
   useForm,
@@ -1213,7 +1213,7 @@ export default function RFPUpdateForm({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Could not update quotations!`);
       }
 
       const result = await response.json();
