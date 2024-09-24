@@ -9,23 +9,63 @@ import jsPDF from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { X } from "lucide-react";
+import { X, Star } from "lucide-react";
 import Loader from "@/components/shared/Loader";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Disclosure } from "@headlessui/react";
 
 interface Product {
   id: string;
   name: string;
+  gst:string;
   modelNo: string;
   price: string;
   quantity: number;
   GST: number;
+  description?: string;
 }
 
 interface OtherCharge {
   id: string;
   name: string;
+  GST:string;
   price: string;
   gst: number;
+  description?: string;
+}
+
+interface Vendor {
+  companyName: string;
+  email: string;
+  mobile: string;
+  address: string;
+  gstin: string;
+}
+
+interface Quotation {
+  id: string;
+  refNo: string;
+  totalAmount: string;
+  totalAmountWithoutGST: string;
+  vendor: Vendor;
+  products: Product[];
+  otherCharges: OtherCharge[];
+}
+
+interface RFPDetails {
+  rfpId: string;
+  requirementType: string;
+  dateOfOrdering: string;
+  deliveryLocation: string;
+  deliveryByDate: string;
+  rfpStatus: string;
+  preferredQuotationId: string;
+  quotations: Quotation[];
 }
 
 interface FormData {
@@ -37,6 +77,7 @@ interface FormData {
   poId: string;
   orderNo: string;
   ref: string;
+  
   date: string;
   rfpid: string;
   vendorName: string;
@@ -60,6 +101,7 @@ const Page: React.FC = () => {
     orderNo: "",
     ref: "",
     date: "",
+    
     rfpid: "",
     vendorName: "",
     vendorAddress: "",
@@ -70,6 +112,7 @@ const Page: React.FC = () => {
     remarks: "",
     quotationId: ""
   });
+  const [rfpDetails, setRfpDetails] = useState<RFPDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const searchParams = useSearchParams();
@@ -85,6 +128,7 @@ const Page: React.FC = () => {
         if (!rfpResponse.ok) throw new Error("Network response was not ok");
         const rfpData = await rfpResponse.json();
         const rfpDetails = rfpData[0];
+        setRfpDetails(rfpDetails);
 
         const companyResponse = await fetch('/api/company');
         if (!companyResponse.ok) throw new Error("Network response was not ok");
@@ -134,6 +178,15 @@ const Page: React.FC = () => {
   };
 
   const onSubmit = async () => {
+    if (!formData.remarks.trim()) {
+      toast({
+        title: "Remarks are required",
+        description: "Please add remarks before submitting the PO.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload = {
       poId: formData.poId,
       quotationId: formData.quotationId,
@@ -151,17 +204,14 @@ const Page: React.FC = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Network response was not ok')
-        else{
-
-      const result = await response.json();
-      toast({
-        title: "🎉 PO Created successfully.",
-       
-      });
-      router.push("/dashboard")
-    }
-      
+      if (!response.ok) throw new Error('Network response was not ok');
+      else {
+        const result = await response.json();
+        toast({
+          title: "🎉 PO Created successfully.",
+        });
+        router.push("/dashboard");
+      }
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -172,14 +222,22 @@ const Page: React.FC = () => {
     }
   };
 
-  const calculateTotalAmount = (items: Product[] | OtherCharge[]): number => {
-    return items.reduce((total, item) => {
-      const price = parseFloat(item.price);
-      const quantity = 'quantity' in item ? item.quantity : 1;
-      const gst = 'GST' in item ? item.GST : item.gst;
-      return total + (price * quantity * (1 + gst / 100));
-    }, 0);
+  const calculateTaxableAmount = (item: Product | OtherCharge) => {
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price);
+    return price * (('quantity' in item) ? item.quantity : 1);
   };
+
+  const calculateTotalAmount = (item: Product | OtherCharge) => {
+    const taxableAmount = calculateTaxableAmount(item);
+    const gst = typeof item.GST === 'number' ? item.GST : (typeof item.gst === 'number' ? item.gst : 0);
+    return taxableAmount * (1 + gst / 100);
+  };
+
+ 
+
+  const preferredQuotation = rfpDetails?.quotations.find(q => q.id === rfpDetails.preferredQuotationId);
+
+  if (!preferredQuotation) return <div>No preferred quotation found.</div>;
 
   const downloadPDF = async () => {
     if (pageRef.current) {
@@ -220,62 +278,62 @@ const Page: React.FC = () => {
 
   return (
     <div ref={pageRef}>
-      <div className="mx-20 mt-4">
-        <div className="flex justify-end pb-8">
-          <Link href="/dashboard/finance">
-            <Button type="button" variant="outline" size="icon" className="text-black-500 bg-red-400">
-              <X className="h-4 w-4" />
-            </Button>
-          </Link>
+    <div className="mx-20 mt-4">
+      <div className="flex justify-end pb-8">
+        <Link href="/dashboard/finance">
+          <Button type="button" variant="outline" size="icon" className="text-black-500 bg-red-400">
+            <X className="h-4 w-4" />
+          </Button>
+        </Link>
+      </div>
+      
+      <section className="flex justify-between pb-7">
+        <div>
+          <Image className="rounded-full" height={100} width={100} alt="Company logo" src={formData.companyLogo} />
         </div>
-        
-        <section className="flex justify-between pb-7">
+        <div className="w-[35%]">
           <div>
-            <Image className="rounded-full" height={100} width={100} alt="Company logo" src={formData.companyLogo} />
+            <h1 className="font-bold flex justify-end">{formData.companyName}</h1>
           </div>
-          <div className="w-[35%]">
-            <div>
-              <h1 className="font-bold flex justify-end">{formData.companyName}</h1>
-            </div>
-            <div className="flex justify-end">
-              <h1 className="text-[14px]">{formData.companyAddress}</h1>
-            </div>
+          <div className="flex justify-end">
+            <h1 className="text-[14px]">{formData.companyAddress}</h1>
           </div>
-        </section>
-
-        <div className="font-bold flex justify-center">
-          <h1>Purchase Order</h1>
         </div>
+      </section>
 
-        <section className="flex justify-between">
-          <div className="w-[30%]">
-            <h1 className="font-bold">{formData.vendorName}</h1>
-            <h1 className="text-[14px]">{formData.vendorAddress}</h1>
-            <p className="font-bold">
-              GSTIN: <span className="font-sans text-[14px]">{formData.vendorGST}</span>
-            </p>
+      <div className="font-bold flex justify-center">
+        <h1>Purchase Order</h1>
+      </div>
+
+      <section className="flex justify-between">
+        <div className="w-[30%]">
+          <h1 className="font-bold">{formData.vendorName}</h1>
+          <h1 className="text-[14px]">{formData.vendorAddress}</h1>
+          <p className="font-bold">
+            GSTIN: <span className="font-sans text-[14px]">{formData.vendorGST}</span>
+          </p>
+        </div>
+        <div>
+          <div className="flex">
+            <label className="font-bold">Order No :</label>
+            <h1 className="text-[14px]">{formData.poId}</h1>
           </div>
-          <div>
-            <div className="flex">
-              <label className="font-bold">Order No :</label>
-              <h1 className="text-[14px]">{formData.poId}</h1>
-            </div>
-            <div className="flex">
-              <label className="font-bold">Ref :</label>
-              <h1 className="text-[14px]">{formData.ref}</h1>
-            </div>
-            <div className="flex">
-              <label className="font-bold">Date :</label>
-              <h1 className="text-[14px]">{formData.date}</h1>
-            </div>
+          <div className="flex">
+            <label className="font-bold">Ref :</label>
+            <h1 className="text-[14px]">{preferredQuotation.refNo}</h1>
           </div>
-        </section>
+          <div className="flex">
+            <label className="font-bold">Date :</label>
+            <h1 className="text-[14px]">{formData.date}</h1>
+          </div>
+        </div>
+      </section>
 
         <div className="font-bold mt-10 mb-4">
           <h1>Description: Render Farm</h1>
         </div>
 
-        <section className="flex justify-center">
+        {/* <section className="flex justify-center">
           <table className="w-full border border-collapse border-gray-300">
             <thead>
               <tr>
@@ -312,41 +370,62 @@ const Page: React.FC = () => {
               </tr>
             </tbody>
           </table>
-        </section>
+        </section> */}
         
         <div className="font-bold mt-10 mb-4">
-          <h1>Other Charges</h1>
+          {/* <h1>Preferred Quotation Details</h1> */}
         </div>
-        <section className="flex justify-center pt-4">
-          <table className="w-full border border-collapse border-gray-300">
-            <thead>
-              <tr>
-                <th className="font-bold p-1 border border-gray-300 text-center">Name</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">GST</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {formData.otherCharges.map((charge, index) => (
-                <tr key={charge.id || index}>
-                  <td className="text-[14px] border border-gray-300 p-4">{charge.name}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{charge.price}</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">{charge.gst}%</td>
-                  <td className="text-[14px] border border-gray-300 p-4 text-right">
-                    {(parseFloat(charge.price) * (1 + (charge.gst / 100))).toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-              <tr>
-                <td colSpan={3} className="font-bold text-right pr-14 border">Total Amount Including GST:</td>
-                <td className="text-[14px] border p-2 text-right">
-                  {calculateTotalAmount(formData.otherCharges).toFixed(2)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+       
+          {/* <CardContent> */}
+            <div className="p-4">
+              {/* <h4 className="font-semibold">Quotation Reference: {preferredQuotation.refNo}</h4>
+              <h4 className="font-semibold mt-4">Vendor: {preferredQuotation.vendor.companyName}</h4> */}
+              {/* <h4 className="font-semibold mt-4">Products and Other Charges</h4> */}
+              <table className="min-w-full border-collapse border border-gray-300 mt-2">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-left">Name</th>
+                    <th className="border border-gray-300 p-2 text-left">Description</th>
+                    <th className="border border-gray-300 p-2 text-left">Qty</th>
+                    <th className="border border-gray-300 p-2 text-left">Unit Price</th>
+                    <th className="border border-gray-300 p-2 text-left">GST %</th>
+                    <th className="border border-gray-300 p-2 text-left">Taxable Amt.</th>
+                    <th className="border border-gray-300 p-2 text-left">Total Amt.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    ...preferredQuotation.products,
+                    ...(Array.isArray(preferredQuotation.otherCharges) ? preferredQuotation.otherCharges : [])
+                  ].map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="border border-gray-300 p-2">
+                        {'modelNo' in item ? item.name : 'Other Charge'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {item.description || 'N/A'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {'quantity' in item ? item.quantity : ''}
+                      </td>
+                      <td className="border border-gray-300 p-2">{item.price}</td>
+                      <td className="border border-gray-300 p-2">{'GST' in item ? item.GST : item.gst}</td>
+                      <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-200">
+                    <td colSpan={5} className="border border-gray-300 p-2 font-bold text-right">Total:</td>
+                    <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmountWithoutGST}</td>
+                    <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmount}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          {/* </CardContent> */}
+       
 
         <section className="flex justify-between mt-4">
           <div className="w-1/2">
@@ -365,7 +444,6 @@ const Page: React.FC = () => {
             </div>
           </div>
           <div className="w-1/2 flex flex-col items-end">
-            {/* <Image height={150} width={150} alt="Company stamp" src="/company/stamp-transparent-19.png" /> */}
             <div className="mt-4 w-full">
               <label className="font-bold">Remarks:</label>
               <Textarea 
@@ -373,6 +451,7 @@ const Page: React.FC = () => {
                 value={formData.remarks}
                 onChange={handleInputChange}
                 className="w-full mt-2"
+                placeholder="Please enter remarks (required)"
               />
             </div>
           </div>

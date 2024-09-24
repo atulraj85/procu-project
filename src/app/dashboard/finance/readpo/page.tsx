@@ -106,6 +106,20 @@ const Page: React.FC = () => {
     fetchPoData();
   }, [poId]);
 
+  
+  const calculateTaxableAmount = (item: Product | OtherCharge) => {
+    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price);
+    return price * (('quantity' in item) ? item.quantity : 1);
+  };
+
+  const calculateTotalAmount = (item: Product | OtherCharge) => {
+    const taxableAmount = calculateTaxableAmount(item);
+    const gst = typeof item.GST === 'number' ? item.GST : (typeof item.gst === 'number' ? item.gst : 0);
+    return taxableAmount * (1 + gst / 100);
+  };
+  const preferredQuotation = rfpDetails?.quotations.find(q => q.id === rfpDetails.preferredQuotationId);
+
+  if (!preferredQuotation) return <div>No preferred quotation found.</div>;
   const downloadPDF = async () => {
     if (pageRef.current) {
       try {
@@ -217,48 +231,53 @@ const Page: React.FC = () => {
           <h1>Description: Render Farm</h1>
         </div>
 
-        <section className="flex justify-center">
-          <table className="w-full border border-collapse border-gray-300">
-            <thead>
-              <tr>
-                <th className="font-bold p-1 border border-gray-300 text-center">Product Description</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Unit Price in INR</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Qty</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">GST</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Taxable Amount INR</th>
-                <th className="font-bold p-1 border border-gray-300 text-center">Total Price in INR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rfpData?.quotations?.[0]?.products && rfpData.quotations[0].products.length > 0 ? (
-                rfpData.quotations[0].products.map((product, index) => (
-                  <tr key={product.id || index}>
-                    <td className="text-[14px] border border-gray-300 p-4">
-                      {product.name} (Model No: {product.modelNo})
-                    </td>
-                    <td className="text-[14px] border border-gray-300 p-4 text-right">{product.price}</td>
-                    <td className="text-[14px] border border-gray-300 p-4 text-right">{product.quantity}</td>
-                    <td className="text-[14px] border border-gray-300 p-4 text-right">{product.GST}%</td>
-                    <td className="text-[14px] border border-gray-300 p-4 text-right">{(parseFloat(product.price) * product.quantity).toFixed(2)}</td>
-                    <td className="text-[14px] border border-gray-300 p-4 text-right">{((parseFloat(product.price) * product.quantity) * (1 + (product.GST / 100))).toFixed(2)}</td>
+        <div className="p-4">
+              {/* <h4 className="font-semibold">Quotation Reference: {preferredQuotation.refNo}</h4>
+              <h4 className="font-semibold mt-4">Vendor: {preferredQuotation.vendor.companyName}</h4> */}
+              {/* <h4 className="font-semibold mt-4">Products and Other Charges</h4> */}
+              <table className="min-w-full border-collapse border border-gray-300 mt-2">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-2 text-left">Name</th>
+                    <th className="border border-gray-300 p-2 text-left">Description</th>
+                    <th className="border border-gray-300 p-2 text-left">Qty</th>
+                    <th className="border border-gray-300 p-2 text-left">Unit Price</th>
+                    <th className="border border-gray-300 p-2 text-left">GST %</th>
+                    <th className="border border-gray-300 p-2 text-left">Taxable Amt.</th>
+                    <th className="border border-gray-300 p-2 text-left">Total Amt.</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6} className="text-center">No product details available</td>
-                </tr>
-              )}
-              <tr>
-                <td colSpan={5} className="font-bold text-right pr-14 border">Total Taxable Amount:</td>
-                <td className="text-[14px]   p-2 text-right">{totalTaxableAmount.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colSpan={5} className="font-bold text-right pr-14 border ">Total Amount:</td>
-                <td className="text-[14px] border p-2 text-right">{totalAmount.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+                </thead>
+                <tbody>
+                  {[
+                    ...preferredQuotation.products,
+                    ...(Array.isArray(preferredQuotation.otherCharges) ? preferredQuotation.otherCharges : [])
+                  ].map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="border border-gray-300 p-2">
+                        {'modelNo' in item ? item.name : 'Other Charge'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {item.description || 'N/A'}
+                      </td>
+                      <td className="border border-gray-300 p-2">
+                        {'quantity' in item ? item.quantity : ''}
+                      </td>
+                      <td className="border border-gray-300 p-2">{item.price}</td>
+                      <td className="border border-gray-300 p-2">{'GST' in item ? item.GST : item.gst}</td>
+                      <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
+                      <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-200">
+                    <td colSpan={5} className="border border-gray-300 p-2 font-bold text-right">Total:</td>
+                    <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmountWithoutGST}</td>
+                    {/* <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmount}</td> */}
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
         
         <div className="font-bold mt-10 mb-4 ">
           <h1>Other Charges</h1>

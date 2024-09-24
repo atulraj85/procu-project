@@ -238,7 +238,7 @@ const ViewRFP: React.FC = () => {
                           <h4 className="font-semibold">Vendor Details</h4>
                           <div className="flex items-center space-x-2 mb-2">
                             <div className="flex flex-col">
-                              <Label>{quotation.vendor.companyName} {quotation.vendor.email} {quotation.vendor.mobile}</Label>
+                              <Label>{quotation.vendor.companyName} | {quotation.vendor.email} | {quotation.vendor.mobile}</Label>
                             </div>
                           </div>
                           <h4 className="font-semibold mt-4">Products and Other Charges</h4>
