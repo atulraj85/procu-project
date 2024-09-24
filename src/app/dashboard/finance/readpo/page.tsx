@@ -41,7 +41,7 @@ interface Product {
   modelNo: string;
   price: string;
   quantity: number;
-  GST: number;
+  gst: number;
 }
 
 interface OtherCharge {
@@ -58,6 +58,8 @@ interface Quotation {
   products: Product[];
   otherCharges: OtherCharge[];
   refNo: string;
+  totalAmountWithoutGST: number; // Assuming this is part of the Quotation
+  totalAmount: number; // Assuming this is part of the Quotation
 }
 
 interface RfpData {
@@ -68,10 +70,10 @@ interface RfpData {
 }
 
 const Page = () => {
-  const [poData, setPoData] = useState(null);
+  const [poData, setPoData] = useState<RfpData | null>(null);
   const searchParams = useSearchParams();
   const poId = searchParams.get("poid");
-  const pageRef = useRef(null);
+  const pageRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const fetchPoData = async () => {
@@ -88,12 +90,12 @@ const Page = () => {
     if (poId) fetchPoData();
   }, [poId]);
 
-  const calculateTaxableAmount = (item) => {
+  const calculateTaxableAmount = (item: Product): number => {
     const price = parseFloat(item.price);
     return price * (item.quantity || 1);
   };
 
-  const calculateTotalAmount = (item) => {
+  const calculateTotalAmount = (item: Product): number => {
     const taxableAmount = calculateTaxableAmount(item);
     const gst = item.gst || 0;
     return taxableAmount * (1 + gst / 100);
@@ -149,15 +151,15 @@ const Page = () => {
         </Link>
       </div>
 
-      <section className="flex justify-between pb-7">
+      <section className=" pb-7">
         <Image
           className="rounded-full"
-          height={100}
-          width={100}
+          height={75}
+          width={75}
           alt="Company logo"
           src={company.logo || "/company/logo.png"}
         />
-        <div className="w-[35%] text-right">
+        <div className="w-[35%] text-left">
           <h1 className="font-bold">{company.name}</h1>
           <h1 className="text-[14px]">
             {company.addresses[0]?.street}, {company.addresses[0]?.city}
@@ -223,30 +225,6 @@ const Page = () => {
               </td>
             </tr>
           ))}
-          {quotation.products.find(
-            (product) => product.type === "otherCharge"
-          ) && (
-            <tr>
-              <td colSpan={7} className="border border-gray-300 p-2 font-bold">
-                Other Charges
-              </td>
-            </tr>
-          )}
-          {quotation.products
-            .filter((product) => product.type === "otherCharge")
-            .map((item, idx) => (
-              <tr key={`other-${idx}`}>
-                <td className="border border-gray-300 p-2">{item.name}</td>
-                <td className="border border-gray-300 p-2">-</td>
-                <td className="border border-gray-300 p-2">1</td>
-                <td className="border border-gray-300 p-2">{item.price}</td>
-                <td className="border border-gray-300 p-2">{item.gst}%</td>
-                <td className="border border-gray-300 p-2">{item.price}</td>
-                <td className="border border-gray-300 p-2">
-                  {calculateTotalAmount(item).toFixed(2)}
-                </td>
-              </tr>
-            ))}
         </tbody>
         <tfoot>
           <tr className="bg-gray-200">
