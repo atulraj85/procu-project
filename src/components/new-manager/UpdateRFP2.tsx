@@ -1186,7 +1186,7 @@ export default function RFPUpdateForm({
       setError("Validation error!");
     }
 
-    console.log("Text data to be sent:", data);
+    // console.log("Text data to be sent:", data);
 
     try {
       const formData = new FormData();
@@ -1198,14 +1198,14 @@ export default function RFPUpdateForm({
       formData.append("data", serializedData);
       formData.append("data", serializedData);
 
-      console.log(files);
+      // console.log(files);
 
       // Append files to formData
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
 
-      console.log("FormData to be sent:", Object.fromEntries(formData));
+      // console.log("FormData to be sent:", Object.fromEntries(formData));
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
@@ -1217,7 +1217,7 @@ export default function RFPUpdateForm({
       }
 
       const result = await response.json();
-      console.log("RFP updated successfully:", result);
+      // console.log("RFP updated successfully:", result);
       setSuccess(true);
       router.push("/dashboard/manager");
     } catch (err) {

@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    console.log("Parsed form data:", JSON.stringify(data, null, 2));
+    // console.log("Parsed form data:", JSON.stringify(data, null, 2));
 
     const { quotations, preferredVendorId, rfpStatus } = data;
     const processedQuotations = await Promise.all(
@@ -42,24 +42,24 @@ export async function PUT(request: NextRequest) {
           supportingDocuments,
         } = quotation;
 
-        console.log(
-          "Processing quotation:",
-          JSON.stringify(quotation, null, 2)
-        );
+        // console.log(
+        //   "Processing quotation:",
+        //   JSON.stringify(quotation, null, 2)
+        // );
 
         if (!isValidUUID(vendorId)) {
           console.error(`Invalid vendorId: ${vendorId}`);
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        console.log("supportingDocuments", supportingDocuments);
+        // console.log("supportingDocuments", supportingDocuments);
 
         let processedDocuments = [];
         if (supportingDocuments && supportingDocuments.length > 0) {
           processedDocuments = await Promise.all(
             supportingDocuments.map(async (doc: any) => {
               if (doc.location) {
-                console.log("doc.location", doc.location);
+                // console.log("doc.location", doc.location);
                 return {
                   documentType: doc.fileName,
                   documentName: doc.fileName,
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest) {
                 };
               } else {
                 // Process new document only if it hasn't been processed yet
-                console.log("This is new file data starting");
+                // console.log("This is new file data starting");
 
                 const newDocuments = await processDocuments(
                   id,
@@ -75,7 +75,7 @@ export async function PUT(request: NextRequest) {
                   Array.from(formData.entries()).slice(2)
                 );
 
-                console.log("Create new document:", newDocuments);
+                // console.log("Create new document:", newDocuments);
                 return newDocuments; // Ensure you return the new documents
               }
             })
@@ -119,10 +119,10 @@ export async function PUT(request: NextRequest) {
       })
     );
 
-    console.log(
-      "Processed quotations:",
-      JSON.stringify(processedQuotations, null, 2)
-    );
+    // console.log(
+    //   "Processed quotations:",
+    //   JSON.stringify(processedQuotations, null, 2)
+    // );
 
     const existingRFP = await prisma.rFP.findUnique({
       where: { id },
@@ -133,14 +133,14 @@ export async function PUT(request: NextRequest) {
       throw new Error(`RFP with id ${id} not found`);
     }
 
-    console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
+    // console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
 
     // Update or create quotations
     const updatedQuotations = await Promise.all(
       processedQuotations.map(async (q) => {
         if (q.id) {
           // Update existing quotation
-          console.log("Updating quotation:", q);
+          // console.log("Updating quotation:", q);
           return prisma.quotation.update({
             where: { id: q.id },
             data: {
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest) {
           });
         } else {
           // Create new quotation
-          console.log("Creating quotation:", q);
+          // console.log("Creating quotation:", q);
           return prisma.quotation.create({
             data: {
               rfpId: id,
@@ -240,15 +240,15 @@ async function processDocuments(
     vendorId
   );
 
-  console.log("quotationDirPath", quotationDirPath);
+  // console.log("quotationDirPath", quotationDirPath);
 
 
   await fs.mkdir(quotationDirPath, { recursive: true });
 
   const vendorDocs = supDocs.filter((doc) => doc[0].startsWith(vendorId));
 
-  console.log("Processing documents for vendor ID:", vendorId);
-  console.log("Vendor documents found:", JSON.stringify(vendorDocs, null, 2));
+  // console.log("Processing documents for vendor ID:", vendorId);
+  // console.log("Vendor documents found:", JSON.stringify(vendorDocs, null, 2));
 
   return Promise.all(
     vendorDocs.map(async ([key, file]) => {
@@ -273,7 +273,7 @@ async function processDocuments(
         location: `/assets/RFP-${rfpId}/${vendorId}/${fileNameWithDate}`,
       };
 
-      console.log("Processed document:", JSON.stringify(documentInfo, null, 2));
+      // console.log("Processed document:", JSON.stringify(documentInfo, null, 2));
       return documentInfo;
     })
   );
