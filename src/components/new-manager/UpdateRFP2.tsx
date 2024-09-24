@@ -731,21 +731,21 @@ const OtherChargesList = ({
     </div>
   );
 };
-// Step 5: Create Supporting Documents List Component
-import { Eye } from "lucide-react";
 
+
+// Step 5: Create Supporting Documents List Component
 const SupportingDocumentsList = ({
   control,
   index,
   setValue,
   files,
   setFiles,
-  getValue,
+  getValues,
 }: {
-  control: Control<FormData>;
+  control: Control<any>;
   index: number;
-  setValue: UseFormSetValue<FormData>;
-  getValue: any;
+  setValue: UseFormSetValue<any>;
+  getValues: any;
   files: { [key: string]: File };
   setFiles: React.Dispatch<React.SetStateAction<{ [key: string]: File }>>;
 }) => {
@@ -754,21 +754,16 @@ const SupportingDocumentsList = ({
     name: `quotations.${index}.supportingDocuments`,
   });
 
-  const quotation = useWatch({
-    control,
-    name: `quotations.${index}`,
-  });
-
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     docIndex: number
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const documentName = getValue(
+      const documentName = getValues(
         `quotations.${index}.supportingDocuments.${docIndex}.name`
       );
-      const fileKey = `${getValue(
+      const fileKey = `${getValues(
         `quotations.${index}.vendorId`
       )}/${documentName}`;
       setFiles((prevFiles) => ({
@@ -782,8 +777,29 @@ const SupportingDocumentsList = ({
     }
   };
 
-  const handlePreview = (location: string) => {
-    window.open(`/${location}`, "_blank");
+  const handleDelete = (docIndex: number) => {
+    // Remove the document from the fields array
+    remove(docIndex);
+
+    // Remove the document from the form data
+    const currentDocs = getValues(`quotations.${index}.supportingDocuments`);
+    const updatedDocs = currentDocs.filter(
+      (_: any, i: number) => i !== docIndex
+    );
+    setValue(`quotations.${index}.supportingDocuments`, updatedDocs);
+
+    // Remove the file from the files state if it exists
+    const documentName = getValues(
+      `quotations.${index}.supportingDocuments.${docIndex}.name`
+    );
+    const fileKey = `${getValues(
+      `quotations.${index}.vendorId`
+    )}/${documentName}`;
+    setFiles((prevFiles) => {
+      const newFiles = { ...prevFiles };
+      delete newFiles[fileKey];
+      return newFiles;
+    });
   };
 
   return (
@@ -801,7 +817,7 @@ const SupportingDocumentsList = ({
           <div className="flex">
             <div className="grid grid-cols-1 justify-between">
               {fields.map((field, docIndex) => {
-                const location = getValue(
+                const location = getValues(
                   `quotations.${index}.supportingDocuments.${docIndex}.location`
                 );
                 const isFileUploaded = !!location;
@@ -830,23 +846,11 @@ const SupportingDocumentsList = ({
                       )}
                     </div>
                     <div className="flex space-x-2">
-                      {/* {isFileUploaded && (
-                        <Button
-                          type="button"
-                          onClick={() => handlePreview(location)}
-                          variant="outline"
-                          size="icon"
-                          className="text-blue-500"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )} */}
-
                       <div className="flex flex-col">
                         <Label className="font-bold text-[16px] text-slate-700"></Label>
                         <Button
                           type="button"
-                          onClick={() => remove(docIndex)}
+                          onClick={() => handleDelete(docIndex)}
                           variant="outline"
                           size="icon"
                           className="text-red-500"
@@ -873,6 +877,7 @@ const SupportingDocumentsList = ({
     </div>
   );
 };
+
 // Step 6: Create Total Component
 interface TotalComponentProps {
   control: Control<any>;
@@ -1199,17 +1204,17 @@ export default function RFPUpdateForm({
 
       console.log("FormData to be sent:", Object.fromEntries(formData));
 
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
+      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+      //   method: "PUT",
+      //   body: formData,
+      // });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
+      // const result = await response.json();
+      // console.log("RFP updated successfully:", result);
       setSuccess(true);
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -1236,9 +1241,6 @@ export default function RFPUpdateForm({
             </Button>
           </Link>
         </CardHeader>
-
-        <h1>{}</h1>
-
         <CardContent>
           {fields.map((field, index) => {
             const quotation = getValues(`quotations.${index}`);
@@ -1360,7 +1362,7 @@ export default function RFPUpdateForm({
                       setValue={setValue}
                       files={files}
                       setFiles={setFiles}
-                      getValue={getValues}
+                      getValues={getValues}
                     />
 
                     <div className="flex justify-end">
