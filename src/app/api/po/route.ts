@@ -156,9 +156,9 @@ export async function GET(request: NextRequest) {
                         id: true,
                         name: true,
                         modelNo: true,
+                        specification: true
                       },
                     },
-                    // description: true, TODO
                     quantity: true,
                   },
                 },
