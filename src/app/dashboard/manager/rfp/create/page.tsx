@@ -471,7 +471,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Approver Name
@@ -486,7 +486,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Email
@@ -501,7 +501,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Phone
@@ -516,7 +516,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     ></Label>
                     <Button
@@ -581,7 +581,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Product
@@ -596,7 +596,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Model No
@@ -611,7 +611,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Quantity
@@ -633,7 +633,7 @@ const RFPForm: React.FC = () => {
                   <div className="flex flex-col">
                     <Label
                       className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                        index === 1 ? "hidden" : "visible"
+                        index > 0 ? "hidden" : "visible"
                       }`}
                     ></Label>
                     <Button
@@ -731,5 +731,3 @@ const RFPForm: React.FC = () => {
 };
 
 export default RFPForm;
-
-
