@@ -233,12 +233,17 @@ async function processDocuments(
   supDocs: any[]
 ) {
   const quotationDirPath = path.join(
-    process.cwd(),
+    // process.cwd(),
+    "/",
     "public",
     "assets",
     `RFP-${rfpId}`,
     vendorId
   );
+
+  console.log("quotationDirPath", quotationDirPath);
+  
+
   await fs.mkdir(quotationDirPath, { recursive: true });
 
   const vendorDocs = supDocs.filter((doc) => doc[0].startsWith(vendorId));
