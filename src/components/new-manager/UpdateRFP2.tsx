@@ -1183,7 +1183,7 @@ export default function RFPUpdateForm({
     setSuccess(false);
 
     if (!validateForm(data)) {
-      throw new Error("Validation Error!");
+      setError("Validation error!");
     }
 
     console.log("Text data to be sent:", data);
@@ -1440,6 +1440,18 @@ export default function RFPUpdateForm({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {Object.keys(errors).length > 0 && (
+        <div>
+          {Object.entries(errors).map(([key, error]) => (
+            <Alert key={key} variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ))}
+        </div>
+      )}
+
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
