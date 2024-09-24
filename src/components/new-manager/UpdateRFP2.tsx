@@ -1045,8 +1045,7 @@ export default function RFPUpdateForm({
   const [showCheckbox, setShowCheckbox] = useState(true);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const router = useRouter();
-
+  const router = useRouter();
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1183,7 +1182,9 @@ export default function RFPUpdateForm({
     setError(null);
     setSuccess(false);
 
-    validateForm(data);
+    if (!validateForm(data)) {
+      throw new Error("Validation Error!");
+    }
 
     console.log("Text data to be sent:", data);
 
@@ -1218,7 +1219,7 @@ export default function RFPUpdateForm({
       const result = await response.json();
       console.log("RFP updated successfully:", result);
       setSuccess(true);
-      router.push("/dashboard/manager")
+      router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
       setError(
