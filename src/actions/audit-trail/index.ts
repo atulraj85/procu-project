@@ -1,6 +1,7 @@
 "use server";
 
-import { createAuditTrail, findAuditableEventByName } from "@/data/audit-trail";
+import { createAuditTrail } from "@/data/audit-trail";
+import { findAuditableEventByName } from "@/data/auditable-event";
 import { currentUser } from "@/lib/auth";
 
 type RequestData = {

@@ -1,8 +1,8 @@
-import { db } from "@/lib/db";
 import { LoginSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { findUserByEmail } from "./data/user";
 
 export default {
   providers: [
@@ -14,9 +14,7 @@ export default {
         }
 
         const { email, password } = validation.data;
-        const user = await db.user.findUnique({
-          where: { email },
-        });
+        const user = await findUserByEmail(email);
         if (!user || !user.password) {
           return null;
         }

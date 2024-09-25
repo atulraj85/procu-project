@@ -12,6 +12,12 @@ const passwordSchema = z
   .min(8, { message: "Password must be at least 8 characters!" })
   .max(25, { message: "Password must be at most 25 characters!" });
 
+const nameSchema = z
+  .string({ required_error: "Full name is required!" })
+  .min(1, { message: "Full name is required!" })
+  .min(3, { message: "Full name must be at least 3 characters." })
+  .max(50, { message: "Full name must be at most 50 characters." });
+
 export const LoginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
@@ -41,11 +47,7 @@ const RoleEnum = z.enum(
 export const RegisterUserSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  name: z
-    .string({ required_error: "Full name is required!" })
-    .min(1, { message: "Full name is required!" })
-    .min(3, { message: "Full name must be at least 3 characters." })
-    .max(50, { message: "Full name must be at most 50 characters." }),
+  name: nameSchema,
   company: z
     .string({ required_error: "Company is required!" })
     .min(1, { message: "Company is required!" })
@@ -54,5 +56,12 @@ export const RegisterUserSchema = z.object({
     .string({ required_error: "Number is required!" })
     .min(1, { message: "Number is required!" })
     .min(10, { message: "Number must be at least 10 characters." }),
+  role: RoleEnum.optional(),
+});
+
+export const UpdateUserSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: nameSchema,
   role: RoleEnum.optional(),
 });

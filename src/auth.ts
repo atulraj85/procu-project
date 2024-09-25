@@ -1,7 +1,7 @@
 import authConfig from "@/auth.config";
 import { findUserById } from "@/data/user";
-import { db } from "@/lib/db";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { drizzleDB } from "@/lib/db";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { Role } from "@prisma/client";
 import NextAuth, { DefaultSession } from "next-auth";
 import { JWT } from "next-auth/jwt";
@@ -27,7 +27,7 @@ declare module "next-auth/jwt" {
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  adapter: DrizzleAdapter(drizzleDB),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",

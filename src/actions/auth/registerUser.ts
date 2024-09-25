@@ -1,11 +1,10 @@
 "use server";
 
-import { findUserByEmail } from "@/data/user";
-import { db } from "@/lib/db";
+import { findCompanyByName } from "@/data/company";
+import { createUser, findUserByEmail } from "@/data/user";
 import { sendEmailVerificationEmail } from "@/lib/mail";
 import { generateEmailVerificationToken } from "@/lib/token";
 import { RegisterUserSchema } from "@/schemas";
-import { Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -15,14 +14,7 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
     return { error: "Invalid fields!" } as const;
   }
 
-  const {
-    email,
-    name,
-    password,
-    company,
-    mobile,
-    role = Role.USER,
-  } = validation.data;
+  const { email, name, password, company, mobile, role } = validation.data;
 
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
@@ -30,26 +22,19 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
   }
 
   // Retrieve companyId from the company table using findFirst
-  const companyRecord = await db.company.findFirst({
-    where: {
-      name: company, // Assuming the company table has a 'name' field
-    },
-  });
-
+  const companyRecord = await findCompanyByName(company);
   if (!companyRecord) {
     return { error: "Company not found!" } as const;
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  await db.user.create({
-    data: {
-      email,
-      companyId: companyRecord.id,
-      name,
-      mobile,
-      password: hashedPassword,
-      role,
-    },
+  await createUser({
+    name,
+    email,
+    password: hashedPassword,
+    mobile,
+    role: role || "USER",
+    companyId: companyRecord.id,
   });
 
   const verificationToken = await generateEmailVerificationToken(email);
