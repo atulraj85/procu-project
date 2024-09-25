@@ -51,6 +51,7 @@ enum AddressType {
 model User {
   id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email            String            @unique
+  emailVerified    DateTime?
   password         String
   name             String?
   mobile           String?
@@ -75,6 +76,7 @@ enum Role {
   ACCOUNTANT
   QUALITY_ASSURANCE
   USER
+  VENDOR
 }
 
 model Vendor {
@@ -218,7 +220,7 @@ model OtherCharge {
 
 model RFP {
   id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  rfpId                String          @unique
+  rfpId                String          @unique @db.VarChar(255)
   requirementType      String
   dateOfOrdering       DateTime
   deliveryLocation     String
@@ -233,6 +235,8 @@ model RFP {
   created_at           DateTime        @default(now())
   updated_at           DateTime        @updatedAt
   po                   PO?
+
+  @@index([rfpId])
 }
 
 enum RFPStatus {

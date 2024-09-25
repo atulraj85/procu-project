@@ -1,6 +1,17 @@
-import { db } from "./db";
+import {
+  createEmailVerificationToken,
+  deleteEmailVerificationToken,
+  findEmailVerificationTokenByEmail,
+} from "@/data/email-verification-token";
+import {
+  createPasswordResetToken,
+  deletePasswordResetToken,
+  findPasswordResetTokenByEmail,
+} from "@/data/password-reset-token";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import { db } from "./db";
 
 interface IValidatedToken {
   userId: number;
@@ -43,7 +54,7 @@ export const validateToken = async (
     const decodedToken: IValidatedToken | void = jwt.verify(
       token.split(" ")[1],
       process.env.JWT_SECRET as string,
-      function(err, payload) {
+      function (err, payload) {
         //@ts-ignore
         if (err) {
           throw new Error(err?.message);
@@ -58,3 +69,43 @@ export const validateToken = async (
     throw new Error((err as any)?.message);
   }
 };
+
+export async function generateEmailVerificationToken(email: string) {
+  const expirationTimeMs = parseInt(
+    process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_TIME_MS!
+  );
+
+  try {
+    const existingToken = await findEmailVerificationTokenByEmail(email);
+    if (existingToken) {
+      await deleteEmailVerificationToken(existingToken.id);
+    }
+
+    const token = uuidv4();
+    const expiresAt = new Date(new Date().getTime() + expirationTimeMs);
+    return await createEmailVerificationToken({ email, token, expiresAt });
+  } catch (error) {
+    console.error(`Error generating token`, error);
+    return null;
+  }
+}
+
+export async function generatePasswordResetToken(email: string) {
+  const expirationTimeMs = parseInt(
+    process.env.PASSWORD_RESET_TOKEN_EXPIRY_TIME_MS!
+  );
+
+  try {
+    const existingToken = await findPasswordResetTokenByEmail(email);
+    if (existingToken) {
+      await deletePasswordResetToken(existingToken.id);
+    }
+
+    const token = uuidv4();
+    const expiresAt = new Date(new Date().getTime() + expirationTimeMs);
+    return await createPasswordResetToken({ email, token, expiresAt });
+  } catch (error) {
+    console.error(`Error generating token`, error);
+    return null;
+  }
+}

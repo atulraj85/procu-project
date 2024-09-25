@@ -37,73 +37,46 @@ interface User {
 }
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [users, setUsers] = useState<User[] | null>(null);
-  const [pendingRoleChange, setPendingRoleChange] = useState<{
-    role: string;
-    id: number;
-    currentRole: string;
-  } | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("TOKEN");
-    const role = localStorage.getItem("USER_ROLE");
-    if (!token) {
-      router.push("/login");
-    } else if (role?.toLowerCase() !== "admin") {
-      router.push("/dashboard/admin");
-    }
-  }, [router]);
+  const [usersListing, setUsersListing] =
+    useState<IUsersListingResponse | null>();
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const response = await fetch("/api/users");
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data);
+      try {
+        setLoading(true);
+        const response = await fetch("/api/users");
+        if (response.ok) {
+          const data = await response.json();
+          console.log("data", data);
+          setUsersListing(data);
+          setUsersListing({
+            response: {
+              meta: { success: true, message: "This is a message" },
+              data: data,
+            },
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching users", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchUsers();
   }, []);
 
-  if (!users) {
+  if (isLoading) {
     return <Loader />;
   }
 
-  const handleRoleChange = async () => {
-    if (!pendingRoleChange) return;
-
-    const { role, id } = pendingRoleChange;
-
-    try {
-      const response = await fetch(`/api/users`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role, id }),
-      });
-
-      if (response.ok) {
-        toast("Role updated successfully");
-        console.log("role changes");
-        // Update the local state to reflect the change
-        setUsers(users.map(user => 
-          user.id === id ? { ...user, role } : user
-        ));
-      } else {
-        console.error("Failed to update role");
-        toast.error("Failed to update role");
-      }
-    } catch (error) {
-      console.error("Error updating role:", error);
-      toast.error("Error updating role");
-    } finally {
-      setIsDialogOpen(false);
-      setPendingRoleChange(null);
-    }
-  };
+  const users =
+    usersListing?.response?.data?.map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    })) || [];
 
   return (
     <div className="flex">

@@ -1,8 +1,8 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { loginUser } from "@/actions/auth/";
+import { FormError } from "@/components/form-error";
+import { FormSuccess } from "@/components/form-success";
 import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
@@ -12,93 +12,59 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
-import MainButton from "../common/MainButton";
+import { LoginSchema } from "@/schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useState } from "react";
-import makeApiCallService from "@/service/apiService";
-import { useRouter } from "next/navigation";
-import { ILoginUserResponse } from "@/types";
-
-const FormSchema = z.object({
-  email: z
-    .string()
-    .email({
-      message: "Enter a valid email",
-    })
-    .min(2, {
-      message: "Email must be at least 2 characters.",
-    }),
-  password: z
-    .string()
-    .min(8, {
-      message: "Password must be at least 8 characters.",
-    })
-    .max(25, {
-      message: "Password must be at most 25 characters.",
-    }),
-});
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import MainButton from "../common/MainButton";
+import { Button } from "../ui/button";
 
 interface LoginFormProps {
   api: string; // The API endpoint for the login request
   registerPage: string; // The URL for the register page
 }
 
-function LoginForm({ api, registerPage}: LoginFormProps) {
+function LoginForm({ api}: any) {
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const router = useRouter();
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [success, setSuccess] = useState<string | undefined>(undefined);
+  const [isPending, startTransition] = useTransition();
+
+  const form = useForm<z.infer<typeof LoginSchema>>({
+    resolver: zodResolver(LoginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
-  const [loading, setLoading] = useState(false);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    try {
-      setLoading(true);
+  async function onSubmit(data: z.infer<typeof LoginSchema>) {
+    setError(undefined);
+    setSuccess(undefined);
 
-      const response = await makeApiCallService<ILoginUserResponse>(api, {
-        method: "POST",
-        body: data,
-      });
+    startTransition(() => {
+      loginUser(data)
+        .then((data) => {
+          if (data?.error) {
+            form.reset();
+            setError(data.error);
+          }
 
-      if (response?.response?.meta?.success) {
-        // Store the token and role in local storage
-        localStorage.setItem("TOKEN", response?.response?.data?.token);
-        localStorage.setItem("USER_ROLE", response?.response?.data?.role); // Store the role
-        localStorage.setItem("USER_ID", response?.response?.data?.userId);
-
-        toast({
-          title: "🎉 Login success",
-          description: response?.response?.meta?.message,
+          if (data?.success) {
+            form.reset();
+            setSuccess(data?.success);
+          }
+        })
+        .catch(() => {
+          setError("Something went wrong!");
         });
-
-        console.log(localStorage.getItem("USER_ROLE"));
-          router.push("/dashboard");
-
-        // if(localStorage.getItem("USER_ROLE") == "ADMIN"){
-        //   router.push("/dashboard/admin/company");
-        // } else {
-        //   router.push("/dashboard/admin/company");
-        // }
-        
-      }
-
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      toast({
-        title: "Error",
-        description: "An error occurred during login.",
-      });
-    }
+    });
   }
 
   return (
@@ -121,18 +87,18 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder="Email Address"
                     {...field}
+                    placeholder="Email Address"
                     className="h-[3.75rem] w-full rounded-large"
                     startIcon="email"
                     type="email"
+                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="password"
@@ -147,9 +113,13 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
                     startIcon="padlock"
                     type={showPassword ? "text" : "password"}
                     
+                    disabled={isPending}
                   />
                 </FormControl>
                 <FormMessage />
+                <Button asChild size="sm" variant="link" className="px-0">
+                  <Link href="/auth/forgot-password">Forgot password?</Link>
+                </Button>
               </FormItem>
               <span
               className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
@@ -160,17 +130,17 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
             </div>
             )}
           />
-
+          <FormError message={error} />
+          <FormSuccess message={success} />
           <MainButton
             text="Login"
             classes="h-[3.31rem] rounded-large"
             width="full_width"
             isSubmitable
-            isLoading={loading}
+            isLoading={isPending}
           />
-
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href={registerPage}>Register Instead?</Link>
+            <Link href="/auth/register">Register Instead?</Link>
           </div>
         </form>
       </Form>

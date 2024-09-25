@@ -37,6 +37,7 @@ Table Address {
 Table User {
   id String [pk]
   email String [unique, not null]
+  emailVerified DateTime
   password String [not null]
   name String
   mobile String
@@ -278,6 +279,7 @@ Enum Role {
   ACCOUNTANT
   QUALITY_ASSURANCE
   USER
+  VENDOR
 }
 
 Enum RFPStatus {

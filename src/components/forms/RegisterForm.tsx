@@ -1,8 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { registerUser } from "@/actions/auth";
 import { IoEye,IoEyeOff } from "react-icons/io5";
 import {
   Form,
@@ -13,24 +11,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import MainButton from "../common/MainButton";
-import Link from "next/link";
 import { CreateUserInputValidation } from "@/lib/validations";
-import { useState } from "react";
-import makeApiCallService from "@/service/apiService";
-import { ICreateUserResponse } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import MainButton from "../common/MainButton";
+import { FormError } from "@/components/form-error";
+import { FormSuccess } from "@/components/form-success";
 import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
 
 const FormSchema = CreateUserInputValidation;
 
-interface RegisterFormProps {
-  apiUrl: string; // API URL passed as a prop
-  loginPage: string;
-  text:string;
-}
 
-function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
+function RegisterForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
@@ -39,6 +35,11 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
 
 
   const router = useRouter();
+
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [success, setSuccess] = useState<string | undefined>(undefined);
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -51,27 +52,30 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    try {
-      setLoading(true);
+    setError(undefined);
+    setSuccess(undefined);
 
-      const response = await makeApiCallService<ICreateUserResponse>(apiUrl, {
-        method: "POST",
-        body: data,
-      });
+    startTransition(() => {
+      registerUser(data)
+        .then((data) => {
+          if (data?.error) {
+            form.reset();
+            setError(data.error);
+          }
 
-      if (response?.response?.meta?.success) {
-        toast({
-          title: "🎉 Registration success",
-          description: response?.response?.meta?.message,
+          if (data?.success) {
+            form.reset();
+            setSuccess(data?.success);
+            toast({
+              title: "🎉 Registration success",
+              description: data.success,
+            });
+          }
+        })
+        .catch(() => {
+          setError("Something went wrong!");
         });
-
-        router.push("/login");
-      }
-
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-    }
+    });
   }
 
   return (
@@ -186,18 +190,18 @@ function RegisterForm({ apiUrl,loginPage, text}: RegisterFormProps) {
    
   )}
 />
-
+          <FormError message={error} />
+          <FormSuccess message={success} />
 
           <MainButton
             text="Register"
             classes="h-[3.31rem] rounded-large"
             width="full_width"
             isSubmitable
-            isLoading={loading}
+            isLoading={isPending}
           />
-
           <div className="flex justify-center font-bold text-[14px] text-[#191A15] mt-4">
-            <Link href={loginPage}>Login Instead?</Link>
+            <Link href="/auth/login">Login Instead?</Link>
           </div>
         </form>
       </Form>
