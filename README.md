@@ -31,6 +31,16 @@
 
 
 
+# Database and ORM
+
+## Generate Drizzle:
+
+```bash
+
+npx drizzle-kit generate
+```
+
+
 
 
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
@@ -125,5 +135,7 @@ For QA and production, these values need to be updated according to the SMTP ser
   - A higher-order component, `with-role.tsx`, is available in `/src/components/auth` to manage access control.
 
 ---
+
+
 
 
