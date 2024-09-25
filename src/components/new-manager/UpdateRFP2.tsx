@@ -41,6 +41,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
+import { toast } from "../ui/use-toast";
 
 // Add quotation ref number (Quotation table)
 
@@ -1219,6 +1220,11 @@ export default function RFPUpdateForm({
       const result = await response.json();
       // console.log("RFP updated successfully:", result);
       setSuccess(true);
+
+      toast({
+        title: "🎉 Quotation Submitted!",
+        description: response.ok,
+      });
       router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
