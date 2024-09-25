@@ -19,7 +19,7 @@ function RegisterPage() {
         </div>
       </div>
       <div className="flex-grow">
-        <RegisterForm apiUrl="/api/register" loginPage="/login" text="Register to get started"/>
+        <RegisterForm text="Register to get started"/>
       </div>
     </div>
   );

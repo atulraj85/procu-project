@@ -1,7 +1,7 @@
 "use client";
 
 import { registerUser } from "@/actions/auth";
-import { IoEye,IoEyeOff } from "react-icons/io5";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 import {
   Form,
   FormControl,
@@ -25,14 +25,16 @@ import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-
 
 const FormSchema = CreateUserInputValidation;
 
+type RegisterFormProps = {
+  text: string;
+};
 
-function RegisterForm() {
+function RegisterForm({ text }: RegisterFormProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
 
   const router = useRouter();
 
@@ -160,36 +162,33 @@ function RegisterForm() {
             )}
           />
 
-<FormField
-  control={form.control}
-  name="password"
-  render={({ field }) => (
-     <div className="relative">
-      <FormItem>
-       
-          <FormControl>
-            <Input
-              placeholder="Password"
-              {...field}
-              startIcon="padlock"
-              className="h-[3.75rem] w-full rounded-large"
-              type={showPassword ? "text" : "password"}
-            />
-            
-          </FormControl>
-       
-        <FormMessage />
-      </FormItem>
-      <span
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? <IoEyeOff /> : <IoEye />}
-            </span>
-            </div>
-   
-  )}
-/>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <div className="relative">
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Password"
+                      {...field}
+                      startIcon="padlock"
+                      className="h-[3.75rem] w-full rounded-large"
+                      type={showPassword ? "text" : "password"}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+                <span
+                  className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? <IoEyeOff /> : <IoEye />}
+                </span>
+              </div>
+            )}
+          />
           <FormError message={error} />
           <FormSuccess message={success} />
 
