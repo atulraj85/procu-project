@@ -81,7 +81,7 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
         });
 
         console.log(localStorage.getItem("USER_ROLE"));
-          router.push("/dashboard/admin");
+          router.push("/dashboard");
 
         // if(localStorage.getItem("USER_ROLE") == "ADMIN"){
         //   router.push("/dashboard/admin/company");
