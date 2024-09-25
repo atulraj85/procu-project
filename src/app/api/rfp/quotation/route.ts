@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { serializePrismaModel } from "@/types";
 import { prisma } from "@/lib/prisma";
-import path from "path";
-import fs from "fs/promises";
 import { Prisma } from "@prisma/client";
+import { UTApi } from "uploadthing/server";
 
 function isValidUUID(uuid: string) {
   const uuidRegex =
@@ -232,23 +231,7 @@ async function processDocuments(
   vendorId: string,
   supDocs: any[]
 ) {
-  const quotationDirPath = path.join(
-    // process.cwd(),
-    "./public",
-    "assets",
-    `RFP-${rfpId}`,
-    vendorId
-  );
-
-  console.log("quotationDirPath", quotationDirPath);
-
-
-  await fs.mkdir(quotationDirPath, { recursive: true });
-
   const vendorDocs = supDocs.filter((doc) => doc[0].startsWith(vendorId));
-
-  // console.log("Processing documents for vendor ID:", vendorId);
-  // console.log("Vendor documents found:", JSON.stringify(vendorDocs, null, 2));
 
   return Promise.all(
     vendorDocs.map(async ([key, file]) => {
@@ -262,18 +245,25 @@ async function processDocuments(
       const fileNameWithDate = `${
         new Date().toISOString().split("T")[0]
       }-${newFileName}`;
-      const filePath = path.join(quotationDirPath, fileNameWithDate);
 
-      const fileBuffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(filePath, fileBuffer);
+      const utapi = new UTApi();
+
+      // Upload file to UploadThing
+      const uploadResult = await utapi.uploadFiles([file]);
+
+      if (!uploadResult) {
+        console.error("Upload failed");
+        return null;
+      }
+
+      const [uploadedFile] = uploadResult;
 
       const documentInfo = {
         documentType: file.name,
         documentName: fileNameWithDate,
-        location: `/assets/RFP-${rfpId}/${vendorId}/${fileNameWithDate}`,
+        location: uploadedFile.data?.url,
       };
 
-      // console.log("Processed document:", JSON.stringify(documentInfo, null, 2));
       return documentInfo;
     })
   );
