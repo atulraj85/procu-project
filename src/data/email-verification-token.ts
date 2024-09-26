@@ -17,7 +17,7 @@ export async function createEmailVerificationToken(
       .values({
         email: data.email,
         token: data.token,
-        expiresAt: data.expiresAt.toISOString(),
+        expiresAt: data.expiresAt,
       })
       .returning();
     return results[0] || null;
@@ -51,7 +51,7 @@ export async function findEmailVerificationTokenByToken(token: string) {
       .from(EmailVerificationTokenTable)
       .where(eq(EmailVerificationTokenTable.token, token))
       .limit(1);
-    return results || null;
+    return results[0] || null;
   } catch (error) {
     console.error(
       `Error finding email-verification-token by token ${token}`,

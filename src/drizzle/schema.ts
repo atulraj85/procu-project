@@ -43,17 +43,17 @@ export const UserTable = pgTable(
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: text("name").notNull(),
     email: text("email").notNull(),
-    emailVerified: timestamp("emailVerified", { precision: 3, mode: "string" }),
+    emailVerified: timestamp("emailVerified", { precision: 3, mode: "date" }),
     password: text("password").notNull(),
     mobile: text("mobile"),
     role: UserRole("role").default("USER").notNull(),
     companyId: uuid("companyId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -87,7 +87,7 @@ export const EmailVerificationTokenTable = pgTable(
     token: uuid("token").notNull(),
     expiresAt: timestamp("expires_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -115,7 +115,7 @@ export const PasswordResetTokenTable = pgTable(
     token: uuid("token").notNull(),
     expiresAt: timestamp("expires_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -139,12 +139,12 @@ export const AuditableEventTable = pgTable(
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     priority: integer("priority").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -164,7 +164,7 @@ export const AuditTrailTable = pgTable(
     eventId: uuid("event_id").notNull(),
     details: jsonb("details").notNull(),
     userId: uuid("user_id").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
@@ -199,14 +199,14 @@ export const AuditTrailTable = pgTable(
 export const prismaMigrations = pgTable("_prisma_migrations", {
   id: varchar("id", { length: 36 }).primaryKey().notNull(),
   checksum: varchar("checksum", { length: 64 }).notNull(),
-  finishedAt: timestamp("finished_at", { withTimezone: true, mode: "string" }),
+  finishedAt: timestamp("finished_at", { withTimezone: true, mode: "date" }),
   migrationName: varchar("migration_name", { length: 255 }).notNull(),
   logs: text("logs"),
   rolledBackAt: timestamp("rolled_back_at", {
     withTimezone: true,
-    mode: "string",
+    mode: "date",
   }),
-  startedAt: timestamp("started_at", { withTimezone: true, mode: "string" })
+  startedAt: timestamp("started_at", { withTimezone: true, mode: "date" })
     .defaultNow()
     .notNull(),
   appliedStepsCount: integer("applied_steps_count").default(0).notNull(),
@@ -219,12 +219,12 @@ export const RFPQueryTable = pgTable(
     content: varchar("content", { length: 255 }).notNull(),
     rfpId: uuid("rfp_id").notNull(),
     userId: uuid("user_id").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -255,12 +255,12 @@ export const RFPQueryResponseTable = pgTable(
     queryId: uuid("query_id").notNull(),
     userId: uuid("user_id").notNull(),
     parentQueryResponseId: uuid("parent_query_response_id"),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -299,14 +299,14 @@ export const CompanyTable = pgTable(
     phone: text("phone"),
     website: text("website"),
     industry: text("industry"),
-    foundedDate: timestamp("foundedDate", { precision: 3, mode: "string" }),
+    foundedDate: timestamp("foundedDate", { precision: 3, mode: "date" }),
     status: text("status"),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     gst: text("GST"),
     logo: text("logo"),
@@ -335,22 +335,22 @@ export const rfp = pgTable(
     requirementType: text("requirementType").notNull(),
     dateOfOrdering: timestamp("dateOfOrdering", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     deliveryLocation: text("deliveryLocation").notNull(),
     deliveryByDate: timestamp("deliveryByDate", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     userId: uuid("userId").notNull(),
     rfpStatus: RFPStatus("rfpStatus").default("DRAFT").notNull(),
     preferredQuotationId: uuid("preferredQuotationId"),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -396,12 +396,12 @@ export const vendor = pgTable(
     remarks: text("remarks"),
     pan: text("pan"),
     verifiedById: uuid("verifiedById"),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -437,12 +437,12 @@ export const invoice = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     poId: uuid("poId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -467,12 +467,12 @@ export const payment = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     invoiceId: uuid("invoiceId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -492,12 +492,12 @@ export const productCategory = pgTable(
   "ProductCategory",
   {
     name: text("name").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     id: uuid("id").defaultRandom().primaryKey().notNull(),
   },
@@ -519,12 +519,12 @@ export const goodStatus = pgTable(
     deliveryStatus: boolean("deliveryStatus").notNull(),
     qualityAssurance: boolean("qualityAssurance").notNull(),
     qualityAssuranceLeaderId: uuid("qualityAssuranceLeaderId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -560,12 +560,12 @@ export const po = pgTable(
     userId: uuid("userId").notNull(),
     companyId: uuid("companyId").notNull(),
     rfpId: uuid("rfpId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     remarks: text("remarks").notNull(),
   },
@@ -621,12 +621,12 @@ export const quotation = pgTable(
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     rfpId: uuid("rfpId").notNull(),
     vendorId: uuid("vendorId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     isPrimary: boolean("isPrimary").default(false).notNull(),
     totalAmount: numeric("totalAmount", { precision: 10, scale: 2 }).notNull(),
@@ -661,10 +661,10 @@ export const qualityAssurance = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     userId: uuid("userId").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+    updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
   },
@@ -693,12 +693,12 @@ export const supportingDocument = pgTable(
     documentType: text("documentType").notNull(),
     documentName: text("documentName").notNull(),
     location: text("location").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -721,13 +721,13 @@ export const approversList = pgTable(
     rfpId: uuid("rfpId").notNull(),
     userId: uuid("userId").notNull(),
     approved: boolean("approved").default(false).notNull(),
-    approvedAt: timestamp("approvedAt", { precision: 3, mode: "string" }),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    approvedAt: timestamp("approvedAt", { precision: 3, mode: "date" }),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {
@@ -761,12 +761,12 @@ export const product = pgTable(
     name: text("name").notNull(),
     modelNo: text("modelNo").notNull(),
     specification: text("specification").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     productCategoryId: uuid("productCategoryId").notNull(),
@@ -798,12 +798,12 @@ export const rfpProduct = pgTable(
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     rfpId: uuid("rfpId").notNull(),
     quantity: integer("quantity").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     description: text("description"),
     productId: uuid("productId").notNull(),
@@ -840,12 +840,12 @@ export const vendorPricing = pgTable(
     quotationId: uuid("quotationId").notNull(),
     rfpProductId: uuid("rfpProductId").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
     gst: integer("GST").notNull(),
   },
@@ -909,12 +909,12 @@ export const otherCharge = pgTable(
     name: text("name").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
     gst: numeric("gst", { precision: 5, scale: 2 }).notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", {
       precision: 3,
-      mode: "string",
+      mode: "date",
     }).notNull(),
   },
   (table) => {

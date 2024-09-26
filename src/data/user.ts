@@ -22,7 +22,7 @@ export async function createUser(data: UserData) {
         companyId: data.companyId,
         mobile: data.mobile,
         role: data.role,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       })
       .returning();
     return results[0] || null;
@@ -77,7 +77,10 @@ export async function markUserEmailVerified(userId: string) {
   try {
     await db
       .update(UserTable)
-      .set({ emailVerified: new Date().toISOString() })
+      .set({
+        emailVerified: new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(UserTable.id, userId));
   } catch (error) {
     console.error("Error on creating user", error);

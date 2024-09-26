@@ -15,7 +15,7 @@ export async function createPasswordResetToken(data: PasswordResetTokenData) {
       .values({
         email: data.email,
         token: data.token,
-        expiresAt: data.expiresAt.toISOString(),
+        expiresAt: data.expiresAt,
       })
       .returning();
     return results[0] || null;
@@ -41,7 +41,7 @@ export async function findPasswordResetTokenByToken(token: string) {
       .from(PasswordResetTokenTable)
       .where(eq(PasswordResetTokenTable.token, token))
       .limit(1);
-    return results || null;
+    return results[0] || null;
   } catch (error) {
     console.error(error);
   }
