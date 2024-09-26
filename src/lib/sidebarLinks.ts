@@ -77,6 +77,12 @@ export const AdminList = [
     imgUrl: "/svgs/dashboard.svg",
     route: "/dashboard/admin/company",
   },
+  {
+    value: "Audit Log",
+    label: "Audit Log",
+    imgUrl: "/svgs/dashboard.svg",
+    route: "/dashboard/admin/audit",
+  },
 ];
 
 export const vendorList = [

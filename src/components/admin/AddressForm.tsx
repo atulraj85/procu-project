@@ -165,8 +165,8 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
                   )}
                 />
               </div>
-              <Button type="submit" className="mt-4 w-40 my-4 bg-primary">
-                Update Address
+              <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
+               ADD
               </Button>
             </div>
           </CardContent>
