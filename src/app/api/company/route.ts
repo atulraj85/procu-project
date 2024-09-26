@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Adjust the import based on your project structure
+import { deleteCompany } from "@/data/company";
+import { CompanyTable } from "@/drizzle/schema";
+import { drizzleDB as db } from "@/lib/db";
+import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import fs from "fs";
+import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { serializePrismaModel } from "@/types";
 
 // // Ensure the API route does not use bodyParser
 // export const config = {
@@ -71,20 +73,19 @@ export async function POST(request: Request) {
       : null;
 
     // Create a new company entry in the database
-    const company = await prisma.company.create({
-      data: {
-        name: fields.name,
-        GST: fields.GST,
-        gstAddress: fields.gstAddress,
-        email: fields.email,
-        phone: fields.phone,
-        website: fields.website,
-        industry: fields.industry,
-        foundedDate: fields.foundedDate ? new Date(fields.foundedDate) : null,
-        status: fields.status,
-        logo: logoPath ? `/company/${path.basename(logoPath)}` : null, // Store the relative path
-        stamp: stampPath ? `/company/${path.basename(stampPath)}` : null, // Store the relative path
-      },
+    const company = db.insert(CompanyTable).values({
+      name: fields.name,
+      gst: fields.GST,
+      gstAddress: fields.gstAddress,
+      email: fields.email,
+      phone: fields.phone,
+      website: fields.website,
+      industry: fields.industry,
+      foundedDate: fields.foundedDate ? new Date(fields.foundedDate) : null,
+      status: fields.status,
+      logo: logoPath ? `/company/${path.basename(logoPath)}` : null, // Store the relative path
+      stamp: stampPath ? `/company/${path.basename(stampPath)}` : null, // Store the relative path
+      updatedAt: new Date(),
     });
 
     return NextResponse.json(company, { status: 201 });
@@ -97,81 +98,60 @@ export async function POST(request: Request) {
   }
 }
 
+// Type Definitions
+type SortBy = keyof InferSelectModel<typeof CompanyTable>;
+type SortDirection = "asc" | "desc";
+type WhereField = keyof InferSelectModel<typeof CompanyTable>;
+
+const DEFAULT_SORTING_FIELD: SortBy = "id";
+const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const whereClause: Record<string, any> = {};
-    let orderByClause: Record<string, "asc" | "desc"> | undefined = undefined;
-    const validAttributes = [...companyModel.attributes, "orderBy"];
 
-    console.log("Received search params:", Object.fromEntries(searchParams));
+    const sortBy: SortBy =
+      (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
+    const sortingOrder: SortDirection =
+      (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
 
+    if (!["asc", "desc"].includes(sortingOrder)) {
+      return NextResponse.json(
+        { error: "Invalid order value" },
+        { status: 400 }
+      );
+    }
+
+    // Construct where conditions
+    const whereConditions: SQL<unknown>[] = [];
     searchParams.forEach((value, key) => {
-      console.log(`Processing parameter: ${key} = ${value}`);
-      if (validAttributes.includes(key)) {
-        if (key === "orderBy") {
-          const parts = value.split(",");
-          let orderByField: string = companyModel.attributes[0]; // Default to first attribute
-          let orderByDirection: "asc" | "desc" = "asc"; // Default to ascending
-
-          if (parts.length === 2) {
-            orderByField = parts[0];
-            orderByDirection =
-              parts[1].toLowerCase() === "desc" ? "desc" : "asc";
-          } else if (parts.length === 1) {
-            orderByDirection =
-              parts[0].toLowerCase() === "desc" ? "desc" : "asc";
-          }
-
-          console.log(
-            `OrderBy field: ${orderByField}, direction: ${orderByDirection}`
-          );
-
-          if (companyModel.attributes.includes(orderByField)) {
-            orderByClause = {
-              [orderByField]: orderByDirection,
-            };
-            console.log(`Set orderByClause:`, orderByClause);
-          } else {
-            console.log(`Invalid orderBy field: ${orderByField}`);
-          }
-        } else if (key === "id") {
-          const ids = value.split(",").map((id) => id);
-          whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
-        } else if (key === "state_id") {
-          const stateIds = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.state_id =
-            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
-        } else {
-          whereClause[key] = value;
+      if (key !== "sortBy" && key !== "order") {
+        if (key in CompanyTable) {
+          whereConditions.push(eq(CompanyTable[key as WhereField], value));
         }
-      } else {
-        console.log(`Ignoring invalid parameter: ${key}`);
       }
     });
 
-    const records = await prisma.company.findMany({
+    // Combine conditions using 'and'
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+    // Fetch filtered and sorted users
+    const companies = await db.query.CompanyTable.findMany({
       where: whereClause,
-      orderBy: orderByClause,
-      include: {
+      orderBy:
+        sortingOrder === "asc"
+          ? [asc(CompanyTable[sortBy])]
+          : [desc(CompanyTable[sortBy])],
+      // Include the addresses in the result
+      with: {
         addresses: true,
       },
     });
 
-    // const formattedData = formatRFPData(records);
-    // console.log("formattedData", formattedData);
+    console.log(`Found ${companies.length} records`);
 
-    console.log(`Found ${records.length} records`);
-
-    if (Object.keys(whereClause).length > 0 && records.length === 0) {
-      return NextResponse.json(
-        { error: `No records found matching the criteria` },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(serializePrismaModel(records));
-  } catch (error: unknown) {
+    return NextResponse.json(companies);
+  } catch (error) {
     console.error("Detailed error:", error);
     return NextResponse.json(
       { error: "Error fetching records", details: (error as Error).message },
@@ -284,9 +264,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json();
-    await prisma.company.delete({
-      where: { id },
-    });
+    await deleteCompany(id);
     return NextResponse.json({ message: "Company deleted successfully" });
   } catch (error) {
     return NextResponse.json(
@@ -295,23 +273,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
-const companyModel = {
-  model: prisma.company,
-  attributes: [
-    "id",
-    "name",
-    "GST",
-    "gstAddress",
-    "logo",
-    "stamp",
-    "email",
-    "phone",
-    "website",
-    "industry",
-    "foundedDate",
-    "status",
-    "created_at",
-    "updated_at",
-  ],
-};

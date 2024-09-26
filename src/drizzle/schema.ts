@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
@@ -15,9 +15,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const AddressType = pgEnum("AddressType", ["BUSINESS", "SHIPPING"]);
+export const AddressType = pgEnum("address_type", ["BUSINESS", "SHIPPING"]);
 
-export const RFPStatus = pgEnum("RFPStatus", [
+export const RFPStatus = pgEnum("rfp_status", [
   "DRAFT",
   "SUBMITTED",
   "PO_CREATED",
@@ -27,7 +27,7 @@ export const RFPStatus = pgEnum("RFPStatus", [
   "PAYMENT_DONE",
 ]);
 
-export const UserRole = pgEnum("Role", [
+export const UserRole = pgEnum("user_role", [
   "ADMIN",
   "PR_MANAGER",
   "FINANCE_MANAGER",
@@ -38,16 +38,16 @@ export const UserRole = pgEnum("Role", [
 ]);
 
 export const UserTable = pgTable(
-  "User",
+  "users",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: text("name").notNull(),
     email: text("email").notNull(),
-    emailVerified: timestamp("emailVerified", { precision: 3, mode: "date" }),
+    emailVerified: timestamp("email_verified", { precision: 3, mode: "date" }),
     password: text("password").notNull(),
     mobile: text("mobile"),
     role: UserRole("role").default("USER").notNull(),
-    companyId: uuid("companyId").notNull(),
+    companyId: uuid("company_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -58,11 +58,11 @@ export const UserTable = pgTable(
   },
   (table) => {
     return {
-      emailKey: uniqueIndex("User_email_key").using(
+      emailKey: uniqueIndex("users_email_key").using(
         "btree",
         table.email.asc().nullsLast()
       ),
-      nameEmailMobileIdx: index("User_name_email_mobile_idx").using(
+      nameEmailMobileIdx: index("users_name_email_mobile_idx").using(
         "btree",
         table.name.asc().nullsLast(),
         table.email.asc().nullsLast(),
@@ -71,7 +71,7 @@ export const UserTable = pgTable(
       userCompanyIdFkey: foreignKey({
         columns: [table.companyId],
         foreignColumns: [CompanyTable.id],
-        name: "User_companyId_fkey",
+        name: "users_company_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -79,8 +79,23 @@ export const UserTable = pgTable(
   }
 );
 
+export const UserTableRelations = relations(UserTable, ({ one, many }) => ({
+  company: one(CompanyTable, {
+    fields: [UserTable.companyId],
+    references: [CompanyTable.id],
+  }),
+  auditTrails: many(AuditTrailTable),
+  rfpQueries: many(RFPQueryTable),
+  rfpQueryResponses: many(RFPQueryResponseTable),
+  rfps: many(RFPTable),
+  vendors: many(VendorTable),
+  pos: many(POTable),
+  qualityAssurances: many(QualityAssuranceTable),
+  approversLists: many(ApproversListTable),
+}));
+
 export const EmailVerificationTokenTable = pgTable(
-  "EmailVerificationToken",
+  "email_verification_tokens",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     email: text("email").notNull(),
@@ -93,13 +108,13 @@ export const EmailVerificationTokenTable = pgTable(
   (table) => {
     return {
       emailTokenKey: uniqueIndex(
-        "EmailVerificationToken_email_token_key"
+        "email_verification_tokens_email_token_key"
       ).using(
         "btree",
         table.email.asc().nullsLast(),
         table.token.asc().nullsLast()
       ),
-      tokenKey: uniqueIndex("EmailVerificationToken_token_key").using(
+      tokenKey: uniqueIndex("email_verification_tokens_token_key").using(
         "btree",
         table.token.asc().nullsLast()
       ),
@@ -108,7 +123,7 @@ export const EmailVerificationTokenTable = pgTable(
 );
 
 export const PasswordResetTokenTable = pgTable(
-  "PasswordResetToken",
+  "password_reset_tokens",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     email: text("email").notNull(),
@@ -120,12 +135,12 @@ export const PasswordResetTokenTable = pgTable(
   },
   (table) => {
     return {
-      emailTokenKey: uniqueIndex("PasswordResetToken_email_token_key").using(
+      emailTokenKey: uniqueIndex("password_reset_tokens_email_token_key").using(
         "btree",
         table.email.asc().nullsLast(),
         table.token.asc().nullsLast()
       ),
-      tokenKey: uniqueIndex("PasswordResetToken_token_key").using(
+      tokenKey: uniqueIndex("password_reset_tokens_token_key").using(
         "btree",
         table.token.asc().nullsLast()
       ),
@@ -134,7 +149,7 @@ export const PasswordResetTokenTable = pgTable(
 );
 
 export const AuditableEventTable = pgTable(
-  "AuditableEvent",
+  "auditable_events",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: varchar("name", { length: 255 }).notNull(),
@@ -149,7 +164,7 @@ export const AuditableEventTable = pgTable(
   },
   (table) => {
     return {
-      nameKey: uniqueIndex("AuditableEvent_name_key").using(
+      nameKey: uniqueIndex("auditable_events_name_key").using(
         "btree",
         table.name.asc().nullsLast()
       ),
@@ -157,12 +172,19 @@ export const AuditableEventTable = pgTable(
   }
 );
 
+export const AuditableEventTableRelations = relations(
+  AuditableEventTable,
+  ({ many }) => ({
+    auditTrails: many(AuditTrailTable),
+  })
+);
+
 export const AuditTrailTable = pgTable(
-  "AuditTrail",
+  "audit_trails",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    eventId: uuid("event_id").notNull(),
     details: jsonb("details").notNull(),
+    eventId: uuid("event_id").notNull(),
     userId: uuid("user_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -170,25 +192,25 @@ export const AuditTrailTable = pgTable(
   },
   (table) => {
     return {
-      eventIdIdx: index("AuditTrail_eventId_idx").using(
+      eventIdIdx: index("audit_trails_event_id_idx").using(
         "btree",
         table.eventId.asc().nullsLast()
       ),
-      userIdIdx: index("AuditTrail_user_id_idx").using(
+      userIdIdx: index("audit_trails_user_id_idx").using(
         "btree",
         table.userId.asc().nullsLast()
       ),
       auditTrailEventIdFkey: foreignKey({
         columns: [table.eventId],
         foreignColumns: [AuditableEventTable.id],
-        name: "AuditTrail_event_id_fkey",
+        name: "audit_trails_event_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       auditTrailUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "AuditTrail_user_id_fkey",
+        name: "audit_trails_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -196,24 +218,81 @@ export const AuditTrailTable = pgTable(
   }
 );
 
-export const prismaMigrations = pgTable("_prisma_migrations", {
-  id: varchar("id", { length: 36 }).primaryKey().notNull(),
-  checksum: varchar("checksum", { length: 64 }).notNull(),
-  finishedAt: timestamp("finished_at", { withTimezone: true, mode: "date" }),
-  migrationName: varchar("migration_name", { length: 255 }).notNull(),
-  logs: text("logs"),
-  rolledBackAt: timestamp("rolled_back_at", {
-    withTimezone: true,
-    mode: "date",
+export const AuditTrailTableRelations = relations(
+  AuditTrailTable,
+  ({ one }) => ({
+    auditableEvent: one(AuditableEventTable, {
+      fields: [AuditTrailTable.eventId],
+      references: [AuditableEventTable.id],
+    }),
+    user: one(UserTable, {
+      fields: [AuditTrailTable.userId],
+      references: [UserTable.id],
+    }),
+  })
+);
+
+export const RFPTable = pgTable(
+  "rfps",
+  {
+    id: uuid("id").defaultRandom().primaryKey().notNull(),
+    rfpId: varchar("rfp_id", { length: 255 }).notNull(),
+    requirementType: text("requirement_type").notNull(),
+    dateOfOrdering: timestamp("date_of_ordering", {
+      precision: 3,
+      mode: "date",
+    }).notNull(),
+    deliveryLocation: text("delivery_location").notNull(),
+    deliveryByDate: timestamp("delivery_by_date", {
+      precision: 3,
+      mode: "date",
+    }).notNull(),
+    userId: uuid("user_id").notNull(),
+    rfpStatus: RFPStatus("rfp_status").default("DRAFT").notNull(),
+    preferredQuotationId: uuid("preferred_quotation_id"),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      precision: 3,
+      mode: "date",
+    }).notNull(),
+  },
+  (table) => {
+    return {
+      rfpIdIdx: index("rfps_rfp_id_idx").using(
+        "btree",
+        table.rfpId.asc().nullsLast()
+      ),
+      rfpIdKey: uniqueIndex("rfps_rfp_id_key").using(
+        "btree",
+        table.rfpId.asc().nullsLast()
+      ),
+      rfpUserIdFkey: foreignKey({
+        columns: [table.userId],
+        foreignColumns: [UserTable.id],
+        name: "rfps_user_id_fkey",
+      })
+        .onUpdate("cascade")
+        .onDelete("restrict"),
+    };
+  }
+);
+
+export const RFPTableRelations = relations(RFPTable, ({ one, many }) => ({
+  user: one(UserTable, {
+    fields: [RFPTable.userId],
+    references: [UserTable.id],
   }),
-  startedAt: timestamp("started_at", { withTimezone: true, mode: "date" })
-    .defaultNow()
-    .notNull(),
-  appliedStepsCount: integer("applied_steps_count").default(0).notNull(),
-});
+  rfpQueries: many(RFPQueryTable),
+  pos: many(POTable),
+  quotations: many(QuotationTable),
+  approversLists: many(ApproversListTable),
+  rfpProducts: many(RFPProductTable),
+}));
 
 export const RFPQueryTable = pgTable(
-  "RFPQuery",
+  "rfp_queries",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     content: varchar("content", { length: 255 }).notNull(),
@@ -231,15 +310,15 @@ export const RFPQueryTable = pgTable(
     return {
       rfpQueryRfpIdFkey: foreignKey({
         columns: [table.rfpId],
-        foreignColumns: [rfp.id],
-        name: "RFPQuery_rfp_id_fkey",
+        foreignColumns: [RFPTable.id],
+        name: "rfp_queries_rfp_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       rfpQueryUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "RFPQuery_user_id_fkey",
+        name: "rfp_queries_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -247,8 +326,23 @@ export const RFPQueryTable = pgTable(
   }
 );
 
+export const RFPQueryTableRelations = relations(
+  RFPQueryTable,
+  ({ one, many }) => ({
+    rfp: one(RFPTable, {
+      fields: [RFPQueryTable.rfpId],
+      references: [RFPTable.id],
+    }),
+    user: one(UserTable, {
+      fields: [RFPQueryTable.userId],
+      references: [UserTable.id],
+    }),
+    rfpQueryResponses: many(RFPQueryResponseTable),
+  })
+);
+
 export const RFPQueryResponseTable = pgTable(
-  "RFPQueryResponse",
+  "rfp_query_responses",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     content: varchar("content", { length: 255 }).notNull(),
@@ -268,21 +362,21 @@ export const RFPQueryResponseTable = pgTable(
       rfpQueryResponseQueryIdFkey: foreignKey({
         columns: [table.queryId],
         foreignColumns: [RFPQueryTable.id],
-        name: "RFPQueryResponse_query_id_fkey",
+        name: "rfp_query_responses_query_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       rfpQueryResponseUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "RFPQueryResponse_user_id_fkey",
+        name: "rfp_query_responses_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       rfpQueryResponseParentQueryResponseIdFkey: foreignKey({
         columns: [table.parentQueryResponseId],
         foreignColumns: [table.id],
-        name: "RFPQueryResponse_parent_query_response_id_fkey",
+        name: "rfp_query_responses_parent_query_response_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("set null"),
@@ -290,8 +384,32 @@ export const RFPQueryResponseTable = pgTable(
   }
 );
 
+export const RFPQueryResponseTableRelations = relations(
+  RFPQueryResponseTable,
+  ({ one, many }) => ({
+    rfpQuery: one(RFPQueryTable, {
+      fields: [RFPQueryResponseTable.queryId],
+      references: [RFPQueryTable.id],
+    }),
+    user: one(UserTable, {
+      fields: [RFPQueryResponseTable.userId],
+      references: [UserTable.id],
+    }),
+    rfpQueryResponse: one(RFPQueryResponseTable, {
+      fields: [RFPQueryResponseTable.parentQueryResponseId],
+      references: [RFPQueryResponseTable.id],
+      relationName:
+        "rfp_query_responses_parent_query_response_id_rfp_query_response_id",
+    }),
+    rfpQueryResponses: many(RFPQueryResponseTable, {
+      relationName:
+        "rfp_query_responses_parent_query_response_id_rfp_query_response_id",
+    }),
+  })
+);
+
 export const CompanyTable = pgTable(
-  "Company",
+  "companies",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: text("name").notNull(),
@@ -299,8 +417,12 @@ export const CompanyTable = pgTable(
     phone: text("phone"),
     website: text("website"),
     industry: text("industry"),
-    foundedDate: timestamp("foundedDate", { precision: 3, mode: "date" }),
+    foundedDate: timestamp("founded_date", { precision: 3, mode: "date" }),
     status: text("status"),
+    gst: text("gst"),
+    logo: text("logo"),
+    stamp: text("stamp"),
+    gstAddress: text("gst_address"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -308,18 +430,14 @@ export const CompanyTable = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    gst: text("GST"),
-    logo: text("logo"),
-    stamp: text("stamp"),
-    gstAddress: text("gstAddress"),
   },
   (table) => {
     return {
-      gstKey: uniqueIndex("Company_GST_key").using(
+      gstKey: uniqueIndex("companies_gst_key").using(
         "btree",
         table.gst.asc().nullsLast()
       ),
-      emailKey: uniqueIndex("Company_email_key").using(
+      emailKey: uniqueIndex("companies_email_key").using(
         "btree",
         table.email.asc().nullsLast()
       ),
@@ -327,46 +445,30 @@ export const CompanyTable = pgTable(
   }
 );
 
-export const rfp = pgTable(
-  "RFP",
+export const CompanyTableRelations = relations(CompanyTable, ({ many }) => ({
+  pos: many(POTable),
+  users: many(UserTable),
+  addresses: many(AddressTable),
+}));
+
+export const AddressTable = pgTable(
+  "addresses",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    rfpId: varchar("rfpId", { length: 255 }).notNull(),
-    requirementType: text("requirementType").notNull(),
-    dateOfOrdering: timestamp("dateOfOrdering", {
-      precision: 3,
-      mode: "date",
-    }).notNull(),
-    deliveryLocation: text("deliveryLocation").notNull(),
-    deliveryByDate: timestamp("deliveryByDate", {
-      precision: 3,
-      mode: "date",
-    }).notNull(),
-    userId: uuid("userId").notNull(),
-    rfpStatus: RFPStatus("rfpStatus").default("DRAFT").notNull(),
-    preferredQuotationId: uuid("preferredQuotationId"),
-    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", {
-      precision: 3,
-      mode: "date",
-    }).notNull(),
+    street: text("street").notNull(),
+    city: text("city").notNull(),
+    state: text("state").notNull(),
+    postalCode: text("postal_code").notNull(),
+    country: text("country").notNull(),
+    addressType: AddressType("address_type").notNull(),
+    companyId: uuid("company_id").notNull(),
   },
   (table) => {
     return {
-      rfpIdIdx: index("RFP_rfpId_idx").using(
-        "btree",
-        table.rfpId.asc().nullsLast()
-      ),
-      rfpIdKey: uniqueIndex("RFP_rfpId_key").using(
-        "btree",
-        table.rfpId.asc().nullsLast()
-      ),
-      rfpUserIdFkey: foreignKey({
-        columns: [table.userId],
-        foreignColumns: [UserTable.id],
-        name: "RFP_userId_fkey",
+      addressCompanyIdFkey: foreignKey({
+        columns: [table.companyId],
+        foreignColumns: [CompanyTable.id],
+        name: "addresses_company_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -374,28 +476,35 @@ export const rfp = pgTable(
   }
 );
 
-export const vendor = pgTable(
-  "Vendor",
+export const AddressTableRelations = relations(AddressTable, ({ one }) => ({
+  company: one(CompanyTable, {
+    fields: [AddressTable.companyId],
+    references: [CompanyTable.id],
+  }),
+}));
+
+export const VendorTable = pgTable(
+  "vendors",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    customerCode: text("customerCode"),
-    primaryName: text("primaryName").notNull(),
-    companyName: text("companyName").notNull(),
-    contactDisplayName: text("contactDisplayName").notNull(),
+    customerCode: text("customer_code"),
+    primaryName: text("primary_name").notNull(),
+    companyName: text("company_name").notNull(),
+    contactDisplayName: text("contact_display_name").notNull(),
     email: text("email"),
-    workPhone: text("workPhone"),
+    workPhone: text("work_phone"),
     mobile: text("mobile"),
     website: text("website"),
     gstin: text("gstin"),
-    msmeNo: text("msmeNo"),
+    msmeNo: text("msme_no"),
     address: text("address"),
-    customerState: text("customerState"),
-    customerCity: text("customerCity"),
+    customerState: text("customer_state"),
+    customerCity: text("customer_city"),
     country: text("country"),
     zip: text("zip"),
     remarks: text("remarks"),
     pan: text("pan"),
-    verifiedById: uuid("verifiedById"),
+    verifiedById: uuid("verified_by_id"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -406,12 +515,12 @@ export const vendor = pgTable(
   },
   (table) => {
     return {
-      gstinKey: uniqueIndex("Vendor_gstin_key").using(
+      gstinKey: uniqueIndex("vendors_gstin_key").using(
         "btree",
         table.gstin.asc().nullsLast()
       ),
       primaryNameCompanyNameContactDisplayNameEmailMobIdx: index(
-        "Vendor_primaryName_companyName_contactDisplayName_email_mob_idx"
+        "vendors_primary_name_company_name_contact_display_name_email_mob_idx"
       ).using(
         "btree",
         table.primaryName.asc().nullsLast(),
@@ -424,7 +533,7 @@ export const vendor = pgTable(
       vendorVerifiedByIdFkey: foreignKey({
         columns: [table.verifiedById],
         foreignColumns: [UserTable.id],
-        name: "Vendor_verifiedById_fkey",
+        name: "vendors_verified_by_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("set null"),
@@ -432,11 +541,19 @@ export const vendor = pgTable(
   }
 );
 
-export const invoice = pgTable(
-  "Invoice",
+export const VendorTableRelations = relations(VendorTable, ({ one, many }) => ({
+  user: one(UserTable, {
+    fields: [VendorTable.verifiedById],
+    references: [UserTable.id],
+  }),
+  quotations: many(QuotationTable),
+}));
+
+export const InvoiceTable = pgTable(
+  "invoices",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    poId: uuid("poId").notNull(),
+    poId: uuid("po_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -447,14 +564,14 @@ export const invoice = pgTable(
   },
   (table) => {
     return {
-      poIdKey: uniqueIndex("Invoice_poId_key").using(
+      poIdKey: uniqueIndex("invoices_po_id_key").using(
         "btree",
         table.poId.asc().nullsLast()
       ),
       invoicePoIdFkey: foreignKey({
         columns: [table.poId],
-        foreignColumns: [po.id],
-        name: "Invoice_poId_fkey",
+        foreignColumns: [POTable.id],
+        name: "invoices_po_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -462,11 +579,23 @@ export const invoice = pgTable(
   }
 );
 
-export const payment = pgTable(
-  "Payment",
+export const InvoiceTableRelations = relations(
+  InvoiceTable,
+  ({ one, many }) => ({
+    po: one(POTable, {
+      fields: [InvoiceTable.poId],
+      references: [POTable.id],
+    }),
+    payments: many(PaymentTable),
+    goodStatuses: many(GoodStatusTable),
+  })
+);
+
+export const PaymentTable = pgTable(
+  "payments",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    invoiceId: uuid("invoiceId").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -479,8 +608,8 @@ export const payment = pgTable(
     return {
       paymentInvoiceIdFkey: foreignKey({
         columns: [table.invoiceId],
-        foreignColumns: [invoice.id],
-        name: "Payment_invoiceId_fkey",
+        foreignColumns: [InvoiceTable.id],
+        name: "payments_invoice_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -488,9 +617,17 @@ export const payment = pgTable(
   }
 );
 
-export const productCategory = pgTable(
-  "ProductCategory",
+export const PaymentTableRelations = relations(PaymentTable, ({ one }) => ({
+  invoice: one(InvoiceTable, {
+    fields: [PaymentTable.invoiceId],
+    references: [InvoiceTable.id],
+  }),
+}));
+
+export const ProductCategoryTable = pgTable(
+  "product_categories",
   {
+    id: uuid("id").defaultRandom().primaryKey().notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -499,11 +636,10 @@ export const productCategory = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    id: uuid("id").defaultRandom().primaryKey().notNull(),
   },
   (table) => {
     return {
-      nameKey: uniqueIndex("ProductCategory_name_key").using(
+      nameKey: uniqueIndex("product_categories_name_key").using(
         "btree",
         table.name.asc().nullsLast()
       ),
@@ -511,14 +647,21 @@ export const productCategory = pgTable(
   }
 );
 
-export const goodStatus = pgTable(
-  "GoodStatus",
+export const ProductCategoryTableRelations = relations(
+  ProductCategoryTable,
+  ({ many }) => ({
+    products: many(ProductTable),
+  })
+);
+
+export const ProductTable = pgTable(
+  "products",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    invoiceId: uuid("invoiceId").notNull(),
-    deliveryStatus: boolean("deliveryStatus").notNull(),
-    qualityAssurance: boolean("qualityAssurance").notNull(),
-    qualityAssuranceLeaderId: uuid("qualityAssuranceLeaderId").notNull(),
+    name: text("name").notNull(),
+    modelNo: text("model_no").notNull(),
+    specification: text("specification").notNull(),
+    productCategoryId: uuid("product_category_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -529,21 +672,18 @@ export const goodStatus = pgTable(
   },
   (table) => {
     return {
-      invoiceIdKey: uniqueIndex("GoodStatus_invoiceId_key").using(
+      nameModelNoSpecificationIdx: index(
+        "products_name_model_no_specification_idx"
+      ).using(
         "btree",
-        table.invoiceId.asc().nullsLast()
+        table.name.asc().nullsLast(),
+        table.modelNo.asc().nullsLast(),
+        table.specification.asc().nullsLast()
       ),
-      goodStatusInvoiceIdFkey: foreignKey({
-        columns: [table.invoiceId],
-        foreignColumns: [invoice.id],
-        name: "GoodStatus_invoiceId_fkey",
-      })
-        .onUpdate("cascade")
-        .onDelete("restrict"),
-      goodStatusQualityAssuranceLeaderIdFkey: foreignKey({
-        columns: [table.qualityAssuranceLeaderId],
-        foreignColumns: [qualityAssurance.id],
-        name: "GoodStatus_qualityAssuranceLeaderId_fkey",
+      productProductCategoryIdFkey: foreignKey({
+        columns: [table.productCategoryId],
+        foreignColumns: [ProductCategoryTable.id],
+        name: "products_product_category_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -551,15 +691,27 @@ export const goodStatus = pgTable(
   }
 );
 
-export const po = pgTable(
-  "PO",
+export const ProductTableRelations = relations(
+  ProductTable,
+  ({ one, many }) => ({
+    productCategory: one(ProductCategoryTable, {
+      fields: [ProductTable.productCategoryId],
+      references: [ProductCategoryTable.id],
+    }),
+    rfpProducts: many(RFPProductTable),
+  })
+);
+
+export const POTable = pgTable(
+  "pos",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    poId: text("poId").notNull(),
-    quotationId: uuid("quotationId").notNull(),
-    userId: uuid("userId").notNull(),
-    companyId: uuid("companyId").notNull(),
-    rfpId: uuid("rfpId").notNull(),
+    poId: text("po_id").notNull(),
+    remarks: text("remarks").notNull(),
+    quotationId: uuid("quotation_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    companyId: uuid("company_id").notNull(),
+    rfpId: uuid("rfp_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -567,47 +719,46 @@ export const po = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    remarks: text("remarks").notNull(),
   },
   (table) => {
     return {
-      poIdKey: uniqueIndex("PO_poId_key").using(
+      poIdKey: uniqueIndex("pos_po_id_key").using(
         "btree",
         table.poId.asc().nullsLast()
       ),
-      quotationIdKey: uniqueIndex("PO_quotationId_key").using(
+      quotationIdKey: uniqueIndex("pos_quotation_id_key").using(
         "btree",
         table.quotationId.asc().nullsLast()
       ),
-      rfpIdKey: uniqueIndex("PO_rfpId_key").using(
+      rfpIdKey: uniqueIndex("pos_rfp_id_key").using(
         "btree",
         table.rfpId.asc().nullsLast()
       ),
       poQuotationIdFkey: foreignKey({
         columns: [table.quotationId],
-        foreignColumns: [quotation.id],
-        name: "PO_quotationId_fkey",
+        foreignColumns: [QuotationTable.id],
+        name: "pos_quotation_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       poUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "PO_userId_fkey",
+        name: "pos_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       poCompanyIdFkey: foreignKey({
         columns: [table.companyId],
         foreignColumns: [CompanyTable.id],
-        name: "PO_companyId_fkey",
+        name: "pos_company_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       poRfpIdFkey: foreignKey({
         columns: [table.rfpId],
-        foreignColumns: [rfp.id],
-        name: "PO_rfpId_fkey",
+        foreignColumns: [RFPTable.id],
+        name: "pos_rfp_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -615,12 +766,34 @@ export const po = pgTable(
   }
 );
 
-export const quotation = pgTable(
-  "Quotation",
+export const POTableRelations = relations(POTable, ({ one, many }) => ({
+  quotation: one(QuotationTable, {
+    fields: [POTable.quotationId],
+    references: [QuotationTable.id],
+  }),
+  company: one(CompanyTable, {
+    fields: [POTable.companyId],
+    references: [CompanyTable.id],
+  }),
+  rfp: one(RFPTable, {
+    fields: [POTable.rfpId],
+    references: [RFPTable.id],
+  }),
+  user: one(UserTable, {
+    fields: [POTable.userId],
+    references: [UserTable.id],
+  }),
+  invoices: many(InvoiceTable),
+}));
+
+export const GoodStatusTable = pgTable(
+  "good_statuses",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    rfpId: uuid("rfpId").notNull(),
-    vendorId: uuid("vendorId").notNull(),
+    invoiceId: uuid("invoice_id").notNull(),
+    deliveryStatus: boolean("delivery_status").notNull(),
+    qualityAssurance: boolean("quality_assurance").notNull(),
+    qualityAssuranceLeaderId: uuid("quality_assurance_leader_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -628,27 +801,24 @@ export const quotation = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    isPrimary: boolean("isPrimary").default(false).notNull(),
-    totalAmount: numeric("totalAmount", { precision: 10, scale: 2 }).notNull(),
-    refNo: text("refNo"),
-    totalAmountWithoutGst: numeric("totalAmountWithoutGST", {
-      precision: 10,
-      scale: 2,
-    }).notNull(),
   },
   (table) => {
     return {
-      quotationRfpIdFkey: foreignKey({
-        columns: [table.rfpId],
-        foreignColumns: [rfp.id],
-        name: "Quotation_rfpId_fkey",
+      invoiceIdKey: uniqueIndex("good_statuses_invoice_id_key").using(
+        "btree",
+        table.invoiceId.asc().nullsLast()
+      ),
+      goodStatusInvoiceIdFkey: foreignKey({
+        columns: [table.invoiceId],
+        foreignColumns: [InvoiceTable.id],
+        name: "good_statuses_invoice_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
-      quotationVendorIdFkey: foreignKey({
-        columns: [table.vendorId],
-        foreignColumns: [vendor.id],
-        name: "Quotation_vendorId_fkey",
+      goodStatusQualityAssuranceLeaderIdFkey: foreignKey({
+        columns: [table.qualityAssuranceLeaderId],
+        foreignColumns: [QualityAssuranceTable.id],
+        name: "good_statuses_quality_assurance_leader_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -656,11 +826,84 @@ export const quotation = pgTable(
   }
 );
 
-export const qualityAssurance = pgTable(
-  "QualityAssurance",
+export const GoodStatusTableRelations = relations(
+  GoodStatusTable,
+  ({ one }) => ({
+    invoice: one(InvoiceTable, {
+      fields: [GoodStatusTable.invoiceId],
+      references: [InvoiceTable.id],
+    }),
+    qualityAssurance: one(QualityAssuranceTable, {
+      fields: [GoodStatusTable.qualityAssuranceLeaderId],
+      references: [QualityAssuranceTable.id],
+    }),
+  })
+);
+
+export const QuotationTable = pgTable(
+  "quotations",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    userId: uuid("userId").notNull(),
+    rfpId: uuid("rfp_id").notNull(),
+    vendorId: uuid("vendor_id").notNull(),
+    isPrimary: boolean("is_primary").default(false).notNull(),
+    refNo: text("ref_no"),
+    totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull(),
+    totalAmountWithoutGst: numeric("total_amount_without_gst", {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      precision: 3,
+      mode: "date",
+    }).notNull(),
+  },
+  (table) => {
+    return {
+      quotationRfpIdFkey: foreignKey({
+        columns: [table.rfpId],
+        foreignColumns: [RFPTable.id],
+        name: "quotations_rfp_id_fkey",
+      })
+        .onUpdate("cascade")
+        .onDelete("restrict"),
+      quotationVendorIdFkey: foreignKey({
+        columns: [table.vendorId],
+        foreignColumns: [VendorTable.id],
+        name: "quotations_vendor_id_fkey",
+      })
+        .onUpdate("cascade")
+        .onDelete("restrict"),
+    };
+  }
+);
+
+export const QuotationTableRelations = relations(
+  QuotationTable,
+  ({ one, many }) => ({
+    pos: many(POTable),
+    rfp: one(RFPTable, {
+      fields: [QuotationTable.rfpId],
+      references: [RFPTable.id],
+    }),
+    vendor: one(VendorTable, {
+      fields: [QuotationTable.vendorId],
+      references: [VendorTable.id],
+    }),
+    supportingDocuments: many(SupportingDocumentTable),
+    vendorPricings: many(VendorPricingTable),
+    otherCharges: many(OtherChargeTable),
+  })
+);
+
+export const QualityAssuranceTable = pgTable(
+  "quality_assurances",
+  {
+    id: uuid("id").defaultRandom().primaryKey().notNull(),
+    userId: uuid("user_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -670,14 +913,14 @@ export const qualityAssurance = pgTable(
   },
   (table) => {
     return {
-      userIdKey: uniqueIndex("QualityAssurance_userId_key").using(
+      userIdKey: uniqueIndex("quality_assurances_user_id_key").using(
         "btree",
         table.userId.asc().nullsLast()
       ),
       qualityAssuranceUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "QualityAssurance_userId_fkey",
+        name: "quality_assurances_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -685,14 +928,25 @@ export const qualityAssurance = pgTable(
   }
 );
 
-export const supportingDocument = pgTable(
-  "SupportingDocument",
+export const QualityAssuranceTableRelations = relations(
+  QualityAssuranceTable,
+  ({ one, many }) => ({
+    goodStatuses: many(GoodStatusTable),
+    user: one(UserTable, {
+      fields: [QualityAssuranceTable.userId],
+      references: [UserTable.id],
+    }),
+  })
+);
+
+export const SupportingDocumentTable = pgTable(
+  "supporting_documents",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    quotationId: uuid("quotationId").notNull(),
-    documentType: text("documentType").notNull(),
-    documentName: text("documentName").notNull(),
+    documentName: text("document_name").notNull(),
+    documentType: text("document_type").notNull(),
     location: text("location").notNull(),
+    quotationId: uuid("quotation_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -705,8 +959,8 @@ export const supportingDocument = pgTable(
     return {
       supportingDocumentQuotationIdFkey: foreignKey({
         columns: [table.quotationId],
-        foreignColumns: [quotation.id],
-        name: "SupportingDocument_quotationId_fkey",
+        foreignColumns: [QuotationTable.id],
+        name: "supporting_documents_quotation_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
@@ -714,14 +968,24 @@ export const supportingDocument = pgTable(
   }
 );
 
-export const approversList = pgTable(
-  "ApproversList",
+export const SupportingDocumentTableRelations = relations(
+  SupportingDocumentTable,
+  ({ one }) => ({
+    quotation: one(QuotationTable, {
+      fields: [SupportingDocumentTable.quotationId],
+      references: [QuotationTable.id],
+    }),
+  })
+);
+
+export const ApproversListTable = pgTable(
+  "approvers_list",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    rfpId: uuid("rfpId").notNull(),
-    userId: uuid("userId").notNull(),
+    rfpId: uuid("rfp_id").notNull(),
+    userId: uuid("user_id").notNull(),
     approved: boolean("approved").default(false).notNull(),
-    approvedAt: timestamp("approvedAt", { precision: 3, mode: "date" }),
+    approvedAt: timestamp("approved_at", { precision: 3, mode: "date" }),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -732,72 +996,50 @@ export const approversList = pgTable(
   },
   (table) => {
     return {
-      rfpIdUserIdKey: uniqueIndex("ApproversList_rfpId_userId_key").using(
+      rfpIdUserIdKey: uniqueIndex("approvers_list_rfp_id_user_id_key").using(
         "btree",
         table.rfpId.asc().nullsLast(),
         table.userId.asc().nullsLast()
       ),
       approversListRfpIdFkey: foreignKey({
         columns: [table.rfpId],
-        foreignColumns: [rfp.id],
-        name: "ApproversList_rfpId_fkey",
+        foreignColumns: [RFPTable.id],
+        name: "approvers_list_rfp_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       approversListUserIdFkey: foreignKey({
         columns: [table.userId],
         foreignColumns: [UserTable.id],
-        name: "ApproversList_userId_fkey",
+        name: "approvers_list_user_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
     };
   }
 );
-
-export const product = pgTable(
-  "Product",
-  {
-    name: text("name").notNull(),
-    modelNo: text("modelNo").notNull(),
-    specification: text("specification").notNull(),
-    createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", {
-      precision: 3,
-      mode: "date",
-    }).notNull(),
-    id: uuid("id").defaultRandom().primaryKey().notNull(),
-    productCategoryId: uuid("productCategoryId").notNull(),
-  },
-  (table) => {
-    return {
-      nameModelNoSpecificationIdx: index(
-        "Product_name_modelNo_specification_idx"
-      ).using(
-        "btree",
-        table.name.asc().nullsLast(),
-        table.modelNo.asc().nullsLast(),
-        table.specification.asc().nullsLast()
-      ),
-      productProductCategoryIdFkey: foreignKey({
-        columns: [table.productCategoryId],
-        foreignColumns: [productCategory.id],
-        name: "Product_productCategoryId_fkey",
-      })
-        .onUpdate("cascade")
-        .onDelete("restrict"),
-    };
-  }
+export const ApproversListTableRelations = relations(
+  ApproversListTable,
+  ({ one }) => ({
+    rfp: one(RFPTable, {
+      fields: [ApproversListTable.rfpId],
+      references: [RFPTable.id],
+    }),
+    user: one(UserTable, {
+      fields: [ApproversListTable.userId],
+      references: [UserTable.id],
+    }),
+  })
 );
 
-export const rfpProduct = pgTable(
-  "RFPProduct",
+export const RFPProductTable = pgTable(
+  "rfp_products",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    rfpId: uuid("rfpId").notNull(),
+    rfpId: uuid("rfp_id").notNull(),
+    productId: uuid("product_id").notNull(),
     quantity: integer("quantity").notNull(),
+    description: text("description"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -805,41 +1047,56 @@ export const rfpProduct = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    description: text("description"),
-    productId: uuid("productId").notNull(),
   },
   (table) => {
     return {
-      rfpIdProductIdKey: uniqueIndex("RFPProduct_rfpId_productId_key").using(
+      rfpIdProductIdKey: uniqueIndex(
+        "rfp_products_rfp_id_product_id_key"
+      ).using(
         "btree",
         table.rfpId.asc().nullsLast(),
         table.productId.asc().nullsLast()
       ),
       rfpProductRfpIdFkey: foreignKey({
         columns: [table.rfpId],
-        foreignColumns: [rfp.id],
-        name: "RFPProduct_rfpId_fkey",
+        foreignColumns: [RFPTable.id],
+        name: "rfp_products_rfp_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       rfpProductProductIdFkey: foreignKey({
         columns: [table.productId],
-        foreignColumns: [product.id],
-        name: "RFPProduct_productId_fkey",
+        foreignColumns: [ProductTable.id],
+        name: "rfp_products_product_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
     };
   }
 );
+export const RFPProductTableRelations = relations(
+  RFPProductTable,
+  ({ one, many }) => ({
+    rfp: one(RFPTable, {
+      fields: [RFPProductTable.rfpId],
+      references: [RFPTable.id],
+    }),
+    product: one(ProductTable, {
+      fields: [RFPProductTable.productId],
+      references: [ProductTable.id],
+    }),
+    vendorPricings: many(VendorPricingTable),
+  })
+);
 
-export const vendorPricing = pgTable(
-  "VendorPricing",
+export const VendorPricingTable = pgTable(
+  "vendor_pricings",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    quotationId: uuid("quotationId").notNull(),
-    rfpProductId: uuid("rfpProductId").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+    gst: integer("gst").notNull(),
+    rfpProductId: uuid("rfp_product_id").notNull(),
+    quotationId: uuid("quotation_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -847,12 +1104,11 @@ export const vendorPricing = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    gst: integer("GST").notNull(),
   },
   (table) => {
     return {
       quotationIdRfpProductIdKey: uniqueIndex(
-        "VendorPricing_quotationId_rfpProductId_key"
+        "vendor_pricings_quotation_id_rfp_product_id_key"
       ).using(
         "btree",
         table.quotationId.asc().nullsLast(),
@@ -860,55 +1116,43 @@ export const vendorPricing = pgTable(
       ),
       vendorPricingQuotationIdFkey: foreignKey({
         columns: [table.quotationId],
-        foreignColumns: [quotation.id],
-        name: "VendorPricing_quotationId_fkey",
+        foreignColumns: [QuotationTable.id],
+        name: "vendor_pricings_quotation_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
       vendorPricingRfpProductIdFkey: foreignKey({
         columns: [table.rfpProductId],
-        foreignColumns: [rfpProduct.id],
-        name: "VendorPricing_rfpProductId_fkey",
+        foreignColumns: [RFPProductTable.id],
+        name: "vendor_pricings_rfp_product_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
     };
   }
 );
-
-export const address = pgTable(
-  "Address",
-  {
-    id: uuid("id").defaultRandom().primaryKey().notNull(),
-    street: text("street").notNull(),
-    city: text("city").notNull(),
-    state: text("state").notNull(),
-    postalCode: text("postalCode").notNull(),
-    country: text("country").notNull(),
-    addressType: AddressType("addressType").notNull(),
-    companyId: uuid("companyId").notNull(),
-  },
-  (table) => {
-    return {
-      addressCompanyIdFkey: foreignKey({
-        columns: [table.companyId],
-        foreignColumns: [CompanyTable.id],
-        name: "Address_companyId_fkey",
-      })
-        .onUpdate("cascade")
-        .onDelete("restrict"),
-    };
-  }
+export const VendorPricingTableRelations = relations(
+  VendorPricingTable,
+  ({ one }) => ({
+    quotation: one(QuotationTable, {
+      fields: [VendorPricingTable.quotationId],
+      references: [QuotationTable.id],
+    }),
+    rfpProduct: one(RFPProductTable, {
+      fields: [VendorPricingTable.rfpProductId],
+      references: [RFPProductTable.id],
+    }),
+  })
 );
 
-export const otherCharge = pgTable(
-  "OtherCharge",
+export const OtherChargeTable = pgTable(
+  "other_charges",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
-    quotationId: uuid("quotationId").notNull(),
     name: text("name").notNull(),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
     gst: numeric("gst", { precision: 5, scale: 2 }).notNull(),
+    quotationId: uuid("quotation_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -919,18 +1163,30 @@ export const otherCharge = pgTable(
   },
   (table) => {
     return {
-      quotationIdNameKey: uniqueIndex("OtherCharge_quotationId_name_key").using(
+      quotationIdNameKey: uniqueIndex(
+        "other_charges_quotation_id_name_key"
+      ).using(
         "btree",
         table.quotationId.asc().nullsLast(),
         table.name.asc().nullsLast()
       ),
       otherChargeQuotationIdFkey: foreignKey({
         columns: [table.quotationId],
-        foreignColumns: [quotation.id],
-        name: "OtherCharge_quotationId_fkey",
+        foreignColumns: [QuotationTable.id],
+        name: "other_charges_quotation_id_fkey",
       })
         .onUpdate("cascade")
         .onDelete("restrict"),
     };
   }
+);
+
+export const OtherChargeTableRelations = relations(
+  OtherChargeTable,
+  ({ one }) => ({
+    quotation: one(QuotationTable, {
+      fields: [OtherChargeTable.quotationId],
+      references: [QuotationTable.id],
+    }),
+  })
 );

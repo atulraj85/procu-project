@@ -49,7 +49,7 @@ function formatRFPData(inputData: any[]) {
           price: pricing.price,
           description: pricing.rfpProduct.product.specification,
           gst: pricing.GST,
-          type: "product", 
+          type: "product",
         })),
         ...(quotation.otherCharges || []).map((charge: any) => ({
           ...charge,
@@ -327,54 +327,6 @@ export async function POST(request: NextRequest) {
     console.error("Error creating RFP:", error);
     return NextResponse.json(
       { error: `Failed to create RFP: ${error.message}` },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const { searchParams } = request.nextUrl;
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "ID is required for updating a record" },
-        { status: 400 }
-      );
-    }
-
-    const data = await request.json();
-
-    // Define valid attributes for the RFP model
-    const validAttributes = rfpModel.attributes; // Assuming rfpModel is defined similarly to vendorModel
-    const invalidKeys = Object.keys(data).filter(
-      (key) => !validAttributes.includes(key)
-    );
-
-    if (invalidKeys.length > 0) {
-      return NextResponse.json(
-        { error: `Invalid attributes in data: ${invalidKeys.join(", ")}` },
-        { status: 400 }
-      );
-    }
-
-    // Add the updated_at field to the data
-    data.updated_at = new Date(); // Set to the current date and time
-
-    // Update the record
-    const updatedRecord = await rfpModel.model.update({
-      where: { id: id }, // Ensure id is the correct type (string or number based on your schema)
-      data,
-    });
-
-    return NextResponse.json(serializePrismaModel(updatedRecord), {
-      status: 200,
-    });
-  } catch (error: unknown) {
-    console.error("Error updating RFP:", error);
-    return NextResponse.json(
-      { error: "Error updating record", details: (error as Error).message },
       { status: 500 }
     );
   }
