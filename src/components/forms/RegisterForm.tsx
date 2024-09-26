@@ -27,9 +27,10 @@ const FormSchema = CreateUserInputValidation;
 
 type RegisterFormProps = {
   text: string;
+  role: string
 };
 
-function RegisterForm({ text }: RegisterFormProps) {
+function RegisterForm({ text, role }: RegisterFormProps) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
@@ -50,6 +51,7 @@ function RegisterForm({ text }: RegisterFormProps) {
       email: "",
       mobile: "",
       password: "",
+      role: role
     },
   });
 

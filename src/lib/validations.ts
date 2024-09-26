@@ -12,6 +12,7 @@ const CreateUserInputValidation = z.object({
   company: z.string().min(2, {
     message: "Company must be at least 2 characters.",
   }),
+  role: z.string().optional(),
 
   email: z
     .string()
@@ -32,7 +33,6 @@ const CreateUserInputValidation = z.object({
     .max(25, {
       message: "Password must be at most 25 characters.",
     }),
-    
 });
 
 const LoginUserInputValidation = z.object({
