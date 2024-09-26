@@ -4,7 +4,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { MoreHorizontal } from "lucide-react";
 
-interface TableRow {
+ interface TableRow {
   id: string;
   poId: string;
   RFPStatus: string;
@@ -105,7 +105,7 @@ export const columns2: ColumnDef<TableRow>[] = [
   { header: "Delivery Location", accessorKey: "deliveryLocation" },
   { header: "Delivery By Date", accessorKey: "deliveryByDate" },
   // { header: "Last Date to Respond", accessorKey: "lastDateToRespond" },
-  { header: "RFP Status", accessorKey: "RFPStatus" },
+  { header: "RFP Status", accessorKey: "rfpStatus" },
   {
     id: "actions",
     cell: ({ row }) => {
@@ -128,7 +128,7 @@ export const columns2: ColumnDef<TableRow>[] = [
               )}`}
             >
               {" "}
-              <DropdownMenuItem> Create PO</DropdownMenuItem>{" "}
+              <DropdownMenuItem> Create Purchase Order</DropdownMenuItem>{" "}
             </Link>
             {/* <Link
               href={`/dashboard/finance/readpo?rfp=${encodeURIComponent(

@@ -45,7 +45,6 @@ const Page = () => {
     }
   }, [searchParams]);
 
-
   if (loading) return <Loader />;
   if (error) return <div>Error: {error}</div>;
 

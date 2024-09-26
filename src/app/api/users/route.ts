@@ -219,13 +219,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: Request) {
   const { id, email, password, name, role } = await request.json();
+
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const results = await db
-      .update(UserTable)
-      .set({
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
         email,
-        password: hashedPassword,
+        password, // Make sure to hash the password before saving it
         name,
         role,
       })

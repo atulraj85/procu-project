@@ -23,13 +23,13 @@ function formatRFPData(inputData: any[]) {
       email: approver.user.email,
       mobile: approver.user.mobile,
     })),
-
     products: rfp.rfpProducts.map((product: any) => ({
       id: product.product.id,
       name: product.product.name,
       modelNo: product.product.modelNo,
       quantity: product.quantity,
       rfpProductId: product.id,
+      description: product.product.specification,
     })),
     quotations: rfp.quotations.map((quotation: any) => ({
       id: quotation.id,
@@ -39,16 +39,23 @@ function formatRFPData(inputData: any[]) {
       created_at: quotation.created_at,
       updated_at: quotation.updated_at,
       vendor: quotation.vendor,
-      products: quotation?.vendorPricings.map((pricing: any) => ({
-        id: pricing.rfpProduct.product.id,
-        rfpProductId: pricing.rfpProduct.id,
-        name: pricing.rfpProduct.product.name,
-        modelNo: pricing.rfpProduct.product.modelNo,
-        quantity: pricing.rfpProduct.quantity,
-        price: pricing.price,
-        GST: pricing.GST,
-      })),
-      otherCharges: quotation.otherCharges || [],
+      products: [
+        ...quotation?.vendorPricings.map((pricing: any) => ({
+          id: pricing.rfpProduct.product.id,
+          rfpProductId: pricing.rfpProduct.id,
+          name: pricing.rfpProduct.product.name,
+          modelNo: pricing.rfpProduct.product.modelNo,
+          quantity: pricing.rfpProduct.quantity,
+          price: pricing.price,
+          description: pricing.rfpProduct.product.specification,
+          gst: pricing.GST,
+          type: "product", 
+        })),
+        ...(quotation.otherCharges || []).map((charge: any) => ({
+          ...charge,
+          type: "otherCharge",
+        })),
+      ],
       supportingDocuments: quotation.supportingDocuments || [],
     })),
     createdBy: {
@@ -145,9 +152,9 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 modelNo: true,
+                specification: true, // Ensure this is included
               },
             },
-            // description: true, TODO
             quantity: true,
           },
         },
@@ -186,9 +193,9 @@ export async function GET(request: NextRequest) {
                         id: true,
                         name: true,
                         modelNo: true,
+                        specification: true, // Ensure this is included
                       },
                     },
-                    // description: true, TODO
                     quantity: true,
                   },
                 },
@@ -201,7 +208,6 @@ export async function GET(request: NextRequest) {
                 gst: true,
               },
             },
-
             supportingDocuments: {
               select: {
                 documentName: true,
@@ -210,7 +216,6 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-
         user: {
           select: {
             name: true,

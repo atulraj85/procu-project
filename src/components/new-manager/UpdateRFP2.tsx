@@ -1,5 +1,5 @@
 // Step 1: Define Types
-
+"use client";
 import React, { useState, useEffect, useCallback, ChangeEvent } from "react";
 import {
   useForm,
@@ -8,14 +8,13 @@ import {
   useWatch,
   Control,
   UseFormSetValue,
-  useController,
 } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, Plus, X } from "lucide-react";
+import { AlertCircle, Loader2, Plus, PlusIcon, X } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -41,6 +40,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
+import { toast } from "../ui/use-toast";
 
 // Add quotation ref number (Quotation table)
 
@@ -217,99 +218,124 @@ const VendorSelector = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Vendor Details</CardTitle>
+        <div className="flex">
+          <CardTitle className="text-lg">Vendor Details</CardTitle>
+        </div>
       </CardHeader>
       <CardContent>
-        <Input
-          disabled={disableVendorSearch}
-          className="w-1/2"
-          type="text"
-          placeholder="Search Vendors..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-        />
-        {error && <div className="text-red-500">{error}</div>}
-        {fetchedVendors.length > 0 && (
-          <div className="mt-2">
-            <h3 className="font-semibold">Fetched Vendors:</h3>
-            <ul>
-              {fetchedVendors.map((vendor) => (
-                <li
-                  key={vendor.id}
-                  className="py-1 cursor-pointer hover:bg-gray-200"
-                  onClick={() => {
-                    addVendor(vendor);
-                    setValue(`quotations.${index}.vendorId`, vendor.id);
-                    setFetchedVendors([]);
-                    setError(null);
-                  }}
-                >
-                  {vendor.companyName} | {vendor.email}
-                </li>
-              ))}
-            </ul>
+        <div className="flex justify-between">
+          <div className="w-[70%]">
+            {error && <div className="text-red-500">{error}</div>}
+            {approvedVendor && (
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Vendor Name
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.companyName}
+                    placeholder="Name"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Email
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.email}
+                    placeholder="Email"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    Phone
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.mobile}
+                    placeholder="Phone"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
+                    GSTIN
+                  </Label>
+                  <Input
+                    disabled
+                    value={approvedVendor.gstin}
+                    placeholder="GSTIN"
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
+                  <Button
+                    type="button"
+                    onClick={() => removeVendor()}
+                    variant="outline"
+                    size="icon"
+                    className="text-red-500"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {approvedVendor && (
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Vendor Name
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.companyName}
-                placeholder="Name"
-                className="flex-1"
-              />
+
+          <div className="w-[30%] pl-8">
+            <Input
+              className="border-2 border-green-700"
+              disabled={disableVendorSearch}
+              type="text"
+              placeholder="Search Vendors..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+            <div>
+              {fetchedVendors.length > 0 && (
+                <div className="mt-2">
+                  <h3 className="font-semibold">Fetched Vendors:</h3>
+                  <ul>
+                    {fetchedVendors.map((vendor) => (
+                      <li
+                        key={vendor.id}
+                        className="py-1 cursor-pointer hover:bg-gray-200"
+                        onClick={() => {
+                          addVendor(vendor);
+                          setValue(`quotations.${index}.vendorId`, vendor.id);
+                          setFetchedVendors([]);
+                          setError(null);
+                        }}
+                      >
+                        {vendor.companyName} | {vendor.email}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Email
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.email}
-                placeholder="Email"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                Phone
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.mobile}
-                placeholder="Phone"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                GSTIN
-              </Label>
-              <Input
-                disabled
-                value={approvedVendor.gstin}
-                placeholder="GSTIN"
-                className="flex-1"
-              />
-            </div>
-            <div className="flex flex-col">
-              <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
-              <Button
-                type="button"
-                onClick={() => removeVendor()}
-                variant="outline"
-                size="icon"
-                className="text-red-500"
+
+            {disableVendorSearch && (
+              <Alert
+                variant="default"
+                className="mt-2 border-orange-500 text-orange-500"
               >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+                <AlertCircle className="h-4 w-4" color="orange" />
+                <AlertTitle>Warning</AlertTitle>
+                <AlertDescription>
+                  You need to remove the current vendor first to modify existing
+                  vendor details.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
     </Card>
   );
@@ -323,12 +349,14 @@ const ProductList = ({
   index,
   getValues,
   setValue,
+  setErrors,
 }: {
   products: Product[];
   control: any;
   index: number;
   getValues: any;
   setValue: any;
+  setErrors: (error: string) => void; // New prop type
 }) => {
   const { fields, replace } = useFieldArray({
     control,
@@ -437,52 +465,73 @@ const ProductList = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Products</CardTitle>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-2">
-          <div className="grid grid-cols-7 gap-2 mb-2">
+    <div>
+      <div className="space-y-4">
+        <div className="flex space-x-4">
+          <div className="w-1/6">
             <Label>Name</Label>
-            <Label>Model No.</Label>
-            <Label>Quantity</Label>
-            <Label>Unit Price</Label>
-            <Label>GST</Label>
-            <Label>Total (Without GST)</Label>
-            <Label>Total (With GST)</Label>
           </div>
-
-          {loading ? (
-            <>Fetching Data</>
-          ) : (
-            fields.map((field, productIndex) => (
-              <div key={field.id} className="grid grid-cols-7 gap-2 m-2">
+          <div className="w-1/4">
+            <Label>Product Description</Label>
+          </div>
+          <div className="w-1/12 text-center">
+            <Label>Qty.</Label>
+          </div>
+          <div className="w-1/6 text-center">
+            <Label>Unit Price</Label>
+          </div>
+          <div className="w-1/12 text-center">
+            <Label>GST%</Label>
+          </div>
+          <div className="w-1/6 text-right">
+            <Label>Taxable Amount (INR)</Label>
+          </div>
+          <div className="w-1/6 text-right">
+            <Label>Total (incl. GST) (INR)</Label>
+          </div>
+        </div>
+        {loading ? (
+          <div>Fetching Data...</div>
+        ) : (
+          fields.map((field, productIndex) => (
+            <div key={field.id} className="flex space-x-4 items-start">
+              <div className="w-1/6">
                 <Input
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.name`
                   )}
                   readOnly
                 />
+              </div>
+              <div className="w-1/4">
+                <Textarea className="w-full" />
+              </div>
+              <div className="w-1/12">
                 <Input
-                  {...control.register(
-                    `quotations.${index}.products.${productIndex}.modelNo`
-                  )}
-                  readOnly
-                />
-                <Input
+                  type="number"
+                  className="text-center"
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.quantity`
                   )}
-                  readOnly
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    setValue(
+                      `quotations.${index}.products.${productIndex}.quantity`,
+                      value
+                    );
+                    updateProductTotals(productIndex);
+                  }}
                 />
+              </div>
+              <div className="w-1/6">
                 <Controller
                   name={`quotations.${index}.products.${productIndex}.unitPrice`}
                   control={control}
                   render={({ field }) => (
                     <Input
                       type="number"
+                      step="0.01"
+                      className="text-right"
                       {...field}
                       onChange={(e) => {
                         field.onChange(parseFloat(e.target.value));
@@ -491,6 +540,8 @@ const ProductList = ({
                     />
                   )}
                 />
+              </div>
+              <div className="w-1/12">
                 <Controller
                   name={`quotations.${index}.products.${productIndex}.gst`}
                   control={control}
@@ -503,7 +554,7 @@ const ProductList = ({
                       value={field.value}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select GST" />
+                        <SelectValue placeholder="GST" />
                       </SelectTrigger>
                       <SelectContent>
                         {["NILL", "0", "3", "5", "12", "18", "28"].map(
@@ -517,7 +568,10 @@ const ProductList = ({
                     </Select>
                   )}
                 />
+              </div>
+              <div className="w-1/6">
                 <Input
+                  className="text-right"
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
                   )}
@@ -530,7 +584,10 @@ const ProductList = ({
                     ) || 0
                   ).toFixed(2)}
                 />
+              </div>
+              <div className="w-1/6">
                 <Input
+                  className="text-right"
                   {...control.register(
                     `quotations.${index}.products.${productIndex}.totalPriceWithGST`
                   )}
@@ -544,11 +601,12 @@ const ProductList = ({
                   ).toFixed(2)}
                 />
               </div>
-            ))
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            </div>
+          ))
+        )}
+        {error && <div className="text-red-500">{error}</div>}
+      </div>
+    </div>
   );
 };
 
@@ -594,98 +652,101 @@ const OtherChargesList = ({
 
   return (
     <div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Other Charges (If any)</CardTitle>
-        </CardHeader>
+      <hr />
+      <div>
+        <CardTitle className="text-lg">Other Charges (If any)</CardTitle>
 
-        <CardContent>
-          <div className="grid grid-cols-4 gap-2 mb-2">
-            <Label>Name</Label>
-            <Label>GST</Label>
-            <Label>Unit Price</Label>
-          </div>
-          {fields.map((field, chargeIndex) => (
-            <div className="space-y-2 m-2" key={field.id}>
-              <div className="grid grid-cols-4 gap-2">
-                <Input
-                  {...control.register(
-                    `quotations.${index}.otherCharges.${chargeIndex}.name`
-                  )}
-                />
-                <Controller
-                  name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select GST" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["NILL", "0", "3", "5", "12", "18", "28"].map(
-                          (gst) => (
-                            <SelectItem key={gst} value={gst}>
-                              {gst}
-                            </SelectItem>
-                          )
-                        )}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                <Input
-                  type="number"
-                  {...control.register(
-                    `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
-                  )}
-                />
+        <div className="flex justify-between">
+          <div className="grid grid-cols-1">
+            <div className="grid grid-cols-4 gap-2 mb-2">
+              <Label>Name</Label>
+              <Label>GST</Label>
+              <Label>Unit Price</Label>
+            </div>
+            {fields.map((field, chargeIndex) => (
+              <div className="space-y-2 mb-2" key={field.id}>
+                <div className="grid grid-cols-4 gap-2">
+                  <Input
+                    {...control.register(
+                      `quotations.${index}.otherCharges.${chargeIndex}.name`
+                    )}
+                  />
+                  <Controller
+                    name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select GST" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                            (gst) => (
+                              <SelectItem key={gst} value={gst}>
+                                {gst}
+                              </SelectItem>
+                            )
+                          )}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <Input
+                    type="number"
+                    {...control.register(
+                      `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
+                    )}
+                  />
 
-                <div className="flex flex-col">
-                  <Label className="font-bold text-[16px] text-slate-700"></Label>
-                  <Button
-                    type="button"
-                    onClick={() => remove(chargeIndex)}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div className="flex flex-col">
+                    <Label className="font-bold text-[16px] text-slate-700"></Label>
+                    <Button
+                      type="button"
+                      onClick={() => remove(chargeIndex)}
+                      variant="outline"
+                      size="icon"
+                      className="text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           <Button
             type="button"
-            className="bg-primary mt-2"
+            className="bg-primary"
             onClick={() => {
               append({ name: "", gst: "NILL", unitPrice: 0 });
               updateGlobalFormData();
             }}
           >
-            Add Other Charge
+            <PlusIcon />
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
-// Step 5: Create Supporting Documents List Component
-import { Eye } from "lucide-react";
 
+// Step 5: Create Supporting Documents List Component
 const SupportingDocumentsList = ({
   control,
   index,
   setValue,
   files,
   setFiles,
-  getValue,
+  getValues,
 }: {
-  control: Control<FormData>;
+  control: Control<any>;
   index: number;
-  setValue: UseFormSetValue<FormData>;
-  getValue: any;
+  setValue: UseFormSetValue<any>;
+  getValues: any;
   files: { [key: string]: File };
   setFiles: React.Dispatch<React.SetStateAction<{ [key: string]: File }>>;
 }) => {
@@ -694,21 +755,16 @@ const SupportingDocumentsList = ({
     name: `quotations.${index}.supportingDocuments`,
   });
 
-  const quotation = useWatch({
-    control,
-    name: `quotations.${index}`,
-  });
-
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     docIndex: number
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      const documentName = getValue(
+      const documentName = getValues(
         `quotations.${index}.supportingDocuments.${docIndex}.name`
       );
-      const fileKey = `${getValue(
+      const fileKey = `${getValues(
         `quotations.${index}.vendorId`
       )}/${documentName}`;
       setFiles((prevFiles) => ({
@@ -722,8 +778,29 @@ const SupportingDocumentsList = ({
     }
   };
 
-  const handlePreview = (location: string) => {
-    window.open(`/${location}`, "_blank");
+  const handleDelete = (docIndex: number) => {
+    // Remove the document from the fields array
+    remove(docIndex);
+
+    // Remove the document from the form data
+    const currentDocs = getValues(`quotations.${index}.supportingDocuments`);
+    const updatedDocs = currentDocs.filter(
+      (_: any, i: number) => i !== docIndex
+    );
+    setValue(`quotations.${index}.supportingDocuments`, updatedDocs);
+
+    // Remove the file from the files state if it exists
+    const documentName = getValues(
+      `quotations.${index}.supportingDocuments.${docIndex}.name`
+    );
+    const fileKey = `${getValues(
+      `quotations.${index}.vendorId`
+    )}/${documentName}`;
+    setFiles((prevFiles) => {
+      const newFiles = { ...prevFiles };
+      delete newFiles[fileKey];
+      return newFiles;
+    });
   };
 
   return (
@@ -733,77 +810,75 @@ const SupportingDocumentsList = ({
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-4 gap-2 mb-2">
             <Label>Name</Label>
             <Label>File</Label>
-            <Label>Actions</Label>
           </div>
-          {fields.map((field, docIndex) => {
-            const location = getValue(
-              `quotations.${index}.supportingDocuments.${docIndex}.location`
-            );
-            const isFileUploaded = !!location;
 
-            return (
-              <div key={field.id} className="grid grid-cols-3 gap-2 m-2">
-                <Input
-                  {...control.register(
-                    `quotations.${index}.supportingDocuments.${docIndex}.name`
-                  )}
-                  placeholder="Enter document name"
-                />
-                <div>
-                  {isFileUploaded ? (
+          <div className="flex">
+            <div className="grid grid-cols-1 justify-between">
+              {fields.map((field, docIndex) => {
+                const location = getValues(
+                  `quotations.${index}.supportingDocuments.${docIndex}.location`
+                );
+                const isFileUploaded = !!location;
+
+                return (
+                  <div key={field.id} className="grid grid-cols-3 gap-2">
                     <Input
-                      type="text"
-                      value={location}
-                      disabled
-                      className="bg-gray-100"
+                      {...control.register(
+                        `quotations.${index}.supportingDocuments.${docIndex}.name`
+                      )}
+                      placeholder="Enter document name"
                     />
-                  ) : (
-                    <Input
-                      type="file"
-                      onChange={(e) => handleFileChange(e, docIndex)}
-                    />
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  {isFileUploaded && (
-                    <Button
-                      type="button"
-                      onClick={() => handlePreview(location)}
-                      variant="outline"
-                      size="icon"
-                      className="text-blue-500"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    type="button"
-                    onClick={() => remove(docIndex)}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-          <Button
-            type="button"
-            className="bg-primary mt-2"
-            onClick={() => append({ name: "", fileName: "" })}
-          >
-            Add Supporting Document
-          </Button>
+                    <div>
+                      {isFileUploaded ? (
+                        <Input
+                          type="text"
+                          value={location}
+                          disabled
+                          className="bg-gray-100"
+                        />
+                      ) : (
+                        <Input
+                          type="file"
+                          onChange={(e) => handleFileChange(e, docIndex)}
+                        />
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="flex flex-col">
+                        <Label className="font-bold text-[16px] text-slate-700"></Label>
+                        <Button
+                          type="button"
+                          onClick={() => handleDelete(docIndex)}
+                          variant="outline"
+                          size="icon"
+                          className="text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <Button
+              type="button"
+              className="bg-primary"
+              onClick={() => append({ name: "", fileName: "" })}
+            >
+              <PlusIcon />
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 };
+
 // Step 6: Create Total Component
 interface TotalComponentProps {
   control: Control<any>;
@@ -874,33 +949,15 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   }, [quotation, setValue, index]);
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Total</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label>Total Without GST</Label>
-            {/* <Input
-              value={quotation.total?.withoutGST?.toFixed(2) || "0.00"}
-              readOnly
-            />{" "} */}
-            <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
-          </div>
-          <div>
-            <Label>Total With GST</Label>
-            {/* <Input
-              value={quotation.total?.withGST?.toFixed(2) || "0.00"}
-              readOnly
-            /> */}
-            <Input
-              value={(quotation.total?.withGST || 0).toFixed(2)}
-              readOnly
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 gap-2 p-2 bg-green-200 rounded">
+      <div>
+        <Label>Taxable Amount (INR)</Label>
+        <Input value={quotation.total?.withoutGST || "0.00"} readOnly />
+      </div>
+      <div>
+        <Label>Total (incl. GST) (INR)</Label>
+        <Input value={(quotation.total?.withGST || 0).toFixed(2)} readOnly />
+      </div>
     </div>
   );
 };
@@ -971,8 +1028,8 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
-  console.log("RFPUpdateForm - Received rfpId:", rfpId);
-  console.log("RFPUpdateForm - Received initialData:", initialData);
+  // console.log("RFPUpdateForm - Received rfpId:", rfpId);
+  // console.log("RFPUpdateForm - Received initialData:", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -989,6 +1046,7 @@ export default function RFPUpdateForm({
   const [showCheckbox, setShowCheckbox] = useState(true);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const router = useRouter();
 
   const { control, handleSubmit, setValue, getValues } = useForm<any>({
     defaultValues: {
@@ -1003,26 +1061,30 @@ export default function RFPUpdateForm({
         vendor: quotation.vendor,
         totalAmount: quotation.totalAmount,
         totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-        products: quotation.products.map((product: any) => ({
-          id: product.id,
-          rfpProductId: product.rfpProductId,
-          name: product.name,
-          modelNo: product.modelNo,
-          quantity: product.quantity,
-          unitPrice: parseFloat(product.price),
-          gst: product.GST.toString(),
-          totalPriceWithoutGST: parseFloat(product.price) * product.quantity,
-          totalPriceWithGST:
-            parseFloat(product.price) *
-            product.quantity *
-            (1 + product.GST / 100),
-        })),
-        otherCharges: quotation.otherCharges.map((charge: any) => ({
-          id: charge.id,
-          name: charge.name,
-          unitPrice: parseFloat(charge.price),
-          gst: charge.gst,
-        })),
+        products: quotation.products
+          .filter((product: any) => product.type === "product")
+          .map((product: any) => ({
+            id: product.id,
+            rfpProductId: product.rfpProductId,
+            name: product.name,
+            modelNo: product.modelNo,
+            quantity: product.quantity,
+            unitPrice: parseFloat(product.price),
+            gst: product.gst.toString(),
+            totalPriceWithoutGST: parseFloat(product.price) * product.quantity,
+            totalPriceWithGST:
+              parseFloat(product.price) *
+              product.quantity *
+              (1 + product.GST / 100),
+          })),
+        otherCharges: quotation.products
+          .filter((product: any) => product.type === "otherCharge")
+          .map((charge: any) => ({
+            id: charge.id,
+            name: charge.name,
+            unitPrice: parseFloat(charge.price),
+            gst: charge.gst,
+          })),
         total: {
           withGST: parseFloat(quotation.totalAmount),
           withoutGST: parseFloat(quotation.totalAmountWithoutGST),
@@ -1064,12 +1126,68 @@ export default function RFPUpdateForm({
     }
   };
 
+  const [errors, setErrors] = useState<{
+    [key: string]: string;
+  }>({});
+
+  const validateForm = (data: FormData): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    // Validate preferred vendor
+    if (!preferredVendorId) {
+      newErrors.preferredVendor = "You must select a preferred quotation.";
+    }
+
+    // Validate reference numbers
+    fields.forEach((_, index) => {
+      const refNo = getValues(`quotations.${index}.refNo`);
+      if (!refNo || refNo.trim() === "") {
+        newErrors[`quotations.${index}.refNo`] =
+          "Reference number is required.";
+      }
+    });
+
+    // Validate products
+    fields.forEach((_, quotationIndex) => {
+      const products = getValues(`quotations.${quotationIndex}.products`);
+      products.forEach((product: any, productIndex: number) => {
+        if (!product.quantity) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.quantity`
+          ] = `Quantity at Quotataion ${
+            quotationIndex + 1
+          } must be a positive integer.`;
+          console.log("here");
+        }
+        if (product.unitPrice <= 0) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.unitPrice`
+          ] = `Unit price at Quotataion ${
+            quotationIndex + 1
+          } must be a positive integer.`;
+        }
+        if (!["NILL", "0", "3", "5", "12", "18", "28"].includes(product.gst)) {
+          newErrors[
+            `quotations.${quotationIndex}.products.${productIndex}.gst`
+          ] = "Invalid GST value.";
+        }
+      });
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
     setError(null);
     setSuccess(false);
 
-    console.log("Text data to be sent:", data);
+    if (!validateForm(data)) {
+      setError("Validation error!");
+    }
+
+    // console.log("Text data to be sent:", data);
 
     try {
       const formData = new FormData();
@@ -1081,14 +1199,14 @@ export default function RFPUpdateForm({
       formData.append("data", serializedData);
       formData.append("data", serializedData);
 
-      console.log(files);
+      // console.log(files);
 
       // Append files to formData
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
 
-      console.log("FormData to be sent:", Object.fromEntries(formData));
+      // console.log("FormData to be sent:", Object.fromEntries(formData));
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
@@ -1096,12 +1214,18 @@ export default function RFPUpdateForm({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Could not update quotations!`);
       }
 
       const result = await response.json();
-      console.log("RFP updated successfully:", result);
+      // console.log("RFP updated successfully:", result);
       setSuccess(true);
+
+      toast({
+        title: "🎉 Quotation Submitted!",
+        description: response.ok,
+      });
+      router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
       setError(
@@ -1127,7 +1251,6 @@ export default function RFPUpdateForm({
             </Button>
           </Link>
         </CardHeader>
-
         <CardContent>
           {fields.map((field, index) => {
             const quotation = getValues(`quotations.${index}`);
@@ -1143,11 +1266,19 @@ export default function RFPUpdateForm({
                   <AccordionTrigger>Quotation {index + 1}</AccordionTrigger>
 
                   <AccordionContent>
-                    <div className="m-2">
-                      <Card className="w-1/2">
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            <div className="ml-2 mb-2 flex flex-row gap-1 items-center">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          <div className="flex flex-row items-center justify-between gap-2 mb-2">
+                            <div className="w-1/4">
+                              <Label>Ref No.</Label>
+                              <Input
+                                {...control.register(
+                                  `quotations.${index}.refNo`
+                                )}
+                              />
+                            </div>
+                            <div className="flex flex-row items-center gap-2">
                               <Checkbox
                                 checked={preferredVendorIndex === index}
                                 disabled={
@@ -1168,34 +1299,34 @@ export default function RFPUpdateForm({
                                   }
                                 }}
                               />
-                              <Label className="font-bold text-[16px] text-slate-700">
-                                Preferred Quote
-                              </Label>
+                              <div className="flex flex-col gap-1">
+                                <Label className="font-bold text-[16px] text-green-700">
+                                  Preferred Quote
+                                </Label>
+                                {preferredVendorIndex === index && (
+                                  <Input
+                                    className="mb-2"
+                                    placeholder="Reason for preferring this vendor"
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                  />
+                                )}
+                              </div>
                             </div>
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {preferredVendorIndex === index && (
-                            <div>
-                              <Textarea
-                                className="mb-2"
-                                placeholder="Reason for preferring this vendor"
-                                value={reason}
-                                onChange={(e) => setReason(e.target.value)}
+
+                            <div className="w-1/3">
+                              <TotalComponent
+                                setValue={setValue}
+                                control={control}
+                                index={index}
                               />
                             </div>
-                          )}
-                          <div className="w-1/2">
-                            <Label>Ref No.</Label>
-                            <Input
-                              {...control.register(`quotations.${index}.refNo`)}
-                            />
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
 
-                    <div className="m-2">
+                    <div className="my-2">
                       <VendorSelector
                         setValue={setValue}
                         index={index}
@@ -1204,54 +1335,57 @@ export default function RFPUpdateForm({
                       />
                     </div>
 
-                    <div className="m-2">
-                      <ProductList
-                        products={
-                          quotation.products.length === 0
-                            ? initialData.products
-                            : quotation.products
-                        }
-                        setValue={setValue}
-                        getValues={getValues}
-                        control={control}
-                        index={index}
-                      />
-                    </div>
+                    <Card className="my-2">
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Products / Services Details
+                        </CardTitle>
+                      </CardHeader>
 
-                    <OtherChargesList
+                      <CardContent>
+                        <div className="mb-2">
+                          <ProductList
+                            setErrors={(error) => setError(error)} // Pass the error handler
+                            products={
+                              quotation.products.length === 0
+                                ? initialData.products
+                                : quotation.products
+                            }
+                            setValue={setValue}
+                            getValues={getValues}
+                            control={control}
+                            index={index}
+                          />
+                        </div>
+
+                        <OtherChargesList
+                          control={control}
+                          index={index}
+                          formData={FormData}
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <SupportingDocumentsList
                       control={control}
                       index={index}
-                      formData={FormData}
+                      setValue={setValue}
+                      files={files}
+                      setFiles={setFiles}
+                      getValues={getValues}
                     />
 
-                    <div className="m-2">
-                      <TotalComponent
-                        setValue={setValue}
-                        control={control}
-                        index={index}
-                      />
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        onClick={() => handleDeleteClick(index)}
+                        variant="outline"
+                        size="icon"
+                        className="text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <div className="m-2">
-                      <SupportingDocumentsList
-                        control={control}
-                        index={index}
-                        setValue={setValue}
-                        files={files}
-                        setFiles={setFiles}
-                        getValue={getValues}
-                      />
-                    </div>
-
-                    <Button
-                      type="button"
-                      onClick={() => handleDeleteClick(index)}
-                      variant="outline"
-                      size="icon"
-                      className="text-red-500"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -1312,6 +1446,18 @@ export default function RFPUpdateForm({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {Object.keys(errors).length > 0 && (
+        <div>
+          {Object.entries(errors).map(([key, error]) => (
+            <Alert key={key} variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ))}
+        </div>
+      )}
+
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>

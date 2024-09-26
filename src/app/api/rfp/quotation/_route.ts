@@ -11,6 +11,12 @@ function isValidUUID(uuid: string) {
   return uuidRegex.test(uuid);
 }
 
+interface SupportingDocument {
+  documentType: string;
+  documentName: string;
+  location: string;
+}
+
 export async function PUT(request: NextRequest) {
   console.log("PUT request started");
   try {
@@ -51,7 +57,6 @@ export async function PUT(request: NextRequest) {
         }
 
         return {
-          // id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
           vendorId,
           refNo,
           totalAmount: new Prisma.Decimal(total.withGST),
@@ -98,10 +103,6 @@ export async function PUT(request: NextRequest) {
 
       await deleteExistingRecords(existingRFP.quotations);
 
-      // insert Quotate
-      // delete quotation
-      // updaate quotation
-
       return prisma.rFP.update({
         where: { id },
         data: {
@@ -124,7 +125,7 @@ export async function PUT(request: NextRequest) {
                   },
                   supportingDocuments: {
                     create: q.supportingDocuments.create.filter(
-                      (doc) => doc !== null
+                      (doc: SupportingDocument | null) => doc !== null
                     ),
                   },
                 },
@@ -141,7 +142,7 @@ export async function PUT(request: NextRequest) {
                   },
                   supportingDocuments: {
                     create: q.supportingDocuments.create.filter(
-                      (doc) => doc !== null
+                      (doc: SupportingDocument | null) => doc !== null
                     ),
                   },
                 },

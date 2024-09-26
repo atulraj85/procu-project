@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Loader from "../shared/Loader";
 import { DataTable } from "../Table/data-table";
 import { columns1 } from "../Table/columns";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface TableRow {
   rfpId: string;
@@ -18,27 +19,15 @@ const Dashboard = () => {
   const [status, setStatus] = useState<'OPEN' | 'COMPLETED' | 'DRAFT'>('DRAFT');
   const [content, setContent] = useState<TableRow[]>([]);
   const [title, setTitle] = useState("OPEN RFPs");
-  const [loading, setLoading] = useState(true); // Loading state
-
-  const headers = [
-    { key: "rfpId", header: "RFP ID" },
-    { key: "requirementType", header: "Requirement Type" },
-    { key: "dateOfOrdering", header: "Date of Ordering" },
-    { key: "deliveryLocation", header: "Delivery Location" },
-    { key: "deliveryByDate", header: "Delivery By Date" },
-    { key: "lastDateToRespond", header: "Last Date to Respond" },
-    { key: "rfpStatus", header: "RFP Status" },
-  ];
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-    setLoading(true); // Set loading to true before fetching data
+    setLoading(true);
     try {
       const response = await fetch('/api/rfp');
       const data = await response.json();
-      // console.log("Fetched data:", data); // Log fetched data
 
-      // Convert data to fit TableRow format and filter based on status
-      const formattedData = data.map((item: any) => ({
+      const formattedData: TableRow[] = data.map((item: any) => ({
         rfpId: item.rfpId,
         requirementType: item.requirementType,
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
@@ -48,7 +37,6 @@ const Dashboard = () => {
         rfpStatus: item.rfpStatus,
       }));
 
-      // Filter based on `status` state
       const filteredData = formattedData.filter((item: { rfpStatus: string; }) =>
         status === 'OPEN' ? item.rfpStatus === 'PENDING' :
         status === 'COMPLETED' ? item.rfpStatus === 'COMPLETED' :
@@ -57,10 +45,10 @@ const Dashboard = () => {
       );
 
       setContent(filteredData);
-      setLoading(false); // Set loading to false after data is set
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setLoading(false); // Ensure loading is false if there's an error
+      setLoading(false);
     }
   };
 
@@ -69,7 +57,7 @@ const Dashboard = () => {
   }, [status]);
 
   const setData = () => {
-    fetchData(); // Fetch data when the component mounts or when `status` changes
+    fetchData();
 
     switch (status) {
       case 'OPEN':
@@ -84,21 +72,18 @@ const Dashboard = () => {
     }
   };
 
+  // Explicitly type columns1 as ColumnDef<TableRow>[]
+  const typedColumns: ColumnDef<TableRow>[] = columns1 as ColumnDef<TableRow>[];
+
   return (
     <div className="flex flex-col w-full">
       <div className="flex items-center justify-evenly w-full">
         <div className="flex justify-between w-full  ">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          {/* <Link
-            href={`/company/request-product`}
-            className="bg-blue-700 hover:bg-blue-400 py-2 px-4 text-white"
-          >
-            Create RFP
-          </Link> */}
         </div>
       </div>
       <div className="flex py-5 gap-4">
-      <div
+        <div
           onClick={() => setStatus('DRAFT')}
           className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
             status === 'DRAFT' && "bg-blue-800 text-white"
@@ -122,15 +107,14 @@ const Dashboard = () => {
         >
           Completed RFPs
         </div>
-       
       </div>
       <hr />
 
       <div className="w-full">
         {loading ? (
-<Loader/>        ) : (
-          // <Table title={title} titles={headers} content={content} />
-          <DataTable columns={columns1} data={content}/>
+          <Loader />
+        ) : (
+          <DataTable columns={typedColumns} data={content} />
         )}
       </div>
     </div>

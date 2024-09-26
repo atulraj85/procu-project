@@ -468,242 +468,238 @@ const VendorDetails: React.FC = () => {
   }, []);
 
   return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor List</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Sheet>
-            <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
-              Add Vendor
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetDescription>
-                  <form
-                    onSubmit={onSubmitVendorDetails}
-                    className="flex flex-wrap w-full  gap-7"
-                  >
-                    <div className="flex flex-col gap-3 w-60 text-base relative">
-                      <label className="font-bold">GSTN</label>
-                      <Input
-                        type="text"
-                        name="vendor_gstn"
-                        value={vendorData.vendor_gstn}
-                        onChange={handleChangeVendorDetails}
-                        placeholder="GSTN"
-                        className="p-2"
-                      />
+    <Card>
+      <CardHeader>
+        <CardTitle>Vendor List</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Sheet>
+          <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
+            Add Vendor
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetDescription>
+                <form
+                  onSubmit={onSubmitVendorDetails}
+                  className="flex flex-wrap w-full  gap-7"
+                >
+                  <div className="flex flex-col gap-3 w-60 text-base relative">
+                    <label className="font-bold">GSTN</label>
+                    <Input
+                      type="text"
+                      name="vendor_gstn"
+                      value={vendorData.vendor_gstn}
+                      onChange={handleChangeVendorDetails}
+                      placeholder="GSTN"
+                      className="p-2"
+                    />
 
+                    <button
+                      type="button"
+                      onClick={handleSearchGSTN}
+                      className="absolute right-0 top-14 transform -translate-y-1/2  px-1 py-1 rounded"
+                    >
+                      <IoIosSearch />
+                    </button>
+                    {errors.gstn && (
+                      <p className="text-red-500">{errors.gstn}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Company Name</label>
+                    <Input
+                      disabled
+                      type="text"
+                      name="company_name"
+                      value={vendorData.company_name}
+                      // onChange={handleChangeVendorDetails}
+                      placeholder="Company Name"
+                      className="p-2   "
+                    />
+
+                    {errors.company && (
+                      <p className="text-red-500">{errors.company}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">PAN Card</label>
+                    <Input
+                      disabled
+                      type="text"
+                      name="pan_card"
+                      value={vendorData.pan_card}
+                      // onChange={handleChangeVendorDetails}
+                      placeholder="PAN Card"
+                      className="p-2   "
+                    />
+                    {errors.pan && <p className="text-red-500">{errors.pan}</p>}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Address</label>
+                    <Input
+                      disabled
+                      type="text"
+                      name="address"
+                      value={vendorData.address}
+                      // onChange={handleChangeVendorDetails}
+                      placeholder="Address"
+                      className="p-2    "
+                    />
+                    {errors.address && (
+                      <p className="text-red-500">{errors.address}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Pin Code</label>
+                    <Input
+                      disabled
+                      type="text"
+                      name="pin_code"
+                      value={vendorData.pin_code}
+                      // onChange={handleChangeVendorDetails}
+                      placeholder="Pin Code"
+                      className="p-2   "
+                    />
+                    {errors.pin && <p className="text-red-500">{errors.pin}</p>}
+                  </div>
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Person Name</label>
+                    <Input
+                      type="text"
+                      name="person_name"
+                      value={vendorData.person_name}
+                      onChange={handleChangeVendorDetails}
+                      placeholder="Person Name"
+                      className="p-2   "
+                    />
+                    {errors.person && (
+                      <p className="text-red-500">{errors.person}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Contact No</label>
+                    <Input
+                      type="text"
+                      name="contact_no"
+                      value={vendorData.contact_no}
+                      onChange={handleChangeVendorDetails}
+                      placeholder="Contact No"
+                      className="p-2   "
+                    />
+                    {errors.contact && (
+                      <p className="text-red-500">{errors.contact}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Email</label>
+                    <Input
+                      type="text"
+                      name="email"
+                      value={vendorData.email}
+                      onChange={handleChangeVendorDetails}
+                      placeholder="Email"
+                      className="p-2   "
+                    />
+                    {errors.email && (
+                      <p className="text-red-500">{errors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">Website</label>
+                    <Input
+                      type="text"
+                      name="website"
+                      value={vendorData.website}
+                      onChange={handleChangeVendorDetails}
+                      placeholder="Website"
+                      className="p-2   "
+                    />
+                    {errors.website && (
+                      <p className="text-red-500">{errors.website}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">State</label>
+                    <Select
+                      onValueChange={handleStateChange}
+                      value={vendorData.state}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a state" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {states.map((state) => (
+                            <SelectItem key={state.value} value={state.value}>
+                              {state.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    {errors.state && (
+                      <p className="text-red-500">{errors.state}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-3 w-60 text-base">
+                    <label className="font-bold">City</label>
+                    <Select
+                      onValueChange={handleCityChange}
+                      value={vendorData.city}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a city" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {cities.map((city) => (
+                            <SelectItem key={city.value} value={city.value}>
+                              {city.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    {errors.city && (
+                      <p className="text-red-500">{errors.city}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button
+                      type="submit"
+                      className="bg-primary text-white mt-8 py-2 px-4 rounded"
+                    >
+                      {isEditing ? "Update Vendor" : "Add Vendor"}
+                    </button>
+                    {isEditing && (
                       <button
                         type="button"
-                        onClick={handleSearchGSTN}
-                        className="absolute right-0 top-14 transform -translate-y-1/2  px-1 py-1 rounded"
+                        onClick={handleCancelEdit}
+                        className="bg-gray-500 text-white py-2 px-4 rounded"
                       >
-                        <IoIosSearch />
+                        Cancel
                       </button>
-                      {errors.gstn && (
-                        <p className="text-red-500">{errors.gstn}</p>
-                      )}
-                    </div>
+                    )}
+                  </div>
+                </form>
+              </SheetDescription>
+            </SheetHeader>
+          </SheetContent>
+        </Sheet>
 
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Company Name</label>
-                      <Input
-                        disabled
-                        type="text"
-                        name="company_name"
-                        value={vendorData.company_name}
-                        // onChange={handleChangeVendorDetails}
-                        placeholder="Company Name"
-                        className="p-2   "
-                      />
-
-                      {errors.company && (
-                        <p className="text-red-500">{errors.company}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">PAN Card</label>
-                      <Input
-                        disabled
-                        type="text"
-                        name="pan_card"
-                        value={vendorData.pan_card}
-                        // onChange={handleChangeVendorDetails}
-                        placeholder="PAN Card"
-                        className="p-2   "
-                      />
-                      {errors.pan && (
-                        <p className="text-red-500">{errors.pan}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Address</label>
-                      <Input
-                        disabled
-                        type="text"
-                        name="address"
-                        value={vendorData.address}
-                        // onChange={handleChangeVendorDetails}
-                        placeholder="Address"
-                        className="p-2    "
-                      />
-                      {errors.address && (
-                        <p className="text-red-500">{errors.address}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Pin Code</label>
-                      <Input
-                        disabled
-                        type="text"
-                        name="pin_code"
-                        value={vendorData.pin_code}
-                        // onChange={handleChangeVendorDetails}
-                        placeholder="Pin Code"
-                        className="p-2   "
-                      />
-                      {errors.pin && (
-                        <p className="text-red-500">{errors.pin}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Person Name</label>
-                      <Input
-                        type="text"
-                        name="person_name"
-                        value={vendorData.person_name}
-                        onChange={handleChangeVendorDetails}
-                        placeholder="Person Name"
-                        className="p-2   "
-                      />
-                      {errors.person && (
-                        <p className="text-red-500">{errors.person}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Contact No</label>
-                      <Input
-                        type="text"
-                        name="contact_no"
-                        value={vendorData.contact_no}
-                        onChange={handleChangeVendorDetails}
-                        placeholder="Contact No"
-                        className="p-2   "
-                      />
-                      {errors.contact && (
-                        <p className="text-red-500">{errors.contact}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Email</label>
-                      <Input
-                        type="text"
-                        name="email"
-                        value={vendorData.email}
-                        onChange={handleChangeVendorDetails}
-                        placeholder="Email"
-                        className="p-2   "
-                      />
-                      {errors.email && (
-                        <p className="text-red-500">{errors.email}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">Website</label>
-                      <Input
-                        type="text"
-                        name="website"
-                        value={vendorData.website}
-                        onChange={handleChangeVendorDetails}
-                        placeholder="Website"
-                        className="p-2   "
-                      />
-                      {errors.website && (
-                        <p className="text-red-500">{errors.website}</p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">State</label>
-                      <Select
-                        onValueChange={handleStateChange}
-                        value={vendorData.state}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a state" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {states.map((state) => (
-                              <SelectItem key={state.value} value={state.value}>
-                                {state.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      {errors.state && (
-                        <p className="text-red-500">{errors.state}</p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-3 w-60 text-base">
-                      <label className="font-bold">City</label>
-                      <Select
-                        onValueChange={handleCityChange}
-                        value={vendorData.city}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a city" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {cities.map((city) => (
-                              <SelectItem key={city.value} value={city.value}>
-                                {city.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      {errors.city && (
-                        <p className="text-red-500">{errors.city}</p>
-                      )}
-                    </div>
-
-                    <div className="flex gap-4">
-                      <button
-                        type="submit"
-                        className="bg-primary text-white mt-8 py-2 px-4 rounded"
-                      >
-                        {isEditing ? "Update Vendor" : "Add Vendor"}
-                      </button>
-                      {isEditing && (
-                        <button
-                          type="button"
-                          onClick={handleCancelEdit}
-                          className="bg-gray-500 text-white py-2 px-4 rounded"
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                </SheetDescription>
-              </SheetHeader>
-            </SheetContent>
-          </Sheet>
-
-          <DataTable columns={columns} data={vendorArray} />
-        </CardContent>
-      </Card>
+        <DataTable columns={columns} data={vendorArray} />
+      </CardContent>
+    </Card>
   );
 };
 

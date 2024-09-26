@@ -16,6 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { IoEye, IoEyeOff } from "react-icons/io5";
 import * as z from "zod";
 import MainButton from "../common/MainButton";
 import { Button } from "../ui/button";
@@ -92,22 +93,30 @@ function LoginForm({ api }: any) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Password"
-                    {...field}
-                    className="h-[3.75rem] w-full rounded-large"
-                    startIcon="padlock"
-                    type="password"
-                    disabled={isPending}
-                  />
-                </FormControl>
-                <FormMessage />
-                <Button asChild size="sm" variant="link" className="px-0">
-                  <Link href="/auth/forgot-password">Forgot password?</Link>
-                </Button>
-              </FormItem>
+              <div className="relative">
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      placeholder="Password"
+                      {...field}
+                      className="h-[3.75rem] w-full rounded-large"
+                      startIcon="padlock"
+                      type="password"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  <Button asChild size="sm" variant="link" className="px-0">
+                    <Link href="/auth/forgot-password">Forgot password?</Link>
+                  </Button>
+                </FormItem>
+                <span
+                  className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? <IoEyeOff /> : <IoEye />}
+                </span>
+              </div>
             )}
           />
           <FormError message={error} />
