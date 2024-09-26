@@ -31,6 +31,7 @@ export async function PUT(
         password: hashedPassword,
         name,
         role,
+        updatedAt: new Date(),
       })
       .where(eq(UserTable.id, user.id))
       .returning();
