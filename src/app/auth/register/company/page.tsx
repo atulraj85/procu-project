@@ -115,6 +115,7 @@ const Company: React.FC = () => {
       } else {
         const response = await fetch(`/api/vendor/gst/${GST}`);
         const result = await response.json();
+        console.log(GST);
         
         console.log(result);
         if (result.flag) {
@@ -137,6 +138,7 @@ const Company: React.FC = () => {
       toast({
         title: "An error occurred while fetching vendor details.",
       });
+      console.log(error);
     }
     setLoader(false);
   };
@@ -308,7 +310,7 @@ const Company: React.FC = () => {
             </div>
 
             <div className="flex flex-col gap-3 w-60 text-base">
-              <label className="font-bold">Emial</label>
+              <label className="font-bold">Email</label>
               <Input
                 
                 type="email"
