@@ -16,18 +16,18 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
 
   const { email, name, password, company, mobile, role } = validation.data;
 
-  const existingUser = await findUserByEmail(email);
+  const existingUser = await findUserByEmail(email!);
   if (existingUser) {
     return { error: "User with this email already exists!" } as const;
   }
 
   // Retrieve companyId from the company table using findFirst
-  const companyRecord = await findCompanyByName(company);
+  const companyRecord = await findCompanyByName(company!);
   if (!companyRecord) {
     return { error: "Company not found!" } as const;
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password!, 10);
   await createUser({
     name,
     email,

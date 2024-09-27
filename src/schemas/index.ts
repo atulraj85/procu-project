@@ -1,5 +1,5 @@
 import { Role } from "@prisma/client";
-import { z } from "zod";
+import { string, z } from "zod";
 
 const emailSchema = z
   .string({ required_error: "Email is required!" })
@@ -39,7 +39,6 @@ const RoleEnum = z.enum(
     Role.ACCOUNTANT,
     Role.QUALITY_ASSURANCE,
     Role.USER,
-    Role.VENDOR,
   ],
   { invalid_type_error: "Invalid role!" }
 );
@@ -56,7 +55,7 @@ export const RegisterUserSchema = z.object({
     .string({ required_error: "Number is required!" })
     .min(1, { message: "Number is required!" })
     .min(10, { message: "Number must be at least 10 characters." }),
-  role: RoleEnum.optional(),
+  role: RoleEnum.optional() || string,
 });
 
 export const UpdateUserSchema = z.object({
