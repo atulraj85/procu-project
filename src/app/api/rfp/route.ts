@@ -1,10 +1,267 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { generateRFPId, rfpModel } from "@/lib/prisma";
+import {
+  ApproversListTable,
+  RFPProductTable,
+  RFPTable,
+} from "@/drizzle/schema";
+import { drizzleDB } from "@/lib/db";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
-import { vendorList } from "@/lib/sidebarLinks";
+import { generateRFPId } from "@/utils";
+import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+// Type Definitions
+type SortBy = keyof InferSelectModel<typeof RFPTable>;
+type SortDirection = "asc" | "desc";
+type WhereField = keyof InferSelectModel<typeof RFPTable>;
+
+const DEFAULT_SORTING_FIELD: SortBy = "id";
+const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+
+    console.log("Received search params:", Object.fromEntries(searchParams));
+
+    const sortBy: SortBy =
+      (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
+    const sortingOrder: SortDirection =
+      (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
+
+    if (!["asc", "desc"].includes(sortingOrder)) {
+      return NextResponse.json(
+        { error: "Invalid order value" },
+        { status: 400 }
+      );
+    }
+
+    // Construct where conditions
+    const whereConditions: SQL<unknown>[] = [];
+    searchParams.forEach((value, key) => {
+      if (key !== "sortBy" && key !== "order") {
+        if (key in RFPTable) {
+          whereConditions.push(eq(RFPTable[key as WhereField], value));
+        }
+      }
+    });
+
+    // Combine conditions using 'and'
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+    const records = await drizzleDB.query.RFPTable.findMany({
+      where: whereClause,
+      orderBy:
+        sortingOrder === "asc"
+          ? [asc(RFPTable[sortBy])]
+          : [desc(RFPTable[sortBy])],
+      columns: {
+        id: true,
+        rfpId: true,
+        requirementType: true,
+        dateOfOrdering: true,
+        deliveryLocation: true,
+        deliveryByDate: true,
+        rfpStatus: true,
+        preferredQuotationId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      with: {
+        approversLists: {
+          with: {
+            user: {
+              columns: {
+                name: true,
+                email: true,
+                mobile: true,
+              },
+            },
+          },
+        },
+        rfpProducts: {
+          columns: { id: true, quantity: true },
+          with: {
+            product: {
+              columns: {
+                id: true,
+                name: true,
+                modelNo: true,
+                specification: true, // Ensure this is included}
+              },
+            },
+          },
+        },
+        quotations: {
+          columns: {
+            id: true,
+            refNo: true,
+            totalAmount: true,
+            totalAmountWithoutGst: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          with: {
+            vendor: {
+              columns: {
+                id: true,
+                companyName: true,
+                email: true,
+                mobile: true,
+                address: true,
+                customerState: true,
+                customerCity: true,
+                country: true,
+                zip: true,
+                gstin: true,
+                pan: true,
+              },
+            },
+            vendorPricings: {
+              columns: { price: true, gst: true },
+              with: {
+                rfpProduct: {
+                  columns: { id: true, quantity: true },
+                  with: {
+                    product: {
+                      columns: {
+                        id: true,
+                        name: true,
+                        modelNo: true,
+                        specification: true, // Ensure this is included
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            otherCharges: {
+              columns: {
+                name: true,
+                price: true,
+                gst: true,
+              },
+            },
+            supportingDocuments: {
+              columns: {
+                documentName: true,
+                location: true,
+              },
+            },
+          },
+        },
+        user: {
+          columns: {
+            name: true,
+            email: true,
+            mobile: true,
+          },
+        },
+      },
+    });
+
+    console.log(`Found ${records.length} records`);
+
+    const formattedData = formatRFPData(records);
+    console.log("formattedData", formattedData);
+
+    return NextResponse.json(serializePrismaModel(formattedData));
+  } catch (error: unknown) {
+    console.error("Detailed error:", error);
+    return NextResponse.json(
+      { error: "Error fetching records", details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const {
+      requirementType,
+      dateOfOrdering,
+      deliveryLocation,
+      deliveryByDate,
+      userId,
+      rfpProducts,
+      approvers,
+      rfpStatus,
+    }: RequestBody = await request.json();
+
+    console.log(dateOfOrdering);
+
+    // Check if the user exists
+    const existingUser = await drizzleDB.query.UserTable.findFirst({
+      columns: { id: true },
+    });
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "User does not exist" },
+        { status: 404 }
+      );
+    }
+
+    // Validate the status
+    if (!Object.values(RFPStatus).includes(rfpStatus)) {
+      return NextResponse.json(
+        { error: `Invalid status value: ${rfpStatus}` },
+        { status: 400 }
+      );
+    }
+
+    // Generate RFP ID
+    const rfpId = await generateRFPId();
+
+    // Create RFP inside the transaction
+    const newRFP = await drizzleDB.transaction(async (tx) => {
+      // Create the RFP first
+      const results = await drizzleDB
+        .insert(RFPTable)
+        .values({
+          rfpId,
+          requirementType,
+          dateOfOrdering: new Date(),
+          deliveryLocation,
+          deliveryByDate: new Date(deliveryByDate),
+          userId,
+          rfpStatus,
+          updatedAt: new Date(),
+        })
+        .returning();
+      const createdRFP = results[0];
+
+      // Create RFP products and approvers
+      await Promise.all([
+        drizzleDB.insert(RFPProductTable).values(
+          rfpProducts.map((rfpProduct) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            quantity: rfpProduct.quantity,
+            productId: rfpProduct.productId, // Ensure this is the correct type
+            updatedAt: new Date(),
+          }))
+        ),
+        drizzleDB.insert(ApproversListTable).values(
+          approvers.map((approver) => ({
+            rfpId: createdRFP.id, // Use the ID of the created RFP
+            userId: approver.approverId,
+            approved: false,
+            updatedAt: new Date(),
+          }))
+        ),
+      ]);
+
+      return createdRFP;
+    });
+
+    return NextResponse.json({ data: newRFP }, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating RFP:", error);
+    return NextResponse.json(
+      { error: `Failed to create RFP: ${error.message}` },
+      { status: 500 }
+    );
+  }
+}
 
 function formatRFPData(inputData: any[]) {
   return inputData.map((rfp: any) => ({
@@ -64,270 +321,4 @@ function formatRFPData(inputData: any[]) {
       mobile: rfp.user.mobile,
     },
   }));
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = request.nextUrl;
-    const whereClause: Record<string, any> = {};
-    let orderByClause: Record<string, "asc" | "desc"> | undefined = undefined;
-    const validAttributes = [...rfpModel.attributes, "orderBy"];
-
-    console.log("Received search params:", Object.fromEntries(searchParams));
-
-    searchParams.forEach((value, key) => {
-      console.log(`Processing parameter: ${key} = ${value}`);
-      if (validAttributes.includes(key)) {
-        if (key === "orderBy") {
-          const parts = value.split(",");
-          let orderByField: string = rfpModel.attributes[0]; // Default to first attribute
-          let orderByDirection: "asc" | "desc" = "asc"; // Default to ascending
-
-          if (parts.length === 2) {
-            orderByField = parts[0];
-            orderByDirection =
-              parts[1].toLowerCase() === "desc" ? "desc" : "asc";
-          } else if (parts.length === 1) {
-            orderByDirection =
-              parts[0].toLowerCase() === "desc" ? "desc" : "asc";
-          }
-
-          console.log(
-            `OrderBy field: ${orderByField}, direction: ${orderByDirection}`
-          );
-
-          if (rfpModel.attributes.includes(orderByField)) {
-            orderByClause = {
-              [orderByField]: orderByDirection,
-            };
-            console.log(`Set orderByClause:`, orderByClause);
-          } else {
-            console.log(`Invalid orderBy field: ${orderByField}`);
-          }
-        } else if (key === "id") {
-          const ids = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
-        } else if (key === "state_id") {
-          const stateIds = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.state_id =
-            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
-        } else {
-          whereClause[key] = value;
-        }
-      } else {
-        console.log(`Ignoring invalid parameter: ${key}`);
-      }
-    });
-
-    const records = await prisma.rFP.findMany({
-      where: whereClause,
-      orderBy: orderByClause,
-      select: {
-        id: true,
-        rfpId: true,
-        requirementType: true,
-        dateOfOrdering: true,
-        deliveryLocation: true,
-        deliveryByDate: true,
-        rfpStatus: true,
-        preferredQuotationId: true,
-        created_at: true,
-        updated_at: true,
-        approversList: {
-          select: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-                mobile: true,
-              },
-            },
-          },
-        },
-        rfpProducts: {
-          select: {
-            id: true,
-            product: {
-              select: {
-                id: true,
-                name: true,
-                modelNo: true,
-                specification: true, // Ensure this is included
-              },
-            },
-            quantity: true,
-          },
-        },
-        quotations: {
-          select: {
-            id: true,
-            refNo: true,
-            totalAmount: true,
-            totalAmountWithoutGST: true,
-            created_at: true,
-            updated_at: true,
-            vendor: {
-              select: {
-                id: true,
-                companyName: true,
-                email: true,
-                mobile: true,
-                address: true,
-                customerState: true,
-                customerCity: true,
-                country: true,
-                zip: true,
-                gstin: true,
-                pan: true,
-              },
-            },
-            vendorPricings: {
-              select: {
-                price: true,
-                GST: true,
-                rfpProduct: {
-                  select: {
-                    id: true,
-                    product: {
-                      select: {
-                        id: true,
-                        name: true,
-                        modelNo: true,
-                        specification: true, // Ensure this is included
-                      },
-                    },
-                    quantity: true,
-                  },
-                },
-              },
-            },
-            otherCharges: {
-              select: {
-                name: true,
-                price: true,
-                gst: true,
-              },
-            },
-            supportingDocuments: {
-              select: {
-                documentName: true,
-                location: true,
-              },
-            },
-          },
-        },
-        user: {
-          select: {
-            name: true,
-            email: true,
-            mobile: true,
-          },
-        },
-      },
-    });
-
-    const formattedData = formatRFPData(records);
-    console.log("formattedData", formattedData);
-
-    console.log(`Found ${records.length} records`);
-
-    if (Object.keys(whereClause).length > 0 && records.length === 0) {
-      return NextResponse.json(
-        { error: `No records found matching the criteria` },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(serializePrismaModel(formattedData));
-  } catch (error: unknown) {
-    console.error("Detailed error:", error);
-    return NextResponse.json(
-      { error: "Error fetching records", details: (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const {
-      requirementType,
-      dateOfOrdering,
-      deliveryLocation,
-      deliveryByDate,
-      userId,
-      rfpProducts,
-      approvers,
-      rfpStatus,
-    }: RequestBody = await request.json();
-
-    console.log(dateOfOrdering);
-
-    // Check if the user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: "User does not exist" },
-        { status: 404 }
-      );
-    }
-
-    // Validate the status
-    if (!Object.values(RFPStatus).includes(rfpStatus)) {
-      return NextResponse.json(
-        { error: `Invalid status value: ${rfpStatus}` },
-        { status: 400 }
-      );
-    }
-
-    // Generate RFP ID
-    const rfpId = await generateRFPId();
-
-    // Create RFP inside the transaction
-    const newRFP = await prisma.$transaction(async (prisma) => {
-      // Create the RFP first
-      const createdRFP = await prisma.rFP.create({
-        data: {
-          rfpId,
-          requirementType,
-          dateOfOrdering: new Date(),
-          deliveryLocation,
-          deliveryByDate: new Date(deliveryByDate),
-          userId,
-          rfpStatus,
-        },
-      });
-
-      // Create RFP products and approvers
-      await Promise.all([
-        prisma.rFPProduct.createMany({
-          data: rfpProducts.map((rfpProduct) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            quantity: rfpProduct.quantity,
-            productId: rfpProduct.productId, // Ensure this is the correct type
-          })),
-        }),
-        prisma.approversList.createMany({
-          data: approvers.map((approver) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            userId: approver.approverId,
-            approved: false,
-          })),
-        }),
-      ]);
-
-      return createdRFP;
-    });
-
-    return NextResponse.json({ data: newRFP }, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating RFP:", error);
-    return NextResponse.json(
-      { error: `Failed to create RFP: ${error.message}` },
-      { status: 500 }
-    );
-  }
 }

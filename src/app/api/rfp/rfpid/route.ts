@@ -1,10 +1,9 @@
+import { generateRFPId } from "@/utils";
 import { NextRequest, NextResponse } from "next/server";
-import { generateRFPId } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
     const rfpid = await generateRFPId();
-
     return NextResponse.json(rfpid);
   } catch (error: unknown) {
     console.error("Detailed error:", error);
