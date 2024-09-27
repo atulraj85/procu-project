@@ -1,12 +1,17 @@
 import { z } from "zod";
 
+// Product Schema
 export const productSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Product name is required"),
   modelNo: z.string().min(1, "Model number is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   unitPrice: z.number().min(0, "Unit price must be non-negative"),
-  gst: z.enum(["NILL", "0", "3", "5", "12", "18", "28"]),
+  gst: z
+    .enum(["NILL", "0", "3", "5", "12", "18", "28"])
+    .refine((val) => val !== "NILL", {
+      message: "GST cannot be NILL",
+    }),
   totalPriceWithoutGST: z.number(),
   totalPriceWithGST: z.number(),
 });
@@ -16,7 +21,11 @@ export const otherChargeSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Charge name is required"),
   unitPrice: z.string().min(0, "Unit price must be non-negative"),
-  gst: z.enum(["NILL", "0", "3", "5", "12", "18", "28"]),
+  gst: z
+    .enum(["NILL", "0", "3", "5", "12", "18", "28"])
+    .refine((val) => val !== "NILL", {
+      message: "GST cannot be NILL",
+    }),
 });
 
 // Supporting Document Schema
@@ -35,13 +44,21 @@ export const quotationSchema = z.object({
   vendor: z.any(),
   totalAmount: z.number(),
   totalAmountWithoutGST: z.number(),
-  products: z.array(productSchema),
-  otherCharges: z.array(otherChargeSchema),
+  products: z.array(productSchema).refine((arr) => arr.length > 0, {
+    message: "At least one product is required",
+  }),
+  otherCharges: z.array(otherChargeSchema).refine((arr) => arr.length > 0, {
+    message: "At least one other charge is required",
+  }),
   total: z.object({
     withGST: z.number(),
     withoutGST: z.number(),
   }),
-  supportingDocuments: z.array(supportingDocumentSchema),
+  supportingDocuments: z
+    .array(supportingDocumentSchema)
+    .refine((arr) => arr.length > 0, {
+      message: "At least one supporting document is required",
+    }),
 });
 
 // RFP Schema
@@ -50,6 +67,7 @@ export const rfpSchema = z.object({
   rfpStatus: z.string(),
   preferredQuotationId: z.string().nullable(),
   preferredVendorId: z.string().optional().nullable(),
+  reason: z.string().min(10, "Please describe your reason thoroughly."),
   quotations: z
     .array(quotationSchema)
     .min(1, "At least one quotation is required")

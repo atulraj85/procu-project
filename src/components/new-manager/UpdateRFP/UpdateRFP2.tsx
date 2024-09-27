@@ -157,6 +157,7 @@ export default function RFPUpdateForm({
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
+      reason: "",
       // products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
@@ -171,6 +172,7 @@ export default function RFPUpdateForm({
             id: product.id,
             rfpProductId: product.rfpProductId,
             name: product.name,
+            description: product.description,
             modelNo: product.modelNo,
             quantity: product.quantity,
             unitPrice: parseFloat(product.price),
@@ -296,6 +298,70 @@ export default function RFPUpdateForm({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleSubmitReasonAndAddQuotation = async (
+    data: z.infer<typeof rfpSchema>
+  ) => {
+    // Logic to handle the submission of the form with the reason
+    console.log("Submitting reason and adding quotation:", data);
+    // You can call your API or perform any other actions here
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    // if (!validateForm(data)) {
+    //   setError("Validation error!");
+    // }
+
+    // console.log("Text data to be sent:", data);
+
+    try {
+      const formData = new FormData();
+      formData.append("rfpId", rfpId);
+      const serializedData = JSON.stringify({
+        ...data,
+        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+      });
+      formData.append("data", serializedData);
+      formData.append("data", serializedData);
+
+      // console.log(files);
+
+      // Append files to formData
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
+
+      // console.log("FormData to be sent:", Object.fromEntries(formData));
+
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Could not update quotations!`);
+      }
+
+      const result = await response.json();
+      // console.log("RFP updated successfully:", result);
+      setSuccess(true);
+
+      toast({
+        title: "🎉 Quotation Submitted!",
+        description: response.ok,
+      });
+      router.push("/dashboard/manager");
+    } catch (err) {
+      console.error("Error updating RFP:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
     setError(null);
@@ -353,6 +419,7 @@ export default function RFPUpdateForm({
       setIsLoading(false);
     }
   };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
@@ -484,7 +551,7 @@ export default function RFPUpdateForm({
 
                           {/* Product section */}
                           <CardContent>
-                            {/* <div className="mb-2">
+                            <div className="mb-2">
                               <ProductList
                                 errors={errors}
                                 products={
@@ -498,7 +565,7 @@ export default function RFPUpdateForm({
                                 index={index}
                                 globalFormData={globalFormData}
                               />
-                            </div> */}
+                            </div>
 
                             <OtherChargesList
                               errors={errors}
@@ -616,13 +683,23 @@ export default function RFPUpdateForm({
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
+
+          {errors?.reason && (
+            <p className="text-red-500 text-sm mt-1">{errors.reason.message}</p>
+          )}
+
           <Button
+            type="button" // Keep this as "button" to prevent form submission
             className="bg-primary"
             onClick={() => {
+              const formData = getValues(); // Get all form values
               if (reason) {
-                handleAddQuotation();
+                setValue("reason", reason);
+                handleSubmitReasonAndAddQuotation(formData);
+
                 setShowReasonPrompt(false);
                 setReason("");
+                // Call the function to handle the submission with reason and form data
               }
             }}
           >

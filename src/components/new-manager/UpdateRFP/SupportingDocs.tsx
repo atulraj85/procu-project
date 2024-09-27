@@ -99,6 +99,11 @@ const SupportingDocumentsList = ({
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
+          {errors?.quotations?.[index]?.supportingDocuments && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.quotations[index].supportingDocuments.message}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-4 gap-2 mb-2">

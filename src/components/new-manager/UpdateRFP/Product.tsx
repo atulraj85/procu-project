@@ -22,7 +22,6 @@ type Product = {
   totalPriceWithoutGST?: number;
   totalPriceWithGST?: number;
 };
-
 const ProductList = ({
   products,
   control,
@@ -45,19 +44,12 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  console.log("products", products);
-
-  if (products.length == 0) {
-    console.log("tes");
-    const data = getValues(`quotations.products`);
-    console.log(data);
-  }
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
+    setError(null);
 
     try {
       if (Array.isArray(products) && products.length > 0) {
@@ -67,12 +59,14 @@ const ProductList = ({
           modelNo: product.modelNo || "",
           quantity: product.quantity || 0,
           unitPrice: product.unitPrice || 0,
+          description: product.description || "",
           rfpProductId: product.rfpProductId || "",
           gst: product.gst || "NILL",
           totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
           totalPriceWithGST: product.totalPriceWithGST || 0,
         }));
 
+        // Use replace to set the products directly
         replace(mappedProducts);
 
         // Update global form data
@@ -87,7 +81,6 @@ const ProductList = ({
           globalFormData.set("quotations", JSON.stringify(quotations));
         }
       }
-      setError(null);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -95,7 +88,7 @@ const ProductList = ({
     } finally {
       setIsLoading(false);
     }
-  }, [products, replace, index]);
+  }, []);
 
   const calculateTotals = (
     unitPrice: number,
@@ -148,7 +141,7 @@ const ProductList = ({
         globalFormData.set("quotations", JSON.stringify(quotations));
       }
     },
-    [getValues, setValue, index]
+    [getValues, setValue, index, globalFormData]
   );
 
   return (
@@ -195,7 +188,7 @@ const ProductList = ({
             <div className="w-1/4">
               <Input
                 {...control.register(
-                  `quotations.${index}.products.${productIndex}.modelNo`
+                  `quotations.${index}.products.${productIndex}.description`
                 )}
               />
               {errors?.quotations?.[index]?.products?.[productIndex]

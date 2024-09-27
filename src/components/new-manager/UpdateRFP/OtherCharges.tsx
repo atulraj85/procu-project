@@ -13,14 +13,6 @@ import { X, PlusIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
-type OtherCharge = {
-  id: any;
-  price: any;
-  name: string;
-  gst: string;
-  unitPrice: number;
-};
-
 const OtherChargesList = ({
   control,
   index,
@@ -66,7 +58,11 @@ const OtherChargesList = ({
       <hr />
       <div>
         <CardTitle className="text-lg">Other Charges (If any)</CardTitle>
-
+        {errors?.quotations?.[index]?.otherCharges && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.quotations[index].otherCharges.message}
+          </p>
+        )}
         <div className="flex justify-between">
           <div className="grid grid-cols-1">
             <div className="grid grid-cols-4 gap-2 mb-2">
@@ -118,7 +114,7 @@ const OtherChargesList = ({
                         </Select>
                       )}
                     />
-                    {errors?.quotations?.[index]?.otherCharges[chargeIndex]
+                    {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]
                       ?.gst && (
                       <p className="text-red-500 text-sm mt-1">
                         {
