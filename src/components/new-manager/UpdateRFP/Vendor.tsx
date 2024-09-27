@@ -133,7 +133,7 @@ const VendorSelector = ({
         <div className="flex justify-between">
           <div>
             <CardTitle className="text-lg">Vendor Details</CardTitle>
-            {errors?.quotations?.[index].vendorId && (
+            {errors?.quotations?.[index]?.vendorId && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.quotations[index].vendorId.message}
               </p>

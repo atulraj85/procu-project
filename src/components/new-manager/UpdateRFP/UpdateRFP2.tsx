@@ -442,11 +442,12 @@ export default function RFPUpdateForm({
                                 </div>
                               </div>
 
-                              {!preferredVendorIndex && (
-                                <p className="text-red-500 text-sm">
-                                  Please select a preferred quotation.
-                                </p>
-                              )}
+                              {preferredVendorIndex === null &&
+                                preferredVendorIndex !== index && (
+                                  <p className="text-red-500 text-sm">
+                                    Please select a preferred quotation.
+                                  </p>
+                                )}
                             </div>
 
                             {/* Total */}
@@ -462,57 +463,62 @@ export default function RFPUpdateForm({
                       </CardHeader>
 
                       <CardContent>
-                        {/* <div className="my-2">
-                      <VendorSelector
-                        setValue={setValue}
-                        index={index}
-                        setShowCheckbox={setShowCheckbox}
-                        vendor={quotation.vendor}
-                        globalFormData={globalFormData}
-                      />
-                    </div> */}
-
-                        {/* <Card className="my-2">
-                      <CardHeader>
-                        <CardTitle className="text-lg">
-                          Products / Services Details
-                        </CardTitle>
-                      </CardHeader>
-
-                      <CardContent>
-                        <div className="mb-2">
-                          <ProductList
+                        {/* Vendor Section */}
+                        <div className="my-2">
+                          <VendorSelector
                             errors={errors}
-                            products={
-                              quotation.products.length === 0
-                                ? initialData.products
-                                : quotation.products
-                            }
                             setValue={setValue}
-                            getValues={getValues}
-                            control={control}
                             index={index}
+                            setShowCheckbox={setShowCheckbox}
+                            vendor={quotation.vendor}
                             globalFormData={globalFormData}
                           />
                         </div>
 
-                        <OtherChargesList
+                        <Card className="my-2">
+                          <CardHeader>
+                            <CardTitle className="text-lg">
+                              Products / Services Details
+                            </CardTitle>
+                          </CardHeader>
+
+                          {/* Product section */}
+                          <CardContent>
+                            {/* <div className="mb-2">
+                              <ProductList
+                                errors={errors}
+                                products={
+                                  quotation.products.length === 0
+                                    ? initialData.products
+                                    : quotation.products
+                                }
+                                setValue={setValue}
+                                getValues={getValues}
+                                control={control}
+                                index={index}
+                                globalFormData={globalFormData}
+                              />
+                            </div> */}
+
+                            <OtherChargesList
+                              errors={errors}
+                              control={control}
+                              index={index}
+                              formData={FormData}
+                              globalFormData={globalFormData}
+                            />
+                          </CardContent>
+                        </Card>
+
+                        <SupportingDocumentsList
+                          errors={errors}
                           control={control}
                           index={index}
-                          formData={FormData}
-                          globalFormData={globalFormData}
+                          setValue={setValue}
+                          files={files}
+                          setFiles={setFiles}
+                          getValues={getValues}
                         />
-                      </CardContent>
-                    </Card> */}
-
-                        {/* <SupportingDocumentsList
-                      control={control}
-                      index={index}
-                      setValue={setValue}
-                      files={files}
-                      setFiles={setFiles}
-                      getValues={getValues}
-                    /> */}
 
                         <div className="flex justify-end">
                           <Button

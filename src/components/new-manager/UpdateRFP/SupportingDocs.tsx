@@ -18,6 +18,7 @@ type SupportingDocument = {
 };
 
 const SupportingDocumentsList = ({
+  errors,
   control,
   index,
   setValue,
@@ -25,6 +26,7 @@ const SupportingDocumentsList = ({
   setFiles,
   getValues,
 }: {
+  errors: any;
   control: Control<any>;
   index: number;
   setValue: UseFormSetValue<any>;
@@ -36,12 +38,15 @@ const SupportingDocumentsList = ({
     control,
     name: `quotations.${index}.supportingDocuments`,
   });
+  const [fileError, setFileError] = useState("");
 
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     docIndex: number
   ) => {
     const file = e.target.files?.[0];
+    setFileError("");
+
     if (file) {
       const documentName = getValues(
         `quotations.${index}.supportingDocuments.${docIndex}.name`
@@ -57,6 +62,10 @@ const SupportingDocumentsList = ({
         `quotations.${index}.supportingDocuments.${docIndex}.fileName`,
         file.name
       );
+    }
+    if (!file) {
+      setFileError("Please upload a file.");
+      return;
     }
   };
 
@@ -107,12 +116,26 @@ const SupportingDocumentsList = ({
 
                 return (
                   <div key={field.id} className="grid grid-cols-3 gap-2">
-                    <Input
-                      {...control.register(
-                        `quotations.${index}.supportingDocuments.${docIndex}.name`
+                    <div className="flex flex-col">
+                      <Input
+                        {...control.register(
+                          `quotations.${index}.supportingDocuments.${docIndex}.name`
+                        )}
+                        placeholder="Enter document name"
+                      />
+                      {errors?.quotations?.[index]?.supportingDocuments?.[
+                        docIndex
+                      ]?.name && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {
+                            errors.quotations[index].supportingDocuments[
+                              docIndex
+                            ].name.message
+                          }
+                        </p>
                       )}
-                      placeholder="Enter document name"
-                    />
+                    </div>
+
                     <div>
                       {isFileUploaded ? (
                         <Input
@@ -127,7 +150,11 @@ const SupportingDocumentsList = ({
                           onChange={(e) => handleFileChange(e, docIndex)}
                         />
                       )}
+                      {fileError && ( // Assuming fileError is the state for file validation
+                        <p className="text-red-500 text-sm mt-1">{fileError}</p>
+                      )}
                     </div>
+
                     <div className="flex space-x-2">
                       <div className="flex flex-col">
                         <Label className="font-bold text-[16px] text-slate-700"></Label>

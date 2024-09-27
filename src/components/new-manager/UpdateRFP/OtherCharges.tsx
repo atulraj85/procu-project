@@ -26,11 +26,13 @@ const OtherChargesList = ({
   index,
   formData,
   globalFormData,
+  errors,
 }: {
   control: any;
   index: number;
   formData: any;
   globalFormData: any;
+  errors: any;
 }) => {
   const { fields, append, remove } = useFieldArray({
     control,
@@ -75,40 +77,76 @@ const OtherChargesList = ({
             {fields.map((field, chargeIndex) => (
               <div className="space-y-2 mb-2" key={field.id}>
                 <div className="grid grid-cols-4 gap-2">
-                  <Input
-                    {...control.register(
-                      `quotations.${index}.otherCharges.${chargeIndex}.name`
+                  <div className="flex flex-col">
+                    <Input
+                      {...control.register(
+                        `quotations.${index}.otherCharges.${chargeIndex}.name`
+                      )}
+                    />
+                    {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]
+                      ?.name && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          errors.quotations[index].otherCharges[chargeIndex]
+                            .name.message
+                        }
+                      </p>
                     )}
-                  />
-                  <Controller
-                    name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select GST" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {["NILL", "0", "3", "5", "12", "18", "28"].map(
-                            (gst) => (
-                              <SelectItem key={gst} value={gst}>
-                                {gst}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <Controller
+                      name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select GST" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["NILL", "0", "3", "5", "12", "18", "28"].map(
+                              (gst) => (
+                                <SelectItem key={gst} value={gst}>
+                                  {gst}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors?.quotations?.[index]?.otherCharges[chargeIndex]
+                      ?.gst && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          errors.quotations[index].otherCharges[chargeIndex].gst
+                            .message
+                        }
+                      </p>
                     )}
-                  />
-                  <Input
-                    type="number"
-                    {...control.register(
-                      `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
+                  </div>
+
+                  <div className="flex flex-col">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      {...control.register(
+                        `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
+                      )}
+                    />
+                    {errors?.quotations?.[index]?.otherCharges[chargeIndex]
+                      ?.unitPrice && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {
+                          errors.quotations[index].otherCharges[chargeIndex]
+                            .unitPrice.message
+                        }
+                      </p>
                     )}
-                  />
+                  </div>
 
                   <div className="flex flex-col">
                     <Label className="font-bold text-[16px] text-slate-700"></Label>
