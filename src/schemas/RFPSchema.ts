@@ -49,6 +49,7 @@ export const rfpSchema = z.object({
   rfpId: z.string(),
   rfpStatus: z.string(),
   preferredQuotationId: z.string().nullable(),
+  preferredVendorId: z.string().optional().nullable(),
   quotations: z
     .array(quotationSchema)
     .min(1, "At least one quotation is required")

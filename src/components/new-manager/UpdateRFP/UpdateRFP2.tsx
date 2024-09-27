@@ -395,43 +395,61 @@ export default function RFPUpdateForm({
                                   `quotations.${index}.refNo`
                                 )}
                               />
+
+                              {errors?.quotations?.[index]?.refNo && (
+                                <p className="text-red-500 text-sm mt-1">
+                                  {errors.quotations[index].refNo.message}
+                                </p>
+                              )}
                             </div>
-                            <div className="flex flex-row items-center gap-2">
-                              <Checkbox
-                                checked={preferredVendorIndex === index}
-                                disabled={
-                                  preferredVendorIndex !== null &&
-                                  preferredVendorIndex !== index
-                                }
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    // setValue(
-                                    //   "preferredVendorId",
-                                    //   quotation.vendorId
-                                    // );
-                                    setPreferredVendorId(quotation.vendorId);
-                                    setPreferredVendorIndex(index);
-                                  } else {
-                                    setPreferredVendorId("");
-                                    setPreferredVendorIndex(null);
+                            <div className="flex flex-col items-center gap-2">
+                              <div>
+                                <Checkbox
+                                  checked={preferredVendorIndex === index}
+                                  disabled={
+                                    preferredVendorIndex !== null &&
+                                    preferredVendorIndex !== index
                                   }
-                                }}
-                              />
-                              <div className="flex flex-col gap-1">
-                                <Label className="font-bold text-[16px] text-green-700">
-                                  Preferred Quote
-                                </Label>
-                                {preferredVendorIndex === index && (
-                                  <Input
-                                    className="mb-2"
-                                    placeholder="Reason for preferring this vendor"
-                                    value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
-                                  />
-                                )}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setValue(
+                                        "preferredVendorId",
+                                        quotation.vendorId
+                                      );
+                                      setPreferredVendorId(quotation.vendorId);
+                                      setPreferredVendorIndex(index);
+                                    } else {
+                                      setPreferredVendorId("");
+                                      setPreferredVendorIndex(null);
+                                    }
+                                  }}
+                                />
+                                <div className=" gap-1">
+                                  <Label className="font-bold text-[16px] text-green-700">
+                                    Preferred Quote
+                                  </Label>
+
+                                  {preferredVendorIndex === index && (
+                                    <Input
+                                      className="mb-2"
+                                      placeholder="Reason for preferring this vendor"
+                                      value={reason}
+                                      onChange={(e) =>
+                                        setReason(e.target.value)
+                                      }
+                                    />
+                                  )}
+                                </div>
                               </div>
+
+                              {!preferredVendorIndex && (
+                                <p className="text-red-500 text-sm">
+                                  Please select a preferred quotation.
+                                </p>
+                              )}
                             </div>
 
+                            {/* Total */}
                             <div className="w-1/3">
                               <TotalComponent
                                 setValue={setValue}
@@ -442,9 +460,9 @@ export default function RFPUpdateForm({
                           </div>
                         </CardTitle>
                       </CardHeader>
-                    </Card>
 
-                    <div className="my-2">
+                      <CardContent>
+                        {/* <div className="my-2">
                       <VendorSelector
                         setValue={setValue}
                         index={index}
@@ -452,9 +470,9 @@ export default function RFPUpdateForm({
                         vendor={quotation.vendor}
                         globalFormData={globalFormData}
                       />
-                    </div>
+                    </div> */}
 
-                    <Card className="my-2">
+                        {/* <Card className="my-2">
                       <CardHeader>
                         <CardTitle className="text-lg">
                           Products / Services Details
@@ -485,28 +503,30 @@ export default function RFPUpdateForm({
                           globalFormData={globalFormData}
                         />
                       </CardContent>
-                    </Card>
+                    </Card> */}
 
-                    <SupportingDocumentsList
+                        {/* <SupportingDocumentsList
                       control={control}
                       index={index}
                       setValue={setValue}
                       files={files}
                       setFiles={setFiles}
                       getValues={getValues}
-                    />
+                    /> */}
 
-                    <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        onClick={() => handleDeleteClick(index)}
-                        variant="outline"
-                        size="icon"
-                        className="text-red-500"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            onClick={() => handleDeleteClick(index)}
+                            variant="outline"
+                            size="icon"
+                            className="text-red-500"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
