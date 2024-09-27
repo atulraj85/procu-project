@@ -546,6 +546,7 @@ const ProductList = ({
                 />
               </div>
 
+              {/* gst */}
               <div className="w-1/12">
                 <Controller
                   name={`quotations.${index}.products.${productIndex}.gst`}
@@ -574,6 +575,8 @@ const ProductList = ({
                   )}
                 />
               </div>
+
+              {/* taxable amount */}
               <div className="w-1/6">
                 <Input
                   className="text-right"
@@ -590,6 +593,8 @@ const ProductList = ({
                   ).toFixed(2)}
                 />
               </div>
+
+              {/* total amount */}
               <div className="w-1/6">
                 <Input
                   className="text-right"
