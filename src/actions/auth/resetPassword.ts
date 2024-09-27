@@ -5,9 +5,11 @@ import {
   findPasswordResetTokenByToken,
 } from "@/data/password-reset-token";
 import { findUserByEmail } from "@/data/user";
-import { db } from "@/lib/db";
+import { UserTable } from "@/drizzle/schema";
+import { drizzleDB as db } from "@/lib/db";
 import { ResetPasswordSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export async function resetPassword(
@@ -39,10 +41,13 @@ export async function resetPassword(
 
   const { password } = validation.data;
   const hashedPassword = await bcrypt.hash(password, 10);
-  await db.user.update({
-    where: { id: existingUser.id },
-    data: { password: hashedPassword },
-  });
+  await db
+    .update(UserTable)
+    .set({
+      password: hashedPassword,
+      updatedAt: new Date(),
+    })
+    .where(eq(UserTable.id, existingUser.id));
 
   await deletePasswordResetToken(existingToken.id);
 
