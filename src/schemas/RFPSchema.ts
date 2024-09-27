@@ -1,0 +1,56 @@
+import { z } from "zod";
+
+export const productSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Product name is required"),
+  modelNo: z.string().min(1, "Model number is required"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  unitPrice: z.number().min(0, "Unit price must be non-negative"),
+  gst: z.enum(["NILL", "0", "3", "5", "12", "18", "28"]),
+  totalPriceWithoutGST: z.number(),
+  totalPriceWithGST: z.number(),
+});
+
+// Other Charge Schema
+export const otherChargeSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, "Charge name is required"),
+  unitPrice: z.number().min(0, "Unit price must be non-negative"),
+  gst: z.enum(["NILL", "0", "3", "5", "12", "18", "28"]),
+});
+
+// Supporting Document Schema
+export const supportingDocumentSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Document name is required"),
+  fileName: z.string().optional(),
+  location: z.string().optional(),
+});
+
+// Quotation Schema
+export const quotationSchema = z.object({
+  id: z.string().optional(),
+  refNo: z.string().min(1, "Reference number is required"),
+  vendorId: z.string().min(1, "Vendor ID is required"),
+  vendor: z.any(),
+  totalAmount: z.number(),
+  totalAmountWithoutGST: z.number(),
+  products: z.array(productSchema),
+  otherCharges: z.array(otherChargeSchema),
+  total: z.object({
+    withGST: z.number(),
+    withoutGST: z.number(),
+  }),
+  supportingDocuments: z.array(supportingDocumentSchema),
+});
+
+// RFP Schema
+export const rfpSchema = z.object({
+  rfpId: z.string(),
+  rfpStatus: z.string(),
+  preferredQuotationId: z.string().nullable(),
+  quotations: z
+    .array(quotationSchema)
+    .min(1, "At least one quotation is required")
+    .max(3, "Maximum 3 quotations allowed"),
+});
