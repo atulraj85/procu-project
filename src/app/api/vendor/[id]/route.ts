@@ -1,5 +1,5 @@
 import { VendorTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 

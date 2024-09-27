@@ -1,6 +1,6 @@
 import { deleteCompany } from "@/data/company";
 import { CompanyTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";

@@ -1,13 +1,22 @@
 // lib/prisma.js or lib/prisma.ts
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
-
-export { prisma };
+import {
+  ApproversListTable,
+  CompanyTable,
+  GoodStatusTable,
+  InvoiceTable,
+  PaymentTable,
+  ProductCategoryTable,
+  ProductTable,
+  QualityAssuranceTable,
+  QuotationTable,
+  RFPProductTable,
+  RFPTable,
+} from "@/drizzle/schema";
 
 export const modelMap: Record<string, any> = {
   company: {
-    model: prisma.company,
+    model: CompanyTable,
     attributes: [
       "id",
       "name",
@@ -55,11 +64,11 @@ export const modelMap: Record<string, any> = {
   //   ],
   // },
   payment: {
-    model: prisma.payment,
+    model: PaymentTable,
     attributes: ["id", "invoiceId", "created_at", "updated_at"],
   },
   productCategory: {
-    model: prisma.productCategory,
+    model: ProductCategoryTable,
     attributes: ["id", "name", "created_at", "updated_at"],
   },
   // po: {
@@ -67,7 +76,7 @@ export const modelMap: Record<string, any> = {
   //   attributes: ["id", "quotationId", "userId", "created_at", "updated_at"],
   // },
   goodStatus: {
-    model: prisma.goodStatus,
+    model: GoodStatusTable,
     attributes: [
       "id",
       "invoiceId",
@@ -79,7 +88,7 @@ export const modelMap: Record<string, any> = {
     ],
   },
   product: {
-    model: prisma.product,
+    model: ProductTable,
     attributes: [
       "id",
       "name",
@@ -91,11 +100,11 @@ export const modelMap: Record<string, any> = {
     ],
   },
   invoice: {
-    model: prisma.invoice,
+    model: InvoiceTable,
     attributes: ["id", "poId", "created_at", "updated_at"],
   },
   quotation: {
-    model: prisma.quotation,
+    model: QuotationTable,
     attributes: [
       "id",
       "rfpId",
@@ -106,11 +115,11 @@ export const modelMap: Record<string, any> = {
     ],
   },
   qualityAssurance: {
-    model: prisma.qualityAssurance,
+    model: QualityAssuranceTable,
     attributes: ["id", "userId", "created_at", "updated_at"],
   },
   rfpProduct: {
-    model: prisma.rFPProduct,
+    model: RFPProductTable,
     attributes: [
       "id",
       "rfpId",
@@ -121,7 +130,7 @@ export const modelMap: Record<string, any> = {
     ],
   },
   approversList: {
-    model: prisma.approversList,
+    model: ApproversListTable,
     attributes: [
       "id",
       "rfpId",
@@ -135,7 +144,7 @@ export const modelMap: Record<string, any> = {
 };
 
 export const rfpModel = {
-  model: prisma.rFP,
+  model: RFPTable,
   attributes: [
     "id",
     "rfpId",

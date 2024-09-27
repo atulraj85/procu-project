@@ -5,7 +5,7 @@ import {
   SupportingDocumentTable,
   VendorPricingTable,
 } from "@/drizzle/schema";
-import { drizzleDB } from "@/lib/db";
+import { db } from "@/lib/db";
 import { serializePrismaModel } from "@/types";
 import { isValidUUID } from "@/utils";
 import { Decimal } from "decimal.js";
@@ -127,7 +127,7 @@ export async function PUT(request: NextRequest) {
     //   JSON.stringify(processedQuotations, null, 2)
     // );
 
-    const existingRFP = await drizzleDB.query.RFPTable.findFirst({
+    const existingRFP = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, id),
       with: {
         quotations: true,
@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
     );
 
     // Step 1: Update the RFP with the new status and preferred quotation
-    await drizzleDB
+    await db
       .update(RFPTable)
       .set({
         rfpStatus,
@@ -167,7 +167,7 @@ export async function PUT(request: NextRequest) {
     // Step 2: Update the quotations to associate with the RFP
     await Promise.all(
       updatedQuotations.map(async (quotation) => {
-        await drizzleDB
+        await db
           .update(QuotationTable)
           .set({ rfpId: id }) // Connecting by setting foreign key
           .where(eq(QuotationTable.id, quotation.id));
@@ -175,7 +175,7 @@ export async function PUT(request: NextRequest) {
     );
 
     // Step 3: Fetch the updated RFP with related data
-    const updatedRFP = await drizzleDB.query.RFPTable.findFirst({
+    const updatedRFP = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, id),
       with: {
         quotations: {
@@ -203,7 +203,7 @@ export async function PUT(request: NextRequest) {
 
 async function createNewQuotation(rfpId: string, q: any) {
   // Create a new quotation
-  await drizzleDB.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     // Insert the quotation data
     const [newQuotation] = await tx
       .insert(QuotationTable)
@@ -254,7 +254,7 @@ async function createNewQuotation(rfpId: string, q: any) {
 
 async function updatedQuotation(q) {
   // Update existing quotation
-  await drizzleDB.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     // Update the quotation data
     await tx
       .update(QuotationTable)

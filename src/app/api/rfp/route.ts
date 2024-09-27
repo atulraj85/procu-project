@@ -3,7 +3,7 @@ import {
   RFPProductTable,
   RFPTable,
 } from "@/drizzle/schema";
-import { drizzleDB } from "@/lib/db";
+import { db } from "@/lib/db";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 import { generateRFPId } from "@/utils";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     const whereClause =
       whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    const records = await drizzleDB.query.RFPTable.findMany({
+    const records = await db.query.RFPTable.findMany({
       where: whereClause,
       orderBy:
         sortingOrder === "asc"
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     console.log(dateOfOrdering);
 
     // Check if the user exists
-    const existingUser = await drizzleDB.query.UserTable.findFirst({
+    const existingUser = await db.query.UserTable.findFirst({
       columns: { id: true },
     });
     if (!existingUser) {
@@ -213,9 +213,9 @@ export async function POST(request: NextRequest) {
     const rfpId = await generateRFPId();
 
     // Create RFP inside the transaction
-    const newRFP = await drizzleDB.transaction(async (tx) => {
+    const newRFP = await db.transaction(async (tx) => {
       // Create the RFP first
-      const results = await drizzleDB
+      const results = await db
         .insert(RFPTable)
         .values({
           rfpId,
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
 
       // Create RFP products and approvers
       await Promise.all([
-        drizzleDB.insert(RFPProductTable).values(
+        db.insert(RFPProductTable).values(
           rfpProducts.map((rfpProduct) => ({
             rfpId: createdRFP.id, // Use the ID of the created RFP
             quantity: rfpProduct.quantity,
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           }))
         ),
-        drizzleDB.insert(ApproversListTable).values(
+        db.insert(ApproversListTable).values(
           approvers.map((approver) => ({
             rfpId: createdRFP.id, // Use the ID of the created RFP
             userId: approver.approverId,

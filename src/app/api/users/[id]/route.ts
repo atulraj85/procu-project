@@ -1,6 +1,6 @@
 import { deleteUser } from "@/data/user";
 import { UserTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { UpdateUserSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
