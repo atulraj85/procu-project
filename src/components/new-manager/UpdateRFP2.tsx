@@ -506,6 +506,8 @@ const ProductList = ({
               <div className="w-1/4">
                 <Textarea className="w-full" />
               </div>
+
+              {/* Quantity */}
               <div className="w-1/12">
                 <Input
                   type="number"
@@ -523,6 +525,8 @@ const ProductList = ({
                   }}
                 />
               </div>
+
+              {/* Unit price */}
               <div className="w-1/6">
                 <Controller
                   name={`quotations.${index}.products.${productIndex}.unitPrice`}
@@ -541,6 +545,7 @@ const ProductList = ({
                   )}
                 />
               </div>
+
               <div className="w-1/12">
                 <Controller
                   name={`quotations.${index}.products.${productIndex}.gst`}
