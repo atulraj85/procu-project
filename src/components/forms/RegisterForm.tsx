@@ -21,12 +21,13 @@ import * as z from "zod";
 import MainButton from "../common/MainButton";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
+import { RegisterUserSchema, Role } from "@/schemas";
 
-const FormSchema = CreateUserInputValidation;
+const FormSchema = RegisterUserSchema;
 
 type RegisterFormProps = {
   text: string;
-  role: string;
+  role: Role;
 };
 
 function RegisterForm({ text, role }: RegisterFormProps) {
@@ -50,7 +51,7 @@ function RegisterForm({ text, role }: RegisterFormProps) {
       email: "",
       mobile: "",
       password: "",
-      role: "",
+      role: "USER",
     },
   });
 

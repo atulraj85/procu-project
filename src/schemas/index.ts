@@ -1,5 +1,9 @@
-import { Role } from "@prisma/client";
-import { string, z } from "zod";
+import { UserRole } from "@/drizzle/schema";
+import { z } from "zod";
+
+export type Role = (typeof UserRole.enumValues)[number]; 
+
+
 
 const emailSchema = z
   .string({ required_error: "Email is required!" })
@@ -31,17 +35,10 @@ export const ResetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
-const RoleEnum = z.enum(
-  [
-    Role.ADMIN,
-    Role.PR_MANAGER,
-    Role.FINANCE_MANAGER,
-    Role.ACCOUNTANT,
-    Role.QUALITY_ASSURANCE,
-    Role.USER,
-  ],
-  { invalid_type_error: "Invalid role!" }
-);
+export const RoleEnum = z.enum(UserRole.enumValues, {
+  invalid_type_error: "Invalid role!",
+});
+
 
 export const RegisterUserSchema = z.object({
   email: emailSchema,
@@ -55,7 +52,7 @@ export const RegisterUserSchema = z.object({
     .string({ required_error: "Number is required!" })
     .min(1, { message: "Number is required!" })
     .min(10, { message: "Number must be at least 10 characters." }),
-  role: RoleEnum.optional() || string,
+  role: RoleEnum.optional(),
 });
 
 export const UpdateUserSchema = z.object({
