@@ -1,14 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+  OtherChargeTable,
+  QuotationTable,
+  RFPTable,
+  SupportingDocumentTable,
+  VendorPricingTable,
+} from "@/drizzle/schema";
+import { drizzleDB } from "@/lib/db";
 import { serializePrismaModel } from "@/types";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { isValidUUID } from "@/utils";
+import { Decimal } from "decimal.js";
+import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 import { UTApi } from "uploadthing/server";
 
-function isValidUUID(uuid: string) {
-  const uuidRegex =
-    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-  return uuidRegex.test(uuid);
-}
 export async function PUT(request: NextRequest) {
   console.log("PUT request started");
   try {
@@ -95,11 +99,11 @@ export async function PUT(request: NextRequest) {
           id: quotationId && isValidUUID(quotationId) ? quotationId : undefined,
           vendorId,
           refNo,
-          totalAmount: new Prisma.Decimal(total.withGST),
-          totalAmountWithoutGST: new Prisma.Decimal(total.withoutGST),
+          totalAmount: new Decimal(total.withGST).toNumber(),
+          totalAmountWithoutGST: new Decimal(total.withoutGST).toNumber(),
           vendorPricings: {
             create: products.map((product: any) => ({
-              price: new Prisma.Decimal(product.unitPrice),
+              price: new Decimal(product.unitPrice).toNumber(),
               GST: parseInt(product.gst),
               rfpProduct: { connect: { id: product.rfpProductId } },
             })),
@@ -107,8 +111,8 @@ export async function PUT(request: NextRequest) {
           otherCharges: {
             create: otherCharges.map((charge: any) => ({
               name: charge.name,
-              price: new Prisma.Decimal(charge.unitPrice),
-              gst: new Prisma.Decimal(charge.gst),
+              price: new Decimal(charge.unitPrice).toNumber(),
+              gst: new Decimal(charge.gst).toNumber(),
             })),
           },
           supportingDocuments: {
@@ -123,9 +127,11 @@ export async function PUT(request: NextRequest) {
     //   JSON.stringify(processedQuotations, null, 2)
     // );
 
-    const existingRFP = await prisma.rFP.findUnique({
-      where: { id },
-      include: { quotations: true },
+    const existingRFP = await drizzleDB.query.RFPTable.findFirst({
+      where: eq(RFPTable.id, id),
+      with: {
+        quotations: true,
+      },
     });
 
     if (!existingRFP) {
@@ -140,71 +146,40 @@ export async function PUT(request: NextRequest) {
         if (q.id) {
           // Update existing quotation
           // console.log("Updating quotation:", q);
-          return prisma.quotation.update({
-            where: { id: q.id },
-            data: {
-              vendorId: q.vendorId,
-              refNo: q.refNo,
-              totalAmount: q.totalAmount,
-              totalAmountWithoutGST: q.totalAmountWithoutGST,
-              vendorPricings: {
-                deleteMany: { quotationId: q.id },
-                create: q.vendorPricings.create,
-              },
-              otherCharges: {
-                deleteMany: { quotationId: q.id },
-                create: q.otherCharges.create,
-              },
-              supportingDocuments: {
-                deleteMany: { quotationId: q.id },
-                create: q.supportingDocuments.create.filter(
-                  (doc: any) => doc !== null
-                ),
-              },
-            },
-          });
+          return updatedQuotation(q);
         } else {
-          // Create new quotation
-          // console.log("Creating quotation:", q);
-          return prisma.quotation.create({
-            data: {
-              rfpId: id,
-              vendorId: q.vendorId,
-              refNo: q.refNo,
-              totalAmount: q.totalAmount,
-              totalAmountWithoutGST: q.totalAmountWithoutGST,
-              vendorPricings: {
-                create: q.vendorPricings.create,
-              },
-              otherCharges: {
-                create: q.otherCharges.create,
-              },
-              supportingDocuments: {
-                create: q.supportingDocuments.create.filter(
-                  (doc: any) => doc !== null
-                ),
-              },
-            },
-          });
+          return createNewQuotation(id, q);
         }
       })
     );
 
-    // Update the RFP with the new quotations
-    const updatedRFP = await prisma.rFP.update({
-      where: { id },
-      data: {
+    // Step 1: Update the RFP with the new status and preferred quotation
+    await drizzleDB
+      .update(RFPTable)
+      .set({
         rfpStatus,
-        quotations: {
-          connect: updatedQuotations.map((q) => ({ id: q.id })),
-        },
         preferredQuotationId: preferredVendorId
           ? updatedQuotations.find((q) => q.vendorId === preferredVendorId)?.id
           : undefined,
-      },
-      include: {
+      })
+      .where(eq(RFPTable.id, id));
+
+    // Step 2: Update the quotations to associate with the RFP
+    await Promise.all(
+      updatedQuotations.map(async (quotation) => {
+        await drizzleDB
+          .update(QuotationTable)
+          .set({ rfpId: id }) // Connecting by setting foreign key
+          .where(eq(QuotationTable.id, quotation.id));
+      })
+    );
+
+    // Step 3: Fetch the updated RFP with related data
+    const updatedRFP = await drizzleDB.query.RFPTable.findFirst({
+      where: eq(RFPTable.id, id),
+      with: {
         quotations: {
-          include: {
+          with: {
             supportingDocuments: true,
             vendorPricings: true,
             otherCharges: true,
@@ -224,6 +199,121 @@ export async function PUT(request: NextRequest) {
       { status: 400 }
     );
   }
+}
+
+async function createNewQuotation(rfpId: string, q: any) {
+  // Create a new quotation
+  await drizzleDB.transaction(async (tx) => {
+    // Insert the quotation data
+    const [newQuotation] = await tx
+      .insert(QuotationTable)
+      .values({
+        rfpId, // Assuming `id` is the RFP ID
+        vendorId: q.vendorId,
+        refNo: q.refNo,
+        totalAmount: q.totalAmount,
+        totalAmountWithoutGst: q.totalAmountWithoutGST,
+        updatedAt: new Date(),
+      })
+      .returning({ id: QuotationTable.id });
+
+    // Insert the new vendor pricings
+    await tx.insert(VendorPricingTable).values(
+      q.vendorPricings.create.map((pricing: any) => ({
+        quotationId: newQuotation.id,
+        price: pricing.price,
+        GST: pricing.GST,
+      }))
+    );
+
+    // Insert the new other charges
+    await tx.insert(OtherChargeTable).values(
+      q.otherCharges.create.map((charge: any) => ({
+        quotationId: newQuotation.id,
+        name: charge.name,
+        price: charge.price,
+        gst: charge.gst,
+      }))
+    );
+
+    // Insert the new supporting documents
+    await tx.insert(SupportingDocumentTable).values(
+      q.supportingDocuments.create
+        .filter((doc: any) => doc !== null) // Filter out null docs
+        .map((doc: any) => ({
+          quotationId: newQuotation.id,
+          documentName: doc.documentName,
+          location: doc.location,
+        }))
+    );
+  });
+
+  // Return created quotation (optional)
+  return { ...q };
+}
+
+async function updatedQuotation(q) {
+  // Update existing quotation
+  await drizzleDB.transaction(async (tx) => {
+    // Update the quotation data
+    await tx
+      .update(QuotationTable)
+      .set({
+        vendorId: q.vendorId,
+        refNo: q.refNo,
+        totalAmount: q.totalAmount,
+        totalAmountWithoutGst: q.totalAmountWithoutGST,
+      })
+      .where(eq(QuotationTable.id, q.id));
+
+    // Delete the old vendor pricings
+    await tx
+      .delete(VendorPricingTable)
+      .where(eq(VendorPricingTable.quotationId, q.id));
+
+    // Insert the new vendor pricings
+    await tx.insert(VendorPricingTable).values(
+      q.vendorPricings.create.map((pricing: any) => ({
+        quotationId: q.id,
+        price: pricing.price,
+        GST: pricing.GST,
+      }))
+    );
+
+    // Delete the old other charges
+    await tx
+      .delete(OtherChargeTable)
+      .where(eq(OtherChargeTable.quotationId, q.id));
+
+    // Insert the new other charges
+    await tx.insert(OtherChargeTable).values(
+      q.otherCharges.create.map((charge: any) => ({
+        quotationId: q.id,
+        name: charge.name,
+        price: charge.price,
+        gst: charge.gst,
+      }))
+    );
+
+    // Delete the old supporting documents
+    await tx
+      .delete(SupportingDocumentTable)
+      .where(eq(SupportingDocumentTable.quotationId, q.id));
+
+    // Insert the new supporting documents
+    await tx.insert(SupportingDocumentTable).values(
+      q.supportingDocuments.create
+        .filter((doc: any) => doc !== null) // Filter out null docs
+        .map((doc: any) => ({
+          quotationId: q.id,
+          documentName: doc.documentName,
+          location: doc.location,
+        }))
+    );
+  });
+
+  // Return updated quotation (optional based on what you need to do with it)
+  return { id: q.id, ...q };
 }
 
 async function processDocuments(

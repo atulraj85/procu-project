@@ -2,6 +2,12 @@ import { POTable, RFPTable } from "@/drizzle/schema";
 import { drizzleDB } from "@/lib/db";
 import { desc, sql } from "drizzle-orm";
 
+export function isValidUUID(uuid: string) {
+  const uuidRegex =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+  return uuidRegex.test(uuid);
+}
+
 export async function generateRFPId() {
   const today = new Date();
   const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
