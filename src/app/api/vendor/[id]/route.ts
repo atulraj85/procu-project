@@ -10,18 +10,16 @@ export async function PUT(
   const body = await request.json();
 
   try {
-    let results = await db
-      .select({ id: VendorTable.id })
-      .from(VendorTable)
-      .where(eq(VendorTable.id, params.id));
+    const vendor = await db.query.VendorTable.findFirst({
+      columns: { id: true },
+      where: eq(VendorTable.id, params.id),
+    });
 
-    if (!results[0]) {
+    if (!vendor) {
       return NextResponse.json({ errpr: "Invalid vendor" }, { status: 404 });
     }
 
-    const vendor = results[0];
-
-    results = await db
+    const results = await db
       .update(VendorTable)
       .set({
         ...body,
