@@ -22,12 +22,14 @@ const VendorSelector = ({
   setShowCheckbox,
   vendor,
   globalFormData,
+  errors,
 }: {
   index: number;
   setValue: any;
   setShowCheckbox: any;
   vendor: any;
   globalFormData: any;
+  errors: any;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
@@ -128,8 +130,24 @@ const VendorSelector = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex">
-          <CardTitle className="text-lg">Vendor Details</CardTitle>
+        <div className="flex justify-between">
+          <div>
+            <CardTitle className="text-lg">Vendor Details</CardTitle>
+            {errors?.quotations?.[index].vendorId && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.quotations[index].vendorId.message}
+              </p>
+            )}
+          </div>
+
+          <Input
+            className="border-2 border-green-700"
+            disabled={disableVendorSearch}
+            type="text"
+            placeholder="Search Vendors..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
         </div>
       </CardHeader>
       <CardContent>
@@ -199,14 +217,6 @@ const VendorSelector = ({
           </div>
 
           <div className="w-[30%] pl-8">
-            <Input
-              className="border-2 border-green-700"
-              disabled={disableVendorSearch}
-              type="text"
-              placeholder="Search Vendors..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
             <div>
               {fetchedVendors.length > 0 && (
                 <div className="mt-2">
