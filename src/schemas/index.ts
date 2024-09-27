@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { UserRole } from "@/drizzle/schema";
 import { z } from "zod";
 
 const emailSchema = z
@@ -31,18 +31,9 @@ export const ResetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
-const RoleEnum = z.enum(
-  [
-    Role.ADMIN,
-    Role.PR_MANAGER,
-    Role.FINANCE_MANAGER,
-    Role.ACCOUNTANT,
-    Role.QUALITY_ASSURANCE,
-    Role.USER,
-    Role.VENDOR,
-  ],
-  { invalid_type_error: "Invalid role!" }
-);
+const RoleEnum = z.enum(UserRole.enumValues, {
+  invalid_type_error: "Invalid role!",
+});
 
 export const RegisterUserSchema = z.object({
   email: emailSchema,
