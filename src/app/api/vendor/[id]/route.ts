@@ -1,5 +1,5 @@
 import { VendorTable } from "@/drizzle/schema";
-import { drizzleDB } from "@/lib/db";
+import { drizzleDB as db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,7 +10,7 @@ export async function PUT(
   const body = await request.json();
 
   try {
-    let results = await drizzleDB
+    let results = await db
       .select({ id: VendorTable.id })
       .from(VendorTable)
       .where(eq(VendorTable.id, params.id));
@@ -21,7 +21,7 @@ export async function PUT(
 
     const vendor = results[0];
 
-    results = await drizzleDB
+    results = await db
       .update(VendorTable)
       .set({
         ...body,
