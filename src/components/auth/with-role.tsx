@@ -1,6 +1,6 @@
 "use client";
 
-import { Role } from "@prisma/client";
+import { Role } from "@/schemas";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";

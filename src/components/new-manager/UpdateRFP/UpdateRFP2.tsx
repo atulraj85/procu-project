@@ -348,7 +348,7 @@ export default function RFPUpdateForm({
       setSuccess(true);
 
       toast({
-        title: "🎉 Quotation Submitted!",
+        title: "🎉 Quotation Updated!",
         description: response.ok,
       });
       router.push("/dashboard/manager");
@@ -465,7 +465,8 @@ export default function RFPUpdateForm({
 
                               {errors?.quotations?.[index]?.refNo && (
                                 <p className="text-red-500 text-sm mt-1">
-                                  {errors.quotations[index].refNo.message}
+                                  {errors.quotations?.[index]?.refNo?.message ||
+                                    "Error message not available"}
                                 </p>
                               )}
                             </div>
@@ -646,17 +647,6 @@ export default function RFPUpdateForm({
         </Alert>
       )}
 
-      {Object.keys(errors).length > 0 && (
-        <div>
-          {/* {Object.entries(errors).map(([key, error]) => (
-            <Alert key={key} variant="destructive">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ))} */}
-        </div>
-      )}
-
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
@@ -689,17 +679,16 @@ export default function RFPUpdateForm({
           )}
 
           <Button
-            type="button" // Keep this as "button" to prevent form submission
+            type="submit"
             className="bg-primary"
             onClick={() => {
-              const formData = getValues(); // Get all form values
+              const formData = getValues();
               if (reason) {
                 setValue("reason", reason);
                 handleSubmitReasonAndAddQuotation(formData);
 
                 setShowReasonPrompt(false);
                 setReason("");
-                // Call the function to handle the submission with reason and form data
               }
             }}
           >

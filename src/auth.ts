@@ -2,9 +2,9 @@ import authConfig from "@/auth.config";
 import { findUserById } from "@/data/user";
 import { db } from "@/lib/db";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { Role } from "@prisma/client";
 import NextAuth, { DefaultSession } from "next-auth";
 import { JWT } from "next-auth/jwt";
+import { Role } from "./schemas";
 
 export type ExtendedUser = DefaultSession["user"] & {
   role: Role;
