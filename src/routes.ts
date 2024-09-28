@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role } from "@/schemas";
 
 export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
 
