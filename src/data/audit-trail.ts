@@ -1,5 +1,5 @@
 import { AuditTrailTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 
 interface AuditTrailInput {
   eventId: string;

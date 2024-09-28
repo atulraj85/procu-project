@@ -1,5 +1,5 @@
+import { ProductTable, UserTable, VendorTable } from "@/drizzle/schema";
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 type SelectField = boolean | { select: Record<string, SelectField> };
 
@@ -11,7 +11,7 @@ type SearchConfig = {
 
 const searchConfigs: Record<string, SearchConfig> = {
   users: {
-    model: prisma.user,
+    model: UserTable,
     searchFields: ["name", "email", "mobile"],
     returnFields: {
       id: true,
@@ -22,7 +22,7 @@ const searchConfigs: Record<string, SearchConfig> = {
     },
   },
   vendors: {
-    model: prisma.vendor,
+    model: VendorTable,
     searchFields: [
       "primaryName",
       "companyName",
@@ -41,7 +41,7 @@ const searchConfigs: Record<string, SearchConfig> = {
     },
   },
   products: {
-    model: prisma.product,
+    model: ProductTable,
     searchFields: ["name", "modelNo", "specification"],
     returnFields: {
       id: true,

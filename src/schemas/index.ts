@@ -1,9 +1,7 @@
 import { UserRole } from "@/drizzle/schema";
 import { z } from "zod";
 
-export type Role = (typeof UserRole.enumValues)[number]; 
-
-
+export type Role = (typeof UserRole.enumValues)[number];
 
 const emailSchema = z
   .string({ required_error: "Email is required!" })
@@ -35,10 +33,9 @@ export const ResetPasswordSchema = z.object({
   password: passwordSchema,
 });
 
-export const RoleEnum = z.enum(UserRole.enumValues, {
+const RoleEnum = z.enum(UserRole.enumValues, {
   invalid_type_error: "Invalid role!",
 });
-
 
 export const RegisterUserSchema = z.object({
   email: emailSchema,

@@ -1,7 +1,7 @@
 import { findCompanyByName } from "@/data/company";
 import { createUser, deleteUser, findUserByEmail } from "@/data/user";
 import { UserTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { RegisterUserSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";

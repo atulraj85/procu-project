@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient, RFPStatus } from "@prisma/client";
+import { POTable, RFPTable } from "@/drizzle/schema";
+import { db } from "@/lib/db";
 import { serializePrismaModel } from "@/types";
-
-const prisma = new PrismaClient();
+import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
 
 // POST /api/po
 export async function POST(request: Request) {
@@ -11,29 +11,30 @@ export async function POST(request: Request) {
 
     console.log("Body reciveived: ", body);
 
-    const updateRFP = await prisma.rFP.update({
-      where: {
-        id: body.rfpId,
-      },
-      data: {
-        rfpStatus: body.rfpStatus,
-      },
-    });
+    const updatedRFPs = await db
+      .update(RFPTable)
+      .set({ rfpStatus: body.rfpStatus })
+      .where(eq(RFPTable.id, body.rfpId))
+      .returning();
+    const updatedRFP = updatedRFPs[0];
 
-    const po = await prisma.pO.create({
-      data: {
+    const insertedPOs = await db
+      .insert(POTable)
+      .values({
         poId: body.poId,
         quotationId: body.quotationId,
         userId: body.userId,
         companyId: body.companyId,
         rfpId: body.rfpId,
         remarks: body.remarks,
-      },
-    });
+        updatedAt: new Date(),
+      })
+      .returning();
+    const po = insertedPOs[0];
 
     const rfp_po = {
       po: po,
-      rfp: updateRFP,
+      rfp: updatedRFP,
     };
 
     console.log("After prisma: ", po);
@@ -45,92 +46,70 @@ export async function POST(request: Request) {
     );
   }
 }
-const poModel = {
-  model: prisma.pO,
-  attributes: [
-    "id",
-    "poId", // Unique identifier for the PO
-    "quotationId", // ID of the associated quotation
-    "userId", // ID of the user associated with the PO
-    "invoice", // Optional invoice field
-    "remarks", // Remarks related to the PO
-    "companyId", // ID of the company associated with the PO
-    "rfpId", // Unique RFP ID associated with the PO
-    "created_at", // Timestamp for when the PO was created
-    "updated_at", // Timestamp for when the PO was last updated
-  ],
-};
 
+// Type Definitions
+type SortBy = keyof InferSelectModel<typeof POTable>;
+type SortDirection = "asc" | "desc";
+type WhereField = keyof InferSelectModel<typeof POTable>;
+
+const DEFAULT_SORTING_FIELD: SortBy = "id";
+const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
-    const whereClause: Record<string, any> = {};
-    let orderByClause: Record<string, "asc" | "desc"> | undefined = undefined;
-    const validAttributes = [...poModel.attributes, "orderBy"];
-
     console.log("Received search params:", Object.fromEntries(searchParams));
 
+    const sortBy: SortBy =
+      (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
+    const sortingOrder: SortDirection =
+      (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
+
+    if (!["asc", "desc"].includes(sortingOrder)) {
+      return NextResponse.json(
+        { error: "Invalid order value" },
+        { status: 400 }
+      );
+    }
+
+    // Construct where conditions
+    const whereConditions: SQL<unknown>[] = [];
     searchParams.forEach((value, key) => {
-      console.log(`Processing parameter: ${key} = ${value}`);
-      if (validAttributes.includes(key)) {
-        if (key === "orderBy") {
-          const parts = value.split(",");
-          let orderByField: string = poModel.attributes[0]; // Default to first attribute
-          let orderByDirection: "asc" | "desc" = "asc"; // Default to ascending
-
-          if (parts.length === 2) {
-            orderByField = parts[0];
-            orderByDirection =
-              parts[1].toLowerCase() === "desc" ? "desc" : "asc";
-          } else if (parts.length === 1) {
-            orderByDirection =
-              parts[0].toLowerCase() === "desc" ? "desc" : "asc";
-          }
-
-          console.log(
-            `OrderBy field: ${orderByField}, direction: ${orderByDirection}`
-          );
-
-          if (poModel.attributes.includes(orderByField)) {
-            orderByClause = {
-              [orderByField]: orderByDirection,
-            };
-            console.log(`Set orderByClause:`, orderByClause);
-          } else {
-            console.log(`Invalid orderBy field: ${orderByField}`);
-          }
-        } else if (key === "id") {
-          const ids = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.id = ids.length > 1 ? { in: ids } : ids[0];
-        } else if (key === "state_id") {
-          const stateIds = value.split(",").map((id) => parseInt(id, 10));
-          whereClause.state_id =
-            stateIds.length > 1 ? { in: stateIds } : stateIds[0];
-        } else {
-          whereClause[key] = value;
+      if (key !== "sortBy" && key !== "order") {
+        if (key in POTable) {
+          whereConditions.push(eq(POTable[key as WhereField], value));
         }
-      } else {
-        console.log(`Ignoring invalid parameter: ${key}`);
       }
     });
 
-    const records = await prisma.pO.findMany({
+    // Combine conditions using 'and'
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+    let records = await db.query.POTable.findMany({
       where: whereClause,
-      orderBy: orderByClause,
-      select: {
+      orderBy:
+        sortingOrder === "asc"
+          ? [asc(POTable[sortBy])]
+          : [desc(POTable[sortBy])],
+      columns: {
         id: true,
         poId: true, // Added poId
+        remarks: true, // Added remarks
         quotationId: true,
+      },
+      with: {
         quotation: {
-          select: {
+          columns: {
             id: true,
             refNo: true,
             totalAmount: true,
-            totalAmountWithoutGST: true,
-            created_at: true,
-            updated_at: true,
+            totalAmountWithoutGst: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+          with: {
             vendor: {
-              select: {
+              columns: {
                 id: true,
                 companyName: true,
                 email: true,
@@ -145,67 +124,51 @@ export async function GET(request: NextRequest) {
               },
             },
             vendorPricings: {
-              select: {
-                price: true,
-                GST: true,
+              columns: { price: true, gst: true },
+              with: {
                 rfpProduct: {
-                  select: {
-                    id: true,
+                  columns: { id: true, quantity: true },
+                  with: {
                     product: {
-                      select: {
+                      columns: {
                         id: true,
                         name: true,
                         modelNo: true,
-                        specification: true
+                        specification: true,
                       },
                     },
-                    quantity: true,
                   },
                 },
               },
             },
             otherCharges: {
-              select: {
-                name: true,
-                price: true,
-                gst: true,
-              },
+              columns: { name: true, price: true, gst: true },
             },
-
             supportingDocuments: {
-              select: {
-                documentName: true,
-                location: true,
-              },
+              columns: { documentName: true, location: true },
             },
           },
         },
         user: {
-          select: {
-            name: true,
-            email: true,
-            mobile: true,
-          },
+          columns: { name: true, email: true, mobile: true },
         },
-        remarks: true, // Added remarks
         company: {
-          select: {
+          columns: {
             id: true,
             name: true,
-            GST: true,
+            gst: true,
             logo: true,
             stamp: true,
             email: true,
             phone: true,
             website: true,
+          },
+          with: {
             addresses: true,
           },
         },
         rfp: {
-          select: {
-            rfpStatus: true,
-            rfpId: true,
-          },
+          columns: { rfpId: true, rfpStatus: true },
         },
       },
     });
@@ -214,13 +177,6 @@ export async function GET(request: NextRequest) {
     console.log("formattedData", formattedData);
 
     console.log(`Found ${records.length} records`);
-
-    if (Object.keys(whereClause).length > 0 && records.length === 0) {
-      return NextResponse.json(
-        { error: `No records found matching the criteria` },
-        { status: 404 }
-      );
-    }
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
@@ -302,42 +258,4 @@ function formatPOData(inputData: any[]): any[] {
       updated_at: po.company.updated_at,
     },
   }));
-}
-
-// PUT /api/po/[id]
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await request.json();
-    const updatedPo = await prisma.pO.update({
-      where: { id: params.id },
-      data: {
-        poId: body.poId,
-        quotationId: body.quotationId,
-        userId: body.userId,
-        companyId: body.companyId,
-        rfpId: body.rfpId,
-      },
-    });
-    return NextResponse.json(updatedPo);
-  } catch (error) {
-    return NextResponse.json({ error: "Error updating PO" }, { status: 500 });
-  }
-}
-
-// DELETE /api/po/[id]
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.pO.delete({
-      where: { id: params.id },
-    });
-    return NextResponse.json({ message: "PO deleted successfully" });
-  } catch (error) {
-    return NextResponse.json({ error: "Error deleting PO" }, { status: 500 });
-  }
 }
