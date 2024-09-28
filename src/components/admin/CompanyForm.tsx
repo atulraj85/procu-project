@@ -26,7 +26,6 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { IoConstructOutline } from "react-icons/io5";
-import { AddressType } from "@prisma/client";
 
 interface Company {
   GST: string;

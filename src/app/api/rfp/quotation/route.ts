@@ -252,7 +252,7 @@ async function createNewQuotation(rfpId: string, q: any) {
   return { ...q };
 }
 
-async function updatedQuotation(q) {
+async function updatedQuotation(q:any) {
   // Update existing quotation
   await db.transaction(async (tx) => {
     // Update the quotation data
