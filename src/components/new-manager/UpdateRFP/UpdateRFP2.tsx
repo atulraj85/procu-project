@@ -465,7 +465,8 @@ export default function RFPUpdateForm({
 
                               {errors?.quotations?.[index]?.refNo && (
                                 <p className="text-red-500 text-sm mt-1">
-                                  {errors.quotations[index].refNo.message}
+                                  {errors.quotations?.[index]?.refNo?.message ||
+                                    "Error message not available"}
                                 </p>
                               )}
                             </div>
