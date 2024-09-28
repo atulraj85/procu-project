@@ -49,6 +49,11 @@ npx drizzle-kit migrate
 ```
 
 
+## Drizzle studio
+```bash
+npx drizzle-kit studio
+```
+
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
 
 In this repository, I tried to configure authentication using NextAuth.js, Prisma, and email functionality with Nodemailer. It includes the setup for email verification and password reset, using UUIDs for tokens and bcryptjs for password hashing.
