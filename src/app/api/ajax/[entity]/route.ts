@@ -85,7 +85,7 @@ export async function GET(
   }
 
   try {
-    const model = foo(entity);
+    const model = getEntityModel(entity);
     const whereClause = or(
       ...config.searchFields.map((field) => ilike(field, `%${searchTerm}%`))
     );
@@ -105,7 +105,7 @@ export async function GET(
   }
 }
 
-function foo(name: string) {
+function getEntityModel(name: string) {
   switch (name) {
     case "users":
       return db.query.UserTable;
@@ -114,6 +114,6 @@ function foo(name: string) {
     case "products":
       return db.query.ProductTable;
     default:
-      throw new Error("Not supported!");
+      throw new Error("Entity not supported!");
   }
 }
