@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
@@ -186,11 +187,16 @@ const ProductList = ({
               )}
             </div>
             <div className="w-1/4">
-              <Input
+              <Textarea
                 {...control.register(
                   `quotations.${index}.products.${productIndex}.description`
                 )}
               />
+              {/* <Input
+                {...control.register(
+                  `quotations.${index}.products.${productIndex}.description`
+                )}
+              /> */}
               {errors?.quotations?.[index]?.products?.[productIndex]
                 ?.modelNo && (
                 <p className="text-red-500 text-sm mt-1">
