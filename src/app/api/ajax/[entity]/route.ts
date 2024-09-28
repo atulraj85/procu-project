@@ -5,14 +5,14 @@ import { PgColumn } from "drizzle-orm/pg-core";
 import { NextRequest, NextResponse } from "next/server";
 
 type SearchConfig = {
-  searchFields: PgColumn[];
+  searchColumns: PgColumn[];
   columns: Record<string, boolean>;
-  with: any;
+  with?: any;
 };
 
 const searchConfigs: Record<string, SearchConfig> = {
   users: {
-    searchFields: [UserTable.name, UserTable.email, UserTable.mobile],
+    searchColumns: [UserTable.name, UserTable.email, UserTable.mobile],
     columns: {
       id: true,
       name: true,
@@ -20,10 +20,9 @@ const searchConfigs: Record<string, SearchConfig> = {
       mobile: true,
       role: true,
     },
-    with: undefined,
   },
   vendors: {
-    searchFields: [
+    searchColumns: [
       VendorTable.primaryName,
       VendorTable.companyName,
       VendorTable.contactDisplayName,
@@ -39,10 +38,9 @@ const searchConfigs: Record<string, SearchConfig> = {
       mobile: true,
       gstin: true,
     },
-    with: undefined,
   },
   products: {
-    searchFields: [
+    searchColumns: [
       ProductTable.name,
       ProductTable.modelNo,
       ProductTable.specification,
@@ -87,11 +85,11 @@ export async function GET(
   try {
     const model = getEntityModel(entity);
     const whereClause = or(
-      ...config.searchFields.map((field) => ilike(field, `%${searchTerm}%`))
+      ...config.searchColumns.map((field) => ilike(field, `%${searchTerm}%`))
     );
     const results = await model.findMany({
       columns: config.columns,
-      with: config.with,
+      with: config.with || undefined,
       where: whereClause,
     });
 
