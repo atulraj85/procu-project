@@ -90,8 +90,8 @@ export async function GET(
       ...config.searchFields.map((field) => ilike(field, `%${searchTerm}%`))
     );
     const results = await model.findMany({
-      columns: searchConfigs.users.columns,
-      with: searchConfigs.users.with,
+      columns: config.columns,
+      with: config.with,
       where: whereClause,
     });
 
