@@ -1,4 +1,4 @@
-import { Role } from "./schemas";
+import { Role } from "@/schemas";
 
 export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
 
