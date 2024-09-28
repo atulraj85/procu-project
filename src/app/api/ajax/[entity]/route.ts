@@ -85,7 +85,7 @@ export async function GET(
   try {
     const model = getEntityModel(entity);
     const whereClause = or(
-      ...config.searchColumns.map((field) => ilike(field, `%${searchTerm}%`))
+      ...config.searchColumns.map((column) => ilike(column, `%${searchTerm}%`))
     );
     const results = await model.findMany({
       columns: config.columns,
