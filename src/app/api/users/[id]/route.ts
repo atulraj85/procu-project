@@ -1,6 +1,6 @@
-import { deleteUser, findUserById } from "@/data/user";
+import { deleteUser } from "@/data/user";
 import { UserTable } from "@/drizzle/schema";
-import { drizzleDB } from "@/lib/db";
+import { db } from "@/lib/db";
 import { UpdateUserSchema } from "@/schemas";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
@@ -17,14 +17,17 @@ export async function PUT(
   }
 
   try {
-    const user = await findUserById(params.id);
+    const user = await db.query.UserTable.findFirst({
+      columns: { id: true },
+      where: eq(UserTable.id, params.id),
+    });
     if (!user) {
       return NextResponse.json({ error: "Invalid user" }, { status: 404 });
     }
 
     const { name, email, password, role } = validation.data;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const results = await drizzleDB
+    const results = await db
       .update(UserTable)
       .set({
         email,
@@ -50,14 +53,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const user = await findUserById(params.id);
+    const user = await db.query.UserTable.findFirst({
+      columns: { id: true },
+      where: eq(UserTable.id, params.id),
+    });
     if (!user) {
       return NextResponse.json({ error: "Inavlid user" }, { status: 404 });
     }
 
     await deleteUser(user.id);
 
-    return NextResponse.json({});
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete user" },

@@ -1,6 +1,6 @@
 import { deleteCompany, findCompanyById } from "@/data/company";
 import { CompanyTable } from "@/drizzle/schema";
-import { drizzleDB } from "@/lib/db";
+import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const company = await drizzleDB.query.CompanyTable.findFirst({
+    const company = await db.query.CompanyTable.findFirst({
       where: eq(CompanyTable.id, params.id),
       with: {
         addresses: true,

@@ -1,5 +1,5 @@
 import { AuditableEventTable } from "@/drizzle/schema";
-import { drizzleDB as db } from "@/lib/db";
+import { db } from "@/lib/db";
 import { eq } from "drizzle-orm";
 
 export async function findAuditableEventByName(name: string) {

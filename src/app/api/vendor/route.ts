@@ -1,99 +1,55 @@
+import { VendorTable } from "@/drizzle/schema";
+import { db } from "@/lib/db";
+import { VendorRequestBody } from "@/types";
+import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { serializePrismaModel, VendorRequestBody } from "@/types";
 
-const prisma = new PrismaClient();
+// Type Definitions
+type SortBy = keyof InferSelectModel<typeof VendorTable>;
+type SortDirection = "asc" | "desc";
+type WhereField = keyof InferSelectModel<typeof VendorTable>;
 
-const vendorModel = {
-  model: prisma.vendor,
-  attributes: [
-    "id",
-    "customerCode",
-    "primaryName",
-    "companyName",
-    "contactDisplayName",
-    "email",
-    "workPhone",
-    "mobile",
-    "website",
-    "gstin",
-    "msmeNo",
-    "address",
-    "customerState",
-    "customerCity",
-    "country",
-    "zip",
-    "remarks",
-    "pan",
-    "verifiedById",
-    "created_at",
-    "updated_at",
-  ],
-};
+const DEFAULT_SORTING_FIELD: SortBy = "id";
+const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
-    const whereClause: Record<string, any> = {};
-    const orderByClause: Record<string, "asc" | "desc"> = {};
-    const validAttributes = [
-      "id",
-      "customerCode",
-      "primaryName",
-      "companyName",
-      "contactDisplayName",
-      "email",
-      "workPhone",
-      "mobile",
-      "website",
-      "gstin",
-      "msmeNo",
-      "address",
-      "customerState",
-      "customerCity",
-      "country",
-      "zip",
-      "remarks",
-      "pan",
-      "verifiedById",
-      "created_at",
-      "updated_at",
-    ];
+    const sortBy: SortBy =
+      (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
+    const sortingOrder: SortDirection =
+      (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
 
+    if (!["asc", "desc"].includes(sortingOrder)) {
+      return NextResponse.json(
+        { error: "Invalid order value" },
+        { status: 400 }
+      );
+    }
+
+    // Construct where conditions
+    const whereConditions: SQL<unknown>[] = [];
     searchParams.forEach((value, key) => {
-      if (validAttributes.includes(key)) {
-        if (key === "orderBy") {
-          const [orderByField, orderByDirection] = value.split(",");
-          if (validAttributes.includes(orderByField)) {
-            orderByClause[orderByField] =
-              orderByDirection === "asc" ? "asc" : "desc";
-          }
-        } else if (key === "id" || key === "verifiedById") {
-          const ids = value.split(",").map((id) => id);
-          whereClause[key] = ids.length > 1 ? { in: ids } : ids[0];
-        } else {
-          whereClause[key] = value;
+      if (key !== "sortBy" && key !== "order") {
+        if (key in VendorTable) {
+          whereConditions.push(eq(VendorTable[key as WhereField], value));
         }
-      } else {
-        return NextResponse.json(
-          { error: `Invalid attribute: ${key}` },
-          { status: 400 }
-        );
       }
     });
 
-    const records = await prisma.vendor.findMany({
-      where: whereClause,
-      orderBy: orderByClause,
-    });
+    // Combine conditions using 'and'
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    if (Object.keys(whereClause).length > 0 && records.length === 0) {
-      return NextResponse.json(
-        { error: `Not found matching the criteria` },
-        { status: 404 }
-      );
-    }
+    // Fetch filtered and sorted vendors
+    const records = await db.query.VendorTable.findMany({
+      where: whereClause,
+      orderBy:
+        sortingOrder === "asc"
+          ? [asc(VendorTable[sortBy])]
+          : [desc(VendorTable[sortBy])],
+    });
 
     return NextResponse.json(records);
   } catch (error: unknown) {
@@ -105,7 +61,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const vendorDataArray: VendorRequestBody[] = await request.json();
 
@@ -137,8 +93,9 @@ export async function POST(request: Request) {
       }
 
       // Create a new vendor
-      const newVendor = await prisma.vendor.create({
-        data: vendorData,
+      const newVendor = await db.insert(VendorTable).values({
+        ...vendorData,
+        updatedAt: new Date(),
       });
 
       createdVendors.push(newVendor);

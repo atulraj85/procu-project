@@ -8,10 +8,10 @@ import {
   deletePasswordResetToken,
   findPasswordResetTokenByEmail,
 } from "@/data/password-reset-token";
-import bcrypt from "bcrypt";
+import { findUserByEmail } from "@/data/user";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
-import { db } from "./db";
 
 interface IValidatedToken {
   userId: number;
@@ -21,11 +21,7 @@ interface IValidatedToken {
 
 export const generateToken = async (email: string, password: string) => {
   try {
-    const user = await db.user.findUnique({
-      where: {
-        email,
-      },
-    });
+    const user = await findUserByEmail(email);
 
     const passwordMatch = await bcrypt.compare(
       password,
