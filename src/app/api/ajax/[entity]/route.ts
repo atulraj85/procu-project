@@ -1,36 +1,36 @@
 import { ProductTable, UserTable, VendorTable } from "@/drizzle/schema";
+import { db } from "@/lib/db";
+import { ilike, or } from "drizzle-orm";
+import { PgColumn } from "drizzle-orm/pg-core";
 import { NextRequest, NextResponse } from "next/server";
 
-type SelectField = boolean | { select: Record<string, SelectField> };
-
 type SearchConfig = {
-  model: any;
-  searchFields: string[];
-  returnFields: Record<string, SelectField>;
+  searchFields: PgColumn[];
+  columns: Record<string, boolean>;
+  with: any;
 };
 
 const searchConfigs: Record<string, SearchConfig> = {
   users: {
-    model: UserTable,
-    searchFields: ["name", "email", "mobile"],
-    returnFields: {
+    searchFields: [UserTable.name, UserTable.email, UserTable.mobile],
+    columns: {
       id: true,
       name: true,
       email: true,
       mobile: true,
       role: true,
     },
+    with: undefined,
   },
   vendors: {
-    model: VendorTable,
     searchFields: [
-      "primaryName",
-      "companyName",
-      "contactDisplayName",
-      "email",
-      "gstin",
+      VendorTable.primaryName,
+      VendorTable.companyName,
+      VendorTable.contactDisplayName,
+      VendorTable.email,
+      VendorTable.gstin,
     ],
-    returnFields: {
+    columns: {
       id: true,
       primaryName: true,
       companyName: true,
@@ -39,17 +39,23 @@ const searchConfigs: Record<string, SearchConfig> = {
       mobile: true,
       gstin: true,
     },
+    with: undefined,
   },
   products: {
-    model: ProductTable,
-    searchFields: ["name", "modelNo", "specification"],
-    returnFields: {
+    searchFields: [
+      ProductTable.name,
+      ProductTable.modelNo,
+      ProductTable.specification,
+    ],
+    columns: {
       id: true,
       name: true,
       modelNo: true,
       specification: true,
+    },
+    with: {
       productCategory: {
-        select: {
+        columns: {
           name: true,
         },
       },
@@ -78,25 +84,15 @@ export async function GET(
     );
   }
 
-  // Construct the where clause for searching across multiple fields
-  const whereClause = {
-    OR: config.searchFields.map((field) => ({
-      [field]: {
-        contains: searchTerm,
-        mode: "insensitive",
-      },
-    })),
-  };
-
   try {
-    const results = await config.model.findMany({
+    const model = foo(entity);
+    const whereClause = or(
+      ...config.searchFields.map((field) => ilike(field, `%${searchTerm}%`))
+    );
+    const results = await model.findMany({
+      columns: searchConfigs.users.columns,
+      with: searchConfigs.users.with,
       where: whereClause,
-      select: config.returnFields,
-      orderBy: {
-        // Specify the field to sort by and the order
-        // For example, sorting by 'name' in ascending order
-        // name: "asc", // Change this to the desired field for sorting
-      },
     });
 
     return NextResponse.json(results);
@@ -106,5 +102,18 @@ export async function GET(
       { error: `An error occurred while searching ${entity}` },
       { status: 500 }
     );
+  }
+}
+
+function foo(name: string) {
+  switch (name) {
+    case "users":
+      return db.query.UserTable;
+    case "vendors":
+      return db.query.VendorTable;
+    case "products":
+      return db.query.ProductTable;
+    default:
+      throw new Error("Not supported!");
   }
 }
