@@ -1,6 +1,8 @@
 import { UserRole } from "@/drizzle/schema";
 import { z } from "zod";
 
+export type Role = (typeof UserRole.enumValues)[number];
+
 const emailSchema = z
   .string({ required_error: "Email is required!" })
   .min(1, { message: "Email is required!" })

@@ -21,13 +21,13 @@ import * as z from "zod";
 import MainButton from "../common/MainButton";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
-import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
+import { RegisterUserSchema, Role } from "@/schemas";
 
-const FormSchema = CreateUserInputValidation;
+const FormSchema = RegisterUserSchema;
 
 type RegisterFormProps = {
   text: string;
-  role: string
+  role: Role;
 };
 
 function RegisterForm({ text, role }: RegisterFormProps) {
@@ -51,11 +51,17 @@ function RegisterForm({ text, role }: RegisterFormProps) {
       email: "",
       mobile: "",
       password: "",
-      role: role
+      role: "USER",
     },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (role) {
+      data.role = role;
+    }
+
+    console.log(data);
+
     setError(undefined);
     setSuccess(undefined);
 
@@ -63,7 +69,7 @@ function RegisterForm({ text, role }: RegisterFormProps) {
       registerUser(data)
         .then((data) => {
           if (data?.error) {
-            form.reset();
+            // form.reset();
             setError(data.error);
           }
 

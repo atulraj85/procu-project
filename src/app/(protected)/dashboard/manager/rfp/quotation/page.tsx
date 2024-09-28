@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import RFPUpdateForm from "@/components/new-manager/UpdateRFP2";
 import Loader from "@/components/shared/Loader";
+import RFPUpdateForm from "@/components/new-manager/UpdateRFP/UpdateRFP2";
 
 const Page = () => {
   const searchParams = useSearchParams();

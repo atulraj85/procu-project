@@ -19,7 +19,7 @@ function RegisterPage() {
         </div>
       </div>
       <div className="flex-grow">
-        <RegisterForm text="Register to get started" role={""}/>
+        <RegisterForm text="Register to get started" role={"USER"} />
       </div>
     </div>
   );

@@ -40,7 +40,13 @@
 npx drizzle-kit generate
 ```
 
+## For Migration
 
+```bash
+npx drizzle-kit up
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
 
 
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
