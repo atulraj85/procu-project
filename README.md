@@ -1,35 +1,31 @@
 ## 🔓 Stack
+
 - Next14
 - Typescript
 - Shadcn
 - Tailwind
 
-
-
 ### WorkFlow:
 
 1. Creation of Company:
-    1. Path: /register/company
-    2. Initial company is created using it's GST number.
-    3. Data: 
-        1. GST
-        2. Company Name
-        3. Business Address
-        4. Email
-        5. Phone
-        
+   1. Path: /register/company
+   2. Initial company is created using it's GST number.
+   3. Data:
+      1. GST
+      2. Company Name
+      3. Business Address
+      4. Email
+      5. Phone
 2. Creation of Admin:
-    1. Name
-    2. Email
-    3. Phone number
-    4. Password
-    5. Role : ADMIN
+   1. Name
+   2. Email
+   3. Phone number
+   4. Password
+   5. Role : ADMIN
 3. Admin Dashoboard:
-    1. Dashboard
-    2. Users
-    3. Company
-
-
+   1. Dashboard
+   2. Users
+   3. Company
 
 # Database and ORM
 
@@ -48,7 +44,6 @@ npx drizzle-kit generate
 npx drizzle-kit migrate
 ```
 
-
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
 
 In this repository, I tried to configure authentication using NextAuth.js, Prisma, and email functionality with Nodemailer. It includes the setup for email verification and password reset, using UUIDs for tokens and bcryptjs for password hashing.
@@ -64,12 +59,15 @@ npm i next-auth@beta @auth/prisma-adapter nodemailer uuid bcryptjs
 ### Key Dependencies:
 
 - **`next-auth`** & **`@auth/prisma-adapter`**
+
   - Used to configure the NextAuth framework with Prisma for user authentication.
 
 - **`uuid`**
+
   - Generates UUIDs for email verification and password reset tokens.
 
 - **`bcryptjs`**
+
   - Hashes passwords (used instead of `bcrypt` to avoid errors in Auth.js).
 
 - **`nodemailer`**
@@ -96,6 +94,7 @@ npm i -D @types/bcryptjs @types/nodemailer @types/uuid
 Set the following environment variables for different environments:
 
 - **`AUTH_SECRET`**
+
   - Used by the NextAuth framework internally.
   - You can generate it using the following command:
 
@@ -104,9 +103,11 @@ Set the following environment variables for different environments:
     ```
 
 - **`NEXT_PUBLIC_BASE_URL`**
+
   - The base URL of the environment (e.g., `http://localhost:3000` for development).
 
 - **`NEXT_PUBLIC_EMAIL_VERIFICATION_ENDPOINT`** & **`NEXT_PUBLIC_RESET_PASSWORD_ENDPOINT`**
+
   - These remain the same for every environment:
 
     ```bash
@@ -142,6 +143,10 @@ For QA and production, these values need to be updated according to the SMTP ser
 
 ---
 
+## Drizzle basic commands
 
+- **Generate Migration**: Use command `npx drizzle-kit generate` to generate migration file for the changes.
+- **Apply Migrations**: Use command `npx drizzle-kit migrate` to apply migrations.
+- **Drizzle Studio (Visual Interface)**: Use command `npx drizzle-kit studio` tp open a visual interface for interacting with your database schema, running queries, and managing migrations. Drizzle Studio provides a user-friendly way to explore and manage your database during development.
 
-
+---
