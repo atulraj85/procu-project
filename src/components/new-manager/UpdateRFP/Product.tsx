@@ -158,21 +158,22 @@ const ProductList = ({
           <div className="w-1/12 text-center">
             <Label>Qty.</Label>
           </div>
-          <div className="w-1/6 text-center">
+          <div className="w-1/12 text-center">
             <Label>Unit Price</Label>
           </div>
           <div className="w-1/12 text-center">
             <Label>GST%</Label>
           </div>
-          <div className="w-1/6 text-right">
+          <div className="w-1/12 text-right">
             <Label>Taxable Amount (INR)</Label>
           </div>
-          <div className="w-1/6 text-right">
+          <div className="w-1/12 text-right">
             <Label>Total (incl. GST) (INR)</Label>
           </div>
         </div>
         {fields.map((field, productIndex) => (
           <div key={field.id} className="flex space-x-4 items-start">
+            {/* Name */}
             <div className="w-1/6">
               <Input
                 {...control.register(
@@ -186,8 +187,9 @@ const ProductList = ({
                 </p>
               )}
             </div>
+            {/* Description */}
             <div className="w-1/4">
-              <Textarea
+              <Input
                 {...control.register(
                   `quotations.${index}.products.${productIndex}.description`
                 )}
@@ -207,6 +209,7 @@ const ProductList = ({
                 </p>
               )}
             </div>
+            {/* Quantity */}
             <div className="w-1/12">
               <Input
                 type="number"
@@ -236,7 +239,8 @@ const ProductList = ({
                 </p>
               )}
             </div>
-            <div className="w-1/6">
+            {/* unit price */}
+            <div className="w-1/12">
               <Controller
                 name={`quotations.${index}.products.${productIndex}.unitPrice`}
                 control={control}
@@ -263,6 +267,7 @@ const ProductList = ({
                 </p>
               )}
             </div>
+            {/* GST */}
             <div className="w-1/12">
               <Controller
                 name={`quotations.${index}.products.${productIndex}.gst`}
@@ -294,7 +299,8 @@ const ProductList = ({
                 </p>
               )}
             </div>
-            <div className="w-1/6">
+            {/* Taxable amount */}
+            <div className="w-1/12">
               <Input
                 className="text-right"
                 {...control.register(
@@ -310,7 +316,8 @@ const ProductList = ({
                 ).toFixed(2)}
               />
             </div>
-            <div className="w-1/6">
+            {/* Total amount */}
+            <div className="w-1/12">
               <Input
                 className="text-right"
                 {...control.register(
