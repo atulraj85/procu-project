@@ -29,20 +29,9 @@
 
 # Database and ORM
 
-## Generate Drizzle:
-
-```bash
-
-npx drizzle-kit generate
-```
-
-## For Migration
-
-```bash
-npx drizzle-kit up
-npx drizzle-kit generate
-npx drizzle-kit migrate
-```
+- **Generate Migration**: Use command `npx drizzle-kit generate` to generate migration file for the changes.
+- **Apply Migrations**: Use command `npx drizzle-kit migrate` to apply migrations.
+- **Drizzle Studio (Visual Interface)**: Use command `npx drizzle-kit studio` tp open a visual interface for interacting with your database schema, running queries, and managing migrations. Drizzle Studio provides a user-friendly way to explore and manage your database during development.
 
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
 
@@ -140,9 +129,3 @@ For QA and production, these values need to be updated according to the SMTP ser
   - Get the role in the component and check if the user has access.
   - Alternatively, define protected routes with required roles in the `protectedRoutes` variable in `routes.ts`.
   - A higher-order component, `with-role.tsx`, is available in `/src/components/auth` to manage access control.
-
-## Drizzle basic commands
-
-- **Generate Migration**: Use command `npx drizzle-kit generate` to generate migration file for the changes.
-- **Apply Migrations**: Use command `npx drizzle-kit migrate` to apply migrations.
-- **Drizzle Studio (Visual Interface)**: Use command `npx drizzle-kit studio` tp open a visual interface for interacting with your database schema, running queries, and managing migrations. Drizzle Studio provides a user-friendly way to explore and manage your database during development.

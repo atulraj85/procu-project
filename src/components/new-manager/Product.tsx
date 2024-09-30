@@ -36,7 +36,9 @@ export default function SheetSide() {
   const [productCategoryId, setProductCategoryId] = useState<string>("");
   const [products, setProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>(
+    []
+  );
   const [newCategoryName, setNewCategoryName] = useState<string>("");
   const [isAddingCategory, setIsAddingCategory] = useState<boolean>(false);
   const [showCategoryForm, setShowCategoryForm] = useState<boolean>(false);
@@ -173,10 +175,7 @@ export default function SheetSide() {
       <SheetContent side="right1">
         <SheetHeader>
           <SheetTitle>Add Product</SheetTitle>
-         
         </SheetHeader>
-
-        
 
         {/* Product Addition Form */}
         <form onSubmit={handleProductSubmit} className="space-y-4 py-4">
@@ -222,31 +221,41 @@ export default function SheetSide() {
                 Product Category
               </Label>
               <div className="flex">
-              <select
-                id="productCategoryId"
-                value={productCategoryId}
-                onChange={(e) => setProductCategoryId(e.target.value)}
-                className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="" disabled>
-                  Select a product category
-                </option>
-              
-                {productCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
+                <select
+                  id="productCategoryId"
+                  value={productCategoryId}
+                  onChange={(e) => setProductCategoryId(e.target.value)}
+                  className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>
+                    Select a product category
                   </option>
-                ))}
-              </select>
-              <Button
-              type="button"
-              onClick={() => setShowCategoryForm(!showCategoryForm)}
-              className="bg-primary p-2 px-2 ml-3"
-            >
-              {showCategoryForm ? <XIcon size={16} /> : <PlusIcon size={16} />}
-            </Button>
-            </div>
+
+                  {productCategories && productCategories.length > 0 ? (
+                    productCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No categories available
+                    </option>
+                  )}
+                </select>
+                <Button
+                  type="button"
+                  onClick={() => setShowCategoryForm(!showCategoryForm)}
+                  className="bg-primary p-2 px-2 ml-3"
+                >
+                  {showCategoryForm ? (
+                    <XIcon size={16} />
+                  ) : (
+                    <PlusIcon size={16} />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
           <SheetFooter>
@@ -262,28 +271,26 @@ export default function SheetSide() {
 
         {/* Product Category Addition Section */}
         <div className="mb-6 mt-4 border-b pb-4">
-          <div className="flex justify-between items-center mb-2">
-            
-            
-          </div>
+          <div className="flex justify-between items-center mb-2"></div>
           {showCategoryForm && (
-            
             <div className=" space-x-2 mt-2">
-              <h3 className="text-lg font-semibold mb-2 mx-2">Add Product Categories</h3>
+              <h3 className="text-lg font-semibold mb-2 mx-2">
+                Add Product Categories
+              </h3>
               <div className="flex">
-              <Input
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="Enter new category name"
-                className="flex-grow"
-              />
-              <Button
-                onClick={handleAddCategory}
-                disabled={isAddingCategory || !newCategoryName.trim()}
-                className="bg-primary ml-4"
-              >
-                {isAddingCategory ? "Adding..." : "Add"}
-              </Button>
+                <Input
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Enter new category name"
+                  className="flex-grow"
+                />
+                <Button
+                  onClick={handleAddCategory}
+                  disabled={isAddingCategory || !newCategoryName.trim()}
+                  className="bg-primary ml-4"
+                >
+                  {isAddingCategory ? "Adding..." : "Add"}
+                </Button>
               </div>
             </div>
           )}

@@ -104,7 +104,8 @@ const Company: React.FC = () => {
       } else {
         const response = await fetch(`/api/vendor/gst/${GST}`);
         const result = await response.json();
-
+        console.log(GST);
+        
         console.log(result);
         if (result.flag) {
           const data = result.data;
@@ -125,6 +126,7 @@ const Company: React.FC = () => {
       toast({
         title: "An error occurred while fetching vendor details.",
       });
+      console.log(error);
     }
     setLoader(false);
   };
@@ -291,18 +293,19 @@ const Company: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 w-60 text-base">
-                <label className="font-bold">Emial</label>
-                <Input
-                  type="email"
-                  name="email"
-                  value={companyData.email}
-                  placeholder="email"
-                  className="p-2"
-                  onChange={handleChangeVendorDetails}
-                />
-                {errors.email && <p className="text-red-500">{errors.email}</p>}
-              </div>
+            <div className="flex flex-col gap-3 w-60 text-base">
+              <label className="font-bold">Email</label>
+              <Input
+                
+                type="email"
+                name="email"
+                value={companyData.email}
+                placeholder="email"
+                className="p-2"
+                onChange={handleChangeVendorDetails}
+              />
+              {errors.email && <p className="text-red-500">{errors.email}</p>}
+            </div>
             </div>
 
             <div className="flex gap-8">
