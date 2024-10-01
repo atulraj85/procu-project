@@ -9,9 +9,11 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   SortingState,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ArrowUpDown } from "lucide-react";
 
 import {
   Table,
@@ -31,10 +33,10 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+
   const table = useReactTable({
     data,
     columns,
@@ -42,35 +44,28 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
+      globalFilter,
     },
   });
 
+  const sortableColumns = ['gst', 'vendorName', 'companyName', 'email'];
+
   return (
     <div>
-      <div className="flex items-center py-4">
+      <div className="flex justify-end py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
+          placeholder="Search all columns..."
+          value={globalFilter ?? ""}
+          onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
       </div>
-      {/* <div className="flex items-center py-4">
-        <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-      </div> */}
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -78,12 +73,22 @@ export function DataTable<TData, TValue>({
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
+                    {header.isPlaceholder ? null : (
+                      <div className="flex items-center">
+                        {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                        {sortableColumns.includes(header.column.id) && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => header.column.toggleSorting()}
+                          >
+                            <ArrowUpDown className="ml-2 h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
