@@ -212,7 +212,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       // Call the onSubmit prop function with the formData
       // await onSubmit(data);
 
-      const response = await fetch(`/api/company?id=${companyId}`, {
+      const response = await fetch(`/api/company/${companyId}`, {
         method: "PUT",
         body: formData,
       });

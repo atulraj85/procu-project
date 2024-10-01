@@ -76,10 +76,14 @@ export async function PUT(
     // Prepare update data for the company
     const updateData = {
       ...fields,
-      foundedDate: foundedDate ? new Date(foundedDate) : undefined,
+      ...(foundedDate ? { foundedDate: new Date(foundedDate) } : undefined),
       ...(logoPath && { logo: logoPath }),
       ...(stampPath && { stamp: stampPath }),
     };
+    // Remove invalid Date if foundedDate is falsy or an invalid date
+    if (!foundedDate || isNaN(new Date(foundedDate).getTime())) {
+      delete updateData.foundedDate;
+    }
 
     // Now handle address data
     const mapToAddressType = (value: string): AddressType | null => {
@@ -91,42 +95,69 @@ export async function PUT(
       return null;
     };
 
+    // Update company.
+    console.log("Updating company", updateData);
+    await db
+      .update(CompanyTable)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(CompanyTable.id, existingCompany.id));
+
     // If the address exists, update it, otherwise, create a new one
     const addressType =
       mapToAddressType(reqData.get("addressType") as string) || "BUSINESS";
-    const addressFields = {
-      street: reqData.get("street") as string,
-      city: reqData.get("city") as string,
-      state: reqData.get("state") as string,
-      postalCode: reqData.get("postalCode") as string,
-      country: reqData.get("country") as string,
-      addressType,
-    };
-    const addressId = reqData.get("addressId") as string | null;
 
-    // Update company.
-    await db
-      .update(CompanyTable)
-      .set({ ...updateData })
-      .where(eq(CompanyTable.id, existingCompany.id));
+    // [{"street":"","country":"","state":"","city":"","zipCode":"","AddressType":"SHIPPING"}]
+    const addressesPayload = reqData.get("addresses") as string; // Get the JSON string
+    const parsedAddresses = JSON.parse(addressesPayload) as Array<
+      Record<string, string>
+    >;
 
-    const existingAddress = addressId
-      ? await db.query.AddressTable.findFirst({
-          where: eq(AddressTable.id, addressId),
-        })
-      : null;
+    const parsedAddresses2 =
+      parsedAddresses?.map((address) => {
+        const addressType = mapToAddressType(address.AddressType) || "BUSINESS";
+        return {
+          addressId: address.addressId,
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          postalCode: address.zipCode,
+          country: address.country,
+          addressType,
+        };
+      }) || [];
 
-    if (existingAddress) {
-      await db
-        .update(AddressTable)
-        .set(addressFields)
+    const addressesToInsert = [];
+    const addressesToUpdate = [];
 
-        .where(eq(AddressTable.id, addressId!));
-    } else {
-      await db.insert(AddressTable).values({
-        ...addressFields,
-        companyId: existingCompany.id,
-      });
+    for (let i = 0; i < parsedAddresses2.length; i++) {
+      const address = parsedAddresses2[i];
+      const existingAddress = address.addressId
+        ? await db.query.AddressTable.findFirst({
+            where: eq(AddressTable.id, address.addressId),
+          })
+        : null;
+      if (existingAddress) {
+        addressesToUpdate.push({ ...address, companyId: existingCompany.id });
+      } else {
+        addressesToInsert.push({ ...address, companyId: existingCompany.id });
+      }
+    }
+
+    if (addressesToInsert && addressesToInsert.length > 0) {
+      await db.insert(AddressTable).values(addressesToInsert);
+    }
+
+    if (addressesToUpdate && addressesToUpdate.length > 0) {
+      for (let i = 0; i < addressesToUpdate.length; i++) {
+        await Promise.all(
+          addressesToUpdate.map((item) =>
+            db
+              .update(AddressTable)
+              .set(item)
+              .where(eq(AddressTable.id, item.addressId))
+          )
+        );
+      }
     }
 
     const company = await db.query.CompanyTable.findFirst({
@@ -135,7 +166,7 @@ export async function PUT(
         addresses: true,
       },
     });
-    // Return the updated company data
+
     return NextResponse.json({ status: "success", data: company });
   } catch (error: any) {
     console.error("Error updating company", error);
