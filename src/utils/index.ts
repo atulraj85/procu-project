@@ -1,6 +1,6 @@
 import { POTable, RFPTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import { desc, sql } from "drizzle-orm";
+import { desc, like } from "drizzle-orm";
 
 export function isValidUUID(uuid: string) {
   const uuidRegex =
@@ -15,8 +15,8 @@ export async function generateRFPId() {
 
   // Get the last RFP_ID for today
   const lastRFP = await db.query.RFPTable.findFirst({
-    where: (RFPTable) => sql`${RFPTable.rfpId} LIKE ${prefix}%`,
-    orderBy: [desc(RFPTable.rfpId)],
+    where: like(RFPTable.rfpId, `${prefix}%`),
+    orderBy: desc(RFPTable.rfpId),
   });
 
   let nextNumber = 0;
@@ -38,8 +38,8 @@ export async function generatePOId() {
 
   // Get the last RFP_ID for today
   let lastPO = await db.query.POTable.findFirst({
-    where: (POTable) => sql`${POTable.poId} LIKE ${prefix}%`,
-    orderBy: [desc(POTable.poId)],
+    where: like(POTable.poId, `${prefix}%`),
+    orderBy: desc(POTable.poId),
   });
 
   let nextNumber = 0;

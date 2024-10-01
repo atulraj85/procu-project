@@ -1,8 +1,10 @@
+import { saveAuditTrail } from "@/actions/audit-trail";
 import {
   ApproversListTable,
   RFPProductTable,
   RFPTable,
 } from "@/drizzle/schema";
+import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 import { generateRFPId } from "@/utils";
@@ -176,6 +178,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const currentLoggedInUser = await currentUser();
+  if (
+    !currentLoggedInUser ||
+    !currentLoggedInUser.id ||
+    currentLoggedInUser.role !== "PR_MANAGER"
+  ) {
+    console.error("Invalid user!");
+    return NextResponse.json({ error: "Invalid user!" }, { status: 404 });
+  }
+
+  // TODO: Add validation logic before creating RFP.
+
   try {
     const {
       requirementType,
@@ -190,17 +204,6 @@ export async function POST(request: NextRequest) {
 
     console.log(dateOfOrdering);
 
-    // Check if the user exists
-    const existingUser = await db.query.UserTable.findFirst({
-      columns: { id: true },
-    });
-    if (!existingUser) {
-      return NextResponse.json(
-        { error: "User does not exist" },
-        { status: 404 }
-      );
-    }
-
     // Validate the status
     if (!Object.values(RFPStatus).includes(rfpStatus)) {
       return NextResponse.json(
@@ -210,11 +213,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate RFP ID
-    const rfpId = await generateRFPId();
+    let rfpId;
+    try {
+      rfpId = await generateRFPId();
+    } catch (error: any) {
+      console.error("Error generating RFP id", error);
+      return NextResponse.json(
+        { error: `Failed to create RFP: ${error.message}` },
+        { status: 500 }
+      );
+    }
 
-    // Create RFP inside the transaction
-    const newRFP = await db.transaction(async (tx) => {
-      // Create the RFP first
+    // Create the RFP first
+    let createdRFP;
+    try {
       const results = await db
         .insert(RFPTable)
         .values({
@@ -223,37 +235,84 @@ export async function POST(request: NextRequest) {
           dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
-          userId,
+          userId: currentLoggedInUser.id,
           rfpStatus,
           updatedAt: new Date(),
         })
-        .returning();
-      const createdRFP = results[0];
+        .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
+      createdRFP = results[0];
+      console.log("CreatedRFP", createdRFP);
+    } catch (error: any) {
+      console.error("Error creating RFP", error);
+      return NextResponse.json(
+        { error: `Failed to create RFP: ${error.message}` },
+        { status: 500 }
+      );
+    }
 
-      // Create RFP products and approvers
-      await Promise.all([
-        db.insert(RFPProductTable).values(
-          rfpProducts.map((rfpProduct) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            quantity: rfpProduct.quantity,
-            productId: rfpProduct.productId, // Ensure this is the correct type
-            updatedAt: new Date(),
-          }))
-        ),
-        db.insert(ApproversListTable).values(
-          approvers.map((approver) => ({
-            rfpId: createdRFP.id, // Use the ID of the created RFP
-            userId: approver.approverId,
-            approved: false,
-            updatedAt: new Date(),
-          }))
-        ),
-      ]);
+    // Create RFP products
+    try {
+      const values = rfpProducts.map((rfpProduct) => ({
+        rfpId: createdRFP.id, // Use the ID of the created RFP
+        quantity: rfpProduct.quantity,
+        productId: rfpProduct.productId, // Ensure this is the correct type
+        updatedAt: new Date(),
+      }));
+      if (values && values.length > 0) {
+        await db.insert(RFPProductTable).values(values);
+      }
+    } catch (error: any) {
+      console.error("Error creating RFP Products", error);
 
-      return createdRFP;
-    });
+      // Rollback
+      await db.delete(RFPTable).where(eq(RFPTable.id, createdRFP.id));
 
-    return NextResponse.json({ data: newRFP }, { status: 201 });
+      return NextResponse.json(
+        { error: `Failed to create RFP: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    // Create approvers
+    try {
+      const values = approvers.map((approver) => ({
+        rfpId: createdRFP.id, // Use the ID of the created RFP
+        userId: approver.approverId,
+        approved: false,
+        updatedAt: new Date(),
+      }));
+      if (values && values.length > 0) {
+        await db.insert(ApproversListTable).values(values);
+      }
+    } catch (error: any) {
+      console.error("Error creating RFP approvers", error);
+
+      // Rollback
+      await db
+        .delete(RFPProductTable)
+        .where(eq(RFPProductTable.rfpId, createdRFP.id));
+      await db.delete(RFPTable).where(eq(RFPTable.id, createdRFP.id));
+
+      return NextResponse.json(
+        { error: `Failed to create RFP: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    // TODO: Decide what should be the 'rfpDescription'.
+    try {
+      await saveAuditTrail({
+        eventName: "RFP_CREATED",
+        details: {
+          rfpId: createdRFP.rfpId,
+          rfpDescription: "Description of RFP",
+        },
+      });
+    } catch (error) {
+      console.error("Error saving rfp audit trails", error);
+    }
+
+    return NextResponse.json({ data: createdRFP }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating RFP:", error);
     return NextResponse.json(
@@ -263,8 +322,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function formatRFPData(inputData: any[]) {
-  return inputData.map((rfp: any) => ({
+function formatRFPData(rfps: any[]) {
+  return rfps?.map((rfp: any) => ({
     id: rfp.id,
     rfpId: rfp.rfpId,
     requirementType: rfp.requirementType,
@@ -275,46 +334,49 @@ function formatRFPData(inputData: any[]) {
     preferredQuotationId: rfp.preferredQuotationId,
     created_at: rfp.created_at,
     updated_at: rfp.updated_at,
-    approvers: rfp.approversList.map((approver: any) => ({
-      name: approver.user.name,
-      email: approver.user.email,
-      mobile: approver.user.mobile,
-    })),
-    products: rfp.rfpProducts.map((product: any) => ({
-      id: product.product.id,
-      name: product.product.name,
-      modelNo: product.product.modelNo,
-      quantity: product.quantity,
-      rfpProductId: product.id,
-      description: product.product.specification,
-    })),
-    quotations: rfp.quotations.map((quotation: any) => ({
-      id: quotation.id,
-      totalAmount: quotation.totalAmount,
-      refNo: quotation.refNo,
-      totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-      created_at: quotation.created_at,
-      updated_at: quotation.updated_at,
-      vendor: quotation.vendor,
-      products: [
-        ...quotation?.vendorPricings.map((pricing: any) => ({
-          id: pricing.rfpProduct.product.id,
-          rfpProductId: pricing.rfpProduct.id,
-          name: pricing.rfpProduct.product.name,
-          modelNo: pricing.rfpProduct.product.modelNo,
-          quantity: pricing.rfpProduct.quantity,
-          price: pricing.price,
-          description: pricing.rfpProduct.product.specification,
-          gst: pricing.GST,
-          type: "product",
-        })),
-        ...(quotation.otherCharges || []).map((charge: any) => ({
-          ...charge,
-          type: "otherCharge",
-        })),
-      ],
-      supportingDocuments: quotation.supportingDocuments || [],
-    })),
+    approvers:
+      rfp.approversLists?.map((approver: any) => ({
+        name: approver.user.name,
+        email: approver.user.email,
+        mobile: approver.user.mobile,
+      })) || [],
+    products:
+      rfp.rfpProducts?.map((product: any) => ({
+        id: product.product.id,
+        name: product.product.name,
+        modelNo: product.product.modelNo,
+        quantity: product.quantity,
+        rfpProductId: product.id,
+        description: product.product.specification,
+      })) || [],
+    quotations:
+      rfp.quotations?.map((quotation: any) => ({
+        id: quotation.id,
+        totalAmount: quotation.totalAmount,
+        refNo: quotation.refNo,
+        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+        created_at: quotation.created_at,
+        updated_at: quotation.updated_at,
+        vendor: quotation.vendor,
+        products: [
+          ...quotation?.vendorPricings?.map((pricing: any) => ({
+            id: pricing.rfpProduct.product.id,
+            rfpProductId: pricing.rfpProduct.id,
+            name: pricing.rfpProduct.product.name,
+            modelNo: pricing.rfpProduct.product.modelNo,
+            quantity: pricing.rfpProduct.quantity,
+            price: pricing.price,
+            description: pricing.rfpProduct.product.specification,
+            gst: pricing.GST,
+            type: "product",
+          })),
+          ...(quotation.otherCharges || []).map((charge: any) => ({
+            ...charge,
+            type: "otherCharge",
+          })),
+        ],
+        supportingDocuments: quotation.supportingDocuments || [],
+      })) || [],
     createdBy: {
       name: rfp.user.name,
       email: rfp.user.email,
