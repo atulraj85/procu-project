@@ -1,10 +1,7 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
-import { AlertCircle, X } from "lucide-react";
+import { X } from "lucide-react";
 import { ChangeEvent, useCallback, useEffect, useState } from "react";
 
 type Vendor = {
@@ -128,136 +125,75 @@ const VendorSelector = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between">
-          <div>
-            <CardTitle className="text-lg">Vendor Details</CardTitle>
-            {errors?.quotations?.[index]?.vendorId && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.quotations[index].vendorId.message}
-              </p>
-            )}
+    <div>
+      <div className="flex items-center mb-2 gap-2">
+        <div className="font-bold">Vendor Details:</div>
+        {error && <div className="text-red-500 ml-2">{error}</div>}
+        {approvedVendor && (
+          <div className="flex items-center text-sm ml-2">
+            <div className="text-slate-700">
+              {`Vendor Name: ${approvedVendor.companyName}, Email: ${approvedVendor.email}, Phone: ${approvedVendor.mobile}, GSTIN: ${approvedVendor.gstin}`}
+            </div>
+            <Button
+              type="button"
+              onClick={removeVendor}
+              variant="outline"
+              size="icon"
+              className="text-red-500 ml-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
+        )}
+        {errors?.quotations?.[index]?.vendorId && (
+          <p className="text-red-500 text-sm mt-1">
+            {errors.quotations[index].vendorId.message}
+          </p>
+        )}
 
+        {!disableVendorSearch && (
           <Input
-            className="border-2 border-green-700"
             disabled={disableVendorSearch}
             type="text"
             placeholder="Search Vendors..."
             value={searchTerm}
             onChange={handleSearchChange}
           />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-between">
-          <div className="w-[70%]">
-            {error && <div className="text-red-500">{error}</div>}
-            {approvedVendor && (
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="flex flex-col">
-                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                    Vendor Name
-                  </Label>
-                  <Input
-                    disabled
-                    value={approvedVendor.companyName}
-                    placeholder="Name"
-                    className="flex-1"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                    Email
-                  </Label>
-                  <Input
-                    disabled
-                    value={approvedVendor.email}
-                    placeholder="Email"
-                    className="flex-1"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                    Phone
-                  </Label>
-                  <Input
-                    disabled
-                    value={approvedVendor.mobile}
-                    placeholder="Phone"
-                    className="flex-1"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label className="mb-2 font-bold text-[16px] text-slate-700">
-                    GSTIN
-                  </Label>
-                  <Input
-                    disabled
-                    value={approvedVendor.gstin}
-                    placeholder="GSTIN"
-                    className="flex-1"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <Label className="mb-8 font-bold text-[16px] text-slate-700"></Label>
-                  <Button
-                    type="button"
-                    onClick={() => removeVendor()}
-                    variant="outline"
-                    size="icon"
-                    className="text-red-500"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+        )}
+      </div>
 
-          <div className="w-[30%] pl-8">
-            <div>
-              {fetchedVendors.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="font-semibold">Fetched Vendors:</h3>
-                  <ul>
-                    {fetchedVendors.map((vendor) => (
-                      <li
-                        key={vendor.id}
-                        className="py-1 cursor-pointer hover:bg-gray-200"
-                        onClick={() => {
-                          addVendor(vendor);
-                          setValue(`quotations.${index}.vendorId`, vendor.id);
-                          setFetchedVendors([]);
-                          setError(null);
-                        }}
-                      >
-                        {vendor.companyName} | {vendor.email}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+      <div>
+        {fetchedVendors.length > 0 && (
+          <div className="mt-2">
+            <h3 className="font-semibold">Fetched Vendors:</h3>
+            <ul>
+              {fetchedVendors.map((vendor) => (
+                <li
+                  key={vendor.id}
+                  className="py-1 cursor-pointer hover:bg-gray-200"
+                  onClick={() => {
+                    addVendor(vendor);
+                    setValue(`quotations.${index}.vendorId`, vendor.id);
+                    setFetchedVendors([]);
+                    setError(null);
+                  }}
+                >
+                  {vendor.companyName} | {vendor.email}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {disableVendorSearch && (
+          <div className=" border-orange-500 text-orange-500">
+            <div className="text-sm">
+              You need to remove the current vendor first to modify existing
+              vendor details.
             </div>
-
-            {disableVendorSearch && (
-              <Alert
-                variant="default"
-                className="mt-2 border-orange-500 text-orange-500"
-              >
-                <AlertCircle className="h-4 w-4" color="orange" />
-                <AlertTitle>Warning</AlertTitle>
-                <AlertDescription>
-                  You need to remove the current vendor first to modify existing
-                  vendor details.
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+      </div>
+    </div>
   );
 };
 

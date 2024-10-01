@@ -469,14 +469,17 @@ const VendorDetails: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Vendor List</CardTitle>
-      </CardHeader>
+      
       <CardContent>
+        
+      
         <Sheet>
+        <div className="flex justify-between pt-4">
+        <CardTitle>Vendor List</CardTitle>
           <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
             Add Vendor
           </SheetTrigger>
+          </div>
           <SheetContent>
             <SheetHeader>
               <SheetDescription>

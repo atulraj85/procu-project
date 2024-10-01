@@ -504,6 +504,7 @@ const VendorDetails: React.FC = () => {
 
   return (
     <div className="px-5 pb-1">
+      <h1>hiiiiiiiiiiiiiiiiiiiiiiiiiiiii</h1>
       <Sheet>
         <div className=" flex justify-between mt">
           <div>
