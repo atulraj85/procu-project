@@ -322,8 +322,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function formatRFPData(inputData: any[]) {
-  return inputData.map((rfp: any) => ({
+function formatRFPData(rfps: any[]) {
+  return rfps?.map((rfp: any) => ({
     id: rfp.id,
     rfpId: rfp.rfpId,
     requirementType: rfp.requirementType,
@@ -334,46 +334,49 @@ function formatRFPData(inputData: any[]) {
     preferredQuotationId: rfp.preferredQuotationId,
     created_at: rfp.created_at,
     updated_at: rfp.updated_at,
-    approvers: rfp.approversList.map((approver: any) => ({
-      name: approver.user.name,
-      email: approver.user.email,
-      mobile: approver.user.mobile,
-    })),
-    products: rfp.rfpProducts.map((product: any) => ({
-      id: product.product.id,
-      name: product.product.name,
-      modelNo: product.product.modelNo,
-      quantity: product.quantity,
-      rfpProductId: product.id,
-      description: product.product.specification,
-    })),
-    quotations: rfp.quotations.map((quotation: any) => ({
-      id: quotation.id,
-      totalAmount: quotation.totalAmount,
-      refNo: quotation.refNo,
-      totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-      created_at: quotation.created_at,
-      updated_at: quotation.updated_at,
-      vendor: quotation.vendor,
-      products: [
-        ...quotation?.vendorPricings.map((pricing: any) => ({
-          id: pricing.rfpProduct.product.id,
-          rfpProductId: pricing.rfpProduct.id,
-          name: pricing.rfpProduct.product.name,
-          modelNo: pricing.rfpProduct.product.modelNo,
-          quantity: pricing.rfpProduct.quantity,
-          price: pricing.price,
-          description: pricing.rfpProduct.product.specification,
-          gst: pricing.GST,
-          type: "product",
-        })),
-        ...(quotation.otherCharges || []).map((charge: any) => ({
-          ...charge,
-          type: "otherCharge",
-        })),
-      ],
-      supportingDocuments: quotation.supportingDocuments || [],
-    })),
+    approvers:
+      rfp.approversLists?.map((approver: any) => ({
+        name: approver.user.name,
+        email: approver.user.email,
+        mobile: approver.user.mobile,
+      })) || [],
+    products:
+      rfp.rfpProducts?.map((product: any) => ({
+        id: product.product.id,
+        name: product.product.name,
+        modelNo: product.product.modelNo,
+        quantity: product.quantity,
+        rfpProductId: product.id,
+        description: product.product.specification,
+      })) || [],
+    quotations:
+      rfp.quotations?.map((quotation: any) => ({
+        id: quotation.id,
+        totalAmount: quotation.totalAmount,
+        refNo: quotation.refNo,
+        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+        created_at: quotation.created_at,
+        updated_at: quotation.updated_at,
+        vendor: quotation.vendor,
+        products: [
+          ...quotation?.vendorPricings?.map((pricing: any) => ({
+            id: pricing.rfpProduct.product.id,
+            rfpProductId: pricing.rfpProduct.id,
+            name: pricing.rfpProduct.product.name,
+            modelNo: pricing.rfpProduct.product.modelNo,
+            quantity: pricing.rfpProduct.quantity,
+            price: pricing.price,
+            description: pricing.rfpProduct.product.specification,
+            gst: pricing.GST,
+            type: "product",
+          })),
+          ...(quotation.otherCharges || []).map((charge: any) => ({
+            ...charge,
+            type: "otherCharge",
+          })),
+        ],
+        supportingDocuments: quotation.supportingDocuments || [],
+      })) || [],
     createdBy: {
       name: rfp.user.name,
       email: rfp.user.email,
