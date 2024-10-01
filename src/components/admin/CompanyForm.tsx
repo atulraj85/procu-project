@@ -26,10 +26,11 @@ import {
 import { toast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { IoConstructOutline } from "react-icons/io5";
+import { useCurrentUser } from "@/hooks/auth";
 
 interface Company {
   GST: string;
-  gstAddress:string;
+  gstAddress: string;
   addresses: any[];
   created_at: string;
   email: string;
@@ -74,11 +75,13 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [userid, setUserId] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
+
+  const currentUser = useCurrentUser();
+  const userId = currentUser?.id;
 
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
@@ -107,12 +110,8 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   });
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("USER_ID");
-    console.log(storedUserId);
-    setUserId(storedUserId);
-
-    if (storedUserId) {
-      getCompanyId(storedUserId);
+    if (userId) {
+      getCompanyId(userId);
     }
   }, []);
 
@@ -188,7 +187,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         const value = data[key as keyof CompanyFormValues];
         if (value instanceof File) {
           formData.append(key, value);
-          console.log(value)
+          console.log(value);
         } else if (key === "foundedDate" && value) {
           // Convert foundedDate to ISO format
           const date = new Date(value as string);
@@ -265,9 +264,10 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 <p></p>{" "}
                 <strong>
                   {" "}
-                  <span className="text-xl">Address:</span> {companyData.gstAddress}
-                </strong>{"default address , address not come from backend "}
-                
+                  <span className="text-xl">Address:</span>{" "}
+                  {companyData.gstAddress}
+                </strong>
+                {"default address , address not come from backend "}
               </div>
             </div>
 
@@ -398,7 +398,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         alt="Preview"
                         className="w-14 h-14 object-cover rounded-full"
                       />
-                     
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -431,15 +430,15 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       //     field.onChange(null);
                       //   }}
                       // >
-                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                      <CiCircleRemove
+                        className="w-12 absolute right-24 top-2"
                         // variant="outline"
                         size="sm"
-                        
                         onClick={() => {
                           setLogoPreview(null);
                           field.onChange(null);
-                        }} />
-                      
+                        }}
+                      />
                     )}
                   </FormItem>
                 )}
@@ -462,7 +461,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         alt="Preview"
                         className="w-14 h-14 object-cover rounded-full"
                       />
-                     
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -495,15 +493,15 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       //     field.onChange(null);
                       //   }}
                       // >
-                        <CiCircleRemove   className="w-12 absolute right-24 top-2"
+                      <CiCircleRemove
+                        className="w-12 absolute right-24 top-2"
                         // variant="outline"
                         size="sm"
-                        
                         onClick={() => {
                           setStampPreview(null);
                           field.onChange(null);
-                        }} />
-                      
+                        }}
+                      />
                     )}
                   </FormItem>
                 )}
