@@ -18,8 +18,7 @@ function HeroSection() {
         </p>
         <img src="/images/stylish_underline.png" alt="stylish underline" />
         <p className="my-[3.13rem] text-[1.125rem] font-[500]">
-          Let&apos;s make your work more organize and easily using the Taskio
-          Dashboard with many of the latest featuresin managing work every day.
+        Let&apos;s help you consolidate your procurement to pay process at one place
         </p>
         <div className="flex gap-4 md:gap-[2.81rem]">
           <MainButton
@@ -27,10 +26,7 @@ function HeroSection() {
             classes="w-[10rem] h-[3.275rem] rounded-[2.5rem]"
             action={handleRegisterNavigation}
           />
-          <div className="flex gap-3 items-center">
-            <img src="/images/play_icon.png" alt="play icon" />
-            <p>View Demo</p>
-          </div>
+         
         </div>
       </div>
       <div className="z-10">

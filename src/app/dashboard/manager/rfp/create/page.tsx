@@ -10,8 +10,10 @@ import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 import { useRouter } from "next/navigation";
 import { getTodayDate } from "@/lib/getTodayDate";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RFPProduct {
+  specification?: string | number | readonly string[] | undefined;
   productId: string;
   name?: string;
   modelNo?: string;
@@ -28,6 +30,7 @@ type User = {
   id: number;
   name: string;
   email: string;
+  role:string,
   mobile: string;
 };
 
@@ -49,13 +52,14 @@ interface FormData {
   };
 }
 
+
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
-    requirementType: "",
+    requirementType: "Product",
     dateOfOrdering: getTodayDate(),
     deliveryLocation: "",
-    deliveryByDate: "27/07/2024",
-    lastDateToRespond: "hii",
+    deliveryByDate: "",
+    lastDateToRespond: "",
     rfpStatus: "DRAFT",
     rfpProducts: [],
     approvers: [],
@@ -83,14 +87,14 @@ const RFPForm: React.FC = () => {
   const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] =
-    useState<string>("");
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const router = useRouter();
+  const userId = localStorage.getItem("USER_ID");
+  const [userInfo , setUserInfo] =useState<User>()
 
-  console.log(state);
-  console.log(address);
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
@@ -119,8 +123,24 @@ const RFPForm: React.FC = () => {
     };
 
     fetchCompanyData();
+    
   }, []);
 
+   useEffect(()=>{
+    async function fetchUserInformation () {
+    try {
+      const response = await fetch(`/api/users?id=${userId}`);
+      const data = await response.json();
+      setUserInfo(data[0])
+      console.log("user",data[0]);
+      
+    } catch (error) {
+      
+    }
+    
+   }
+   fetchUserInformation()
+  },[])
   useEffect(() => {
     const fetchRfpId = async () => {
       try {
@@ -165,7 +185,6 @@ const RFPForm: React.FC = () => {
         if (entity === "users") {
           setFetchedUsers(data);
         } else if (entity === "products") {
-          // Ensure productId is set correctly
           const formattedProducts = data.map((product: any) => ({
             ...product,
             productId: product.productId || product.id || String(product._id),
@@ -200,8 +219,10 @@ const RFPForm: React.FC = () => {
       setZipCode(value);
     }
   };
+
   const today = new Date();
   const formattedToday = today.toISOString().slice(0, 16);
+
   const handleProductChange = (
     index: number,
     field: keyof RFPProduct,
@@ -210,12 +231,15 @@ const RFPForm: React.FC = () => {
     const updatedProducts = [...approvedProducts];
     updatedProducts[index] = { ...updatedProducts[index], [field]: value };
     setApprovedProducts(updatedProducts);
-
+  
     setFormData((prevData) => ({
       ...prevData,
-      rfpProducts: updatedProducts.map(({ productId, quantity }) => ({
+      rfpProducts: updatedProducts.map(({ productId, quantity, specification, name, modelNo }) => ({
         productId,
         quantity,
+        specification,
+        name,
+        modelNo
       })),
     }));
   };
@@ -241,11 +265,11 @@ const RFPForm: React.FC = () => {
       console.error("Product ID is missing");
       return;
     }
-
+  
     const productExists = approvedProducts.some(
       (p) => p.productId === product.productId
     );
-
+  
     if (!productExists) {
       const newProduct = { ...product, quantity: 1 };
       setApprovedProducts((prevProducts) => [...prevProducts, newProduct]);
@@ -253,7 +277,13 @@ const RFPForm: React.FC = () => {
         ...prevData,
         rfpProducts: [
           ...prevData.rfpProducts,
-          { productId: String(product.productId), quantity: 1 },
+          { 
+            productId: String(product.productId), 
+            quantity: 1,
+            specification: product.specification,
+            name: product.name,
+            modelNo: product.modelNo
+          },
         ],
       }));
       setSearchProductTerm("");
@@ -262,6 +292,7 @@ const RFPForm: React.FC = () => {
       console.warn(`Product with ID ${product.productId} already exists.`);
     }
   };
+
   const removeProduct = (index: number) => {
     setApprovedProducts((prevProducts) =>
       prevProducts.filter((_, i) => i !== index)
@@ -272,10 +303,36 @@ const RFPForm: React.FC = () => {
     }));
   };
 
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!formData.requirementType) newErrors.requirementType = "Requirement type is required";
+    if (!formData.deliveryByDate) newErrors.deliveryByDate = "Expected delivery date is required";
+    if (approvedUsers.length === 0) newErrors.approvers = "At least one approver is required";
+    if (approvedProducts.length === 0) newErrors.products = "At least one product is required";
+    if (!address) newErrors.address = "Address is required";
+    if (!country) newErrors.country = "Country is required";
+    if (!state) newErrors.state = "State is required";
+    if (!city) newErrors.city = "City is required";
+    if (!zipCode) newErrors.zipCode = "Zip code is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-    // Create updatedFormData without including the address
     const updatedFormData = {
       ...formData,
       deliveryLocation,
@@ -287,10 +344,8 @@ const RFPForm: React.FC = () => {
       },
     };
 
-    console.log("form data", updatedFormData);
-
-    setLoading(true); // Set loading state to true
-    setError(null); // Reset error state
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/rfp", {
@@ -306,116 +361,103 @@ const RFPForm: React.FC = () => {
       }
 
       const result = await response.json();
+      if(result){
       toast({
         title: "🎉 Draft Submitted!",
-        description: response.ok,
+        description: "Your RFP draft has been successfully submitted.",
       });
-      // this is for relode form
+      router.push("/dashboard/manager");
       window.location.reload();
-      return router.push("/dashboard");
+    }
+      
+      
     } catch (err) {
-      // toast({
-      //   title: "Error",
-      //   description: "",
-      //   });
       setError(
         err instanceof Error
           ? err.message
           : "Error submitting RFP. Please try again later."
       );
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create RFP</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Request for Product</CardTitle>
-              {rfpId && (
-                <div className="flex justify-between">
-                  <p className="text-md text-muted-foreground">
-                    RFP ID: {rfpId}
-                  </p>
-                  <p>Date of Ordering: {getTodayDate()}</p>
-                </div>
+    <Card>
+      <CardHeader>
+        <div className=" flex justify-between">
+        <div>
+        <CardTitle>Create RFP</CardTitle>
+        </div>
+
+        {userInfo && 
+        <div className="flex ">
+          <h1 className="px-3">Name:- {userInfo.name}</h1>
+          <h1 className="px-3">Role:- {userInfo.role}</h1>
+          <h1 className="px-3">Current Date:- {getTodayDate()}</h1>
+        </div>
+}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Card className="mb-4">
+          <CardHeader>
+            {rfpId && (
+              <div className="flex justify-between">
+                <p className="text-md text-muted-foreground">
+                  RFP ID: {rfpId}
+                </p>
+                <p>RFP Date: {getTodayDate()}</p>
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="grid grid-cols-4 gap-2">
+            <div className="space-y-1 text-[19px]">
+              <Label htmlFor="requirementType">Requirement Type</Label>
+              <Select
+                value={formData.requirementType}
+                onValueChange={(value) =>
+                  setFormData((prevData) => ({ ...prevData, requirementType: value }))
+                }
+              >
+                <SelectTrigger className={errors.requirementType ? "border-red-500" : ""}>
+                  <SelectValue placeholder="Select requirement type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Product">Product</SelectItem>
+                  <SelectItem value="Service">Service</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.requirementType && (
+                <p className="text-red-500 text-sm">{errors.requirementType}</p>
               )}
-            </CardHeader>
-            <CardContent className="grid grid-cols-4 gap-2">
-              <div className="space-y-3 text-[19px]">
-                <Label htmlFor="requirementType">Requirement Type</Label>
-                <div className="flex items-center">
-                  <input
-                    type="radio"
-                    id="product"
-                    name="requirementType"
-                    value="Product"
-                    checked={formData.requirementType === "Product"}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  <Label htmlFor="product" className="mr-4">
-                    Product
-                  </Label>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
+              <Input
+                id="deliveryByDate"
+                name="deliveryByDate"
+                type="datetime-local"
+                min={formattedToday}
+                value={formData.deliveryByDate}
+                onChange={handleInputChange}
+                className={errors.deliveryByDate ? "border-red-500" : ""}
+              />
+              {errors.deliveryByDate && (
+                <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-                  <input
-                    type="radio"
-                    id="service"
-                    name="requirementType"
-                    value="Service"
-                    checked={formData.requirementType === "Service"}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  <Label htmlFor="service">Service</Label>
-                </div>
+        <Card className="mb-4">
+          <CardHeader>
+            <div className="flex justify-between">
+              <div>
+                <CardTitle>Approver Details (for GRN)</CardTitle>
               </div>
-              {/* <div className="space-y-2">
-            <Label htmlFor="dateOfOrdering">Date of Ordering</Label>
-            <Input
-              id="dateOfOrdering"
-              name="dateOfOrdering"
-              type="datetime-local"
-              value={formData.dateOfOrdering}
-              onChange={handleInputChange}
-            />
-          </div> */}
-              <div className="space-y-2">
-                <Label htmlFor="deliveryByDate">Delivery By Date</Label>
-                <Input
-                  id="deliveryByDate"
-                  name="deliveryByDate"
-                  type="datetime-local"
-                  min={formattedToday} // Set the minimum date
-                  value={formData.deliveryByDate}
-                  onChange={handleInputChange}
-                />
-              </div>
-              {/* <div className="space-y-2">
-            <Label htmlFor="lastDateToRespond">Last Date to Respond</Label>
-            <Input
-              id="lastDateToRespond"
-              name="lastDateToRespond"
-              type="datetime-local"
-              value={formData.lastDateToRespond}
-              onChange={handleInputChange}
-            />
-          </div> */}
-            </CardContent>
-          </Card>
-
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Approver Details (for GRN)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center mb-4 space-x-2">
+              <div>
                 <Input
                   type="text"
                   placeholder="Search Approvers..."
@@ -423,23 +465,14 @@ const RFPForm: React.FC = () => {
                   onChange={(e) => handleSearchChange(e, "users")}
                   className="flex-1"
                 />
-                {/* <Button
-              type="button"
-              onClick={() => {
-                // if (user) {
-                //   addApprover(user);
-                //   setSearchApproverTerm("");
-                //   setFetchedUsers([]);
-                // } else {
-                //   console.error("No user selected");
-                // }
-              }}
-              variant="outline"
-              className={userSelected ? "bg-green-500" : ""}
-            >
-              <Plus />
-            </Button> */}
               </div>
+            </div>
+            {errors.approvers && (
+                <p className="text-red-500 text-sm">{errors.approvers}</p>
+              )}
+          </CardHeader>
+            <CardContent>
+            
 
               {fetchedUsers.length > 0 && (
                 <div className="mt-2">
@@ -593,17 +626,17 @@ const RFPForm: React.FC = () => {
                       className="flex-1"
                     />
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col w-[50%]">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
                     >
-                      Model No
+                      Product Description
                     </Label>
                     <Input
                       disabled
-                      value={product.modelNo}
+                      value={product.specification}
                       placeholder="Model"
                       className="flex-1"
                     />
@@ -648,6 +681,9 @@ const RFPForm: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {errors.products && (
+                <p className="text-red-500 text-sm">{errors.products}</p>
+              )}
             </CardContent>
           </Card>
 
@@ -662,7 +698,11 @@ const RFPForm: React.FC = () => {
                   id="address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
+                  className={errors.address ? "border-red-500" : ""}
                 />
+                {errors.address && (
+                  <p className="text-red-500 text-sm">{errors.address}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -671,7 +711,11 @@ const RFPForm: React.FC = () => {
                     id="country"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
+                    className={errors.country ? "border-red-500" : ""}
                   />
+                  {errors.country && (
+                    <p className="text-red-500 text-sm">{errors.country}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="state">State</Label>
@@ -679,7 +723,11 @@ const RFPForm: React.FC = () => {
                     id="state"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
+                    className={errors.state ? "border-red-500" : ""}
                   />
+                  {errors.state && (
+                    <p className="text-red-500 text-sm">{errors.state}</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -689,7 +737,11 @@ const RFPForm: React.FC = () => {
                     id="city"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
+                    className={errors.city ? "border-red-500" : ""}
                   />
+                  {errors.city && (
+                    <p className="text-red-500 text-sm">{errors.city}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zipCode">Zip Code</Label>
@@ -697,7 +749,11 @@ const RFPForm: React.FC = () => {
                     id="zipCode"
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
+                    className={errors.zipCode ? "border-red-500" : ""}
                   />
+                  {errors.zipCode && (
+                    <p className="text-red-500 text-sm">{errors.zipCode}</p>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">

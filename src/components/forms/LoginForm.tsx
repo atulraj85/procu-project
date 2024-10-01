@@ -107,7 +107,7 @@ function LoginForm({ api, registerPage}: LoginFormProps) {
         <p className="text-[#333] text-[1.625rem] font-[700]">
           Pr<span className="text-[#03B300]">o</span>cu
         </p>
-        <p className="text-[#333] text-[1.125rem]">Welcome Back</p>
+        <p className="text-[#333] text-[1.125rem]">Procurement Management System</p>
       </div>
       <Form {...form}>
         <form
