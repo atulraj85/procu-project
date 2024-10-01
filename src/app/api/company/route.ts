@@ -13,7 +13,7 @@ import path from "path";
 //   },
 // };
 
-async function saveFile(file: File, directory: string) {
+export async function saveFile(file: File, directory: string) {
   const filePath = path.join(directory, file.name);
   const fileStream = fs.createWriteStream(filePath);
   const readableStream = file.stream();
