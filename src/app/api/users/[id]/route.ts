@@ -2,7 +2,6 @@ import { deleteUser } from "@/data/user";
 import { UserTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { UpdateUserSchema } from "@/schemas";
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,15 +23,10 @@ export async function PUT(
     if (!user) {
       return NextResponse.json({ error: "Invalid user" }, { status: 404 });
     }
-
-    const { name, email, password, role } = validation.data;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const {  role } = validation.data;
     const results = await db
       .update(UserTable)
       .set({
-        email,
-        password: hashedPassword,
-        name,
         role,
         updatedAt: new Date(),
       })
@@ -71,3 +65,4 @@ export async function DELETE(
     );
   }
 }
+

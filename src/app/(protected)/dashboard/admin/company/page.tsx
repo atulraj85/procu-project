@@ -1,9 +1,8 @@
 // app/companies/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { CompanyForm } from "@/components/admin/CompanyForm";
+import { useState } from "react";
 
 interface Company {
   id: string;
@@ -12,13 +11,9 @@ interface Company {
 }
 
 export default function CompaniesPage() {
- 
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  
-  
   async function handleSubmit(data: any) {
-   
     console.log("From page", data);
     const formData = data;
 
@@ -36,11 +31,7 @@ export default function CompaniesPage() {
         body: formData, // Use FormData directly
       });
     }
-
-    
   }
-
-  
 
   return (
     <div className="container mx-auto p-4">
@@ -49,7 +40,6 @@ export default function CompaniesPage() {
         initialData={selectedCompany || undefined}
         onSubmit={handleSubmit}
       />
-      
     </div>
   );
 }
