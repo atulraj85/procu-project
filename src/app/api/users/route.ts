@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch filtered and sorted users
     const users = await db.query.UserTable.findMany({
+      columns: { password: false },
       where: whereClause,
       orderBy:
         sortingOrder === "asc"
