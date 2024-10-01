@@ -112,7 +112,7 @@ const SupportingDocumentsList = ({
           </div>
 
           <div className="flex">
-            <div className="grid grid-cols-1 justify-between">
+            <div className="grid grid-cols-2 justify-between">
               {fields.map((field, docIndex) => {
                 const location = getValues(
                   `quotations.${index}.supportingDocuments.${docIndex}.location`
@@ -171,6 +171,7 @@ const SupportingDocumentsList = ({
                           className="text-red-500"
                         >
                           <X className="h-4 w-4" />
+                          
                         </Button>
                       </div>
                     </div>
