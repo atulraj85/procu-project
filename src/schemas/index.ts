@@ -54,9 +54,6 @@ export const RegisterUserSchema = z.object({
 });
 
 export const UpdateUserSchema = z.object({
-  email: emailSchema,
-  password: passwordSchema,
-  name: nameSchema,
   role: RoleEnum.optional(),
 });
 
