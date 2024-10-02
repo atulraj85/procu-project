@@ -12,6 +12,9 @@ export async function createEmailVerificationToken(
   data: EmailVerificationTokenData
 ) {
   try {
+    console.log(
+      `Creating email-verification-token for user with email: ${data.email}`
+    );
     const results = await db
       .insert(EmailVerificationTokenTable)
       .values({
@@ -22,10 +25,10 @@ export async function createEmailVerificationToken(
       .returning();
     return results[0] || null;
   } catch (error) {
-    console.error(
-      `Error deleting email-verification-token with data: ${data}`,
-      error
+    console.log(
+      `Error creating email-verification-token for user with email: ${data.email}`
     );
+    throw error;
   }
 }
 
@@ -40,39 +43,36 @@ export async function deleteEmailVerificationToken(id: string) {
       `Error deleting email-verification-token with id: ${id}`,
       error
     );
+    throw error;
   }
 }
 
 export async function findEmailVerificationTokenByToken(token: string) {
   try {
     console.log(`Finding email-verification-token by token: ${token}`);
-    const results = await db
-      .select()
-      .from(EmailVerificationTokenTable)
-      .where(eq(EmailVerificationTokenTable.token, token))
-      .limit(1);
-    return results[0] || null;
+    return await db.query.EmailVerificationTokenTable.findFirst({
+      where: eq(EmailVerificationTokenTable.token, token),
+    });
   } catch (error) {
     console.error(
       `Error finding email-verification-token by token ${token}`,
       error
     );
+    throw error;
   }
 }
 
 export async function findEmailVerificationTokenByEmail(email: string) {
   try {
     console.log(`Finding email-verification-token by email: ${email}`);
-    const results = await db
-      .select()
-      .from(EmailVerificationTokenTable)
-      .where(eq(EmailVerificationTokenTable.email, email))
-      .limit(1);
-    return results[0] || null;
+    return await db.query.EmailVerificationTokenTable.findFirst({
+      where: eq(EmailVerificationTokenTable.email, email),
+    });
   } catch (error) {
     console.error(
       `Error finding email-verification-token by email ${email}`,
       error
     );
+    throw error;
   }
 }

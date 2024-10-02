@@ -5,11 +5,9 @@ import { eq } from "drizzle-orm";
 export async function findCompanyByName(name: string) {
   try {
     console.log(`Finding company by name: ${name}`);
-    const results = await db
-      .select()
-      .from(CompanyTable)
-      .where(eq(CompanyTable.name, name));
-    return results[0] || null;
+    return await db.query.CompanyTable.findFirst({
+      where: eq(CompanyTable.name, name),
+    });
   } catch (error) {
     console.error(`Error finding company by name ${name}`, error);
     throw error;
@@ -19,11 +17,9 @@ export async function findCompanyByName(name: string) {
 export async function findCompanyById(id: string) {
   try {
     console.log(`Finding company by id: ${id}`);
-    const results = await db
-      .select()
-      .from(CompanyTable)
-      .where(eq(CompanyTable.id, id));
-    return results[0] || null;
+    return await db.query.CompanyTable.findFirst({
+      where: eq(CompanyTable.id, id),
+    });
   } catch (error) {
     console.error(`Error finding company by id ${id}`, error);
     throw error;
