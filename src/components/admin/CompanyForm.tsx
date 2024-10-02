@@ -1,11 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import Loader from "@/components/shared/Loader";
-import * as z from "zod";
-import { Upload } from "lucide-react";
-import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,9 +18,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { IoConstructOutline } from "react-icons/io5";
 import { useCurrentUser } from "@/hooks/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { CiCircleRemove } from "react-icons/ci";
+import * as z from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+
+import AddressForm from "./AddressForm";
+import { addresses } from "./address";
 
 interface Company {
   GST: string;
@@ -79,6 +80,25 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
+  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
+  // Address States
+  const [currentAddress, setCurrentAddress] = useState<{
+    title: string;
+    street: string;
+    country: string;
+    state: string;
+    city: string;
+    zipCode: string;
+  } | null>(null);
+
+  const handlecurrentAddress = (searchTitle: string) => {
+    let currAddress = addresses.filter((address) =>
+      address.title.toLowerCase().includes(searchTitle.toLowerCase())
+    );
+
+    setCurrentAddress(currAddress[0]);
+    console.log(addresses[0]);
+  };
 
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
@@ -86,8 +106,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // name: "",
-      // GST: "",
       email: "",
       phone: "",
       website: "",
@@ -243,64 +261,66 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
-        <Card>
-          <CardContent className="mt-4">
-            <div className="flex  justify-between mb-6">
-              <div>
-                <p>
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
+          <Card>
+            <CardContent className="mt-4">
+              <div className="flex  justify-between mb-6">
+                <div>
+                  <p>
+                    {" "}
+                    <strong>{companyData?.name}</strong>{" "}
+                  </p>
+                  <p>
+                    {" "}
+                    <strong>{companyData?.GST}</strong>{" "}
+                  </p>
+                </div>
+
+                <div className="w-[30%]">
                   {" "}
-                  <strong>{companyData?.name}</strong>{" "}
-                </p>
-                <p>
-                  {" "}
-                  <strong>{companyData?.GST}</strong>{" "}
-                </p>
+                  <p></p>{" "}
+                  <strong>
+                    {" "}
+                    <span className="text-xl">Address:</span>{" "}
+                    {companyData.gstAddress
+                      ? companyData.gstAddress
+                      : " address not come from backend "}
+                  </strong>
+                </div>
               </div>
 
-              <div className="w-[30%]">
-                {" "}
-                <p></p>{" "}
-                <strong>
-                  {" "}
-                  <span className="text-xl">Address:</span>{" "}
-                  {companyData.gstAddress}
-                </strong>
-                {"default address , address not come from backend "}
-              </div>
-            </div>
+              <div className="grid grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-4 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* <FormField
+                {/* <FormField
                 control={form.control}
                 name="businessAddress"
                 render={({ field }) => (
@@ -314,34 +334,34 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 )}
               /> */}
 
-              <FormField
-                control={form.control}
-                name="website"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input type="text" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input type="text" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="industry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Industry</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* 
+                <FormField
+                  control={form.control}
+                  name="industry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Industry</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* 
               <FormField
                 control={form.control}
                 name="foundedDate"
@@ -356,326 +376,289 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 )}
               /> */}
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* File input for Logo */}
-              <FormField
-                control={form.control}
-                name="logo"
-                render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
-                      <p className="text-md mb-3 font-medium">Logo</p>
-                      <img
-                        src={
-                          logoPreview
-                            ? logoPreview
-                            : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
-                        }
-                        alt="Preview"
-                        className="w-14 h-14 object-cover rounded-full"
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        className="hidden"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          let count = 0;
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setLogoPreview(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                            field.onChange(file);
-                            count++;
+                {/* File input for Logo */}
+                <FormField
+                  control={form.control}
+                  name="logo"
+                  render={({ field }) => (
+                    <FormItem className="relative">
+                      <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                        <p className="text-md mb-3 font-medium">Logo</p>
+                        <img
+                          src={
+                            logoPreview
+                              ? logoPreview
+                              : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
                           }
-                        }}
-                      />
-                    </FormControl>
-                    {logoPreview && (
-                      // <Button
-                      //   type="button"
-                      //   variant="outline"
-                      //   size="sm"
-                      //   className="mt-6"
-                      //   onClick={() => {
-                      //     setPreview(null);
-                      //     field.onChange(null);
-                      //   }}
-                      // >
-                      <CiCircleRemove
-                        className="w-12 absolute right-24 top-2"
-                        // variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setLogoPreview(null);
-                          field.onChange(null);
-                        }}
-                      />
-                    )}
-                  </FormItem>
-                )}
-              />
+                          alt="Preview"
+                          className="w-14 h-14 object-cover rounded-full"
+                        />
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          className="hidden"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            let count = 0;
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setLogoPreview(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                              field.onChange(file);
+                              count++;
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      {logoPreview && (
+                        // <Button
+                        //   type="button"
+                        //   variant="outline"
+                        //   size="sm"
+                        //   className="mt-6"
+                        //   onClick={() => {
+                        //     setPreview(null);
+                        //     field.onChange(null);
+                        //   }}
+                        // >
+                        <CiCircleRemove
+                          className="w-12 absolute right-24 top-2"
+                          // variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setLogoPreview(null);
+                            field.onChange(null);
+                          }}
+                        />
+                      )}
+                    </FormItem>
+                  )}
+                />
 
-              {/* File input for Stamp */}
-              <FormField
-                control={form.control}
-                name="stamp"
-                render={({ field }) => (
-                  <FormItem className="relative">
-                    <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
-                      <p className="text-md mb-3 font-medium">Stamp</p>
-                      <img
-                        src={
-                          stampPreview
-                            ? stampPreview
-                            : "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
-                        }
-                        alt="Preview"
-                        className="w-14 h-14 object-cover rounded-full"
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        className="hidden"
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          let count = 0;
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setStampPreview(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                            field.onChange(file);
-                            count++;
+                {/* File input for Stamp */}
+                <FormField
+                  control={form.control}
+                  name="stamp"
+                  render={({ field }) => (
+                    <FormItem className="relative">
+                      <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                        <p className="text-md mb-3 font-medium">Stamp</p>
+                        <img
+                          src={
+                            stampPreview
+                              ? stampPreview
+                              : "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
                           }
-                        }}
-                      />
-                    </FormControl>
-                    {stampPreview && (
-                      // <Button
-                      //   type="button"
-                      //   variant="outline"
-                      //   size="sm"
-                      //   className="mt-6"
-                      //   onClick={() => {
-                      //     setPreview(null);
-                      //     field.onChange(null);
-                      //   }}
-                      // >
-                      <CiCircleRemove
-                        className="w-12 absolute right-24 top-2"
-                        // variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setStampPreview(null);
-                          field.onChange(null);
-                        }}
-                      />
-                    )}
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* <Card>
-          <CardHeader>
-            <CardTitle>Business Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              <FormField
-                control={form.control}
-                name="businessAddress.street"
-                render={({ field }) => (
-                  <FormItem className="col-span-3">
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex gap-20">
-                <FormField
-                  control={form.control}
-                  name="businessAddress.country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
+                          alt="Preview"
+                          className="w-14 h-14 object-cover rounded-full"
+                        />
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input
+                          className="hidden"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            let count = 0;
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setStampPreview(reader.result as string);
+                              };
+                              reader.readAsDataURL(file);
+                              field.onChange(file);
+                              count++;
+                            }
+                          }}
+                        />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
+                      {stampPreview && (
+                        // <Button
+                        //   type="button"
+                        //   variant="outline"
+                        //   size="sm"
+                        //   className="mt-6"
+                        //   onClick={() => {
+                        //     setPreview(null);
+                        //     field.onChange(null);
+                        //   }}
+                        // >
+                        <CiCircleRemove
+                          className="w-12 absolute right-24 top-2"
+                          // variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setStampPreview(null);
+                            field.onChange(null);
+                          }}
+                        />
+                      )}
                     </FormItem>
                   )}
                 />
               </div>
-            </div>
-          </CardContent>
-        </Card> */}
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Delivery Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              <FormField
-                control={form.control}
-                name="deliveryAddress.street"
-                render={({ field }) => (
-                  <FormItem className="col-span-3">
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {isAddingAddress && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Delivery Address</CardTitle>
+                <div className="flex justify-between items-center">
+                  <Select
+                    // value={}
+                    onValueChange={(value) => {
+                      console.log(value);
+                      handlecurrentAddress(value);
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select Addresse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {addresses.map((item, idx) => (
+                        <SelectItem key={idx} value={item.title}>
+                          {item.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-              <div className="grid grid-cols-4 gap-4">
-                <FormField
-                  control={form.control}
-                  name="deliveryAddress.country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <Button
+                    type="button"
+                    onClick={() => setIsAddingAddress(false)}
+                    className="my-4 bg-primary"
+                  >
+                    Add Address
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-2">
+                  <FormField
+                    control={form.control}
+                    name="deliveryAddress.street"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} value={currentAddress?.street} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="deliveryAddress.state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <div className="grid grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={currentAddress?.country} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="deliveryAddress.city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={currentAddress?.state} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="deliveryAddress.zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={currentAddress?.city} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-        <Button type="submit" disabled={isLoading} className="my-4 bg-primary">
-          {isLoading ? "Saving..." : "Save Company"}
-        </Button>
-      </form>
-    </Form>
+                    <FormField
+                      control={form.control}
+                      name="deliveryAddress.zipCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zip Code</FormLabel>
+                          <FormControl>
+                            <Input {...field} value={currentAddress?.zipCode} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="my-4 bg-primary"
+          >
+            {isLoading ? "Saving..." : "Save Changes"}
+          </Button>
+        </form>
+      </Form>
+
+      <div className="mt-4">
+        {!isAddingAddress && (
+          <AddressForm
+            companyId={companyId}
+            isAddingAddress={() => setIsAddingAddress(true)}
+          />
+        )}
+      </div>
+    </>
   );
 }

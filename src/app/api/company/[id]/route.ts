@@ -2,11 +2,11 @@ import { deleteCompany } from "@/data/company";
 import { AddressTable, CompanyTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { AddressType } from "@/schemas";
+import { saveFile } from "@/utils/saveFiles";
 import { eq } from "drizzle-orm";
 import fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { saveFile } from "../route";
 
 export async function GET(
   request: NextRequest,
