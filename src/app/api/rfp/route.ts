@@ -165,7 +165,6 @@ export async function GET(request: NextRequest) {
     console.log(`Found ${records.length} records`);
 
     const formattedData = formatRFPData(records);
-    console.log("formattedData", formattedData);
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
@@ -224,10 +223,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the RFP first
-    let createdRFP;
-    try {
-      const results = await db
+    const newRFP = await db.transaction(async (tx) => {
+      const [createdRFP] = await tx
         .insert(RFPTable)
         .values({
           rfpId,
@@ -235,84 +232,51 @@ export async function POST(request: NextRequest) {
           dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
-          userId: currentLoggedInUser.id,
+          userId: currentLoggedInUser.id!,
           rfpStatus,
           updatedAt: new Date(),
         })
         .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
-      createdRFP = results[0];
-      console.log("CreatedRFP", createdRFP);
-    } catch (error: any) {
-      console.error("Error creating RFP", error);
-      return NextResponse.json(
-        { error: `Failed to create RFP: ${error.message}` },
-        { status: 500 }
-      );
-    }
 
-    // Create RFP products
-    try {
-      const values = rfpProducts.map((rfpProduct) => ({
-        rfpId: createdRFP.id, // Use the ID of the created RFP
+      const rfpProductValues = rfpProducts.map((rfpProduct) => ({
+        rfpId: createdRFP.id,
         quantity: rfpProduct.quantity,
-        productId: rfpProduct.productId, // Ensure this is the correct type
+        productId: rfpProduct.productId,
         updatedAt: new Date(),
       }));
-      if (values && values.length > 0) {
-        await db.insert(RFPProductTable).values(values);
+      if (rfpProductValues && rfpProductValues.length > 0) {
+        await tx.insert(RFPProductTable).values(rfpProductValues);
       }
-    } catch (error: any) {
-      console.error("Error creating RFP Products", error);
 
-      // Rollback
-      await db.delete(RFPTable).where(eq(RFPTable.id, createdRFP.id));
-
-      return NextResponse.json(
-        { error: `Failed to create RFP: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
-    // Create approvers
-    try {
-      const values = approvers.map((approver) => ({
-        rfpId: createdRFP.id, // Use the ID of the created RFP
+      const approverValues = approvers.map((approver) => ({
+        rfpId: createdRFP.id,
         userId: approver.approverId,
         approved: false,
         updatedAt: new Date(),
       }));
-      if (values && values.length > 0) {
-        await db.insert(ApproversListTable).values(values);
+      if (approverValues && approverValues.length > 0) {
+        await tx.insert(ApproversListTable).values(approverValues);
       }
-    } catch (error: any) {
-      console.error("Error creating RFP approvers", error);
 
-      // Rollback
-      await db
-        .delete(RFPProductTable)
-        .where(eq(RFPProductTable.rfpId, createdRFP.id));
-      await db.delete(RFPTable).where(eq(RFPTable.id, createdRFP.id));
-
-      return NextResponse.json(
-        { error: `Failed to create RFP: ${error.message}` },
-        { status: 500 }
-      );
-    }
+      return createdRFP;
+    });
 
     // TODO: Decide what should be the 'rfpDescription'.
-    try {
-      await saveAuditTrail({
-        eventName: "RFP_CREATED",
-        details: {
-          rfpId: createdRFP.rfpId,
-          rfpDescription: "Description of RFP",
-        },
-      });
-    } catch (error) {
-      console.error("Error saving rfp audit trails", error);
+    if (newRFP) {
+      try {
+        await saveAuditTrail({
+          eventName: "RFP_CREATED",
+          details: {
+            rfpId: newRFP.rfpId,
+            rfpDescription: "Description of RFP",
+          },
+        });
+      } catch (error) {
+        console.error("Error saving rfp audit trails", error);
+      }
     }
 
-    return NextResponse.json({ data: createdRFP }, { status: 201 });
+    return NextResponse.json({ data: newRFP }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating RFP:", error);
     return NextResponse.json(
