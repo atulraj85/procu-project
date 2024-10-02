@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -30,7 +30,9 @@ type FormValues = z.infer<typeof FormSchema>;
 const AutoFillRegisterForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(
+    null
+  );
   const router = useRouter();
   const userId = localStorage.getItem("USER_ID");
 
@@ -50,17 +52,17 @@ const AutoFillRegisterForm: React.FC = () => {
       try {
         const response = await fetch(`/api/users?id=${userId}`);
         const data = await response.json();
-        
+
         if (data && data.length > 0) {
           const user = data[0];
-          form.setValue('name', user.name);
-          form.setValue('email', user.email);
-          form.setValue('mobile', user.mobile);
-          
-          form.setValue('company', user.companyName || '');
+          form.setValue("name", user.name);
+          form.setValue("email", user.email);
+          form.setValue("mobile", user.mobile);
+
+          form.setValue("company", user.companyName || "");
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
         toast({
           title: "Error",
           description: "Failed to load user data",
@@ -72,7 +74,9 @@ const AutoFillRegisterForm: React.FC = () => {
     fetchUserData();
   }, [form]);
 
-  const handleProfilePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfilePhotoChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       form.setValue("profilePhoto", file);
@@ -131,11 +135,13 @@ const AutoFillRegisterForm: React.FC = () => {
   return (
     <div className="w-full flex flex-col gap-[2.81rem] justify-center items-center min-h-screen px-4 lg:px-[4rem] lg:mr-16">
       <div className="self-start">
-        
         <p className="text-[#333] text-[1.125rem]"> update Profile</p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="w-full space-y-6"
+        >
           <FormField
             control={form.control}
             name="name"
