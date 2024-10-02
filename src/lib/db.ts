@@ -4,7 +4,6 @@ import { drizzle } from "drizzle-orm/neon-http";
 
 const isProduction = process.env.NODE_ENV === "production";
 
-
 console.log("process.env.DATABASE_URL", process.env.DATABASE_URL);
 
 const sql = neon(process.env.DATABASE_URL!); // use neon driver instead of pg Pool
