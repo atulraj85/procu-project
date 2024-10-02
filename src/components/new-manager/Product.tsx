@@ -91,20 +91,11 @@ export default function SheetSide() {
     };
 
     try {
-      const data = await createProduct(productData);
-      console.log("Creating product!", data);
+      const response = await createProduct(productData);
 
-      // const response = await fetch("/api/product", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(productData),
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error("Failed to create product");
-      // }
+      if (!response?.id) {
+        throw new Error("Failed to create product");
+      }
 
       toast({
         title: "🎉 Product added successfully!",
