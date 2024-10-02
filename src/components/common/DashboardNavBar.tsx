@@ -9,7 +9,18 @@ import {
 } from "@/components/ui/popover";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IUserProfileResponse } from "@/types";
+import Link from "next/link";
+
+interface IUserProfileData {
+  name: string;
+  // Add other user profile properties as needed
+}
+
+interface IUserProfileResponse {
+  response?: {
+    data?: IUserProfileData;
+  };
+}
 import { signOut } from "next-auth/react";
 
 interface IProps {
@@ -17,7 +28,7 @@ interface IProps {
   userProfile: IUserProfileResponse | null;
 }
 
-function getInitials(inputString: string) {
+function getInitials(inputString: string): string {
   const words = inputString.split(" ");
   const initials = words.map((word) => word.charAt(0).toUpperCase()).join("");
   return initials;
@@ -32,7 +43,7 @@ function DashboardNavBar({ loading, userProfile }: IProps) {
     <div className="flex justify-end pt-3 pb-3 pr-6">
       <Popover>
         <PopoverTrigger>
-          <div className="flex gap-4 items-center ">
+          <div className="flex gap-4 items-center">
             {loading ? (
               <Skeleton className="w-[2.07463rem] h-[2.07463rem] rounded-full" />
             ) : (
@@ -40,6 +51,7 @@ function DashboardNavBar({ loading, userProfile }: IProps) {
                 <Avatar className="w-[2.07463rem] h-[2.07463rem]">
                   <AvatarImage
                     src="/images/user_alt_icon.png"
+                    alt="User avatar"
                     className="object-cover"
                   />
                   <AvatarFallback>
@@ -48,17 +60,26 @@ function DashboardNavBar({ loading, userProfile }: IProps) {
                 </Avatar>
               </div>
             )}
-
             <div>
               <img src="/images/chevron_down_icon.png" alt="chevron down" />
             </div>
           </div>
         </PopoverTrigger>
-        <PopoverContent
-          className="w-[100px] cursor-pointer"
-          onClick={handleLogout}
-        >
-          Logout
+        <PopoverContent className="cursor-pointer w-[200px]">
+          <div className="flex flex-col">
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-left hover:bg-gray-100 w-full"
+            >
+              Logout
+            </button>
+            <Link 
+  href="/dashboard/manager/updateProfile"
+  className="block p-2 hover:bg-gray-100 w-full text-left"
+>
+  Update Profile
+</Link>
+          </div>
         </PopoverContent>
       </Popover>
     </div>
