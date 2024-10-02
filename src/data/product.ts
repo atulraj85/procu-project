@@ -1,3 +1,5 @@
+"use server";
+
 import { ProductTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 
