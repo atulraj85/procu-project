@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "../ui/use-toast";
 import { PlusIcon, XIcon } from "lucide-react";
+import { createProduct } from "@/data/product";
 
 interface Product {
   id: string;
@@ -90,15 +91,9 @@ export default function SheetSide() {
     };
 
     try {
-      const response = await fetch("/api/product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
+      const response = await createProduct(productData);
 
-      if (!response.ok) {
+      if (!response?.id) {
         throw new Error("Failed to create product");
       }
 
