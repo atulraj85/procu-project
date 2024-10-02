@@ -1,8 +1,10 @@
 import { deleteCompany } from "@/data/company";
 import { CompanyTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import fs from "fs";
+
+import { saveFile } from "@/utils/saveFiles";
+import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
@@ -12,29 +14,6 @@ import path from "path";
 //     bodyParser: false,
 //   },
 // };
-
-export async function saveFile(file: File, directory: string) {
-  const filePath = path.join(directory, file.name);
-  const fileStream = fs.createWriteStream(filePath);
-  const readableStream = file.stream();
-
-  await new Promise<void>((resolve, reject) => {
-    const reader = readableStream.getReader();
-    const pump = async () => {
-      const { done, value } = await reader.read();
-      if (done) {
-        fileStream.end();
-        resolve();
-        return;
-      }
-      fileStream.write(value);
-      pump();
-    };
-    pump().catch(reject);
-  });
-
-  return filePath; // Return the path for further use
-}
 
 export async function POST(request: Request) {
   try {

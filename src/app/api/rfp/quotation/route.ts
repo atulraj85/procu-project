@@ -202,7 +202,7 @@ export async function PUT(request: NextRequest) {
 }
 
 async function createNewQuotation(rfpId: string, q: any) {
-  let newQuotation;
+  let newQuotation :any;
   try {
     [newQuotation] = await db
       .insert(QuotationTable)

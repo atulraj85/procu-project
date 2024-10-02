@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate RFP ID
-    let rfpId;
+    let rfpId:any;
     try {
       rfpId = await generateRFPId();
     } catch (error: any) {
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the RFP first
-    let createdRFP;
+    let createdRFP:any;
     try {
       const results = await db
         .insert(RFPTable)

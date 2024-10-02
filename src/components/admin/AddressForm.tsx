@@ -1,8 +1,7 @@
-import React from 'react';
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from "@/app/dashboard/admin/company/address";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import {
   Form,
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
+import { addresses } from "./address";
 
 const formSchema = z.object({
   deliveryAddress: z.object({
@@ -34,7 +33,10 @@ interface AddressFormProps {
   isAddingAddress: () => void;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
+const AddressForm: React.FC<AddressFormProps> = ({
+  companyId,
+  isAddingAddress,
+}) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,7 +52,6 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
   });
 
   const onSubmit = async (data: FormValues) => {
-    
     console.log(data.deliveryAddress);
     addresses.push(data.deliveryAddress);
     isAddingAddress();
@@ -68,7 +69,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
     //   }
 
     //   console.log('Address updated successfully');
-     
+
     // } catch (error) {
     //   console.error('Error updating address:', error);
     // }
@@ -83,7 +84,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className='grid grid-cols-2 gap-4'>
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="deliveryAddress.title"
@@ -91,7 +92,10 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
                     <FormItem>
                       <FormLabel>Address Title</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g. Home, Office, Warehouse" />
+                        <Input
+                          {...field}
+                          placeholder="e.g. Home, Office, Warehouse"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -166,7 +170,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
                 />
               </div>
               <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
-               ADD
+                ADD
               </Button>
             </div>
           </CardContent>
