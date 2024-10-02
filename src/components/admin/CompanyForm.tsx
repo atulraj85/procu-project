@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Upload } from "lucide-react";
 import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
+import { addresses } from "@/app/dashboard/admin/company/address";
 import {
   Form,
   FormControl,
@@ -27,6 +28,8 @@ import { toast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { IoConstructOutline } from "react-icons/io5";
 import { useCurrentUser } from "@/hooks/auth";
+
+import AddressForm from "./AddressForm";
 
 interface Company {
   GST: string;
@@ -79,6 +82,25 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
+  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
+  // Address States
+  const [currentAddress, setCurrentAddress] = useState<{
+    title: string;
+    street: string;
+    country: string;
+    state: string;
+    city: string;
+    zipCode: string;
+  } | null>(null);
+
+  const handlecurrentAddress = (searchTitle: string) => {
+    let currAddress = addresses.filter((address) =>
+      address.title.toLowerCase().includes(searchTitle.toLowerCase())
+    );
+
+    setCurrentAddress(currAddress[0]);
+    console.log(addresses[0]);
+  };
 
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
@@ -86,8 +108,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // name: "",
-      // GST: "",
+      
       email: "",
       phone: "",
       website: "",
@@ -243,6 +264,8 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   }
 
   return (
+    <>
+    
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
         <Card>
@@ -265,9 +288,10 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                 <strong>
                   {" "}
                   <span className="text-xl">Address:</span>{" "}
-                  {companyData.gstAddress}
+                  {companyData.gstAddress
+                    ? companyData.gstAddress
+                    : " address not come from backend "}
                 </strong>
-                {"default address , address not come from backend "}
               </div>
             </div>
 
@@ -510,90 +534,29 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           </CardContent>
         </Card>
 
-        {/* <Card>
+       {isAddingAddress && <Card>
           <CardHeader>
-            <CardTitle>Business Address</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-2">
-              <FormField
-                control={form.control}
-                name="businessAddress.street"
-                render={({ field }) => (
-                  <FormItem className="col-span-3">
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <CardTitle >Delivery Address</CardTitle>
+            <div className="flex justify-between items-center">
+              <Select
+                // value={}
+                onValueChange={(value) => {
+                  console.log(value);
+                  handlecurrentAddress(value);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select Addresse" />
+                </SelectTrigger>
+                <SelectContent>
+                  {addresses.map((item, idx) => (
+                    <SelectItem value={item.title}>{item.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <div className="flex gap-20">
-                <FormField
-                  control={form.control}
-                  name="businessAddress.country"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Country</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.state"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>State</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="businessAddress.zipCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zip Code</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <Button type="button" onClick={()=>setIsAddingAddress(false)} className="my-4 bg-primary" >Add Address</Button>
             </div>
-          </CardContent>
-        </Card> */}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Delivery Address</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-2">
@@ -604,7 +567,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   <FormItem className="col-span-3">
                     <FormLabel>Address</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={currentAddress?.street} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -619,7 +582,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.country} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -633,7 +596,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>State</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.state} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -647,7 +610,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.city} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -661,7 +624,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <FormItem>
                       <FormLabel>Zip Code</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={currentAddress?.zipCode} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -670,12 +633,17 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> } 
 
         <Button type="submit" disabled={isLoading} className="my-4 bg-primary">
-          {isLoading ? "Saving..." : "Save Company"}
+          {isLoading ? "Saving..." : "Save Changes"}
         </Button>
       </form>
-    </Form>
+    </Form >
+
+    <div className="mt-4">
+      {!isAddingAddress && <AddressForm  companyId={companyId} isAddingAddress={() => setIsAddingAddress(true)} />}
+    </div>
+    </>
   );
 }
