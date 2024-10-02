@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Loader from "@/components/shared/Loader";
-import RFPUpdateForm from "@/components/new-manager/UpdateRFP/UpdateRFP2";
+import RFPUpdateForm from "@/components/new-manager/UpdateRFP/UpdateRFP";
 
 const Page = () => {
   const searchParams = useSearchParams();
