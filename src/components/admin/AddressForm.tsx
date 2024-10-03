@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from "@/app/dashboard/admin/company/address";
+import { addresses } from '@/app/(protected)/dashboard/admin/company/address';
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { AddressformSchema } from "@/schemas/Company";
 import {

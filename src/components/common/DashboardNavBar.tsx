@@ -7,7 +7,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { signOut, auth } from "@/auth";
+// import { signOut, auth } from "@/auth";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -35,7 +35,7 @@ function getInitials(inputString: string): string {
   return initials;
 }
 
-function DashboardNavBar({ loading, userProfile }: IProps) {
+function DashboardNavBar({ loading, userProfile }:Props) {
   const handleLogout = async () => {
     await signOut({ redirectTo: "/auth/login" });
   };
