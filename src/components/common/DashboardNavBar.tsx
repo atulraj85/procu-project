@@ -22,30 +22,22 @@ interface UserProfileResponse {
     data?: UserProfileData;
   };
 }
+import { signOut } from "next-auth/react";
 
 interface Props {
   loading: boolean;
   userProfile: UserProfileResponse | null;
 }
 
-const getInitials = (name: string): string => {
-  return name
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase())
-    .join("");
-};
+function getInitials(inputString: string): string {
+  const words = inputString.split(" ");
+  const initials = words.map((word) => word.charAt(0).toUpperCase()).join("");
+  return initials;
+}
 
-const DashboardNavBar: React.FC<Props> = ({ loading, userProfile }) => {
-  const router = useRouter();
-
+function DashboardNavBar({ loading, userProfile }: IProps) {
   const handleLogout = async () => {
-    try {
-      // await signOut();
-      router.push("/");
-    } catch (error) {
-      console.error("Logout failed:", error);
-      // Handle logout error (e.g., show an error message to the user)
-    }
+    await signOut({ redirectTo: "/auth/login" });
   };
 
   const userName = userProfile?.response?.data?.name || "";

@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from "@/app/(protected)/dashboard/admin/company/address";
+import { addresses } from "@/app/dashboard/admin/company/address";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { AddressformSchema } from "@/schemas/Company";
 import {
@@ -16,17 +16,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type FormValues = z.infer<typeof AddressformSchema>;
+
+const formSchema = z.object({
+  deliveryAddress: z.object({
+    title: z.string().min(1, "Title is required"),
+    street: z.string().min(1, "Street is required"),
+    country: z.string().min(1, "Country is required"),
+    state: z.string().min(1, "State is required"),
+    city: z.string().min(1, "City is required"),
+    zipCode: z.string().min(1, "Zip Code is required"),
+  }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
   isAddingAddress: () => void;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
-  companyId,
-  isAddingAddress,
-}) => {
+const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
     defaultValues: {
@@ -40,8 +49,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data);
-    addresses.push(data);
+    
+    console.log(data.deliveryAddress);
+    addresses.push(data.deliveryAddress);
     isAddingAddress();
     // try {
     //   const response = await fetch(`/api/company?companyId=${companyId}`, {
@@ -57,7 +67,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
     //   }
 
     //   console.log('Address updated successfully');
-
+     
     // } catch (error) {
     //   console.error('Error updating address:', error);
     // }
@@ -75,7 +85,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className='grid grid-cols-2 gap-4'>
                 <FormField
                   control={form.control}
                   name="title"
@@ -83,10 +93,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                     <FormItem>
                       <FormLabel>Address Title</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. Home, Office, Warehouse"
-                        />
+                        <Input {...field} placeholder="e.g. Home, Office, Warehouse" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -202,13 +202,12 @@ export async function PUT(request: NextRequest) {
 }
 
 async function createNewQuotation(rfpId: string, q: any) {
-  // Create a new quotation
-  await db.transaction(async (tx) => {
-    // Insert the quotation data
-    const [newQuotation] = await tx
+  let newQuotation :any;
+  try {
+    [newQuotation] = await db
       .insert(QuotationTable)
       .values({
-        rfpId, // Assuming `id` is the RFP ID
+        rfpId,
         vendorId: q.vendorId,
         refNo: q.refNo,
         totalAmount: q.totalAmount,
@@ -216,101 +215,119 @@ async function createNewQuotation(rfpId: string, q: any) {
         updatedAt: new Date(),
       })
       .returning({ id: QuotationTable.id });
+  } catch (error) {
+    console.error("Error creating quotation", error);
+    throw error;
+  }
 
-    // Insert the new vendor pricings
-    await tx.insert(VendorPricingTable).values(
-      q.vendorPricings.create.map((pricing: any) => ({
+  try {
+    const values =
+      q.vendorPricings.create?.map((pricing: any) => ({
         quotationId: newQuotation.id,
         price: pricing.price,
         GST: pricing.GST,
-      }))
-    );
+      })) || [];
+    if (values && values.length) {
+      await db.insert(VendorPricingTable).values(values);
+    }
+  } catch (error) {
+    console.error("Error creating vendor pricings", error);
+    await rollbackNewQuotationCreation(newQuotation.id);
+    throw error;
+  }
 
-    // Insert the new other charges
-    await tx.insert(OtherChargeTable).values(
-      q.otherCharges.create.map((charge: any) => ({
+  try {
+    const values = q.otherCharges.create.map((charge: any) => ({
+      quotationId: newQuotation.id,
+      name: charge.name,
+      price: charge.price,
+      gst: charge.gst,
+    }));
+    if (values && values.length) {
+      await db.insert(OtherChargeTable).values(values);
+    }
+  } catch (error) {
+    console.error("Error creating other charges", error);
+    await rollbackNewQuotationCreation(newQuotation.id);
+    throw error;
+  }
+
+  try {
+    const values = q.supportingDocuments.create
+      .filter((doc: any) => doc !== null)
+      .map((doc: any) => ({
         quotationId: newQuotation.id,
-        name: charge.name,
-        price: charge.price,
-        gst: charge.gst,
-      }))
-    );
+        documentName: doc.documentName,
+        location: doc.location,
+      }));
+    if (values && values.length) {
+      await db.insert(SupportingDocumentTable).values(values);
+    }
+  } catch (error) {
+    console.error("Error creating supporting documents", error);
+    await rollbackNewQuotationCreation(newQuotation.id);
+    throw error;
+  }
 
-    // Insert the new supporting documents
-    await tx.insert(SupportingDocumentTable).values(
-      q.supportingDocuments.create
-        .filter((doc: any) => doc !== null) // Filter out null docs
-        .map((doc: any) => ({
-          quotationId: newQuotation.id,
-          documentName: doc.documentName,
-          location: doc.location,
-        }))
-    );
-  });
-
-  // Return created quotation (optional)
   return { ...q };
 }
 
-async function updatedQuotation(q:any) {
-  // Update existing quotation
-  await db.transaction(async (tx) => {
-    // Update the quotation data
-    await tx
-      .update(QuotationTable)
-      .set({
-        vendorId: q.vendorId,
-        refNo: q.refNo,
-        totalAmount: q.totalAmount,
-        totalAmountWithoutGst: q.totalAmountWithoutGST,
-      })
-      .where(eq(QuotationTable.id, q.id));
+async function updatedQuotation(q: any) {
+  // Update the quotation data
+  await db
+    .update(QuotationTable)
+    .set({
+      vendorId: q.vendorId,
+      refNo: q.refNo,
+      totalAmount: q.totalAmount,
+      totalAmountWithoutGst: q.totalAmountWithoutGST,
+    })
+    .where(eq(QuotationTable.id, q.id));
 
-    // Delete the old vendor pricings
-    await tx
-      .delete(VendorPricingTable)
-      .where(eq(VendorPricingTable.quotationId, q.id));
+  // Delete the old vendor pricings
+  await db
+    .delete(VendorPricingTable)
+    .where(eq(VendorPricingTable.quotationId, q.id));
 
-    // Insert the new vendor pricings
-    await tx.insert(VendorPricingTable).values(
-      q.vendorPricings.create.map((pricing: any) => ({
+  // Insert the new vendor pricings
+  await db.insert(VendorPricingTable).values(
+    q.vendorPricings.create.map((pricing: any) => ({
+      quotationId: q.id,
+      price: pricing.price,
+      GST: pricing.GST,
+    }))
+  );
+
+  // Delete the old other charges
+  await db
+    .delete(OtherChargeTable)
+    .where(eq(OtherChargeTable.quotationId, q.id));
+
+  // Insert the new other charges
+  await db.insert(OtherChargeTable).values(
+    q.otherCharges.create.map((charge: any) => ({
+      quotationId: q.id,
+      name: charge.name,
+      price: charge.price,
+      gst: charge.gst,
+    }))
+  );
+
+  // Delete the old supporting documents
+  await db
+    .delete(SupportingDocumentTable)
+    .where(eq(SupportingDocumentTable.quotationId, q.id));
+
+  // Insert the new supporting documents
+  await db.insert(SupportingDocumentTable).values(
+    q.supportingDocuments.create
+      .filter((doc: any) => doc !== null) // Filter out null docs
+      .map((doc: any) => ({
         quotationId: q.id,
-        price: pricing.price,
-        GST: pricing.GST,
+        documentName: doc.documentName,
+        location: doc.location,
       }))
-    );
-
-    // Delete the old other charges
-    await tx
-      .delete(OtherChargeTable)
-      .where(eq(OtherChargeTable.quotationId, q.id));
-
-    // Insert the new other charges
-    await tx.insert(OtherChargeTable).values(
-      q.otherCharges.create.map((charge: any) => ({
-        quotationId: q.id,
-        name: charge.name,
-        price: charge.price,
-        gst: charge.gst,
-      }))
-    );
-
-    // Delete the old supporting documents
-    await tx
-      .delete(SupportingDocumentTable)
-      .where(eq(SupportingDocumentTable.quotationId, q.id));
-
-    // Insert the new supporting documents
-    await tx.insert(SupportingDocumentTable).values(
-      q.supportingDocuments.create
-        .filter((doc: any) => doc !== null) // Filter out null docs
-        .map((doc: any) => ({
-          quotationId: q.id,
-          documentName: doc.documentName,
-          location: doc.location,
-        }))
-    );
-  });
+  );
 
   // Return updated quotation (optional based on what you need to do with it)
   return { id: q.id, ...q };
@@ -357,4 +374,19 @@ async function processDocuments(
       return documentInfo;
     })
   );
+}
+
+async function rollbackNewQuotationCreation(quotationId: string) {
+  await Promise.all([
+    db
+      .delete(SupportingDocumentTable)
+      .where(eq(SupportingDocumentTable.quotationId, quotationId)),
+    db
+      .delete(OtherChargeTable)
+      .where(eq(OtherChargeTable.quotationId, quotationId)),
+    db
+      .delete(VendorPricingTable)
+      .where(eq(VendorPricingTable.quotationId, quotationId)),
+    db.delete(QuotationTable).where(eq(QuotationTable.id, quotationId)),
+  ]);
 }
