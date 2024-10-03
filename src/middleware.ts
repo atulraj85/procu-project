@@ -45,6 +45,7 @@ export default auth(async (req) => {
   }
 
   if (isLoggedIn) {
+    console.log("process.env.AUTH_SECRET! ", process.env.AUTH_SECRET!);
     console.log(`Middleware: isLoggedIn: ${isLoggedIn}`);
     const token = await getToken({ req, secret: process.env.AUTH_SECRET! });
     console.log(`Middleware: token: ${token}`);
