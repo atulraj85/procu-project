@@ -45,7 +45,11 @@ export default auth(async (req) => {
 
   if (isLoggedIn) {
     console.log(`Middleware: isLoggedIn: ${isLoggedIn}`);
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET! });
+    const token = await getToken({
+      req,
+      secret: process.env.AUTH_SECRET!,
+      secureCookie: true,
+    });
     console.log(`Middleware: token: ${token}`);
     if (!token || !token.role) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
