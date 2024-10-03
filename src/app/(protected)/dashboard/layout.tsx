@@ -1,5 +1,6 @@
 "use client";
 import DashboardNavBar from "@/components/common/DashboardNavBar";
+import Loader from "@/components/shared/Loader";
 import Sidebar from "@/components/shared/Sidebar";
 import { useCurrentRole } from "@/hooks/auth";
 import {
@@ -10,14 +11,25 @@ import {
   vendorList,
 } from "@/lib/sidebarLinks";
 import { IUserProfileResponse } from "@/types";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<IUserProfileResponse | null>(
     null
   );
   const role = useCurrentRole();
+  const [loading, setLoading] = useState(true);
   const [activeComponent, setActiveComponent] = useState("dashboard");
+
+  if (!role) {
+    window.location.reload();
+  }
+
+  useEffect(() => {
+    if (role) {
+      setLoading(false);
+    }
+  }, [role]);
 
   const getSidebarList = () => {
     switch (role) {
@@ -34,8 +46,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <div className="fixed top-0 left-0 h-full">
         <Sidebar
           items={getSidebarList()}
@@ -52,4 +72,4 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export default Layout;
+export default DashboardLayout;
