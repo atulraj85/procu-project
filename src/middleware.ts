@@ -36,7 +36,11 @@ export default auth(async (req) => {
   }
 
   if (isLoggedIn) {
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET! });
+    const token = await getToken({
+      req,
+      secret: process.env.AUTH_SECRET!,
+      secureCookie: true,
+    });
     if (!token || !token.role) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
