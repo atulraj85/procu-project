@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from "@/app/(protected)/dashboard/admin/company/address";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { addresses } from "./address";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AddressformSchema } from "@/schemas/Company";
-import AddressForm from "./AddressForm";
-import { toast } from "@/components/ui/use-toast";
-import { CompanyFormSchema } from "@/schemas/Company";
 import {
   Form,
   FormControl,
@@ -25,34 +22,16 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-
-interface AddressUpdateProps {
-    compnayId: string;
-}
-
-interface Address {
-  title: string;
-  street: string;
-  country: string;
-  state: string;
-  city: string;
-  zipCode: string;
-}
+import AddressForm from "./AddressForm";
 
 type FormValues = z.infer<typeof AddressformSchema>;
-type TCompanyFomr = z.infer<typeof CompanyFormSchema>;
 
-const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
-  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
-  const [companyData, setCompanyData] = useState<Address | null>(null);
-  const [currentAddress, setCurrentAddress] = useState<{
-    title: string;
-    street: string;
-    country: string;
-    state: string;
-    city: string;
-    zipCode: string;
-  } | null>(null);
+interface Props {
+  companyId: string;
+}
+
+const AddressUpdate: React.FC<Props> = ({ companyId }) => {
+  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
@@ -66,77 +45,29 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
     },
   });
 
-  const handlecurrentAddress = (searchTitle: string) => {
-    let currAddress = addresses.find((address) =>
-      address.title.toLowerCase().includes(searchTitle.toLowerCase())
+  const handleAddressSelect = (searchTitle: string) => {
+    const selectedAddress = addresses.find(
+      (address) => address.title.toLowerCase() === searchTitle.toLowerCase()
     );
-    if (currAddress) {
-      setCurrentAddress(currAddress);
-      form.reset(currAddress); // Reset form fields with the selected address values
+    if (selectedAddress) {
+      form.reset(selectedAddress);
     }
   };
 
   const onSubmitForm = (data: FormValues) => {
-    console.log("Submitted Data:", data);
-    // Add the logic to handle form submission, such as sending data to a backend API.
-  };
-
-  const handleChange = (field: keyof FormValues, value: string) => {
-    setCurrentAddress((prev) => {
-      if (prev) {
-        return { ...prev, [field]: value };
-      }
-      return prev;
-    });
-    form.setValue(field, value); // Update form state as well
-  };
-
-
-  useEffect(()=>{
-    getCompanyDetails(compnayId);
-  },[])
-
-  useEffect(() => {
-    console.log("Updated companyData:", companyData);
-  }, [companyData]);
-
-
-  const getCompanyDetails = async (id: string ) => {
-    try {
-      const response = await fetch(`/api/company?id=${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch company details");
-      }
-      const data = await response.json();
-      console.log(data[0].addresses);
-  
-
-      // Update form values with company data
-     
-    } catch (error) {
-      console.error("Error fetching company details:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch company details",
-        variant: "destructive",
-      });
-    }
+    console.log(data);
   };
 
   return (
     <div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
-          {isAddingAddress && (
+      {!isAddingAddress && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Address</CardTitle>
                 <div className="flex justify-between items-center">
-                  <Select
-                    onValueChange={(value) => {
-                      handlecurrentAddress(value);
-                    }}
-                  >
+                  <Select onValueChange={handleAddressSelect}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Select Address" />
                     </SelectTrigger>
@@ -151,7 +82,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
 
                   <Button
                     type="button"
-                    onClick={() => setIsAddingAddress(false)}
+                    onClick={() => setIsAddingAddress(true)}
                     className="my-4 bg-primary"
                   >
                     Add Address
@@ -167,11 +98,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                       <FormItem className="col-span-3">
                         <FormLabel>Address</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            value={currentAddress?.street || ""}
-                            onChange={(e) => handleChange("street", e.target.value)}
-                          />
+                          <Input {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -186,11 +113,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                         <FormItem>
                           <FormLabel>Country</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={currentAddress?.country || ""}
-                              onChange={(e) => handleChange("country", e.target.value)}
-                            />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -204,11 +127,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                         <FormItem>
                           <FormLabel>State</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={currentAddress?.state || ""}
-                              onChange={(e) => handleChange("state", e.target.value)}
-                            />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -222,11 +141,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                         <FormItem>
                           <FormLabel>City</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={currentAddress?.city || ""}
-                              onChange={(e) => handleChange("city", e.target.value)}
-                            />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -240,11 +155,7 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                         <FormItem>
                           <FormLabel>Zip Code</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              value={currentAddress?.zipCode || ""}
-                              onChange={(e) => handleChange("zipCode", e.target.value)}
-                            />
+                            <Input {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -254,22 +165,15 @@ const AddressUpdate: React.FC<AddressUpdateProps> = ({ compnayId }) => {
                 </div>
 
                 <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
-                  Save
+                  Submit
                 </Button>
               </CardContent>
             </Card>
-          )}
-        </form>
-      </Form>
+          </form>
+        </Form>
+      )}
 
-      <div className="mt-4">
-        {!isAddingAddress && (
-          <AddressForm
-            companyId={compnayId}
-            isAddingAddress={() => setIsAddingAddress(true)}
-          />
-        )}
-      </div>
+      {isAddingAddress && <AddressForm companyId={companyId} isAddingAddress={() => setIsAddingAddress(false)} />}
     </div>
   );
 };

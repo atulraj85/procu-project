@@ -2,9 +2,7 @@ import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from '@/app/(protected)/dashboard/admin/company/address';
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { AddressformSchema } from "@/schemas/Company";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -16,19 +14,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+import { addresses } from './address';
 
-const formSchema = z.object({
-  deliveryAddress: z.object({
-    title: z.string().min(1, "Title is required"),
-    street: z.string().min(1, "Street is required"),
-    country: z.string().min(1, "Country is required"),
-    state: z.string().min(1, "State is required"),
-    city: z.string().min(1, "City is required"),
-    zipCode: z.string().min(1, "Zip Code is required"),
-  }),
+// Define the schema for the form
+const AddressFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  street: z.string().min(1, "Street is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State is required"),
+  city: z.string().min(1, "City is required"),
+  zipCode: z.string().min(1, "Zip Code is required"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof AddressFormSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
@@ -37,7 +35,7 @@ interface AddressFormProps {
 
 const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
   const form = useForm<FormValues>({
-    resolver: zodResolver(AddressformSchema),
+    resolver: zodResolver(AddressFormSchema),
     defaultValues: {
       title: "",
       street: "",
@@ -49,28 +47,10 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
   });
 
   const onSubmit = async (data: FormValues) => {
-    
-    console.log(data.deliveryAddress);
-    addresses.push(data.deliveryAddress);
+    console.log(data);
+    // Here you would typically send the data to your backend
+    // For now, we'll just log it and call isAddingAddress
     isAddingAddress();
-    // try {
-    //   const response = await fetch(`/api/company?companyId=${companyId}`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data.deliveryAddress),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Failed to update address');
-    //   }
-
-    //   console.log('Address updated successfully');
-     
-    // } catch (error) {
-    //   console.error('Error updating address:', error);
-    // }
   };
 
   return (
@@ -78,9 +58,9 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-
-            <CardTitle className="flex justify-between items-center"> <div>Delivery Address</div> 
-            <Button className=" w-28  bg-primary" onClick={()=>{isAddingAddress()}}>Back</Button>
+            <CardTitle className="flex justify-between items-center">
+              <div>Delivery Address</div> 
+              <Button className="w-28 bg-primary" onClick={isAddingAddress}>Back</Button>
             </CardTitle>
           </CardHeader>
           <CardContent>

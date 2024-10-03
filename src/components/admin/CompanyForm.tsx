@@ -1,12 +1,13 @@
 "use client";
 import Loader from "@/components/shared/Loader";
+
 import * as z from "zod";
-import { Upload } from "lucide-react";
 import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
-import { addresses } from "@/app/(protected)/dashboard/admin/company/address";
+import { addresses } from "./address";
 import { CompanyFormSchema } from "@/schemas/Company";
-import { useEffect, useState } from "react";
+
+
 import {
   Form,
   FormControl,
@@ -24,13 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { useCurrentUser } from "@/hooks/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-
-import AddressForm from "./AddressForm";
+import AddressUpdate from "./AddressUpdate";
 
 interface Company {
   GST: string;
@@ -59,11 +59,12 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [companyId, setCompanyId] = useState<string>("");
+  const [companyId, setCompanyId] = useState<string >("");
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
-  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  
+
 
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
@@ -71,22 +72,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(CompanyFormSchema),
     defaultValues: {
-      email: "",
-      phone: "",
-      website: "",
-      industry: "",
-      foundedDate: "",
-      status: "active",
-      logo: undefined,
-      stamp: undefined,
-      deliveryAddress: {
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-        addressType: "SHIPPING",
-      },
+      email:"",
+      phone:"",
+      website:"",
+      industry:"",
+      status:"active",
+      logo:undefined,
+      stamp:undefined,
       ...initialData,
     },
   });
@@ -95,7 +87,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     if (userId) {
       getCompanyId(userId);
     }
-  }, [userId]);
+  }, []);
 
   const getCompanyId = async (id: string) => {
     try {
@@ -126,8 +118,10 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       const data = await response.json();
       setCompanyData(data[0]);
       const company = data[0];
+      setCompanyData(data[0]);
       console.log(data[0]);
 
+      // Update form values with company data
       form.reset({
         email: company.email || "",
         phone: company.phone || "",
@@ -136,6 +130,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         status: company.status || "active",
         logo: undefined,
         stamp: undefined,
+       
       });
     } catch (error) {
       console.error("Error fetching company details:", error);
@@ -154,7 +149,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       const formData = new FormData();
       for (const key in data) {
         if (key === "businessAddress" || key === "deliveryAddress") {
-          continue;
+          continue; // Skip these for now, we'll handle them separately
         }
         const value = data[key as keyof CompanyFormValues];
         if (value instanceof File) {
@@ -165,13 +160,18 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         }
       }
 
+      // Add addresses as a JSON string
+
       formData.append("addresses", JSON.stringify(addresses));
 
+      // Log formData contents (for debugging)
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
       });
 
       console.log(formData);
+      // Call the onSubmit prop function with the formData
+      // await onSubmit(data);
 
       const response = await fetch(`/api/company/${companyId}`, {
         method: "PUT",
@@ -179,7 +179,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       });
 
       if (response.ok) {
+        // Reset form after submission
         form.reset();
+
         toast({
           title: "Success",
           description: "Company saved successfully",
@@ -207,19 +209,24 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-4">
           <Card>
             <CardContent className="mt-4">
-              <div className="flex justify-between mb-6">
+              <div className="flex  justify-between mb-6">
                 <div>
                   <p>
-                    <strong>{companyData?.name}</strong>
+                    {" "}
+                    <strong>{companyData?.name}</strong>{" "}
                   </p>
                   <p>
-                    <strong>{companyData?.GST}</strong>
+                    {" "}
+                    <strong>{companyData?.GST}</strong>{" "}
                   </p>
                 </div>
+
                 <div className="w-[30%]">
-                  <p></p>
+                  {" "}
+                  <p></p>{" "}
                   <strong>
-                    <span className="text-xl">Address:</span>
+                    {" "}
+                    <span className="text-xl">Address:</span>{" "}
                     {companyData.gstAddress
                       ? companyData.gstAddress
                       : " address not come from backend "}
@@ -309,12 +316,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   )}
                 />
 
+                {/* File input for Logo */}
                 <FormField
                   control={form.control}
                   name="logo"
                   render={({ field }) => (
                     <FormItem className="relative">
-                      <FormLabel className="absolute left-8 top-0 items-center justify-center w-32 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
                         <p className="text-md mb-3 font-medium">Logo</p>
                         <img
                           src={
@@ -332,6 +340,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
+                            let count = 0;
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
@@ -340,6 +349,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                               };
                               reader.readAsDataURL(file);
                               field.onChange(file);
+                              count++;
                             }
                           }}
                         />
@@ -347,6 +357,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       {logoPreview && (
                         <CiCircleRemove
                           className="w-12 absolute right-24 top-2"
+                          // variant="outline"
                           size="sm"
                           onClick={() => {
                             setLogoPreview(null);
@@ -358,6 +369,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   )}
                 />
 
+                {/* File input for Stamp */}
                 <FormField
                   control={form.control}
                   name="stamp"
@@ -409,21 +421,22 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
               </div>
             </CardContent>
           </Card>
-
-          <Button type="submit" disabled={isLoading} className="my-4 bg-primary">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="my-4 bg-primary"
+          >
             {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </form>
       </Form>
+          
+          {/* Delivery Address Form */}
 
-      <div className="mt-4">
-        {!isAddingAddress && (
-          <AddressForm
-            companyId={companyId}
-            isAddingAddress={() => setIsAddingAddress(true)}
-          />
-        )}
+      <div  className="mt-6">
+        <AddressUpdate companyId={companyId}/>
       </div>
+
     </div>
   );
 }
