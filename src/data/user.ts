@@ -31,6 +31,7 @@ export async function createUser(data: UserData) {
       `Error deleting email-verification-token with data: ${data}`,
       error
     );
+    throw error;
   }
 }
 
@@ -38,37 +39,33 @@ export async function deleteUser(id: string) {
   try {
     console.log(`Deleting user with id: ${id}`);
     await db.delete(UserTable).where(eq(UserTable.id, id));
-  } catch (err) {
-    console.error(`Error deleting user with id: ${id}`, err);
-    throw err;
+  } catch (error) {
+    console.error(`Error deleting user with id: ${id}`, error);
+    throw error;
   }
 }
 
 export async function findUserById(id: string) {
   try {
     console.log(`Finding user by id: ${id}`);
-    const result = await db
-      .select()
-      .from(UserTable)
-      .where(eq(UserTable.id, id))
-      .limit(1);
-    return result[0];
+    return await db.query.UserTable.findFirst({
+      where: eq(UserTable.id, id),
+    });
   } catch (error) {
     console.error(`Error finding user by id: ${id}`, error);
+    throw error;
   }
 }
 
 export async function findUserByEmail(email: string) {
   try {
     console.log(`Finding user by email: ${email}`);
-    const result = await db
-      .select()
-      .from(UserTable)
-      .where(eq(UserTable.email, email))
-      .limit(1);
-    return result[0];
+    return await db.query.UserTable.findFirst({
+      where: eq(UserTable.email, email),
+    });
   } catch (error) {
     console.error(`Error finding user by email: ${email}`, error);
+    throw error;
   }
 }
 
@@ -84,5 +81,6 @@ export async function markUserEmailVerified(userId: string) {
       .where(eq(UserTable.id, userId));
   } catch (error) {
     console.error("Error on creating user", error);
+    throw error;
   }
 }

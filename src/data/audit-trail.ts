@@ -9,13 +9,17 @@ interface AuditTrailInput {
 
 export async function createAuditTrail(data: AuditTrailInput) {
   try {
+    console.log(`Creating audit trail for eventId: ${data.eventId}`);
     const results = await db
       .insert(AuditTrailTable)
       .values({ ...data })
       .returning();
     return results[0] || null;
-  } catch (err) {
-    console.error("Error saving audit trail", err);
-    throw err;
+  } catch (error) {
+    console.error(
+      `Error creating audit trail for eventId: ${data.eventId}`,
+      error
+    );
+    throw error;
   }
 }

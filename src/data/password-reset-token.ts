@@ -10,6 +10,9 @@ interface PasswordResetTokenData {
 
 export async function createPasswordResetToken(data: PasswordResetTokenData) {
   try {
+    console.log(
+      `Creating password-reset-token for user with email: ${data.email}`
+    );
     const results = await db
       .insert(PasswordResetTokenTable)
       .values({
@@ -20,42 +23,52 @@ export async function createPasswordResetToken(data: PasswordResetTokenData) {
       .returning();
     return results[0] || null;
   } catch (error) {
-    console.error(error);
+    console.error(
+      `Error creating password-reset-token for user with email: ${data.email}`,
+      error
+    );
+    throw error;
   }
 }
 
 export async function deletePasswordResetToken(id: string) {
   try {
+    console.log(`Deleting password-reset-token with id: ${id}`);
     await db
       .delete(PasswordResetTokenTable)
       .where(eq(PasswordResetTokenTable.id, id));
   } catch (error) {
-    console.error(error);
+    console.error(`Error deleting password-reset-token with id: ${id}`, error);
+    throw error;
   }
 }
 
 export async function findPasswordResetTokenByToken(token: string) {
   try {
-    const results = await db
-      .select()
-      .from(PasswordResetTokenTable)
-      .where(eq(PasswordResetTokenTable.token, token))
-      .limit(1);
-    return results[0] || null;
+    console.log(`Finding password-reset-token by token: ${token}`);
+    return await db.query.PasswordResetTokenTable.findFirst({
+      where: eq(PasswordResetTokenTable.token, token),
+    });
   } catch (error) {
-    console.error(error);
+    console.error(
+      `Error finding password-reset-token by token: ${token}`,
+      error
+    );
+    throw error;
   }
 }
 
 export async function findPasswordResetTokenByEmail(email: string) {
   try {
-    const results = await db
-      .select()
-      .from(PasswordResetTokenTable)
-      .where(eq(PasswordResetTokenTable.email, email))
-      .limit(1);
-    return results[0] || null;
+    console.log(`Finding password-reset-token by email: ${email}`);
+    return await db.query.PasswordResetTokenTable.findFirst({
+      where: eq(PasswordResetTokenTable.email, email),
+    });
   } catch (error) {
-    console.error(error);
+    console.error(
+      `Error finding password-reset-token by email: ${email}`,
+      error
+    );
+    throw error;
   }
 }
