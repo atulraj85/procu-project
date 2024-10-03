@@ -1,15 +1,21 @@
 "use client";
+import Loader from "@/components/shared/Loader";
 import { useCurrentRole } from "@/hooks/auth";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const router = useRouter();
   const role = useCurrentRole();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  if (!role) {
-    router.push("/auth/login");
-    return;
-  } else {
+  useEffect(() => {
+    if (!role) {
+      router.push("/auth/login");
+      return;
+    }
+
+    setIsRedirecting(true);
     switch (role) {
       case "ADMIN":
         router.push("/dashboard/admin");
@@ -21,10 +27,16 @@ export default function Dashboard() {
         router.push("/dashboard/finance");
         break;
       default:
-        // Handle default case if needed
+        setIsRedirecting(false);
         break;
     }
+  }, [router, role]);
+
+  if (isRedirecting) {
+    return <Loader />;
   }
 
-  return <div className="mx-4 ">{/* Your dashboard content goes here */}</div>;
+  return (
+    <div className="mx-4">{/* Your default dashboard content goes here */}</div>
+  );
 }
