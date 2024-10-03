@@ -155,15 +155,15 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
   const getCompanyDetails = async (id: string) => {
     try {
-      const response = await fetch(`/api/company?id=${id}`);
+      const response = await fetch(`/api/company/${id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch company details");
       }
       const data = await response.json();
-      setCompanyData(data[0]);
-      const company = data[0];
-      setCompanyData(data[0]);
-      console.log(data[0]);
+      setCompanyData(data);
+      const company = data;
+      setCompanyData(data);
+      console.log(data);
 
       // Update form values with company data
       form.reset({
