@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AddressForm from "./AddressForm";
+import { Company } from "@/types";
+import { toast } from "@/components/ui/use-toast";
 
 type FormValues = z.infer<typeof AddressformSchema>;
 
@@ -32,6 +34,7 @@ interface Props {
 
 const AddressUpdate: React.FC<Props> = ({ companyId }) => {
   const [isAddingAddress, setIsAddingAddress] = useState<boolean>(false);
+  const [companyData, setCompanyData] = useState<any>();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
@@ -45,6 +48,41 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
     },
   });
 
+  useEffect(() => {
+    getCompanyDetails(companyId);
+    if (companyData) {
+      console.log("Updated companyData:", companyData);
+    }
+  }, [companyId]);
+
+  // New useEffect to log companyData when it changes
+  useEffect(() => {
+    if (companyData) {
+      console.log("Updated companyData:", companyData);
+    }
+  }, [companyData]);
+
+  const getCompanyDetails = async (id: string) => {
+    try {
+      const response = await fetch(`/api/company/${id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch company details");
+      }
+      const data = await response.json();
+
+      console.log("res data", data);
+
+      setCompanyData(data);
+    } catch (error) {
+      console.error("Error fetching company details:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch company details",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddressSelect = (searchTitle: string) => {
     const selectedAddress = addresses.find(
       (address) => address.title.toLowerCase() === searchTitle.toLowerCase()
@@ -54,15 +92,36 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
     }
   };
 
-  const onSubmitForm = (data: FormValues) => {
+  const onSubmitForm = async (data: FormValues) => {
     console.log(data);
+
+    const formData = new FormData();
+
+    const addresses = [
+      {
+        ...data,
+        date: new Date().toISOString(),
+      },
+    ];
+
+    formData.append("addresses", JSON.stringify(addresses));
+
+    const response = await fetch(`/api/company/${companyId}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    console.log(response);
   };
 
   return (
     <div>
       {!isAddingAddress && (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
+          <form
+            onSubmit={form.handleSubmit(onSubmitForm)}
+            className="space-y-8"
+          >
             <Card>
               <CardHeader>
                 <CardTitle>Delivery Address</CardTitle>
@@ -173,7 +232,12 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
         </Form>
       )}
 
-      {isAddingAddress && <AddressForm companyId={companyId} isAddingAddress={() => setIsAddingAddress(false)} />}
+      {isAddingAddress && (
+        <AddressForm
+          companyId={companyId}
+          isAddingAddress={() => setIsAddingAddress(false)}
+        />
+      )}
     </div>
   );
 };

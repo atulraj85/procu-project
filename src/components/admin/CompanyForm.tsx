@@ -31,24 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import AddressUpdate from "./AddressUpdate";
-
-interface Company {
-  GST: string;
-  gstAddress: string;
-  addresses: any[];
-  created_at: string;
-  email: string;
-  foundedDate: null | string;
-  id: string;
-  industry: null | string;
-  logo: null | string;
-  name: string;
-  phone: string;
-  stamp: null | string;
-  status: null | string;
-  updated_at: string;
-  website: null | string;
-}
+import { Company } from "@/types";
 
 type CompanyFormValues = z.infer<typeof CompanyFormSchema>;
 
@@ -217,7 +200,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   </p>
                   <p>
                     {" "}
-                    <strong>{companyData?.GST}</strong>{" "}
+                    <strong>{companyData?.gst}</strong>{" "}
                   </p>
                 </div>
 

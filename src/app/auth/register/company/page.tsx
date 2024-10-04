@@ -1,87 +1,62 @@
 "use client";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+
+import { ChangeEvent, FormEvent, useState } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { IoIosSearch } from "react-icons/io";
-
 import { validateGstn } from "@/lib/Validation";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { FiLoader } from "react-icons/fi";
+import { z } from "zod";
 
-interface Error {
-  gstn: string;
-  company: string;
-  address: string;
-  email: string;
-  phone: string;
-}
+// Define Zod schema for form validation
+const companySchema = z.object({
+  company_gstn: z.string().refine(validateGstn, { message: "Invalid GSTN" }),
+  company_name: z.string().min(1, "Company name is required"),
+  address: z.string().min(1, "Address is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits"),
+});
 
-interface Data {
-  email: string;
-  phone: string;
-}
+type CompanyData = z.infer<typeof companySchema>;
 
-interface CompanyData {
-  company_gstn: string;
-  company_name: string;
-  address: string;
-  email: string;
-  phone: string;
-}
+type Error = Partial<Record<keyof CompanyData, string>>;
 
 const Company: React.FC = () => {
-  const [data, setData] = useState<Data>({
-    email: "",
-    phone: "",
-  });
-
   const [loader, setLoader] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const router = useRouter();
 
   const [companyData, setCompanyData] = useState<CompanyData>({
     company_gstn: "",
     company_name: "",
-    // pin_code: "",
     address: "",
-    // pan_card: "",
     email: "",
     phone: "",
   });
 
-  const [isEditing, setIsEditing] = useState<boolean>(false);
-  const router = useRouter();
-  const [errors, setErrors] = useState<Error>({
-    gstn: "",
-    company: "",
-    // pin: "",
-    address: "",
-    // pan: "",
-    email: "",
-    phone: "",
-  });
+  const [errors, setErrors] = useState<Error>({});
 
   const validateFields = (): boolean => {
-    const newErrors = {
-      gstn: "",
-      company: "",
-      // pin: "",
-      address: "",
-      // pan: "",
-      email: "",
-      phone: "",
-    };
-    let isValid = true;
-
-    if (!validateGstn(companyData.company_gstn)) {
-      newErrors.gstn = "Invalid GSTN.";
-      isValid = false;
+    try {
+      companySchema.parse(companyData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Error = {};
+        error.errors.forEach((err) => {
+          const field = err.path[0] as keyof CompanyData;
+          newErrors[field] = err.message;
+        });
+        setErrors(newErrors);
+      }
+      return false;
     }
-
-    setErrors(newErrors);
-    return isValid;
   };
 
   const handleChangeVendorDetails = (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
     setCompanyData((prevData) => ({ ...prevData, [name]: value }));
@@ -91,34 +66,26 @@ const Company: React.FC = () => {
     try {
       const response1 = await fetch(`/api/company?GST=${GST}`);
       const result1 = await response1.json();
-      console.log(result1);
 
       if (!result1.error) {
         toast({
           title: "Error",
           description: "User already exists.",
         });
-
-        // window.location.reload();
-        // return router.push("/dashboard");
       } else {
         const response = await fetch(`/api/vendor/gst/${GST}`);
         const result = await response.json();
-        console.log(GST);
         
-        console.log(result);
         if (result.flag) {
           const data = result.data;
           setCompanyData({
             ...companyData,
             company_name: data.lgnm || "",
-            // pin_code: data.pradr.addr.pncd || "",
             address: data.pradr.adr || "",
-            // pan_card: data.gstin.slice(2, 12) || "",
           });
         } else {
           toast({
-            title: "Failed to fetch conamy details.",
+            title: "Failed to fetch company details.",
           });
         }
       }
@@ -126,7 +93,7 @@ const Company: React.FC = () => {
       toast({
         title: "An error occurred while fetching vendor details.",
       });
-      console.log(error);
+      console.error(error);
     }
     setLoader(false);
   };
@@ -139,6 +106,7 @@ const Company: React.FC = () => {
       toast({
         title: "Invalid GSTN.",
       });
+      setLoader(false);
     }
   };
 
@@ -152,25 +120,16 @@ const Company: React.FC = () => {
       return;
     }
 
-    // Create FormData object
     const formData = new FormData();
-    formData.append("GST", companyData.company_gstn);
-    formData.append("name", companyData.company_name);
-    // formData.append("pincode", companyData.pin_code);
-    formData.append("gstAddress", companyData.address);
-    // formData.append("pancard", companyData.pan_card);
-    formData.append("email", companyData.email);
-    formData.append("phone", companyData.phone);
+    Object.entries(companyData).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
-      console.log(companyData);
-      // Send form data to the API
       const response = await fetch("/api/company", {
         method: "POST",
         body: formData,
       });
-
-      console.log(response);
 
       if (response.ok) {
         toast({
@@ -179,9 +138,7 @@ const Company: React.FC = () => {
         setCompanyData({
           company_gstn: "",
           company_name: "",
-          // pin_code: "",
           address: "",
-          // pan_card: "",
           email: "",
           phone: "",
         });
@@ -192,17 +149,16 @@ const Company: React.FC = () => {
         });
       }
     } catch (error: unknown) {
-      // if(error == "Validation")
       const prismaError = error as { code?: string };
       if (prismaError.code === "P2002") {
         toast({
           title: "User already exists",
         });
+      } else {
+        toast({
+          title: `An error occurred while submitting the form. ${error}`,
+        });
       }
-
-      toast({
-        title: `An error occurred while submitting the form. ${error}`,
-      });
     }
   };
 
@@ -212,7 +168,7 @@ const Company: React.FC = () => {
         Create Company
       </h1>
 
-      <div className="flex h-[80vh]  items-center gap-16 ">
+      <div className="flex h-[80vh] items-center gap-16">
         <div className="relative flex justify-end">
           <img
             src="/images/pick-pages.png"
@@ -224,7 +180,7 @@ const Company: React.FC = () => {
               Pr<span className="text-[#03B300]">o</span>cu
             </p>
             <p className="text-white text-[1.25rem] font-[700]">
-              We&apos;re here to Increase your{" "}
+              We're here to Increase your{" "}
               <span className="text-white">Productivity</span>
             </p>
           </div>
@@ -238,7 +194,6 @@ const Company: React.FC = () => {
             onSubmit={onSubmitDetails}
             className="flex flex-col gap-7 w-[90%] container mx-auto mt-6"
           >
-            {/* GSTN and Company Name in one row */}
             <div className="flex gap-4">
               <div className="flex flex-col gap-3 w-60 text-base relative">
                 <label className="font-bold">GSTN</label>
@@ -257,7 +212,7 @@ const Company: React.FC = () => {
                 >
                   {loader ? <FiLoader /> : <IoIosSearch />}
                 </button>
-                {errors.gstn && <p className="text-red-500">{errors.gstn}</p>}
+                {errors.company_gstn && <p className="text-red-500">{errors.company_gstn}</p>}
               </div>
 
               <div className="flex flex-col gap-3 w-60 text-base">
@@ -270,13 +225,10 @@ const Company: React.FC = () => {
                   placeholder="Company Name"
                   className="p-2"
                 />
-                {errors.company && (
-                  <p className="text-red-500">{errors.company}</p>
-                )}
+                {errors.company_name && <p className="text-red-500">{errors.company_name}</p>}
               </div>
             </div>
 
-            {/* PAN Card and Address in one row */}
             <div className="flex gap-8">
               <div className="flex flex-col gap-3 w-60 text-base">
                 <label className="font-bold">Address</label>
@@ -288,38 +240,35 @@ const Company: React.FC = () => {
                   placeholder="Address"
                   className="p-2"
                 />
-                {errors.address && (
-                  <p className="text-red-500">{errors.address}</p>
-                )}
+                {errors.address && <p className="text-red-500">{errors.address}</p>}
               </div>
 
-            <div className="flex flex-col gap-3 w-60 text-base">
-              <label className="font-bold">Email</label>
-              <Input
-                
-                type="email"
-                name="email"
-                value={companyData.email}
-                placeholder="email"
-                className="p-2"
-                onChange={handleChangeVendorDetails}
-              />
-              {errors.email && <p className="text-red-500">{errors.email}</p>}
-            </div>
+              <div className="flex flex-col gap-3 w-60 text-base">
+                <label className="font-bold">Email</label>
+                <Input
+                  type="email"
+                  name="email"
+                  value={companyData.email}
+                  placeholder="Email"
+                  className="p-2"
+                  onChange={handleChangeVendorDetails}
+                />
+                {errors.email && <p className="text-red-500">{errors.email}</p>}
+              </div>
             </div>
 
             <div className="flex gap-8">
               <div className="flex flex-col gap-3 w-60 text-base">
                 <label className="font-bold">Phone</label>
                 <Input
-                  type="phone"
+                  type="tel"
                   name="phone"
                   value={companyData.phone}
                   placeholder="Phone"
                   className="p-2"
                   onChange={handleChangeVendorDetails}
                 />
-                {errors.email && <p className="text-red-500">{errors.email}</p>}
+                {errors.phone && <p className="text-red-500">{errors.phone}</p>}
               </div>
 
               <div className="flex gap-4">
@@ -330,32 +279,6 @@ const Company: React.FC = () => {
                   {isEditing ? "Update Vendor" : "Register"}
                 </button>
               </div>
-            </div>
-
-            {/* Pin Code */}
-            <div className="flex gap-8">
-              {/* <div className="flex flex-col gap-3 w-60 text-base">
-              <label className="font-bold">Pin Code</label>
-              <Input
-                disabled
-                type="text"
-                name="pin_code"
-                value={companyData.pin_code}
-                placeholder="Pin Code"
-                className="p-2"
-              />
-              {errors.pin && <p className="text-red-500">{errors.pin}</p>}
-            </div> */}
-
-              {/* Submit Button */}
-              {/* <div className="flex gap-4">
-            <button
-              type="submit"
-              className="bg-primary text-white mt-8 py-2 px-4 rounded"
-            >
-              {isEditing ? "Update Vendor" : "Register"}
-            </button>
-          </div> */}
             </div>
           </form>
         </div>

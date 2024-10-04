@@ -48,9 +48,29 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
 
   const onSubmit = async (data: FormValues) => {
     console.log(data);
-    // Here you would typically send the data to your backend
-    // For now, we'll just log it and call isAddingAddress
     isAddingAddress();
+
+    
+    const formData = new FormData();
+
+    // Create the `addresses` array object
+    const addresses = [
+      {
+        ...data, // Spread the properties of `data` inside the object
+        date: new Date().toISOString() // Add the `date` field
+      }
+    ];
+    
+    // Append the `addresses` array as a JSON string to `FormData`
+    formData.append('addresses', JSON.stringify(addresses));
+    
+    const response = await fetch(`/api/company/${companyId}`, {
+      method: "PUT",
+      body: formData // Send the form data
+    });
+    
+    console.log(response);
+    
   };
 
   return (
