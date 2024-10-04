@@ -27,7 +27,7 @@
       1. Dashboard
       2. Users
       3. Company
-   2. Procument Manager
+   2. Procurement Manager
       1. Dashboard
       2. Create RFP
       3. Vendor
