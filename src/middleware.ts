@@ -7,7 +7,7 @@ import {
   publicRoutes,
 } from "@/routes";
 import NextAuth from "next-auth";
-import { getToken } from "next-auth/jwt";
+import { getToken, GetTokenParams } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
@@ -36,11 +36,11 @@ export default auth(async (req) => {
   }
 
   if (isLoggedIn) {
-    const token = await getToken({
-      req,
-      secret: process.env.AUTH_SECRET!,
-      secureCookie: true,
-    });
+    const params: GetTokenParams = { req, secret: process.env.AUTH_SECRET! };
+    if (process.env.NODE_ENV === "production") {
+      params.secureCookie = true;
+    }
+    const token = await getToken(params);
     if (!token || !token.role) {
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
