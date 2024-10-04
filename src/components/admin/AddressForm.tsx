@@ -1,8 +1,8 @@
-import React from "react";
+import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -13,66 +13,44 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { addresses } from "./address";
 
-const formSchema = z.object({
-  deliveryAddress: z.object({
-    title: z.string().min(1, "Title is required"),
-    street: z.string().min(1, "Street is required"),
-    country: z.string().min(1, "Country is required"),
-    state: z.string().min(1, "State is required"),
-    city: z.string().min(1, "City is required"),
-    zipCode: z.string().min(1, "Zip Code is required"),
-  }),
+import { addresses } from './address';
+
+// Define the schema for the form
+const AddressFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  street: z.string().min(1, "Street is required"),
+  country: z.string().min(1, "Country is required"),
+  state: z.string().min(1, "State is required"),
+  city: z.string().min(1, "City is required"),
+  zipCode: z.string().min(1, "Zip Code is required"),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof AddressFormSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
   isAddingAddress: () => void;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
-  companyId,
-  isAddingAddress,
-}) => {
+const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(AddressFormSchema),
     defaultValues: {
-      deliveryAddress: {
-        title: "",
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-      },
+      title: "",
+      street: "",
+      country: "",
+      state: "",
+      city: "",
+      zipCode: "",
     },
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data.deliveryAddress);
-    addresses.push(data.deliveryAddress);
+    console.log(data);
+    // Here you would typically send the data to your backend
+    // For now, we'll just log it and call isAddingAddress
     isAddingAddress();
-    // try {
-    //   const response = await fetch(`/api/company?companyId=${companyId}`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data.deliveryAddress),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Failed to update address');
-    //   }
-
-    //   console.log('Address updated successfully');
-
-    // } catch (error) {
-    //   console.error('Error updating address:', error);
-    // }
   };
 
   return (
@@ -80,22 +58,22 @@ const AddressForm: React.FC<AddressFormProps> = ({
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle>Delivery Address</CardTitle>
+            <CardTitle className="flex justify-between items-center">
+              <div>Delivery Address</div> 
+              <Button className="w-28 bg-primary" onClick={isAddingAddress}>Back</Button>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className='grid grid-cols-2 gap-4'>
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.title"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Address Title</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. Home, Office, Warehouse"
-                        />
+                        <Input {...field} placeholder="e.g. Home, Office, Warehouse" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -103,7 +81,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.street"
+                  name="street"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Street Address</FormLabel>
@@ -118,7 +96,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.country"
+                  name="country"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Country</FormLabel>
@@ -131,7 +109,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.state"
+                  name="state"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>State</FormLabel>
@@ -144,7 +122,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.city"
+                  name="city"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
@@ -157,7 +135,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.zipCode"
+                  name="zipCode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Zip Code</FormLabel>

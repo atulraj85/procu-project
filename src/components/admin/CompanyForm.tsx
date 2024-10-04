@@ -1,6 +1,13 @@
 "use client";
 import Loader from "@/components/shared/Loader";
+
+import * as z from "zod";
+import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
+import { addresses } from "./address";
+import { CompanyFormSchema } from "@/schemas/Company";
+
+
 import {
   Form,
   FormControl,
@@ -18,16 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { useCurrentUser } from "@/hooks/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { CiCircleRemove } from "react-icons/ci";
-import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-
-import AddressForm from "./AddressForm";
-import { addresses } from "./address";
+import AddressUpdate from "./AddressUpdate";
 
 interface Company {
   GST: string;
@@ -47,27 +50,7 @@ interface Company {
   website: null | string;
 }
 
-const formSchema = z.object({
-  email: z.string().optional().or(z.literal("")), //TODO email
-  phone: z.string().optional(),
-  website: z.string().optional().or(z.literal("")), //TODO url()
-  industry: z.string().optional(),
-  foundedDate: z.string().optional(), // Use string for date input
-  status: z.enum(["active", "inactive"]).optional(),
-  logo: z.instanceof(File).optional(), // File input for logo
-  stamp: z.instanceof(File).optional(), // File input for stamp
-
-  deliveryAddress: z.object({
-    street: z.string().optional(),
-    country: z.string().optional(),
-    state: z.string().optional(),
-    city: z.string().optional(),
-    zipCode: z.string().optional(),
-    AddressType: z.string().optional(),
-  }),
-});
-
-type CompanyFormValues = z.infer<typeof formSchema>;
+type CompanyFormValues = z.infer<typeof CompanyFormSchema>;
 
 interface CompanyFormProps {
   initialData?: any;
@@ -76,53 +59,26 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [companyId, setCompanyId] = useState<string >("");
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
-  const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
-  // Address States
-  const [currentAddress, setCurrentAddress] = useState<{
-    title: string;
-    street: string;
-    country: string;
-    state: string;
-    city: string;
-    zipCode: string;
-  } | null>(null);
+  
 
-  const handlecurrentAddress = (searchTitle: string) => {
-    let currAddress = addresses.filter((address) =>
-      address.title.toLowerCase().includes(searchTitle.toLowerCase())
-    );
-
-    setCurrentAddress(currAddress[0]);
-    console.log(addresses[0]);
-  };
 
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
 
   const form = useForm<CompanyFormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(CompanyFormSchema),
     defaultValues: {
-      email: "",
-      phone: "",
-      website: "",
-      industry: "",
-      foundedDate: "",
-      status: "active",
-      logo: undefined,
-      stamp: undefined,
-
-      deliveryAddress: {
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-        addressType: "SHIPPING",
-      },
+      email:"",
+      phone:"",
+      website:"",
+      industry:"",
+      status:"active",
+      logo:undefined,
+      stamp:undefined,
       ...initialData,
     },
   });
@@ -171,18 +127,10 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         phone: company.phone || "",
         website: company.website || "",
         industry: company.industry || "",
-        foundedDate: company.foundedDate || "",
         status: company.status || "active",
         logo: undefined,
         stamp: undefined,
-        deliveryAddress: {
-          street: company.addresses[1]?.address || "",
-          country: company.addresses[1]?.country || "",
-          state: company.addresses[1]?.state || "",
-          city: company.addresses[1]?.city || "",
-          zipCode: company.addresses[1]?.zipCode || "",
-          AddressType: "SHIPPING",
-        },
+       
       });
     } catch (error) {
       console.error("Error fetching company details:", error);
@@ -196,6 +144,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
   async function onSubmitForm(data: CompanyFormValues) {
     setIsLoading(true);
+    console.log(data);
     try {
       const formData = new FormData();
       for (const key in data) {
@@ -206,18 +155,12 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         if (value instanceof File) {
           formData.append(key, value);
           console.log(value);
-        } else if (key === "foundedDate" && value) {
-          // Convert foundedDate to ISO format
-          const date = new Date(value as string);
-          const isoDate = date.toISOString();
-          formData.append(key, isoDate);
         } else {
           formData.append(key, JSON.stringify(value) || "");
         }
       }
 
       // Add addresses as a JSON string
-      const addresses = [data.deliveryAddress];
 
       formData.append("addresses", JSON.stringify(addresses));
 
@@ -261,9 +204,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   }
 
   return (
-    <>
+    <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-4">
           <Card>
             <CardContent className="mt-4">
               <div className="flex  justify-between mb-6">
@@ -320,20 +263,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   )}
                 />
 
-                {/* <FormField
-                control={form.control}
-                name="businessAddress"
-                render={({ field }) => (
-                  <FormItem >
-                    <FormLabel>Business Address</FormLabel>
-                    <FormControl>
-                      <Input type="text" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-
                 <FormField
                   control={form.control}
                   name="website"
@@ -361,20 +290,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-                {/* 
-              <FormField
-                control={form.control}
-                name="foundedDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Founded Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
 
                 <FormField
                   control={form.control}
@@ -440,16 +355,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                         />
                       </FormControl>
                       {logoPreview && (
-                        // <Button
-                        //   type="button"
-                        //   variant="outline"
-                        //   size="sm"
-                        //   className="mt-6"
-                        //   onClick={() => {
-                        //     setPreview(null);
-                        //     field.onChange(null);
-                        //   }}
-                        // >
                         <CiCircleRemove
                           className="w-12 absolute right-24 top-2"
                           // variant="outline"
@@ -470,7 +375,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   name="stamp"
                   render={({ field }) => (
                     <FormItem className="relative">
-                      <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <FormLabel className="absolute left-8 top-0 items-center justify-center w-32 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
                         <p className="text-md mb-3 font-medium">Stamp</p>
                         <img
                           src={
@@ -488,7 +393,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           type="file"
                           accept="image/*"
                           onChange={(e) => {
-                            let count = 0;
                             const file = e.target.files?.[0];
                             if (file) {
                               const reader = new FileReader();
@@ -497,25 +401,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                               };
                               reader.readAsDataURL(file);
                               field.onChange(file);
-                              count++;
                             }
                           }}
                         />
                       </FormControl>
                       {stampPreview && (
-                        // <Button
-                        //   type="button"
-                        //   variant="outline"
-                        //   size="sm"
-                        //   className="mt-6"
-                        //   onClick={() => {
-                        //     setPreview(null);
-                        //     field.onChange(null);
-                        //   }}
-                        // >
                         <CiCircleRemove
                           className="w-12 absolute right-24 top-2"
-                          // variant="outline"
                           size="sm"
                           onClick={() => {
                             setStampPreview(null);
@@ -529,118 +421,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
               </div>
             </CardContent>
           </Card>
-
-          {isAddingAddress && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Delivery Address</CardTitle>
-                <div className="flex justify-between items-center">
-                  <Select
-                    // value={}
-                    onValueChange={(value) => {
-                      console.log(value);
-                      handlecurrentAddress(value);
-                    }}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select Addresse" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {addresses.map((item, idx) => (
-                        <SelectItem key={idx} value={item.title}>
-                          {item.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Button
-                    type="button"
-                    onClick={() => setIsAddingAddress(false)}
-                    className="my-4 bg-primary"
-                  >
-                    Add Address
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <FormField
-                    control={form.control}
-                    name="deliveryAddress.street"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} value={currentAddress?.street} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-4 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="deliveryAddress.country"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={currentAddress?.country} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="deliveryAddress.state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={currentAddress?.state} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="deliveryAddress.city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={currentAddress?.city} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="deliveryAddress.zipCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Zip Code</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={currentAddress?.zipCode} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           <Button
             type="submit"
             disabled={isLoading}
@@ -650,15 +430,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           </Button>
         </form>
       </Form>
+          
+          {/* Delivery Address Form */}
 
-      <div className="mt-4">
-        {!isAddingAddress && (
-          <AddressForm
-            companyId={companyId}
-            isAddingAddress={() => setIsAddingAddress(true)}
-          />
-        )}
+      <div  className="mt-6">
+        <AddressUpdate companyId={companyId}/>
       </div>
-    </>
+
+    </div>
   );
 }
