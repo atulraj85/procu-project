@@ -62,3 +62,26 @@ export const CreateProductCategorySchema = z.object({
     .string({ required_error: "Name is required!" })
     .min(1, { message: "Name is required!" }),
 });
+
+const AddressTypeEnum = z.enum(AddressType.enumValues, {
+  invalid_type_error: "Invalid address type!",
+});
+
+export const AddressSchema = z.object({
+  street: z
+    .string({ required_error: "Street is required!" })
+    .min(1, { message: "Street is required!" }),
+  city: z
+    .string({ required_error: "City is required!" })
+    .min(1, { message: "City is required!" }),
+  state: z
+    .string({ required_error: "State is required!" })
+    .min(1, { message: "State is required!" }),
+  postalCode: z
+    .string({ required_error: "Postal code is required!" })
+    .min(1, { message: "Postal code is required!" }),
+  country: z
+    .string({ required_error: "Country is required!" })
+    .min(1, { message: "Country is required!" }),
+  addressType: AddressTypeEnum,
+});
