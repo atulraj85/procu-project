@@ -115,6 +115,8 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
+  console.log("initialData", initialData);
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -126,7 +128,6 @@ export default function RFPUpdateForm({
   const [reason, setReason] = useState("");
   const quotationLimit = 3;
   const [preferredVendorId, setPreferredVendorId] = useState("");
-  const [showCheckbox, setShowCheckbox] = useState(true);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
@@ -136,6 +137,7 @@ export default function RFPUpdateForm({
   const handleError = (errorMessage: string) => {
     setShowPreferredQuotationError(errorMessage);
   };
+
   const {
     control,
     handleSubmit,
@@ -180,7 +182,7 @@ export default function RFPUpdateForm({
             id: charge.id,
             name: "Other Charges",
             unitPrice: parseFloat(charge.price),
-            gst: charge.gst,
+            gst: charge.gst.toString(),
           })),
         total: {
           withGST: parseFloat(quotation.totalAmount),
@@ -322,9 +324,6 @@ export default function RFPUpdateForm({
     setError(null);
     setSuccess(false);
 
-    if (!validateForm(data)) {
-      setError("Validation error!");
-    }
 
     try {
       const formData = new FormData();
