@@ -1,44 +1,30 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  useForm,
-  useFieldArray,
-  useWatch,
-  Control,
-  UseFormSetValue,
-} from "react-hook-form";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ChevronDown, ChevronUp, Loader2, Trash2, X } from "lucide-react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import Link from "next/link";
-import { Textarea } from "../../ui/textarea";
-import { Checkbox } from "../../ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-import { toast } from "../../ui/use-toast";
 import { rfpSchema } from "@/schemas/RFPSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ChevronDown, ChevronUp, Loader2, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  Control,
+  useFieldArray,
+  useForm,
+  UseFormSetValue,
+  useWatch,
+} from "react-hook-form";
 import { z } from "zod";
-import { ProductList } from "./Product";
-import VendorSelector from "./Vendor";
+import { Checkbox } from "../../ui/checkbox";
+import { Textarea } from "../../ui/textarea";
+import { toast } from "../../ui/use-toast";
 import OtherChargesList from "./OtherCharges";
+import { ProductList } from "./Product";
 import SupportingDocumentsList from "./SupportingDocs";
+import VendorSelector from "./Vendor";
 
 const globalFormData = new FormData();
 
@@ -144,7 +130,12 @@ export default function RFPUpdateForm({
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
+  const [showPreferredQuotationError, setShowPreferredQuotationError] =
+    useState("");
 
+  const handleError = (errorMessage: string) => {
+    setShowPreferredQuotationError(errorMessage);
+  };
   const {
     control,
     handleSubmit,
@@ -250,54 +241,6 @@ export default function RFPUpdateForm({
     }
   }, [fields.length, append]);
 
-  const validateForm = (data: z.infer<typeof rfpSchema>): boolean => {
-    const newErrors: { [key: string]: string } = {};
-
-    // Validate preferred vendor
-    if (!preferredVendorId) {
-      newErrors.preferredVendor = "You must select a preferred quotation.";
-    }
-
-    // Validate reference numbers
-    fields.forEach((_, index) => {
-      const refNo = getValues(`quotations.${index}.refNo`);
-      if (!refNo || refNo.trim() === "") {
-        newErrors[`quotations.${index}.refNo`] =
-          "Reference number is required.";
-      }
-    });
-
-    // Validate products
-    fields.forEach((_, quotationIndex) => {
-      const products = getValues(`quotations.${quotationIndex}.products`);
-      products.forEach((product: any, productIndex: number) => {
-        if (!product.quantity) {
-          newErrors[
-            `quotations.${quotationIndex}.products.${productIndex}.quantity`
-          ] = `Quantity at Quotataion ${
-            quotationIndex + 1
-          } must be a positive integer.`;
-          console.log("here");
-        }
-        if (product.unitPrice <= 0) {
-          newErrors[
-            `quotations.${quotationIndex}.products.${productIndex}.unitPrice`
-          ] = `Unit price at Quotataion ${
-            quotationIndex + 1
-          } must be a positive integer.`;
-        }
-        if (!["NILL", "0", "3", "5", "12", "18", "28"].includes(product.gst)) {
-          newErrors[
-            `quotations.${quotationIndex}.products.${productIndex}.gst`
-          ] = "Invalid GST value.";
-        }
-      });
-    });
-
-    // setError(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const [visibleQuotations, setVisibleQuotations] = useState(
     fields.map(() => true)
   );
@@ -313,19 +256,19 @@ export default function RFPUpdateForm({
   const handleSubmitReasonAndAddQuotation = async (
     data: z.infer<typeof rfpSchema>
   ) => {
-    // Logic to handle the submission of the form with the reason
+    console.log("Error: ", error);
+
     console.log("Submitting reason and adding quotation:", data);
-    // You can call your API or perform any other actions here
+
+    if (!preferredVendorId) {
+      console.log("Heelo");
+      setShowPreferredQuotationError("Please select a Quotation.");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     setSuccess(false);
-
-    // if (!validateForm(data)) {
-    //   setError("Validation error!");
-    // }
-
-    // console.log("Text data to be sent:", data);
 
     try {
       const formData = new FormData();
@@ -486,6 +429,7 @@ export default function RFPUpdateForm({
                           if (checked) {
                             setValue("preferredVendorId", quotation.vendorId);
                             setPreferredVendorId(quotation.vendorId);
+                            setShowPreferredQuotationError("");
                             setPreferredVendorIndex(index);
                           } else {
                             setPreferredVendorId("");
@@ -497,14 +441,14 @@ export default function RFPUpdateForm({
                         <Label className=" text-green-700">
                           Preferred Quote
                         </Label>
+                        {showPreferredQuotationError && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {showPreferredQuotationError ||
+                              "Please select a Quotation."}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    {/* {preferredVendorIndex === null &&
-                      preferredVendorIndex !== index && (
-                        <p className="text-red-500 text-sm">
-                          Please select a preferred quotation.
-                        </p>
-                      )} */}
                   </div>
 
                   {/* Arrow */}
