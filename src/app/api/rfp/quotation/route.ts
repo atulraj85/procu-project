@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    // console.log("Parsed form data:", JSON.stringify(data, null, 2));
+    console.log("Parsed form data:", JSON.stringify(data, null, 2));
 
     const { quotations, preferredVendorId, rfpStatus } = data;
     const processedQuotations = await Promise.all(
@@ -45,17 +45,25 @@ export async function PUT(request: NextRequest) {
           supportingDocuments,
         } = quotation;
 
-        // console.log(
-        //   "Processing quotation:",
-        //   JSON.stringify(quotation, null, 2)
-        // );
+        console.log(
+          "Processing quotation:",
+          JSON.stringify(quotation, null, 2)
+        );
+
+
+        console.log(
+          "Processing quotation products:",
+          JSON.stringify(products, null, 2)
+        );
+
+        
 
         if (!isValidUUID(vendorId)) {
           console.error(`Invalid vendorId: ${vendorId}`);
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        // console.log("supportingDocuments", supportingDocuments);
+        console.log("supportingDocuments", supportingDocuments);
 
         let processedDocuments = [];
         if (supportingDocuments && supportingDocuments.length > 0) {
@@ -122,10 +130,10 @@ export async function PUT(request: NextRequest) {
       })
     );
 
-    // console.log(
-    //   "Processed quotations:",
-    //   JSON.stringify(processedQuotations, null, 2)
-    // );
+    console.log(
+      "Processed quotations:",
+      JSON.stringify(processedQuotations, null, 2)
+    );
 
     const existingRFP = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, id),
@@ -138,7 +146,7 @@ export async function PUT(request: NextRequest) {
       throw new Error(`RFP with id ${id} not found`);
     }
 
-    // console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
+    console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
 
     // Update or create quotations
     const updatedQuotations = await Promise.all(
