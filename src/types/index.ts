@@ -178,3 +178,16 @@ export interface Company {
   createdAt: string;
   updatedAt: string;
 }
+
+ 
+export  interface AddressInterface {
+  id: string;
+  companyId: string;
+  addressName: string;
+  addressType: "SHIPPING" | "BUSINESS"; // Enum-like type for addressType
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}

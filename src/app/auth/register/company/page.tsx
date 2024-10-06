@@ -63,18 +63,20 @@ const Company: React.FC = () => {
   };
 
   const fetchCompanyDetails = async (GST: string) => {
+    console.log(GST);
     try {
-      const response1 = await fetch(`/api/company?GST=${GST}`);
-      const result1 = await response1.json();
+      // const response1 = await fetch(`/api/company?GST=${GST}`);
+      // const result1 = await response1.json();
 
-      if (!result1.error) {
-        toast({
-          title: "Error",
-          description: "User already exists.",
-        });
-      } else {
+      // if (!result1.error) {
+      //   toast({
+      //     title: "Error",
+      //     description: "User already exists.",
+      //   });
+      // } else {
         const response = await fetch(`/api/vendor/gst/${GST}`);
         const result = await response.json();
+        console.log(result);
         
         if (result.flag) {
           const data = result.data;
@@ -88,10 +90,10 @@ const Company: React.FC = () => {
             title: "Failed to fetch company details.",
           });
         }
-      }
+      // }
     } catch (error) {
       toast({
-        title: "An error occurred while fetching vendor details.",
+        title: "An error occurred while fetching company details details.",
       });
       console.error(error);
     }

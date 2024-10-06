@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -13,20 +13,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { AddressformSchema } from '@/schemas/Company';
 
-import { addresses } from './address';
-
-// Define the schema for the form
-const AddressFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  street: z.string().min(1, "Street is required"),
-  country: z.string().min(1, "Country is required"),
-  state: z.string().min(1, "State is required"),
-  city: z.string().min(1, "City is required"),
-  zipCode: z.string().min(1, "Zip Code is required"),
-});
-
-type FormValues = z.infer<typeof AddressFormSchema>;
+type FormValues = z.infer<typeof AddressformSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
@@ -34,10 +24,13 @@ interface AddressFormProps {
 }
 
 const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  
   const form = useForm<FormValues>({
-    resolver: zodResolver(AddressFormSchema),
+    resolver: zodResolver(AddressformSchema),
     defaultValues: {
-      title: "",
+      addressName: "",
       street: "",
       country: "",
       state: "",
@@ -47,31 +40,52 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data);
-    isAddingAddress();
-
+    setIsSaving(true);
     
-    const formData = new FormData();
-
-    // Create the `addresses` array object
-    const addresses = [
-      {
-        ...data, // Spread the properties of `data` inside the object
-        date: new Date().toISOString() // Add the `date` field
+    const formDataWithAddressType = {
+      ...data,
+      addressType: "SHIPPING",
+    };
+  
+    try {
+      const response = await fetch(`/api/company/${companyId}/address`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formDataWithAddressType),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Address added successfully:", result);
+        toast({
+          title: "Success",
+          description: "Address added successfully!",
+          duration: 3000,
+        });
+        isAddingAddress();
+      } else {
+        console.error("Failed to add address:", response.statusText);
+        toast({
+          title: "Error",
+          description: "Failed to add address. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
       }
-    ];
-    
-    // Append the `addresses` array as a JSON string to `FormData`
-    formData.append('addresses', JSON.stringify(addresses));
-    
-    const response = await fetch(`/api/company/${companyId}`, {
-      method: "PUT",
-      body: formData // Send the form data
-    });
-    
-    console.log(response);
-    
-  };
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <Form {...form}>
@@ -88,7 +102,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
               <div className='grid grid-cols-2 gap-4'>
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="addressName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Address Title</FormLabel>
@@ -167,8 +181,12 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
                   )}
                 />
               </div>
-              <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
-                ADD
+              <Button 
+                type="submit" 
+                className="mt-4 w-28 my-4 bg-primary"
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "ADD"}
               </Button>
             </div>
           </CardContent>

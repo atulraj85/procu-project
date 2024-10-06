@@ -122,7 +122,7 @@ function LoginForm({ api}: any) {
                 </Button>
               </FormItem>
               <span
-              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-2xl opacity-55"
+              className="absolute inset-y-0 right-3 bottom-10 flex items-center cursor-pointer text-2xl opacity-55"
               onClick={togglePasswordVisibility}
             >
               {showPassword ? <IoEyeOff /> : <IoEye />}

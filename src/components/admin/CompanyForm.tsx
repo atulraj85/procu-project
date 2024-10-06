@@ -1,13 +1,10 @@
 "use client";
 import Loader from "@/components/shared/Loader";
-
 import * as z from "zod";
 import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
 import { addresses } from "./address";
 import { CompanyFormSchema } from "@/schemas/Company";
-
-
 import {
   Form,
   FormControl,
@@ -25,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { useCurrentUser } from "@/hooks/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
@@ -42,12 +39,10 @@ interface CompanyFormProps {
 
 export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [companyId, setCompanyId] = useState<string >("");
+  const [companyId, setCompanyId] = useState<string>("");
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [stampPreview, setStampPreview] = useState<string | null>(null);
-  
-
 
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
@@ -55,13 +50,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   const form = useForm<CompanyFormValues>({
     resolver: zodResolver(CompanyFormSchema),
     defaultValues: {
-      email:"",
-      phone:"",
-      website:"",
-      industry:"",
-      status:"active",
-      logo:undefined,
-      stamp:undefined,
+      email: "",
+      phone: "",
+      website: "",
+      industry: "",
+      status: "active",
+      logo: undefined,
+      stamp: undefined,
       ...initialData,
     },
   });
@@ -104,7 +99,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       setCompanyData(data);
       console.log(data);
 
-      // Update form values with company data
       form.reset({
         email: company.email || "",
         phone: company.phone || "",
@@ -113,7 +107,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         status: company.status || "active",
         logo: undefined,
         stamp: undefined,
-       
       });
     } catch (error) {
       console.error("Error fetching company details:", error);
@@ -132,7 +125,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       const formData = new FormData();
       for (const key in data) {
         if (key === "businessAddress" || key === "deliveryAddress") {
-          continue; // Skip these for now, we'll handle them separately
+          continue;
         }
         const value = data[key as keyof CompanyFormValues];
         if (value instanceof File) {
@@ -143,18 +136,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         }
       }
 
-      // Add addresses as a JSON string
-
       formData.append("addresses", JSON.stringify(addresses));
 
-      // Log formData contents (for debugging)
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
       });
 
       console.log(formData);
-      // Call the onSubmit prop function with the formData
-      // await onSubmit(data);
 
       const response = await fetch(`/api/company/${companyId}`, {
         method: "PUT",
@@ -162,9 +150,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       });
 
       if (response.ok) {
-        // Reset form after submission
         form.reset();
-
         toast({
           title: "Success",
           description: "Company saved successfully",
@@ -192,23 +178,14 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-4">
           <Card>
             <CardContent className="mt-4">
-              <div className="flex  justify-between mb-6">
+              <div className="flex justify-between mb-6">
                 <div>
-                  <p>
-                    {" "}
-                    <strong>{companyData?.name}</strong>{" "}
-                  </p>
-                  <p>
-                    {" "}
-                    <strong>{companyData?.gst}</strong>{" "}
-                  </p>
+                  <p><strong>{companyData?.name}</strong></p>
+                  <p><strong>{companyData?.gst}</strong></p>
                 </div>
-
                 <div className="w-[30%]">
-                  {" "}
-                  <p></p>{" "}
+                  <p></p>
                   <strong>
-                    {" "}
                     <span className="text-xl">Address:</span>{" "}
                     {companyData.gstAddress
                       ? companyData.gstAddress
@@ -216,7 +193,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   </strong>
                 </div>
               </div>
-
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
@@ -231,7 +207,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="phone"
@@ -245,7 +220,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="website"
@@ -259,7 +233,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="industry"
@@ -273,7 +246,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="status"
@@ -298,14 +270,12 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
-                {/* File input for Logo */}
                 <FormField
                   control={form.control}
                   name="logo"
                   render={({ field }) => (
                     <FormItem className="relative">
-                      <FormLabel className=" absolute  left-8 top-0 items-center justify-center w-32  rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
+                      <FormLabel className="absolute left-8 top-0 items-center justify-center w-32 rounded-lg cursor-pointer hover:border-gray-400 transition-colors">
                         <p className="text-md mb-3 font-medium">Logo</p>
                         <img
                           src={
@@ -340,7 +310,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                       {logoPreview && (
                         <CiCircleRemove
                           className="w-12 absolute right-24 top-2"
-                          // variant="outline"
                           size="sm"
                           onClick={() => {
                             setLogoPreview(null);
@@ -351,8 +320,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     </FormItem>
                   )}
                 />
-
-                {/* File input for Stamp */}
                 <FormField
                   control={form.control}
                   name="stamp"
@@ -413,13 +380,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           </Button>
         </form>
       </Form>
-          
-          {/* Delivery Address Form */}
-
-      <div  className="mt-6">
+      <div className="mt-6">
         <AddressUpdate companyId={companyId}/>
       </div>
-
     </div>
   );
 }

@@ -22,7 +22,7 @@ export const CompanyFormSchema = z.object({
 
 
   export const AddressformSchema = z.object({
-    title: z.string().min(1, "Title is required"),
+    addressName: z.string().min(1, "Title is required"),
     street: z.string().min(1, "Street is required"),
     country: z.string().min(1, "Country is required"),
     state: z.string().min(1, "State is required"),

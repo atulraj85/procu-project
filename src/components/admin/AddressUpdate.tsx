@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addresses } from "./address";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AddressformSchema } from "@/schemas/Company";
 import {
@@ -23,8 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import AddressForm from "./AddressForm";
-import { Company } from "@/types";
 import { toast } from "@/components/ui/use-toast";
+import { AddressInterface } from "@/types";
 
 type FormValues = z.infer<typeof AddressformSchema>;
 
@@ -34,12 +33,14 @@ interface Props {
 
 const AddressUpdate: React.FC<Props> = ({ companyId }) => {
   const [isAddingAddress, setIsAddingAddress] = useState<boolean>(false);
-  const [companyData, setCompanyData] = useState<any>();
+  const [addresses, setAddresses] = useState<AddressInterface[] | null>(null);
+  const [currAddressID, setCurrAddressID] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
     defaultValues: {
-      title: "",
+      addressName: "",
       street: "",
       country: "",
       state: "",
@@ -48,75 +49,97 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
     },
   });
 
-  useEffect(() => {
-    getCompanyDetails(companyId);
-    if (companyData) {
-      console.log("Updated companyData:", companyData);
-    }
-  }, [companyId]);
-
-  // New useEffect to log companyData when it changes
-  useEffect(() => {
-    if (companyData) {
-      console.log("Updated companyData:", companyData);
-    }
-  }, [companyData]);
-
-  const getCompanyDetails = async (id: string) => {
+  const getAddresses = async (id: string) => {
     try {
-      const response = await fetch(`/api/company/${id}`);
+      const response = await fetch(`/api/company/${id}/address`);
       if (!response.ok) {
-        throw new Error("Failed to fetch company details");
+        throw new Error("Failed to fetch Addresses");
       }
       const data = await response.json();
-
-      console.log("res data", data);
-
-      setCompanyData(data);
+      console.log("Fetched addresses:", data);
+      setAddresses(data);
     } catch (error) {
-      console.error("Error fetching company details:", error);
+      console.error("Error fetching Addresses:", error);
       toast({
         title: "Error",
-        description: "Failed to fetch company details",
+        description: "Error fetching Addresses",
         variant: "destructive",
       });
     }
   };
 
+  useEffect(() => {
+    getAddresses(companyId);
+    form.reset({
+      addressName: "",
+      street: "",
+      country: "",
+      state: "",
+      city: "",
+      zipCode: "",
+    });
+  }, [companyId, isAddingAddress]);
+
   const handleAddressSelect = (searchTitle: string) => {
-    const selectedAddress = addresses.find(
-      (address) => address.title.toLowerCase() === searchTitle.toLowerCase()
+    const selectedAddress = addresses?.find(
+      (address) => address.addressName.toLowerCase() === searchTitle.toLowerCase()
     );
     if (selectedAddress) {
+      setCurrAddressID(selectedAddress.id);
       form.reset(selectedAddress);
+      console.log(selectedAddress.addressName);
+      console.log(selectedAddress);
     }
   };
 
   const onSubmitForm = async (data: FormValues) => {
+    setIsSaving(true);
     console.log(data);
 
-    const formData = new FormData();
+    const FormData = {
+      ...data,
+      addressType: "SHIPPING",
+    };
 
-    const addresses = [
-      {
-        ...data,
-        date: new Date().toISOString(),
-      },
-    ];
+    try {
+      const response = await fetch(`/api/company/${companyId}/address/${currAddressID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(FormData),
+      });
 
-    formData.append("addresses", JSON.stringify(addresses));
+      if (!response.ok) {
+        throw new Error("Failed to update address");
+      }
 
-    const response = await fetch(`/api/company/${companyId}`, {
-      method: "PUT",
-      body: formData,
-    });
+      toast({
+        title: "Success",
+        description: "Address updated successfully",
+      });
 
-    console.log(response);
+      getAddresses(companyId);
+    } catch (error) {
+      console.error("Error updating address:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update address",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleAddingAddress = () => {
+    setIsAddingAddress((prev) => !prev);
+    
   };
 
   return (
     <div>
-      {!isAddingAddress && (
+      {!isAddingAddress ? (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmitForm)}
@@ -131,9 +154,9 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
                       <SelectValue placeholder="Select Address" />
                     </SelectTrigger>
                     <SelectContent>
-                      {addresses.map((item, idx) => (
-                        <SelectItem key={idx} value={item.title}>
-                          {item.title}
+                      {addresses?.map((item, idx) => (
+                        <SelectItem key={idx+1} value={item.addressName}>
+                          {item.addressName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -141,7 +164,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
 
                   <Button
                     type="button"
-                    onClick={() => setIsAddingAddress(true)}
+                    onClick={toggleAddingAddress}
                     className="my-4 bg-primary"
                   >
                     Add Address
@@ -223,19 +246,21 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
                   </div>
                 </div>
 
-                <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
-                  Submit
+                <Button 
+                  type="submit" 
+                  className="mt-4 w-36 my-4 bg-primary"
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving..." : "Save Changes"}
                 </Button>
               </CardContent>
             </Card>
           </form>
         </Form>
-      )}
-
-      {isAddingAddress && (
+      ) : (
         <AddressForm
           companyId={companyId}
-          isAddingAddress={() => setIsAddingAddress(false)}
+          isAddingAddress={toggleAddingAddress}
         />
       )}
     </div>
