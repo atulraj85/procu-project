@@ -321,7 +321,7 @@ function formatRFPData(rfps: any[]) {
         id: quotation.id,
         totalAmount: quotation.totalAmount,
         refNo: quotation.refNo,
-        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+        totalAmountWithoutGST: quotation.totalAmountWithoutGst,
         created_at: quotation.created_at,
         updated_at: quotation.updated_at,
         vendor: quotation.vendor,
