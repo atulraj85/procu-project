@@ -22,10 +22,19 @@
    3. Phone number
    4. Password
    5. Role : ADMIN
-3. Admin Dashoboard:
-   1. Dashboard
-   2. Users
-   3. Company
+3. Roles:
+   1. Admin:
+      1. Dashboard
+      2. Users
+      3. Company
+   2. Procurement Manager
+      1. Dashboard
+      2. Create RFP
+      3. Vendor
+   3. Finance Manager
+      1. Dashboard
+      2. Create PO
+
 
 # Database and ORM
 

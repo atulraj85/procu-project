@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest) {
 
     const formData = await request.formData();
     const data = JSON.parse(formData.get("data") as string);
-    // console.log("Parsed form data:", JSON.stringify(data, null, 2));
+    console.log("Parsed form data:", JSON.stringify(data, null, 2));
 
     const { quotations, preferredVendorId, rfpStatus } = data;
     const processedQuotations = await Promise.all(
@@ -45,17 +45,25 @@ export async function PUT(request: NextRequest) {
           supportingDocuments,
         } = quotation;
 
-        // console.log(
-        //   "Processing quotation:",
-        //   JSON.stringify(quotation, null, 2)
-        // );
+        console.log(
+          "Processing quotation:",
+          JSON.stringify(quotation, null, 2)
+        );
+
+
+        console.log(
+          "Processing quotation products:",
+          JSON.stringify(products, null, 2)
+        );
+
+        
 
         if (!isValidUUID(vendorId)) {
           console.error(`Invalid vendorId: ${vendorId}`);
           throw new Error(`Invalid vendorId: ${vendorId}`);
         }
 
-        // console.log("supportingDocuments", supportingDocuments);
+        console.log("supportingDocuments", supportingDocuments);
 
         let processedDocuments = [];
         if (supportingDocuments && supportingDocuments.length > 0) {
@@ -122,10 +130,10 @@ export async function PUT(request: NextRequest) {
       })
     );
 
-    // console.log(
-    //   "Processed quotations:",
-    //   JSON.stringify(processedQuotations, null, 2)
-    // );
+    console.log(
+      "Processed quotations:",
+      JSON.stringify(processedQuotations, null, 2)
+    );
 
     const existingRFP = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, id),
@@ -138,7 +146,7 @@ export async function PUT(request: NextRequest) {
       throw new Error(`RFP with id ${id} not found`);
     }
 
-    // console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
+    console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
 
     // Update or create quotations
     const updatedQuotations = await Promise.all(
@@ -217,19 +225,22 @@ async function createNewQuotation(rfpId: string, q: any) {
 
     const vendorPricingValues =
       q.vendorPricings.create?.map((pricing: any) => ({
-        quotationId: newQuotation.id,
         price: pricing.price,
-        GST: pricing.GST,
+        gst: pricing.GST,
+        quotationId: newQuotation.id,
+        rfpProductId: pricing.rfpProduct.connect.id,
+        updatedAt: new Date(),
       })) || [];
     if (vendorPricingValues && vendorPricingValues.length) {
       await tx.insert(VendorPricingTable).values(vendorPricingValues);
     }
 
     const otherChargeValues = q.otherCharges.create.map((charge: any) => ({
-      quotationId: newQuotation.id,
       name: charge.name,
       price: charge.price,
       gst: charge.gst,
+      quotationId: newQuotation.id,
+      updatedAt: new Date(),
     }));
     if (otherChargeValues && otherChargeValues.length) {
       await tx.insert(OtherChargeTable).values(otherChargeValues);
@@ -238,9 +249,12 @@ async function createNewQuotation(rfpId: string, q: any) {
     const supportingDocumentValues = q.supportingDocuments.create
       .filter((doc: any) => doc !== null)
       .map((doc: any) => ({
-        quotationId: newQuotation.id,
         documentName: doc.documentName,
+        // TODO: Find what will be documentType
+        documentType: "",
         location: doc.location,
+        quotationId: newQuotation.id,
+        updatedAt: new Date(),
       }));
     if (supportingDocumentValues && supportingDocumentValues.length) {
       await tx.insert(SupportingDocumentTable).values(supportingDocumentValues);
@@ -262,6 +276,7 @@ async function updatedQuotation(q: any) {
         refNo: q.refNo,
         totalAmount: q.totalAmount,
         totalAmountWithoutGst: q.totalAmountWithoutGST,
+        updatedAt: new Date(),
       })
       .where(eq(QuotationTable.id, q.id));
 
@@ -271,13 +286,16 @@ async function updatedQuotation(q: any) {
       .where(eq(VendorPricingTable.quotationId, q.id));
 
     // Insert the new vendor pricings
-    await tx.insert(VendorPricingTable).values(
-      q.vendorPricings.create.map((pricing: any) => ({
-        quotationId: q.id,
-        price: pricing.price,
-        GST: pricing.GST,
-      }))
-    );
+    const vendorPricingValues = q.vendorPricings.create.map((pricing: any) => ({
+      price: pricing.price,
+      gst: pricing.GST,
+      quotationId: q.id,
+      rfpProductId: pricing.rfpProduct.connect.id,
+      updatedAt: new Date(),
+    }));
+    if (vendorPricingValues && vendorPricingValues.length) {
+      await tx.insert(VendorPricingTable).values(vendorPricingValues);
+    }
 
     // Delete the old other charges
     await tx
@@ -285,14 +303,16 @@ async function updatedQuotation(q: any) {
       .where(eq(OtherChargeTable.quotationId, q.id));
 
     // Insert the new other charges
-    await tx.insert(OtherChargeTable).values(
-      q.otherCharges.create.map((charge: any) => ({
-        quotationId: q.id,
-        name: charge.name,
-        price: charge.price,
-        gst: charge.gst,
-      }))
-    );
+    const otherChargeValues = q.otherCharges.create.map((charge: any) => ({
+      name: charge.name,
+      price: charge.price,
+      gst: charge.gst,
+      quotationId: q.id,
+      updatedAt: new Date(),
+    }));
+    if (otherChargeValues && otherChargeValues.length) {
+      await tx.insert(OtherChargeTable).values(otherChargeValues);
+    }
 
     // Delete the old supporting documents
     await tx
@@ -300,15 +320,19 @@ async function updatedQuotation(q: any) {
       .where(eq(SupportingDocumentTable.quotationId, q.id));
 
     // Insert the new supporting documents
-    await tx.insert(SupportingDocumentTable).values(
-      q.supportingDocuments.create
-        .filter((doc: any) => doc !== null) // Filter out null docs
-        .map((doc: any) => ({
-          quotationId: q.id,
-          documentName: doc.documentName,
-          location: doc.location,
-        }))
-    );
+    const supportingDocumetValues = q.supportingDocuments.create
+      .filter((doc: any) => doc !== null) // Filter out null docs
+      .map((doc: any) => ({
+        documentName: doc.documentName,
+        // TODO: Find what will be documentType
+        documentType: "",
+        location: doc.location,
+        quotationId: q.id,
+        updatedAt: new Date(),
+      }));
+    if (supportingDocumetValues && supportingDocumetValues.length) {
+      await tx.insert(SupportingDocumentTable).values(supportingDocumetValues);
+    }
   });
 
   // Return updated quotation (optional based on what you need to do with it)

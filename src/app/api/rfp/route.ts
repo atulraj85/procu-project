@@ -166,6 +166,9 @@ export async function GET(request: NextRequest) {
 
     const formattedData = formatRFPData(records);
 
+    console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
+    console.log("records data:", JSON.stringify(records, null, 2));
+
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
     console.error("Detailed error:", error);
@@ -331,7 +334,7 @@ function formatRFPData(rfps: any[]) {
             quantity: pricing.rfpProduct.quantity,
             price: pricing.price,
             description: pricing.rfpProduct.product.specification,
-            gst: pricing.GST,
+            gst: pricing.gst,
             type: "product",
           })),
           ...(quotation.otherCharges || []).map((charge: any) => ({

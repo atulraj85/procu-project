@@ -20,7 +20,7 @@ export const productSchema = z.object({
 export const otherChargeSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Charge name is required"),
-  unitPrice: z.string().min(0, "Unit price must be non-negative"),
+  unitPrice: z.number().min(0, "Unit price must be non-negative"),
   gst: z
     .enum(["NILL", "0", "3", "5", "12", "18", "28"])
     .refine((val) => val !== "NILL", {
