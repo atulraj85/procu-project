@@ -21,7 +21,7 @@ interface UserProfileResponse {
   response?: {
     data?: UserProfileData;
   };
-}
+} 
 import { signOut } from "next-auth/react";
 
 interface Props {
