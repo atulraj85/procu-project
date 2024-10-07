@@ -136,8 +136,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         }
       }
 
-      formData.append("addresses", JSON.stringify(addresses));
-
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
       });
