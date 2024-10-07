@@ -117,11 +117,10 @@ export async function PUT(
         const addressType = mapToAddressType(address.AddressType) || "BUSINESS";
         return {
           addressId: address.addressId,
-          addressName: address.addressName,
           street: address.street,
           city: address.city,
           state: address.state,
-          zipCode: address.zipCode,
+          postalCode: address.zipCode,
           country: address.country,
           addressType,
         };
