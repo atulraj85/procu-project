@@ -18,7 +18,6 @@ export const productSchema = z.object({
 
 // Other Charge Schema
 export const otherChargeSchema = z.object({
-  id: z.string(),
   name: z.string().min(1, "Charge name is required"),
   unitPrice: z.number().min(0, "Unit price must be non-negative"),
   gst: z
@@ -67,7 +66,10 @@ export const rfpSchema = z.object({
   rfpStatus: z.string(),
   preferredQuotationId: z.string().nullable(),
   preferredVendorId: z.string().optional().nullable(),
-  reason: z.string().min(10, "Please describe your reason thoroughly."),
+  // reason: z
+  //   .string()
+  //   .min(10, "Please describe your reason thoroughly.")
+  //   .optional(),
   quotations: z
     .array(quotationSchema)
     .min(1, "At least one quotation is required")

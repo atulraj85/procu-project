@@ -233,33 +233,43 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
-    console.log("gstttttttt", gstn);
-
+    console.log("Checking GSTN:", gstn);
+  
     try {
+      // First, check if vendor exists in database
       const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
       const result1 = await response1.json();
-      console.log("result 1");
-
-      if (!result1.error) {
+      console.log("Database check result:", result1);
+  
+      if (result1.vendor) {
+        // Vendor found in database
         toast({
-          title: "Error",
-          description: "User all ready exist.",
+          title: "Vendor exists",
+          description: "This GSTN is already registered in the system.",
         });
-
-        window.location.reload();
-        return router.push("/dashboard");
+        
+        // Optionally, you can populate the form with existing data
+        setVendorData({
+          ...vendorData,
+          company_name: result1.vendor.companyName || "",
+          state: result1.vendor.customerState || "",
+          pin_code: result1.vendor.zip || "",
+          address: result1.vendor.address || "",
+          city: result1.vendor.customerCity || "",
+          pan_card: result1.vendor.pan || "",
+          person_name: result1.vendor.primaryName || "",
+          email: result1.vendor.email || "",
+          contact_no: result1.vendor.mobile || "",
+          website: result1.vendor.website || "",
+        });
       } else {
-        console.log("hhh1");
-
-        const response = await fetch(`/api/vendor/gst/${gstn}`);
-        const result = await response.json();
-        console.log("result 1 out", result);
-
-        if (result.flag) {
-          const data = result.data;
-          console.log("hi");
-          let pan = data.gstin;
-
+        // Vendor not found in database, fetch from external API
+        const response2 = await fetch(`/api/vendor/gst/${gstn}`);
+        const result2 = await response2.json();
+        console.log("External API result:", result2);
+  
+        if (result2.flag) {
+          const data = result2.data;
           setVendorData({
             ...vendorData,
             company_name: data.lgnm || "",
@@ -269,19 +279,28 @@ const VendorDetails: React.FC = () => {
             city: data.pradr.addr.city || "",
             pan_card: data.gstin.slice(2, 12) || "",
           });
+          
+          toast({
+            title: "GSTN details fetched",
+            description: "Vendor details have been populated from GST database.",
+          });
         } else {
           toast({
-            title: "Failed to fetch vendor details.",
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to fetch vendor details from GST database.",
           });
         }
       }
     } catch (error) {
+      console.error("Error fetching vendor details:", error);
       toast({
-        title: "An error occurred while fetching vendor details.",
+        variant: "destructive",
+        title: "Error",
+        description: "An error occurred while fetching vendor details.",
       });
     }
   };
-
   const handleSearchGSTN = () => {
     if (validateGstn(vendorData.vendor_gstn).isValid) {
       console.log("data", vendorData.vendor_gstn);

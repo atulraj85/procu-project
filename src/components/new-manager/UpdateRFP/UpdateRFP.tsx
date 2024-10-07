@@ -33,6 +33,7 @@ interface TotalComponentProps {
   index: number;
   setValue: UseFormSetValue<any>;
 }
+
 const TotalComponent: React.FC<TotalComponentProps> = ({
   control,
   index,
@@ -44,65 +45,104 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   });
 
   useEffect(() => {
-    // if (quotation.total) {
-    //   setValue(`quotations.${index}.total`, quotation.total);
-    // }
-    const totalWithoutGST =
-      (quotation.products?.reduce(
-        (sum: number, product: { totalPriceWithoutGST: number | string }) =>
-          sum + (Number(product.totalPriceWithoutGST) || 0),
-        0
-      ) || 0) +
-      (quotation.otherCharges?.reduce(
-        (sum: number, charge: { unitPrice: number | string }) =>
-          sum + (Number(charge.unitPrice) || 0),
-        0
-      ) || 0);
+    if (!quotation) return;
 
-    const totalWithGST =
-      (quotation.products?.reduce(
-        (sum: number, product: { totalPriceWithGST: number | string }) =>
-          sum + (Number(product.totalPriceWithGST) || 0),
-        0
-      ) || 0) +
-      (quotation.otherCharges?.reduce(
-        (sum: number, charge: { gst: string; unitPrice: number | string }) => {
+    const calculateTotals = () => {
+      // Calculate total without GST
+      const productsTotal =
+        quotation.products?.reduce((sum: number, product: any) => {
+          return sum + (Number(product.totalPriceWithoutGST) || 0);
+        }, 0) || 0;
+
+      const otherChargesTotal =
+        quotation.otherCharges?.reduce((sum: number, charge: any) => {
+          return sum + (Number(charge.unitPrice) || 0);
+        }, 0) || 0;
+
+      const totalWithoutGST = productsTotal + otherChargesTotal;
+
+      // Calculate total with GST
+      const productsTotalWithGST =
+        quotation.products?.reduce((sum: number, product: any) => {
+          const gstValue = product.gst === "NILL" ? 0 : parseFloat(product.gst);
+          const priceWithGST =
+            (Number(product.unitPrice) || 0) *
+            product.quantity *
+            (1 + gstValue / 100);
+          return sum + priceWithGST;
+        }, 0) || 0;
+
+      const otherChargesTotalWithGST =
+        quotation.otherCharges?.reduce((sum: number, charge: any) => {
           const gstValue = charge.gst === "NILL" ? 0 : parseFloat(charge.gst);
-          return sum + (Number(charge.unitPrice) || 0) * (1 + gstValue / 100);
-        },
-        0
-      ) || 0);
+          const chargeWithGST =
+            (Number(charge.unitPrice) || 0) * (1 + gstValue / 100);
+          return sum + chargeWithGST;
+        }, 0) || 0;
 
-    const newTotal = {
-      withoutGST: Number(totalWithoutGST),
-      withGST: Number(totalWithGST),
+      const totalWithGST = productsTotalWithGST + otherChargesTotalWithGST;
+
+      return {
+        withoutGST: Number(totalWithoutGST),
+        withGST: Number(totalWithGST),
+      };
     };
-    if (
-      quotation.total?.withoutGST !== newTotal.withoutGST ||
-      quotation.total?.withGST !== newTotal.withGST
-    ) {
-      setValue(`quotations.${index}.total`, newTotal, { shouldDirty: false });
 
-      // Update globalFormData
-      if (globalFormData.has("quotations")) {
-        const quotations = JSON.parse(
-          globalFormData.get("quotations") as string
-        );
-        quotations[index].total = newTotal;
-        globalFormData.set("quotations", JSON.stringify(quotations));
+    // Only update if the quotation has products or other charges
+    if (quotation.products?.length > 0 || quotation.otherCharges?.length > 0) {
+      const newTotal = calculateTotals();
+
+      // Only update if values have changed significantly (using small epsilon for float comparison)
+      const hasChanged =
+        !quotation.total ||
+        Math.abs(quotation.total.withoutGST - newTotal.withoutGST) > 0.01 ||
+        Math.abs(quotation.total.withGST - newTotal.withGST) > 0.01;
+
+      if (hasChanged) {
+        setValue(`quotations.${index}.total`, newTotal, { shouldDirty: false });
+
+        // Update globalFormData
+        try {
+          if (globalFormData.has("quotations")) {
+            const formDataValue = globalFormData.get("quotations");
+            if (formDataValue && typeof formDataValue === "string") {
+              const quotations = JSON.parse(formDataValue);
+              if (
+                quotations &&
+                Array.isArray(quotations) &&
+                quotations[index]
+              ) {
+                quotations[index].total = newTotal;
+                globalFormData.set("quotations", JSON.stringify(quotations));
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error updating globalFormData:", error);
+        }
       }
     }
   }, [quotation, setValue, index]);
+
+  // Format numbers for display
+  const formatCurrency = (value: number | undefined): string => {
+    if (value === undefined) return "0.00";
+    return value.toFixed(2);
+  };
 
   return (
     <div className="grid grid-cols-2 gap-2 rounded text-sm">
       <div>
         <Label className="font-bold">Taxable Amount (INR)</Label>
-        <div>{quotation.total?.withoutGST || "0.00"} </div>
+        <div className="text-base font-medium">
+          {formatCurrency(quotation?.total?.withoutGST)}
+        </div>
       </div>
       <div>
         <Label className="font-bold">Total (incl. GST) (INR)</Label>
-        <div>{(quotation.total?.withGST || 0).toFixed(2)}</div>
+        <div className="text-base font-medium">
+          {formatCurrency(quotation?.total?.withGST)}
+        </div>
       </div>
     </div>
   );
@@ -118,7 +158,7 @@ export default function RFPUpdateForm({
   console.log("initialData", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
   const [preferredVendorIndex, setPreferredVendorIndex] = useState<
@@ -134,10 +174,6 @@ export default function RFPUpdateForm({
   const [showPreferredQuotationError, setShowPreferredQuotationError] =
     useState("");
 
-  const handleError = (errorMessage: string) => {
-    setShowPreferredQuotationError(errorMessage);
-  };
-
   const {
     control,
     handleSubmit,
@@ -150,7 +186,6 @@ export default function RFPUpdateForm({
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
-      reason: "",
       // products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
@@ -197,6 +232,12 @@ export default function RFPUpdateForm({
       })),
     },
   });
+
+  useEffect(() => {
+    console.log("Current form errors:", errors);
+  }, [errors]);
+
+  const [reasonError, setReasonError] = useState<string | null>(null);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -258,7 +299,7 @@ export default function RFPUpdateForm({
   const handleSubmitReasonAndAddQuotation = async (
     data: z.infer<typeof rfpSchema>
   ) => {
-    console.log("Error: ", error);
+    console.log("Error: ", errors);
 
     console.log("Submitting reason and adding quotation:", data);
 
@@ -269,7 +310,7 @@ export default function RFPUpdateForm({
     }
 
     setIsLoading(true);
-    setError(null);
+    // setError(null);
     setSuccess(false);
 
     try {
@@ -277,7 +318,7 @@ export default function RFPUpdateForm({
       formData.append("rfpId", rfpId);
       const serializedData = JSON.stringify({
         ...data,
-        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+        rfpStatus: "DRAFT",
       });
       formData.append("data", serializedData);
       formData.append("data", serializedData);
@@ -311,26 +352,35 @@ export default function RFPUpdateForm({
       router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+      // setError(
+      //   err instanceof Error ? err.message : "An unknown error occurred"
+      // );
     } finally {
       setIsLoading(false);
     }
   };
 
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
-    setIsLoading(true);
-    setError(null);
-    setSuccess(false);
+    console.log("Error: ", errors);
 
+    console.log("Submitting quotation:", data);
+
+    if (!preferredVendorId) {
+      console.log("Heelo");
+      setShowPreferredQuotationError("Please select a Quotation.");
+      return;
+    }
+
+    setIsLoading(true);
+    // setError(null);
+    setSuccess(false);
 
     try {
       const formData = new FormData();
       formData.append("rfpId", rfpId);
       const serializedData = JSON.stringify({
         ...data,
-        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+        rfpStatus: "SUBMITTED",
       });
       formData.append("data", serializedData);
       formData.append("data", serializedData);
@@ -358,22 +408,25 @@ export default function RFPUpdateForm({
       setSuccess(true);
 
       toast({
-        title: "🎉 Quotation Submitted!",
+        title: "🎉 Quotation Updated!",
         description: response.ok,
       });
       router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+      // setError(
+      //   err instanceof Error ? err.message : "An unknown error occurred"
+      // );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form
+      onSubmit={handleSubmit(handleSubmitReasonAndAddQuotation)}
+      className="space-y-8"
+    >
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>
@@ -578,13 +631,6 @@ export default function RFPUpdateForm({
         </div>
       )}
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
@@ -609,22 +655,28 @@ export default function RFPUpdateForm({
             className="w-1/3 mb-2"
             placeholder="Reason for adding less than 3 quotations"
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
+            onChange={(e) => {
+              setReason(e.target.value);
+              setReasonError("");
+            }}
           />
 
-          {errors?.reason && (
-            <p className="text-red-500 text-sm mt-1">{errors.reason.message}</p>
+          {reasonError && (
+            <p className="text-red-500 text-sm mt-1">{reasonError}</p>
           )}
 
           <Button
             type="submit"
             className="bg-primary"
             onClick={() => {
+              if (fields.length < 3 && !reason) {
+                setReasonError("Please select reason");
+              }
+
               const formData = getValues();
               if (reason) {
-                setValue("reason", reason);
+                setReason(reason);
                 handleSubmitReasonAndAddQuotation(formData);
-                setReason("");
               }
             }}
           >

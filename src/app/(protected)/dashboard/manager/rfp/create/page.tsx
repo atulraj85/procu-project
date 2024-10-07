@@ -391,65 +391,74 @@ const RFPForm: React.FC = () => {
         <CardTitle>Create RFP</CardTitle>
         </div>
 
-        {userInfo && 
-        <div className="flex ">
-          <h1 className="px-3">Name:- {userInfo.name}</h1>
-          <h1 className="px-3">Role:- {userInfo.role}</h1>
-          <h1 className="px-3">Current Date:- {getTodayDate()}</h1>
-        </div>
-}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Card className="mb-4">
-          <CardHeader>
-            {rfpId && (
-              <div className="flex justify-between">
-                <p className="text-md text-muted-foreground">
-                  RFP ID: {rfpId}
-                </p>
-                <p>RFP Date: {getTodayDate()}</p>
+            {userInfo && (
+              <div className="flex ">
+                <h1 className="px-3">Name:- {userInfo.name}</h1>
+                <h1 className="px-3">Role:- {userInfo.role}</h1>
+                <h1 className="px-3">Current Date:- {getTodayDate()}</h1>
               </div>
             )}
-          </CardHeader>
-          <CardContent className="grid grid-cols-4 gap-2">
-            <div className="space-y-1 text-[19px]">
-              <Label htmlFor="requirementType">Requirement Type</Label>
-              <Select
-                value={formData.requirementType}
-                onValueChange={(value) =>
-                  setFormData((prevData) => ({ ...prevData, requirementType: value }))
-                }
-              >
-                <SelectTrigger className={errors.requirementType ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select requirement type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Product">Product</SelectItem>
-                  <SelectItem value="Service">Service</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.requirementType && (
-                <p className="text-red-500 text-sm">{errors.requirementType}</p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Card className="mb-4">
+            <CardHeader>
+              {rfpId && (
+                <div className="flex justify-between">
+                  <p className="text-md text-muted-foreground">
+                    RFP ID: {rfpId}
+                  </p>
+                  <p>RFP Date: {getTodayDate()}</p>
+                </div>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
-              <Input
-                id="deliveryByDate"
-                name="deliveryByDate"
-                type="datetime-local"
-                min={formattedToday}
-                value={formData.deliveryByDate}
-                onChange={handleInputChange}
-                className={errors.deliveryByDate ? "border-red-500" : ""}
-              />
-              {errors.deliveryByDate && (
-                <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="grid grid-cols-4 gap-2">
+              <div className="space-y-1 text-[19px]">
+                <Label htmlFor="requirementType">Requirement Type</Label>
+                <Select
+                  value={formData.requirementType}
+                  onValueChange={(value) =>
+                    setFormData((prevData) => ({
+                      ...prevData,
+                      requirementType: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger
+                    className={errors.requirementType ? "border-red-500" : ""}
+                  >
+                    <SelectValue placeholder="Select requirement type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Product">Product</SelectItem>
+                    <SelectItem value="Service">Service</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.requirementType && (
+                  <p className="text-red-500 text-sm">
+                    {errors.requirementType}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
+                <Input
+                  id="deliveryByDate"
+                  name="deliveryByDate"
+                  type="date"
+                  min={formattedToday}
+                  value={formData.deliveryByDate}
+                  onChange={handleInputChange}
+                  className={errors.deliveryByDate ? "border-red-500" : ""}
+                />
+                {errors.deliveryByDate && (
+                  <p className="text-red-500 text-sm">
+                    {errors.deliveryByDate}
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
         <Card className="mb-4">
           <CardHeader>

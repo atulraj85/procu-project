@@ -48,6 +48,53 @@ const ProductList = ({
   const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
 
+  const updateProductTotals = useCallback(
+    (productIndex: number) => {
+      const unitPrice = getValues(
+        `quotations.${index}.products.${productIndex}.unitPrice`
+      );
+      const quantity = getValues(
+        `quotations.${index}.products.${productIndex}.quantity`
+      );
+      const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
+
+      console.log("Calculating totals for:", { unitPrice, quantity, gst });
+
+      const { totalWithoutGST, totalWithGST } = calculateTotals(
+        unitPrice,
+        quantity,
+        gst
+      );
+
+      console.log("Calculated totals:", { totalWithoutGST, totalWithGST });
+
+      setValue(
+        `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
+        totalWithoutGST
+      );
+      setValue(
+        `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
+        totalWithGST
+      );
+
+      // Update global form data
+      if (globalFormData.has("quotations")) {
+        const quotations = JSON.parse(
+          globalFormData.get("quotations") as string
+        );
+        quotations[index].products[productIndex] = {
+          ...quotations[index].products[productIndex],
+          unitPrice,
+          gst,
+          totalPriceWithoutGST: totalWithoutGST,
+          totalPriceWithGST: totalWithGST,
+        };
+        globalFormData.set("quotations", JSON.stringify(quotations));
+      }
+    },
+    [getValues, setValue, index, globalFormData]
+  );
+
   useEffect(() => {
     setIsLoading(true);
     setError(null);
@@ -81,6 +128,11 @@ const ProductList = ({
           };
           globalFormData.set("quotations", JSON.stringify(quotations));
         }
+
+        // Calculate totals for each product
+        mappedProducts.forEach((_, productIndex) => {
+          updateProductTotals(productIndex);
+        });
       }
     } catch (err) {
       setError(
@@ -101,49 +153,6 @@ const ProductList = ({
     const totalWithGST = totalWithoutGST * (1 + gstValue / 100);
     return { totalWithoutGST, totalWithGST };
   };
-
-  const updateProductTotals = useCallback(
-    (productIndex: number) => {
-      const unitPrice = getValues(
-        `quotations.${index}.products.${productIndex}.unitPrice`
-      );
-      const quantity = getValues(
-        `quotations.${index}.products.${productIndex}.quantity`
-      );
-      const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
-
-      const { totalWithoutGST, totalWithGST } = calculateTotals(
-        unitPrice,
-        quantity,
-        gst
-      );
-
-      setValue(
-        `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
-        totalWithoutGST
-      );
-      setValue(
-        `quotations.${index}.products.${productIndex}.totalPriceWithGST`,
-        totalWithGST
-      );
-
-      // Update global form data
-      if (globalFormData.has("quotations")) {
-        const quotations = JSON.parse(
-          globalFormData.get("quotations") as string
-        );
-        quotations[index].products[productIndex] = {
-          ...quotations[index].products[productIndex],
-          unitPrice,
-          gst,
-          totalPriceWithoutGST: totalWithoutGST,
-          totalPriceWithGST: totalWithGST,
-        };
-        globalFormData.set("quotations", JSON.stringify(quotations));
-      }
-    },
-    [getValues, setValue, index, globalFormData]
-  );
 
   return (
     <div>

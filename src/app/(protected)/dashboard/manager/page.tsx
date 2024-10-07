@@ -35,7 +35,7 @@ const Dashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/rfp?orderBy=created_at,desc");
+      const response = await fetch("/api/rfp?sortBy=createdAt&order=desc");
       const data = await response.json();
 
       const formattedData = data.map((item: any) => ({

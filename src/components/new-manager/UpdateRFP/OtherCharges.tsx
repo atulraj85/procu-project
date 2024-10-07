@@ -92,10 +92,14 @@ const OtherChargesList = ({
               step="0.01"
               className="text-right"
               {...control.register(
-                `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`
+                `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`,
+                {
+                  valueAsNumber: true, // This will ensure the value is treated as a number
+                }
               )}
             />
-            {errors?.quotations?.[index]?.otherCharges[chargeIndex]
+
+            {/* {errors?.quotations?.[index]?.otherCharges[chargeIndex]
               ?.unitPrice && (
               <p className="text-red-500 text-sm mt-1">
                 {
@@ -103,7 +107,7 @@ const OtherChargesList = ({
                     .message
                 }
               </p>
-            )}
+            )} */}
           </div>
           {/* GST */}
           <div className="w-1/12">
