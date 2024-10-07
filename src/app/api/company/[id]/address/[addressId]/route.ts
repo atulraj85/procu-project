@@ -53,7 +53,7 @@ export async function PUT(
 
   try {
     const address = await db.query.AddressTable.findFirst({
-      columns: { id: true },
+      columns: { id: true, companyId: true },
       where: and(
         eq(AddressTable.id, addressId),
         eq(AddressTable.companyId, companyId)
@@ -67,6 +67,12 @@ export async function PUT(
     const [updatedAddress] = await db
       .update(AddressTable)
       .set({ ...validation.data })
+      .where(
+        and(
+          eq(AddressTable.id, address.id),
+          eq(AddressTable.companyId, address.companyId)
+        )
+      )
       .returning();
 
     return NextResponse.json(updatedAddress);
