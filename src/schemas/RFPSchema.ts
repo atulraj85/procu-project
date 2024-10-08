@@ -40,9 +40,9 @@ export const quotationSchema = z.object({
   id: z.string().optional(),
   refNo: z.string().min(1, "Reference number is required"),
   vendorId: z.string().min(1, "Vendor is required"),
-  vendor: z.any(),
-  totalAmount: z.number(),
-  totalAmountWithoutGST: z.number(),
+  // vendor: z.any(),
+  // totalAmount: z.number(),
+  // totalAmountWithoutGST: z.number(),
   products: z.array(productSchema).refine((arr) => arr.length > 0, {
     message: "At least one product is required",
   }),
