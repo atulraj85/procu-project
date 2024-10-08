@@ -119,7 +119,7 @@ const VendorDetails: React.FC = () => {
           })
         );
 
-        console.log("transformedStates", transformedStates);
+        // console.log("transformedStates", transformedStates);
 
         setStates(transformedStates); // Set the states in the state
       } catch (error) {
@@ -234,8 +234,8 @@ const VendorDetails: React.FC = () => {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
+    // console.log(name);
+    // console.log(value);
 
     setVendorData((prevData) => ({ ...prevData, [name]: value }));
   };
@@ -248,12 +248,12 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
-    console.log("gstttttttt",gstn);
+    // console.log("gstttttttt",gstn);
     
     try {
       const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
       const result1 = await response1.json();
-      console.log("result 1", );
+      // console.log("result 1", );
 
       if (!result1.error) {
         toast({
@@ -269,15 +269,15 @@ const VendorDetails: React.FC = () => {
         return router.push("dashboard/manager/vendor");
         
       } else {
-        console.log("hhh1");
+        // console.log("hhh1");
 
         const response = await fetch(`/api/vendor/gst/${gstn}`);
         const result = await response.json();
-        console.log("result 1 out", result);
+        // console.log("result 1 out", result);
 
         if (result.flag) {
           const data = result.data;
-          console.log("hi");
+          // console.log("hi");
           let pan = data.gstin;
 
           setVendorData({
@@ -308,7 +308,7 @@ const VendorDetails: React.FC = () => {
 
   const handleSearchGSTN = () => {
     if (validateGstn(vendorData.vendor_gstn).isValid) {
-      console.log("data", vendorData.vendor_gstn);
+      // console.log("data", vendorData.vendor_gstn);
 
       fetchVendorDetails(vendorData.vendor_gstn);
     } else {
@@ -351,7 +351,7 @@ const VendorDetails: React.FC = () => {
       pan: vendorData.pan_card,
       verifiedById: USER_ID,
     };
-    console.log(newVendor);
+    // console.log(newVendor);
 
     try {
       const response = await fetch("/api/vendor", {
@@ -433,7 +433,7 @@ const VendorDetails: React.FC = () => {
   };
 
   const handleEditVendor = (index: number) => {
-    console.log("ven", vendorArray[index]);
+    // console.log("ven", vendorArray[index]);
 
     setVendorData(vendorArray[index]);
     setIsEditing(true);
@@ -479,9 +479,9 @@ const VendorDetails: React.FC = () => {
       const result = await response.json();
 
       if (true) {
-        console.log(result);
+        // console.log(result);
         setVendorArray(result);
-        console.log(result.data);
+        // console.log(result.data);
       } else {
         toast({
           title: "Failed to fetch vendor data.",

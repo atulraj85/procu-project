@@ -7,6 +7,7 @@ export const productSchema = z.object({
   modelNo: z.string().min(1, "Model number is required"),
   quantity: z.number().min(1, "Quantity must be at least 1"),
   unitPrice: z.number().min(0, "Unit price must be non-negative"),
+  rfpProductId: z.string().min(9, "RFP Product is needed"),
   gst: z
     .enum(["NILL", "0", "3", "5", "12", "18", "28"])
     .refine((val) => val !== "NILL", {

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 export async function findCompanyByName(name: string) {
   try {
-    console.log(`Finding company by name: ${name}`);
+    // console.log(`Finding company by name: ${name}`);
     return await db.query.CompanyTable.findFirst({
       where: eq(CompanyTable.name, name),
     });
@@ -16,7 +16,7 @@ export async function findCompanyByName(name: string) {
 
 export async function findCompanyById(id: string) {
   try {
-    console.log(`Finding company by id: ${id}`);
+    // console.log(`Finding company by id: ${id}`);
     return await db.query.CompanyTable.findFirst({
       where: eq(CompanyTable.id, id),
     });
@@ -28,7 +28,7 @@ export async function findCompanyById(id: string) {
 
 export async function deleteCompany(id: string) {
   try {
-    console.log(`Deleting company with id: ${id}`);
+    // console.log(`Deleting company with id: ${id}`);
     await db.delete(CompanyTable).where(eq(CompanyTable.id, id));
   } catch (error) {
     console.error(`Error deleting company with id: ${id}`, error);

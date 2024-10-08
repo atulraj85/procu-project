@@ -215,7 +215,7 @@ const VendorDetails = () => {
 
   const onSubmitVendorDetails = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("inside submite");
+    // console.log("inside submite");
 
     if (!validateFields()) {
       toast.error("Please correct the errors in the form.");
@@ -241,7 +241,7 @@ const VendorDetails = () => {
       pan: vendorData.pan_card,
     };
 
-    console.log("new", newVendor);
+    // console.log("new", newVendor);
 
     try {
       const response = await fetch(`/api/vendor?id=${vendorData.id}`, {

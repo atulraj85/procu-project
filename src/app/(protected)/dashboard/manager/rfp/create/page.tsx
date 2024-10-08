@@ -137,7 +137,7 @@ const RFPForm: React.FC = () => {
         const response = await fetch(`/api/users?id=${userId}`);
         const data = await response.json();
         setUserInfo(data[0]);
-        console.log("user", data[0]);
+        // console.log("user", data[0]);
       } catch (error) {}
     }
     fetchUserInformation();
@@ -374,7 +374,7 @@ const RFPForm: React.FC = () => {
           description: "Your RFP draft has been successfully submitted.",
         });
         router.push("/dashboard/manager");
-        window.location.reload();
+        // window.location.reload();
       }
     } catch (err) {
       setError(

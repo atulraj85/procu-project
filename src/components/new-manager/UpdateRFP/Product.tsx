@@ -58,7 +58,7 @@ const ProductList = ({
       );
       const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
 
-      console.log("Calculating totals for:", { unitPrice, quantity, gst });
+      // console.log("Calculating totals for:", { unitPrice, quantity, gst });
 
       const { totalWithoutGST, totalWithGST } = calculateTotals(
         unitPrice,
@@ -66,7 +66,7 @@ const ProductList = ({
         gst
       );
 
-      console.log("Calculated totals:", { totalWithoutGST, totalWithGST });
+      // console.log("Calculated totals:", { totalWithoutGST, totalWithGST });
 
       setValue(
         `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,

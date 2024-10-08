@@ -43,7 +43,7 @@ interface Product {
   price: string;
   quantity: number;
   description:string;
-  gst: number;
+  gst: string;
 }
 
 interface OtherCharge {
@@ -101,7 +101,7 @@ const Page = () => {
   const calculateTotalAmount = (item: Product): number => {
     const taxableAmount = calculateTaxableAmount(item);
     const gst = item.gst || 0;
-    return taxableAmount * (1 + gst / 100);
+    return taxableAmount * (1 + parseFloat(gst as string) / 100);
   };
 
   const downloadPDF = async () => {

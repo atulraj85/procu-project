@@ -455,6 +455,7 @@ export const AddressTable = pgTable(
   "addresses",
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
+    addressName: text("address_name").notNull().unique(),
     street: text("street").notNull(),
     city: text("city").notNull(),
     state: text("state").notNull(),

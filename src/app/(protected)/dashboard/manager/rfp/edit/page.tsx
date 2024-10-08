@@ -56,7 +56,7 @@ const RfpSubmissionForm: React.FC = () => {
           throw new Error("Failed to fetch RFP data");
         }
         const data: RfpData = await response.json();
-        console.log("data", data);
+        // console.log("data", data);
 
         // setRfpData(data[0]);
       } catch (error) {
@@ -115,7 +115,7 @@ const RfpSubmissionForm: React.FC = () => {
 
   const onSubmitRfpDetails = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("inside submit");
+    // console.log("inside submit");
 
     if (!validateFields()) {
       toast.error("Please correct the errors in the form.");

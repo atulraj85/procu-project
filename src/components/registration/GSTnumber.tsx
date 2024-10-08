@@ -24,7 +24,7 @@ const GSTnumber: React.FC<Props> = ({ data, handleChangeData }: any) => {
       setPreview(objectUrl);
     }
   };
-  console.log(file);
+  // console.log(file);
 
   return (
     <div className="">

@@ -96,7 +96,7 @@ export async function PUT(
     };
 
     // Update company.
-    console.log("Updating company", updateData);
+    // console.log("Updating company", updateData);
     await db
       .update(CompanyTable)
       .set({ ...updateData, updatedAt: new Date() })
@@ -117,6 +117,7 @@ export async function PUT(
         const addressType = mapToAddressType(address.AddressType) || "BUSINESS";
         return {
           addressId: address.addressId,
+          addressName: address.addressName,
           street: address.street,
           city: address.city,
           state: address.state,

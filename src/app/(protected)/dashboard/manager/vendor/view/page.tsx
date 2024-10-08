@@ -45,7 +45,7 @@ const VendorDetails = () => {
           `/api/vendor?gstin=${(gstin1)}`
         );
         const data = await response.json();
-        console.log("data", data);
+        // console.log("data", data);
 
         if (Array.isArray(data) && data.length > 0) {
           setVendorData(data[0]);

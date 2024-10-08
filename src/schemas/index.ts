@@ -71,6 +71,9 @@ export const AddressSchema = z.object({
   street: z
     .string({ required_error: "Street is required!" })
     .min(1, { message: "Street is required!" }),
+  addressName: z
+    .string({ required_error: "AddressName is required!" })
+    .min(1, { message: "AddressName is required!" }),
   city: z
     .string({ required_error: "City is required!" })
     .min(1, { message: "City is required!" }),
@@ -80,6 +83,7 @@ export const AddressSchema = z.object({
   postalCode: z
     .string({ required_error: "Postal code is required!" })
     .min(1, { message: "Postal code is required!" }),
+
   country: z
     .string({ required_error: "Country is required!" })
     .min(1, { message: "Country is required!" }),

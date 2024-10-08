@@ -4,7 +4,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { MoreHorizontal } from "lucide-react";
 
- interface TableRow {
+interface TableRow {
   id: string;
   poId: string;
   RFPStatus: string;
@@ -75,7 +75,7 @@ export const columns1: ColumnDef<TableRow>[] = [
               )}`}
             >
               {" "}
-              <DropdownMenuItem> Create Quotation</DropdownMenuItem>{" "}
+              <DropdownMenuItem>Add Vendor Quotations</DropdownMenuItem>{" "}
             </Link>
             <Link
               href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(
@@ -147,29 +147,29 @@ export const columns2: ColumnDef<TableRow>[] = [
 
 export const Po1: ColumnDef<TableRow>[] = [
   { header: "PoId", accessorKey: "poId" },
-  { 
-    header: "Vendor Name", 
-    accessorFn: (row) => row.quotations[0]?.vendor.companyName 
+  {
+    header: "Vendor Name",
+    accessorFn: (row) => row.quotations[0]?.vendor.companyName,
   },
-  { 
-    header: "Vendor Mobile", 
-    accessorFn: (row) => row.quotations[0]?.vendor.mobile 
+  {
+    header: "Vendor Mobile",
+    accessorFn: (row) => row.quotations[0]?.vendor.mobile,
   },
-  { 
-    header: "Taxable Amount", 
-    accessorFn: (row) => row.quotations[0]?.totalAmountWithoutGST 
+  {
+    header: "Taxable Amount",
+    accessorFn: (row) => row.quotations[0]?.totalAmountWithoutGST,
   },
-  { 
-    header: "Total Amount", 
-    accessorFn: (row) => row.quotations[0]?.totalAmount 
+  {
+    header: "Total Amount",
+    accessorFn: (row) => row.quotations[0]?.totalAmount,
   },
   { header: "PO Status", accessorKey: "RFPStatus" },
   {
     id: "actions",
     cell: ({ row }) => {
       const poData = row.original;
-      console.log("poData1",poData);
-      
+      // console.log("poData1", poData);
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -184,11 +184,10 @@ export const Po1: ColumnDef<TableRow>[] = [
             <Link
               href={`/dashboard/finance/readpo?poid=${encodeURIComponent(
                 poData.poId
-                
               )}`}
             >
               <DropdownMenuItem> View</DropdownMenuItem>
-            </Link> 
+            </Link>
             {/* <Link
               href={`/dashboard/manager/rfp/view?rfp=${encodeURIComponent(
                 poData.id
@@ -209,7 +208,6 @@ export const Po1: ColumnDef<TableRow>[] = [
     },
   },
 ];
-
 
 export const columns: ColumnDef<Vendor>[] = [
   {

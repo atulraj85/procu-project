@@ -219,8 +219,8 @@ const VendorDetails: React.FC = () => {
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    console.log(name);
-    console.log(value);
+    // console.log(name);
+    // console.log(value);
 
     setVendorData((prevData) => ({ ...prevData, [name]: value }));
   };
@@ -233,13 +233,13 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
-    console.log("Checking GSTN:", gstn);
+    // console.log("Checking GSTN:", gstn);
   
     try {
       // First, check if vendor exists in database
       const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
       const result1 = await response1.json();
-      console.log("Database check result:", result1);
+      // console.log("Database check result:", result1);
   
       if (result1.vendor) {
         // Vendor found in database
@@ -266,7 +266,7 @@ const VendorDetails: React.FC = () => {
         // Vendor not found in database, fetch from external API
         const response2 = await fetch(`/api/vendor/gst/${gstn}`);
         const result2 = await response2.json();
-        console.log("External API result:", result2);
+        // console.log("External API result:", result2);
   
         if (result2.flag) {
           const data = result2.data;
@@ -303,7 +303,7 @@ const VendorDetails: React.FC = () => {
   };
   const handleSearchGSTN = () => {
     if (validateGstn(vendorData.vendor_gstn).isValid) {
-      console.log("data", vendorData.vendor_gstn);
+      // console.log("data", vendorData.vendor_gstn);
 
       fetchVendorDetails(vendorData.vendor_gstn);
     } else {
@@ -343,7 +343,7 @@ const VendorDetails: React.FC = () => {
       pan: vendorData.pan_card,
       verifiedById: USER_ID,
     };
-    console.log(newVendor);
+    // console.log(newVendor);
 
     try {
       const response = await fetch("/api/vendor", {
@@ -421,7 +421,7 @@ const VendorDetails: React.FC = () => {
   };
 
   const handleEditVendor = (index: number) => {
-    console.log("ven", vendorArray[index]);
+    // console.log("ven", vendorArray[index]);
 
     setVendorData(vendorArray[index]);
     setIsEditing(true);
@@ -467,9 +467,9 @@ const VendorDetails: React.FC = () => {
       const result = await response.json();
 
       if (true) {
-        console.log(result);
+        // console.log(result);
         setVendorArray(result);
-        console.log(result.data);
+        // console.log(result.data);
       } else {
         toast({
           title: "Failed to fetch vendor data.",

@@ -14,7 +14,7 @@ export default function CompaniesPage() {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
   async function handleSubmit(data: any) {
-    console.log("From page", data);
+    // console.log("From page", data);
     const formData = data;
 
     if (selectedCompany) {

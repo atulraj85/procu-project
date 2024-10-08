@@ -25,16 +25,16 @@ export async function createEmailVerificationToken(
       .returning();
     return results[0] || null;
   } catch (error) {
-    console.log(
-      `Error creating email-verification-token for user with email: ${data.email}`
-    );
+    // console.log(
+      // `Error creating email-verification-token for user with email: ${data.email}`
+    // );
     throw error;
   }
 }
 
 export async function deleteEmailVerificationToken(id: string) {
   try {
-    console.log(`Deleting email-verification-token with id: ${id}`);
+    // console.log(`Deleting email-verification-token with id: ${id}`);
     await db
       .delete(EmailVerificationTokenTable)
       .where(eq(EmailVerificationTokenTable.id, id));
@@ -49,7 +49,7 @@ export async function deleteEmailVerificationToken(id: string) {
 
 export async function findEmailVerificationTokenByToken(token: string) {
   try {
-    console.log(`Finding email-verification-token by token: ${token}`);
+    // console.log(`Finding email-verification-token by token: ${token}`);
     return await db.query.EmailVerificationTokenTable.findFirst({
       where: eq(EmailVerificationTokenTable.token, token),
     });
@@ -64,7 +64,7 @@ export async function findEmailVerificationTokenByToken(token: string) {
 
 export async function findEmailVerificationTokenByEmail(email: string) {
   try {
-    console.log(`Finding email-verification-token by email: ${email}`);
+    // console.log(`Finding email-verification-token by email: ${email}`);
     return await db.query.EmailVerificationTokenTable.findFirst({
       where: eq(EmailVerificationTokenTable.email, email),
     });
