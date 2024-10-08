@@ -102,11 +102,8 @@ const Company: React.FC = () => {
         // window.location.reload();
         // return router.push("/dashboard");
       } else {
-        const response = await fetch(`/api/vendor/gst/${GST}`);
+        const response = await fetch(`/api/gst/${GST}`);
         const result = await response.json();
-        // console.log(GST);
-        
-        // console.log(result);
         if (result.flag) {
           const data = result.data;
           setCompanyData({
@@ -293,19 +290,18 @@ const Company: React.FC = () => {
                 )}
               </div>
 
-            <div className="flex flex-col gap-3 w-60 text-base">
-              <label className="font-bold">Email</label>
-              <Input
-                
-                type="email"
-                name="email"
-                value={companyData.email}
-                placeholder="email"
-                className="p-2"
-                onChange={handleChangeVendorDetails}
-              />
-              {errors.email && <p className="text-red-500">{errors.email}</p>}
-            </div>
+              <div className="flex flex-col gap-3 w-60 text-base">
+                <label className="font-bold">Email</label>
+                <Input
+                  type="email"
+                  name="email"
+                  value={companyData.email}
+                  placeholder="email"
+                  className="p-2"
+                  onChange={handleChangeVendorDetails}
+                />
+                {errors.email && <p className="text-red-500">{errors.email}</p>}
+              </div>
             </div>
 
             <div className="flex gap-8">
