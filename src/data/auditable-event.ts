@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 export async function findAuditableEventByName(name: string) {
   try {
-    console.log(`Finding auditable event by name: ${name}`);
+    // console.log(`Finding auditable event by name: ${name}`);
     return await db.query.AuditableEventTable.findFirst({
       where: eq(AuditableEventTable.name, name),
     });

@@ -155,7 +155,7 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
-  console.log("initialData", initialData);
+  // console.log("initialData", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
   // const [error, setError] = useState<string | null>(null);
@@ -234,7 +234,7 @@ export default function RFPUpdateForm({
   });
 
   useEffect(() => {
-    console.log("Current form errors:", errors);
+    console.log("Current form errors:", JSON.stringify(errors));
   }, [errors]);
 
   const [reasonError, setReasonError] = useState<string | null>(null);
@@ -301,16 +301,17 @@ export default function RFPUpdateForm({
   ) => {
     console.log("Error: ", errors);
 
-    console.log("Submitting reason and adding quotation:", data);
+    console.log(
+      "Submitting reason and adding quotation:",
+      JSON.stringify(data)
+    );
 
     if (!preferredVendorId) {
-      console.log("Heelo");
       setShowPreferredQuotationError("Please select a Quotation.");
       return;
     }
 
     setIsLoading(true);
-    // setError(null);
     setSuccess(false);
 
     try {
@@ -321,16 +322,13 @@ export default function RFPUpdateForm({
         rfpStatus: "DRAFT",
       });
       formData.append("data", serializedData);
-      formData.append("data", serializedData);
-
-      // console.log(files);
 
       // Append files to formData
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
 
-      // console.log("FormData to be sent:", Object.fromEntries(formData));
+      console.log("FormData to be sent:", Object.fromEntries(formData));
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
@@ -361,9 +359,10 @@ export default function RFPUpdateForm({
   };
 
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
+
     console.log("Error: ", errors);
 
-    console.log("Submitting quotation:", data);
+    console.log("Submitting quotation:", JSON.stringify(data));
 
     if (!preferredVendorId) {
       console.log("Heelo");
@@ -383,7 +382,6 @@ export default function RFPUpdateForm({
         rfpStatus: "SUBMITTED",
       });
       formData.append("data", serializedData);
-      formData.append("data", serializedData);
 
       // console.log(files);
 
@@ -392,7 +390,7 @@ export default function RFPUpdateForm({
         formData.append(key, file);
       });
 
-      // console.log("FormData to be sent:", Object.fromEntries(formData));
+      console.log("FormData to be sent:", Object.fromEntries(formData));
 
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
@@ -423,10 +421,7 @@ export default function RFPUpdateForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(handleSubmitReasonAndAddQuotation)}
-      className="space-y-8"
-    >
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP</CardTitle>

@@ -284,7 +284,7 @@ const RFPForm: React.FC = () => {
       },
     };
 
-    console.log("form data", updatedFormData);
+    // console.log("form data", updatedFormData);
 
     setLoading(true); // Set loading state to true
     setError(null); // Reset error state

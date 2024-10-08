@@ -49,7 +49,7 @@ const VendorSelector = ({
         try {
           const response = await fetch(`/api/ajax/vendors?q=${value}`);
           const responseData = await response.json();
-          console.log("responseData", responseData);
+          // console.log("responseData", responseData);
           const formattedVendors = responseData.map((vendor: any) => ({
             ...vendor,
             vendorId: vendor.productId || vendor.id || String(vendor._id),

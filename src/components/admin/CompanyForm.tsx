@@ -97,7 +97,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     );
 
     setCurrentAddress(currAddress[0]);
-    console.log(addresses[0]);
+    // console.log(addresses[0]);
   };
 
   const currentUser = useCurrentUser();

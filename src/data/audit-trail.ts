@@ -9,7 +9,7 @@ interface AuditTrailInput {
 
 export async function createAuditTrail(data: AuditTrailInput) {
   try {
-    console.log(`Creating audit trail for eventId: ${data.eventId}`);
+    // console.log(`Creating audit trail for eventId: ${data.eventId}`);
     const results = await db
       .insert(AuditTrailTable)
       .values({ ...data })

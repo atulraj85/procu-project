@@ -96,7 +96,7 @@ export async function PUT(
     };
 
     // Update company.
-    console.log("Updating company", updateData);
+    // console.log("Updating company", updateData);
     await db
       .update(CompanyTable)
       .set({ ...updateData, updatedAt: new Date() })
