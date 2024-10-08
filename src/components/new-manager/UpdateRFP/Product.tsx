@@ -45,9 +45,6 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  console.log("@@@@@@@@@@@@@@@@@@@@ fields", fields);
-  //RFPProductId visible
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
 

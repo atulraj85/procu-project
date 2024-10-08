@@ -359,7 +359,6 @@ export default function RFPUpdateForm({
   };
 
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
-
     console.log("Error: ", errors);
 
     console.log("Submitting quotation:", JSON.stringify(data));
@@ -661,7 +660,7 @@ export default function RFPUpdateForm({
           )}
 
           <Button
-            type="submit"
+            type="button"
             className="bg-primary"
             onClick={() => {
               if (fields.length < 3 && !reason) {
