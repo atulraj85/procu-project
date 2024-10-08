@@ -10,9 +10,9 @@ interface PasswordResetTokenData {
 
 export async function createPasswordResetToken(data: PasswordResetTokenData) {
   try {
-    console.log(
-      `Creating password-reset-token for user with email: ${data.email}`
-    );
+    // console.log(
+    //   `Creating password-reset-token for user with email: ${data.email}`
+    // );
     const results = await db
       .insert(PasswordResetTokenTable)
       .values({
@@ -33,7 +33,7 @@ export async function createPasswordResetToken(data: PasswordResetTokenData) {
 
 export async function deletePasswordResetToken(id: string) {
   try {
-    console.log(`Deleting password-reset-token with id: ${id}`);
+    // console.log(`Deleting password-reset-token with id: ${id}`);
     await db
       .delete(PasswordResetTokenTable)
       .where(eq(PasswordResetTokenTable.id, id));
@@ -45,7 +45,7 @@ export async function deletePasswordResetToken(id: string) {
 
 export async function findPasswordResetTokenByToken(token: string) {
   try {
-    console.log(`Finding password-reset-token by token: ${token}`);
+    // console.log(`Finding password-reset-token by token: ${token}`);
     return await db.query.PasswordResetTokenTable.findFirst({
       where: eq(PasswordResetTokenTable.token, token),
     });
@@ -60,7 +60,7 @@ export async function findPasswordResetTokenByToken(token: string) {
 
 export async function findPasswordResetTokenByEmail(email: string) {
   try {
-    console.log(`Finding password-reset-token by email: ${email}`);
+    // console.log(`Finding password-reset-token by email: ${email}`);
     return await db.query.PasswordResetTokenTable.findFirst({
       where: eq(PasswordResetTokenTable.email, email),
     });

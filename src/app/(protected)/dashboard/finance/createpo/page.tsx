@@ -1,28 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import html2canvas from 'html2canvas';
-import jsPDF from "jspdf";
+import Loader from "@/components/shared/Loader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { X, Star } from "lucide-react";
-import Loader from "@/components/shared/Loader";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Disclosure } from "@headlessui/react";
+import { useCurrentUser } from "@/hooks/auth";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
 
 interface Product {
   id: string;
   name: string;
-  gst:string;
+  gst: string;
   modelNo: string;
   price: string;
   quantity: number;
@@ -33,7 +27,7 @@ interface Product {
 interface OtherCharge {
   id: string;
   name: string;
-  GST:string;
+  GST: string;
   price: string;
   gst: number;
   description?: string;
@@ -77,7 +71,7 @@ interface FormData {
   poId: string;
   orderNo: string;
   ref: string;
-  
+
   date: string;
   rfpid: string;
   vendorName: string;
@@ -101,7 +95,7 @@ const Page: React.FC = () => {
     orderNo: "",
     ref: "",
     date: "",
-    
+
     rfpid: "",
     vendorName: "",
     vendorAddress: "",
@@ -110,14 +104,16 @@ const Page: React.FC = () => {
     products: [],
     otherCharges: [],
     remarks: "",
-    quotationId: ""
+    quotationId: "",
   });
   const [rfpDetails, setRfpDetails] = useState<RFPDetails | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
-  const USER_ID = typeof window !== 'undefined' ? localStorage.getItem("USER_ID") : null;
+  const currentUser = useCurrentUser();
+
+  const USER_ID = currentUser!.id;
   const pageRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -130,7 +126,7 @@ const Page: React.FC = () => {
         const rfpDetails = rfpData[0];
         setRfpDetails(rfpDetails);
 
-        const companyResponse = await fetch('/api/company');
+        const companyResponse = await fetch("/api/company");
         if (!companyResponse.ok) throw new Error("Network response was not ok");
         const companyData = await companyResponse.json();
         const company = companyData[0];
@@ -157,10 +153,14 @@ const Page: React.FC = () => {
           products: rfpDetails.quotations[0]?.products || [],
           otherCharges: rfpDetails.quotations[0]?.otherCharges || [],
           remarks: "",
-          quotationId: rfpDetails.quotations[0]?.id || ""
+          quotationId: rfpDetails.quotations[0]?.id || "",
         });
       } catch (error) {
-        setError(error instanceof Error ? error : new Error('An unknown error occurred'));
+        setError(
+          error instanceof Error
+            ? error
+            : new Error("An unknown error occurred")
+        );
       } finally {
         setLoading(false);
       }
@@ -169,11 +169,13 @@ const Page: React.FC = () => {
     fetchData();
   }, [rfp]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevData => ({
+    setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -194,17 +196,17 @@ const Page: React.FC = () => {
       companyId: formData.companyId,
       rfpId: formData.rfpid,
       remarks: formData.remarks,
-      rfpStatus: "PO_CREATED"
+      rfpStatus: "PO_CREATED",
     };
-    
+
     try {
-      const response = await fetch('/api/po', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/po", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error('Network response was not ok');
+      if (!response.ok) throw new Error("Network response was not ok");
       else {
         const result = await response.json();
         toast({
@@ -213,29 +215,38 @@ const Page: React.FC = () => {
         router.push("/dashboard");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       toast({
         title: "Error creating PO",
-        description: "An error occurred while creating the PO. Please try again.",
+        description:
+          "An error occurred while creating the PO. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const calculateTaxableAmount = (item: Product | OtherCharge) => {
-    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price);
-    return price * (('quantity' in item) ? item.quantity : 1);
+    const price =
+      typeof item.price === "string"
+        ? parseFloat(item.price)
+        : Number(item.price);
+    return price * ("quantity" in item ? item.quantity : 1);
   };
 
   const calculateTotalAmount = (item: Product | OtherCharge) => {
     const taxableAmount = calculateTaxableAmount(item);
-    const gst = typeof item.GST === 'number' ? item.GST : (typeof item.gst === 'number' ? item.gst : 0);
+    const gst =
+      typeof item.GST === "number"
+        ? item.GST
+        : typeof item.gst === "number"
+        ? item.gst
+        : 0;
     return taxableAmount * (1 + gst / 100);
   };
 
- 
- 
-  const preferredQuotation = rfpDetails?.quotations.find(q => q.id === rfpDetails.preferredQuotationId);
+  const preferredQuotation = rfpDetails?.quotations.find(
+    (q) => q.id === rfpDetails.preferredQuotationId
+  );
 
   if (!preferredQuotation) return <div>No preferred quotation found.</div>;
 
@@ -247,20 +258,21 @@ const Page: React.FC = () => {
           useCORS: true,
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'px',
-          format: [canvas.width, canvas.height]
+          orientation: "portrait",
+          unit: "px",
+          format: [canvas.width, canvas.height],
         });
 
-        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+        pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
         pdf.save("purchase_order.pdf");
       } catch (error) {
         console.error("Error generating PDF:", error);
         toast({
           title: "Error generating PDF",
-          description: "An error occurred while generating the PDF. Please try again.",
+          description:
+            "An error occurred while generating the PDF. Please try again.",
           variant: "destructive",
         });
       }
@@ -269,60 +281,82 @@ const Page: React.FC = () => {
 
   const shareViaEmail = () => {
     const subject = encodeURIComponent("Purchase Order");
-    const body = encodeURIComponent(`Please find the purchase order attached.\n\nLink: ${window.location.href}`);
+    const body = encodeURIComponent(
+      `Please find the purchase order attached.\n\nLink: ${window.location.href}`
+    );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
 
-  if (loading) return <div><Loader/> </div>;
+  if (loading)
+    return (
+      <div>
+        <Loader />{" "}
+      </div>
+    );
   if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div ref={pageRef}>
-    <div className="mx-20 mt-4">
-      <div className="flex justify-end pb-8">
-        <Link href="/dashboard/finance">
-          <Button type="button" variant="outline" size="icon" className="text-black-500 bg-red-400">
-            <X className="h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
-      
-      <section className="flex justify-between pb-7">
-        <div>
-          <Image className="rounded-full" height={75} width={75} alt="Company logo" src={formData.companyLogo} />
-          <h1 className="font-bold flex justify-end">{formData.companyName}</h1>
-          <h1 className="text-[14px]">{formData.companyAddress}</h1>
+      <div className="mx-20 mt-4">
+        <div className="flex justify-end pb-8">
+          <Link href="/dashboard/finance">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="text-black-500 bg-red-400"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Link>
         </div>
-        
-      </section>
 
-      <div className="font-bold flex justify-center">
-        <h1>Purchase Order</h1>
-      </div>
+        <section className="flex justify-between pb-7">
+          <div>
+            <Image
+              className="rounded-full"
+              height={75}
+              width={75}
+              alt="Company logo"
+              src={formData.companyLogo}
+            />
+            <h1 className="font-bold flex justify-end">
+              {formData.companyName}
+            </h1>
+            <h1 className="text-[14px]">{formData.companyAddress}</h1>
+          </div>
+        </section>
 
-      <section className="flex justify-between">
-        <div className="w-[30%]">
-          <h1 className="font-bold">{formData.vendorName}</h1>
-          <h1 className="text-[14px]">{formData.vendorAddress}</h1>
-          <p className="font-bold">
-            GSTIN: <span className="font-sans text-[14px]">{formData.vendorGST}</span>
-          </p>
+        <div className="font-bold flex justify-center">
+          <h1>Purchase Order</h1>
         </div>
-        <div>
-          <div className="flex">
-            <label className="font-bold">Order No :</label>
-            <h1 className="text-[14px]">{formData.poId}</h1>
+
+        <section className="flex justify-between">
+          <div className="w-[30%]">
+            <h1 className="font-bold">{formData.vendorName}</h1>
+            <h1 className="text-[14px]">{formData.vendorAddress}</h1>
+            <p className="font-bold">
+              GSTIN:{" "}
+              <span className="font-sans text-[14px]">
+                {formData.vendorGST}
+              </span>
+            </p>
           </div>
-          <div className="flex">
-            <label className="font-bold">Ref :</label>
-            <h1 className="text-[14px]">{preferredQuotation.refNo}</h1>
+          <div>
+            <div className="flex">
+              <label className="font-bold">Order No :</label>
+              <h1 className="text-[14px]">{formData.poId}</h1>
+            </div>
+            <div className="flex">
+              <label className="font-bold">Ref :</label>
+              <h1 className="text-[14px]">{preferredQuotation.refNo}</h1>
+            </div>
+            <div className="flex">
+              <label className="font-bold">Date :</label>
+              <h1 className="text-[14px]">{formData.date}</h1>
+            </div>
           </div>
-          <div className="flex">
-            <label className="font-bold">Date :</label>
-            <h1 className="text-[14px]">{formData.date}</h1>
-          </div>
-        </div>
-      </section>
+        </section>
 
         <div className="font-bold mt-10 mb-4">
           <h1>Description: Render Farm</h1>
@@ -366,67 +400,94 @@ const Page: React.FC = () => {
             </tbody>
           </table>
         </section> */}
-        
+
         <div className="font-bold mt-10 mb-4">
           {/* <h1>Preferred Quotation Details</h1> */}
         </div>
-       
-          {/* <CardContent> */}
-            <div className="p-4">
-              {/* <h4 className="font-semibold">Quotation Reference: {preferredQuotation.refNo}</h4>
+
+        {/* <CardContent> */}
+        <div className="p-4">
+          {/* <h4 className="font-semibold">Quotation Reference: {preferredQuotation.refNo}</h4>
               <h4 className="font-semibold mt-4">Vendor: {preferredQuotation.vendor.companyName}</h4> */}
-              {/* <h4 className="font-semibold mt-4">Products and Other Charges</h4> */}
-              <table className="min-w-full border-collapse border border-gray-300 mt-2">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 p-2 text-left">Name</th>
-                    <th className="border border-gray-300 p-2 text-left">Description</th>
-                    <th className="border border-gray-300 p-2 text-left">Qty</th>
-                    <th className="border border-gray-300 p-2 text-left">Unit Price</th>
-                    <th className="border border-gray-300 p-2 text-left">GST %</th>
-                    <th className="border border-gray-300 p-2 text-left">Taxable Amt.</th>
-                    <th className="border border-gray-300 p-2 text-left">Total Amt.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ...preferredQuotation.products,
-                    ...(Array.isArray(preferredQuotation.otherCharges) ? preferredQuotation.otherCharges : [])
-                  ].map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="border border-gray-300 p-2">
-                        {'modelNo' in item ? item.name : 'Other Charge'}
-                      </td>
-                      <td className="border border-gray-300 p-2">
-                        {item.description || 'N/A'}
-                      </td>
-                      <td className="border border-gray-300 p-2">
-                        {'quantity' in item ? item.quantity : ''}
-                      </td>
-                      <td className="border border-gray-300 p-2">{item.price}</td>
-                      <td className="border border-gray-300 p-2">{item.gst}%</td>
-                      <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
-                      <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-gray-200">
-                    <td colSpan={5} className="border border-gray-300 p-2 font-bold text-right">Total:</td>
-                    <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmountWithoutGST}</td>
-                    <td className="border border-gray-300 p-2 font-bold">{preferredQuotation.totalAmount}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          {/* </CardContent> */}
-       
+          {/* <h4 className="font-semibold mt-4">Products and Other Charges</h4> */}
+          <table className="min-w-full border-collapse border border-gray-300 mt-2">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 p-2 text-left">Name</th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Description
+                </th>
+                <th className="border border-gray-300 p-2 text-left">Qty</th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Unit Price
+                </th>
+                <th className="border border-gray-300 p-2 text-left">GST %</th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Taxable Amt.
+                </th>
+                <th className="border border-gray-300 p-2 text-left">
+                  Total Amt.
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ...preferredQuotation.products,
+                ...(Array.isArray(preferredQuotation.otherCharges)
+                  ? preferredQuotation.otherCharges
+                  : []),
+              ].map((item, idx) => (
+                <tr key={idx}>
+                  <td className="border border-gray-300 p-2">
+                    {"modelNo" in item ? item.name : "Other Charge"}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {item.description || "N/A"}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {"quantity" in item ? item.quantity : ""}
+                  </td>
+                  <td className="border border-gray-300 p-2">{item.price}</td>
+                  <td className="border border-gray-300 p-2">{item.gst}%</td>
+                  <td className="border border-gray-300 p-2">
+                    {calculateTaxableAmount(item).toFixed(2)}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {calculateTotalAmount(item).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="bg-gray-200">
+                <td
+                  colSpan={5}
+                  className="border border-gray-300 p-2 font-bold text-right"
+                >
+                  Total:
+                </td>
+                <td className="border border-gray-300 p-2 font-bold">
+                  {preferredQuotation.totalAmountWithoutGST}
+                </td>
+                <td className="border border-gray-300 p-2 font-bold">
+                  {preferredQuotation.totalAmount}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {/* </CardContent> */}
 
         <section className="flex justify-between mt-4">
           <div className="w-1/2">
             <div className="mt-7 mb-3">
               <label className="font-bold">{formData.companyName}</label>
-              <Image height={80} width={100} alt="Signature" src="/company/sign.png" />
+              <Image
+                height={80}
+                width={100}
+                alt="Signature"
+                src="/company/sign.png"
+              />
               <h1 className="text-[14px]">Authorized Signatory</h1>
             </div>
             <div className="mt-7 mb-3">
@@ -441,7 +502,7 @@ const Page: React.FC = () => {
           <div className="w-1/2 flex flex-col items-end">
             <div className="mt-4 w-full">
               <label className="font-bold">Remarks:</label>
-              <Textarea 
+              <Textarea
                 name="remarks"
                 value={formData.remarks}
                 onChange={handleInputChange}
@@ -456,7 +517,6 @@ const Page: React.FC = () => {
           <Button onClick={onSubmit} className="bg-green-500 text-white mr-4">
             Submit PO
           </Button>
-         
         </div>
       </div>
     </div>

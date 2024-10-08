@@ -91,7 +91,7 @@ const Company: React.FC = () => {
     try {
       const response1 = await fetch(`/api/company?GST=${GST}`);
       const result1 = await response1.json();
-      console.log(result1);
+      // console.log(result1);
 
       if (!result1.error) {
         toast({
@@ -104,9 +104,6 @@ const Company: React.FC = () => {
       } else {
         const response = await fetch(`/api/gst/${GST}`);
         const result = await response.json();
-        console.log(GST);
-
-        console.log(result);
         if (result.flag) {
           const data = result.data;
           setCompanyData({
@@ -126,7 +123,7 @@ const Company: React.FC = () => {
       toast({
         title: "An error occurred while fetching vendor details.",
       });
-      console.log(error);
+      // console.log(error);
     }
     setLoader(false);
   };
@@ -163,14 +160,14 @@ const Company: React.FC = () => {
     formData.append("phone", companyData.phone);
 
     try {
-      console.log(companyData);
+      // console.log(companyData);
       // Send form data to the API
       const response = await fetch("/api/company", {
         method: "POST",
         body: formData,
       });
 
-      console.log(response);
+      // console.log(response);
 
       if (response.ok) {
         toast({

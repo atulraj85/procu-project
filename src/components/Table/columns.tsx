@@ -168,7 +168,7 @@ export const Po1: ColumnDef<TableRow>[] = [
     id: "actions",
     cell: ({ row }) => {
       const poData = row.original;
-      console.log("poData1", poData);
+      // console.log("poData1", poData);
 
       return (
         <DropdownMenu>

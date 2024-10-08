@@ -37,7 +37,7 @@ export async function createUser(data: UserData) {
 
 export async function deleteUser(id: string) {
   try {
-    console.log(`Deleting user with id: ${id}`);
+    // console.log(`Deleting user with id: ${id}`);
     await db.delete(UserTable).where(eq(UserTable.id, id));
   } catch (error) {
     console.error(`Error deleting user with id: ${id}`, error);
@@ -47,7 +47,7 @@ export async function deleteUser(id: string) {
 
 export async function findUserById(id: string) {
   try {
-    console.log(`Finding user by id: ${id}`);
+    // console.log(`Finding user by id: ${id}`);
     return await db.query.UserTable.findFirst({
       where: eq(UserTable.id, id),
     });
@@ -59,7 +59,7 @@ export async function findUserById(id: string) {
 
 export async function findUserByEmail(email: string) {
   try {
-    console.log(`Finding user by email: ${email}`);
+    // console.log(`Finding user by email: ${email}`);
     return await db.query.UserTable.findFirst({
       where: eq(UserTable.email, email),
     });
@@ -70,7 +70,7 @@ export async function findUserByEmail(email: string) {
 }
 
 export async function markUserEmailVerified(userId: string) {
-  console.log(`Marking user email verified for user: ${userId}`);
+  // console.log(`Marking user email verified for user: ${userId}`);
   try {
     await db
       .update(UserTable)

@@ -18,7 +18,7 @@ import path from "path";
 export async function POST(request: Request) {
   try {
     const reqData = await request.formData();
-    console.log(reqData);
+    // console.log(reqData);
 
     // Extract fields from FormData
     const fields: Record<string, string> = {};

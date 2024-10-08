@@ -75,7 +75,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         toast("Role updated successfully");
-        console.log("role changes");
+        // console.log("role changes");
         // Update the local state to reflect the change
         setUsers(
           users.map((user) => (user.id === id ? { ...user, role } : user))
