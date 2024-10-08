@@ -89,19 +89,19 @@ const Company: React.FC = () => {
 
   const fetchCompanyDetails = async (GST: string) => {
     try {
-      const response1 = await fetch(`/api/company?GST=${GST}`);
-      const result1 = await response1.json();
-      console.log(result1);
+      // const response1 = await fetch(`/api/company?GST=${GST}`);
+      // const result1 = await response1.json();
+      // console.log(result1);
 
-      if (!result1.error) {
-        toast({
-          title: "Error",
-          description: "User already exists.",
-        });
+      // if (!result1.error) {
+      //   toast({
+      //     title: "Error",
+      //     description: "User already exists.",
+      //   });
 
         // window.location.reload();
         // return router.push("/dashboard");
-      } else {
+      // } else {
         const response = await fetch(`/api/gst/${GST}`);
         const result = await response.json();
         console.log(GST);
@@ -121,7 +121,7 @@ const Company: React.FC = () => {
             title: "Failed to fetch conamy details.",
           });
         }
-      }
+      // }
     } catch (error) {
       toast({
         title: "An error occurred while fetching vendor details.",
@@ -154,7 +154,7 @@ const Company: React.FC = () => {
 
     // Create FormData object
     const formData = new FormData();
-    formData.append("GST", companyData.company_gstn);
+    formData.append("gst", companyData.company_gstn);
     formData.append("name", companyData.company_name);
     // formData.append("pincode", companyData.pin_code);
     formData.append("gstAddress", companyData.address);
@@ -185,7 +185,7 @@ const Company: React.FC = () => {
           email: "",
           phone: "",
         });
-        router.push("/register/company/admin/register");
+        router.push("/auth/register/company/admin/register");
       } else {
         toast({
           title: "Failed to submit company details.",

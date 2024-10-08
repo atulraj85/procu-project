@@ -17,14 +17,18 @@ import path from "path";
 
 export async function POST(request: Request) {
   try {
+    console.log("in the compnay register route");
+    console.log(request);
     const reqData = await request.formData();
     console.log(reqData);
+    
 
     // Extract fields from FormData
     const fields: Record<string, string> = {};
     const files: Record<string, File[]> = {};
 
     // Convert FormData entries to an array and iterate
+    console.log("conveting form data into array");
     const entries = Array.from(reqData.entries());
     for (const [key, value] of entries) {
       if (value instanceof File) {
@@ -52,6 +56,7 @@ export async function POST(request: Request) {
       : null;
 
     // Create a new company entry in the database
+    console.log("error while creating company in db");
     const company = db.insert(CompanyTable).values({
       name: fields.name,
       gst: fields.GST,

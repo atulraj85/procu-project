@@ -261,7 +261,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   }
 
   return (
-    <>
+    <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
           <Card>
@@ -659,6 +659,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           />
         )}
       </div>
-    </>
+    </div>
   );
 }
