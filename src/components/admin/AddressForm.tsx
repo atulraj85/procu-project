@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -13,89 +13,101 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { addresses } from "./address";
+import { useToast } from "@/components/ui/use-toast";
+import { AddressformSchema } from '@/schemas/Company';
 
-const formSchema = z.object({
-  deliveryAddress: z.object({
-    title: z.string().min(1, "Title is required"),
-    street: z.string().min(1, "Street is required"),
-    country: z.string().min(1, "Country is required"),
-    state: z.string().min(1, "State is required"),
-    city: z.string().min(1, "City is required"),
-    zipCode: z.string().min(1, "Zip Code is required"),
-  }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<typeof AddressformSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
   isAddingAddress: () => void;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
-  companyId,
-  isAddingAddress,
-}) => {
+const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(AddressformSchema),
     defaultValues: {
-      deliveryAddress: {
-        title: "",
-        street: "",
-        country: "",
-        state: "",
-        city: "",
-        zipCode: "",
-      },
+      addressName: "",
+      street: "",
+      country: "",
+      state: "",
+      city: "",
+      zipCode: "",
     },
   });
 
   const onSubmit = async (data: FormValues) => {
-    console.log(data.deliveryAddress);
-    addresses.push(data.deliveryAddress);
-    isAddingAddress();
-    // try {
-    //   const response = await fetch(`/api/company?companyId=${companyId}`, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data.deliveryAddress),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Failed to update address');
-    //   }
-
-    //   console.log('Address updated successfully');
-
-    // } catch (error) {
-    //   console.error('Error updating address:', error);
-    // }
-  };
+    setIsSaving(true);
+    
+    const formDataWithAddressType = {
+      ...data,
+      addressType: "SHIPPING",
+    };
+  
+    try {
+      const response = await fetch(`/api/company/${companyId}/address`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formDataWithAddressType),
+      });
+  
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Address added successfully:", result);
+        toast({
+          title: "Success",
+          description: "Address added successfully!",
+          duration: 3000,
+        });
+        isAddingAddress();
+      } else {
+        console.error("Failed to add address:", response.statusText);
+        toast({
+          title: "Error",
+          description: "Failed to add address. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle>Delivery Address</CardTitle>
+            <CardTitle className="flex justify-between items-center">
+              <div>Delivery Address</div> 
+              <Button className="w-28 bg-primary" onClick={isAddingAddress}>Back</Button>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className='grid grid-cols-2 gap-4'>
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.title"
+                  name="addressName"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Address Title</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. Home, Office, Warehouse"
-                        />
+                        <Input {...field} placeholder="e.g. Home, Office, Warehouse" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -103,7 +115,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.street"
+                  name="street"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Street Address</FormLabel>
@@ -118,7 +130,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.country"
+                  name="country"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Country</FormLabel>
@@ -131,7 +143,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.state"
+                  name="state"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>State</FormLabel>
@@ -144,7 +156,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.city"
+                  name="city"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
@@ -157,7 +169,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 />
                 <FormField
                   control={form.control}
-                  name="deliveryAddress.zipCode"
+                  name="zipCode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Zip Code</FormLabel>
@@ -169,8 +181,12 @@ const AddressForm: React.FC<AddressFormProps> = ({
                   )}
                 />
               </div>
-              <Button type="submit" className="mt-4 w-28 my-4 bg-primary">
-                ADD
+              <Button 
+                type="submit" 
+                className="mt-4 w-28 my-4 bg-primary"
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "ADD"}
               </Button>
             </div>
           </CardContent>

@@ -7,25 +7,26 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+// import { signOut, auth } from "@/auth";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-interface IUserProfileData {
+interface UserProfileData {
   name: string;
   // Add other user profile properties as needed
 }
 
-interface IUserProfileResponse {
+interface UserProfileResponse {
   response?: {
-    data?: IUserProfileData;
+    data?: UserProfileData;
   };
-}
+} 
 import { signOut } from "next-auth/react";
 
-interface IProps {
+interface Props {
   loading: boolean;
-  userProfile: IUserProfileResponse | null;
+  userProfile: UserProfileResponse | null;
 }
 
 function getInitials(inputString: string): string {
@@ -34,56 +35,52 @@ function getInitials(inputString: string): string {
   return initials;
 }
 
-function DashboardNavBar({ loading, userProfile }: IProps) {
+function DashboardNavBar({ loading, userProfile }:Props) {
   const handleLogout = async () => {
     await signOut({ redirectTo: "/auth/login" });
   };
 
+  const userName = userProfile?.response?.data?.name || "";
+
   return (
-    <div className="flex justify-end pt-3 pb-3 pr-6">
+    <nav className="flex justify-end pt-3 pb-3 pr-6">
       <Popover>
-        <PopoverTrigger>
-          <div className="flex gap-4 items-center">
+        <PopoverTrigger asChild>
+          <button className="flex items-center gap-4 focus:outline-none">
             {loading ? (
               <Skeleton className="w-[2.07463rem] h-[2.07463rem] rounded-full" />
             ) : (
-              <div>
-                <Avatar className="w-[2.07463rem] h-[2.07463rem]">
-                  <AvatarImage
-                    src="/images/user_alt_icon.png"
-                    alt="User avatar"
-                    className="object-cover"
-                  />
-                  <AvatarFallback>
-                    {getInitials(userProfile?.response?.data?.name || "")}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+              <Avatar className="w-[2.07463rem] h-[2.07463rem]">
+                <AvatarImage
+                  src="/images/user_alt_icon.png"
+                  alt="User avatar"
+                  className="object-cover"
+                />
+                <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+              </Avatar>
             )}
-            <div>
-              <img src="/images/chevron_down_icon.png" alt="chevron down" />
-            </div>
-          </div>
+            <img src="/images/chevron_down_icon.png" alt="Open menu" className="w-4 h-4" />
+          </button>
         </PopoverTrigger>
-        <PopoverContent className="cursor-pointer w-[200px]">
+        <PopoverContent className="w-48">
           <div className="flex flex-col">
-            <button 
+            <Link
+              href="/dashboard/manager/updateProfile"
+              className="block p-2 hover:bg-gray-100 transition-colors duration-200"
+            >
+              Update Profile
+            </Link>
+            <button
               onClick={handleLogout}
-              className="p-2 text-left hover:bg-gray-100 w-full"
+              className="p-2 text-left hover:bg-gray-100 transition-colors duration-200 w-full"
             >
               Logout
             </button>
-            <Link 
-  href="/dashboard/manager/updateProfile"
-  className="block p-2 hover:bg-gray-100 w-full text-left"
->
-  Update Profile
-</Link>
           </div>
         </PopoverContent>
       </Popover>
-    </div>
+    </nav>
   );
-}
+};
 
 export default DashboardNavBar;

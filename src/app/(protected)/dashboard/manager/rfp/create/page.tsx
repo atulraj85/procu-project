@@ -10,13 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 import { useRouter } from "next/navigation";
 import { getTodayDate } from "@/lib/getTodayDate";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -36,7 +30,7 @@ type User = {
   id: number;
   name: string;
   email: string;
-  role: string;
+  role:string,
   mobile: string;
 };
 
@@ -57,6 +51,7 @@ interface FormData {
     zipCode: string;
   };
 }
+
 
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -92,14 +87,13 @@ const RFPForm: React.FC = () => {
   const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] =
-    useState<string>("");
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const router = useRouter();
-  const userId = "";
-  const [userInfo, setUserInfo] = useState<User>();
+  const userId = localStorage.getItem("USER_ID");
+  const [userInfo , setUserInfo] =useState<User>()
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -129,19 +123,24 @@ const RFPForm: React.FC = () => {
     };
 
     fetchCompanyData();
+    
   }, []);
 
-  useEffect(() => {
-    async function fetchUserInformation() {
-      try {
-        const response = await fetch(`/api/users?id=${userId}`);
-        const data = await response.json();
-        setUserInfo(data[0]);
-        console.log("user", data[0]);
-      } catch (error) {}
+   useEffect(()=>{
+    async function fetchUserInformation () {
+    try {
+      const response = await fetch(`/api/users?id=${userId}`);
+      const data = await response.json();
+      setUserInfo(data[0])
+      console.log("user",data[0]);
+      
+    } catch (error) {
+      
     }
-    fetchUserInformation();
-  }, []);
+    
+   }
+   fetchUserInformation()
+  },[])
   useEffect(() => {
     const fetchRfpId = async () => {
       try {
@@ -159,12 +158,12 @@ const RFPForm: React.FC = () => {
     fetchRfpId();
   }, []);
 
-  // useEffect(() => {
-  //   const userId = localStorage.getItem("USER_ID");
-  //   if (userId) {
-  //     setFormData((prevData) => ({ ...prevData, userId }));
-  //   }
-  // }, []);
+  useEffect(() => {
+    const userId = localStorage.getItem("USER_ID");
+    if (userId) {
+      setFormData((prevData) => ({ ...prevData, userId }));
+    }
+  }, []);
 
   const handleSearchChange = async (
     e: ChangeEvent<HTMLInputElement>,
@@ -232,18 +231,16 @@ const RFPForm: React.FC = () => {
     const updatedProducts = [...approvedProducts];
     updatedProducts[index] = { ...updatedProducts[index], [field]: value };
     setApprovedProducts(updatedProducts);
-
+  
     setFormData((prevData) => ({
       ...prevData,
-      rfpProducts: updatedProducts.map(
-        ({ productId, quantity, specification, name, modelNo }) => ({
-          productId,
-          quantity,
-          specification,
-          name,
-          modelNo,
-        })
-      ),
+      rfpProducts: updatedProducts.map(({ productId, quantity, specification, name, modelNo }) => ({
+        productId,
+        quantity,
+        specification,
+        name,
+        modelNo
+      })),
     }));
   };
 
@@ -268,11 +265,11 @@ const RFPForm: React.FC = () => {
       console.error("Product ID is missing");
       return;
     }
-
+  
     const productExists = approvedProducts.some(
       (p) => p.productId === product.productId
     );
-
+  
     if (!productExists) {
       const newProduct = { ...product, quantity: 1 };
       setApprovedProducts((prevProducts) => [...prevProducts, newProduct]);
@@ -280,12 +277,12 @@ const RFPForm: React.FC = () => {
         ...prevData,
         rfpProducts: [
           ...prevData.rfpProducts,
-          {
-            productId: String(product.productId),
+          { 
+            productId: String(product.productId), 
             quantity: 1,
             specification: product.specification,
             name: product.name,
-            modelNo: product.modelNo,
+            modelNo: product.modelNo
           },
         ],
       }));
@@ -309,14 +306,10 @@ const RFPForm: React.FC = () => {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.requirementType)
-      newErrors.requirementType = "Requirement type is required";
-    if (!formData.deliveryByDate)
-      newErrors.deliveryByDate = "Expected delivery date is required";
-    if (approvedUsers.length === 0)
-      newErrors.approvers = "At least one approver is required";
-    if (approvedProducts.length === 0)
-      newErrors.products = "At least one product is required";
+    if (!formData.requirementType) newErrors.requirementType = "Requirement type is required";
+    if (!formData.deliveryByDate) newErrors.deliveryByDate = "Expected delivery date is required";
+    if (approvedUsers.length === 0) newErrors.approvers = "At least one approver is required";
+    if (approvedProducts.length === 0) newErrors.products = "At least one product is required";
     if (!address) newErrors.address = "Address is required";
     if (!country) newErrors.country = "Country is required";
     if (!state) newErrors.state = "State is required";
@@ -329,7 +322,7 @@ const RFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       toast({
         title: "Error",
@@ -368,14 +361,16 @@ const RFPForm: React.FC = () => {
       }
 
       const result = await response.json();
-      if (result) {
-        toast({
-          title: "🎉 Draft Submitted!",
-          description: "Your RFP draft has been successfully submitted.",
-        });
-        router.push("/dashboard/manager");
-        window.location.reload();
-      }
+      if(result){
+      toast({
+        title: "🎉 Draft Submitted!",
+        description: "Your RFP draft has been successfully submitted.",
+      });
+      router.push("/dashboard/manager");
+      window.location.reload();
+    }
+      
+      
     } catch (err) {
       setError(
         err instanceof Error
@@ -389,12 +384,12 @@ const RFPForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className=" flex justify-between">
-            <div>
-              <CardTitle>Create RFP</CardTitle>
-            </div>
+    <Card>
+      <CardHeader>
+        <div className=" flex justify-between">
+        <div>
+        <CardTitle>Create RFP</CardTitle>
+        </div>
 
             {userInfo && (
               <div className="flex ">
@@ -465,27 +460,29 @@ const RFPForm: React.FC = () => {
             </CardContent>
           </Card>
 
-          <Card className="mb-4">
-            <CardHeader>
-              <div className="flex justify-between">
-                <div>
-                  <CardTitle>Approver Details (for GRN)</CardTitle>
-                </div>
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="Search Approvers..."
-                    value={searchApproverTerm}
-                    onChange={(e) => handleSearchChange(e, "users")}
-                    className="flex-1"
-                  />
-                </div>
+        <Card className="mb-4">
+          <CardHeader>
+            <div className="flex justify-between">
+              <div>
+                <CardTitle>Approver Details (for GRN)</CardTitle>
               </div>
-              {errors.approvers && (
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Search Approvers..."
+                  value={searchApproverTerm}
+                  onChange={(e) => handleSearchChange(e, "users")}
+                  className="flex-1"
+                />
+              </div>
+            </div>
+            {errors.approvers && (
                 <p className="text-red-500 text-sm">{errors.approvers}</p>
               )}
-            </CardHeader>
+          </CardHeader>
             <CardContent>
+            
+
               {fetchedUsers.length > 0 && (
                 <div className="mt-2">
                   <h3 className="font-semibold">Fetched Users:</h3>

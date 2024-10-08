@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ items, setActiveComponent }) => {
             <Link href={item.route} key={index}>
               <div className="space-y-3 ">
                 <div
-                  className="flex transform items-center rounded-lg px-3 py-2 text-gray-600 transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700 cursor-pointer"
+                  className="flex transform items-center rounded-lg px-3 py-2 text-gray-600 transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700 cursor-pointer {}"
                   onClick={() => setActiveComponent(item.value)}
                 >
                   <Image
