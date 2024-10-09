@@ -220,9 +220,9 @@ const RFPForm: React.FC = () => {
       setZipCode(value);
     }
   };
+  
 
-  const today = new Date();
-  const formattedToday = today.toISOString().slice(0, 16);
+  const today = new Date().toISOString().split('T')[0];
 
   const handleProductChange = (
     index: number,
@@ -245,6 +245,64 @@ const RFPForm: React.FC = () => {
         })
       ),
     }));
+  };
+
+  // Add function to handle form updates
+  const handleUpdate = async () => {
+    if (!validateForm()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
+    const updatedFormData = {
+      ...formData,
+      deliveryLocation,
+      deliveryLocationDetails: {
+        country,
+        state,
+        city,
+        zipCode,
+      },
+    };
+
+    try {
+      const response = await fetch("/api/rfp", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFormData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update RFP");
+      }
+
+      const result = await response.json();
+      if (result) {
+        toast({
+          title: "🎉 Update Successful!",
+          description: "Your RFP has been successfully updated.",
+        });
+        router.push("/dashboard/manager");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Error updating RFP. Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addApprover = (user: User) => {
@@ -388,7 +446,7 @@ const RFPForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-2">
       <Card>
         <CardHeader>
           <div className=" flex justify-between">
@@ -418,58 +476,67 @@ const RFPForm: React.FC = () => {
               )}
             </CardHeader>
             <CardContent className="grid grid-cols-4 gap-2">
-              <div className="space-y-1 text-[19px]">
-                <Label htmlFor="requirementType">Requirement Type</Label>
-                <Select
-                  value={formData.requirementType}
-                  onValueChange={(value) =>
-                    setFormData((prevData) => ({
-                      ...prevData,
-                      requirementType: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger
-                    className={errors.requirementType ? "border-red-500" : ""}
-                  >
-                    <SelectValue placeholder="Select requirement type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Product">Product</SelectItem>
-                    <SelectItem value="Service">Service</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.requirementType && (
-                  <p className="text-red-500 text-sm">
-                    {errors.requirementType}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
-                <Input
-                  id="deliveryByDate"
-                  name="deliveryByDate"
-                  type="date"
-                  min={formattedToday}
-                  value={formData.deliveryByDate}
-                  onChange={handleInputChange}
-                  className={errors.deliveryByDate ? "border-red-500" : ""}
-                />
-                {errors.deliveryByDate && (
-                  <p className="text-red-500 text-sm">
-                    {errors.deliveryByDate}
-                  </p>
-                )}
-              </div>
+            <div className="flex space-x-4 mt-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="product"
+                      name="requirementType"
+                      value="Product"
+                      checked={formData.requirementType === "Product"}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          requirementType: e.target.value,
+                        })
+                      }
+                    />
+                    <Label htmlFor="product">Product</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="service"
+                      name="requirementType"
+                      value="Service"
+                      checked={formData.requirementType === "Service"}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          requirementType: e.target.value,
+                        })
+                      }
+                    />
+                    <Label htmlFor="service">Service</Label>
+                  </div>
+                </div>
+                <div className="space-y-2">
+        <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
+        <Input
+          id="deliveryByDate"
+          name="deliveryByDate"
+          type="date"
+          min={today}
+          value={formData.deliveryByDate}
+          onChange={handleInputChange}
+          className={errors.deliveryByDate ? "border-red-500" : ""}
+        />
+        {errors.deliveryByDate && (
+          <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
+        )}
+      </div>
             </CardContent>
           </Card>
-
-          <Card className="mb-4">
+        
+        {/* <div className="flex justify-between  space-x-2"> */}
+          <Card className="mb-2">
             <CardHeader>
               <div className="flex justify-between">
                 <div>
-                  <CardTitle>Approver Details (for GRN)</CardTitle>
+                 
+                  <p className="text-md text-muted-foreground">
+                  Approver Details (for GRN)
+                  </p>
                 </div>
                 <div>
                   <Input
@@ -487,7 +554,7 @@ const RFPForm: React.FC = () => {
             </CardHeader>
             <CardContent>
               {fetchedUsers.length > 0 && (
-                <div className="mt-2">
+                <div className="">
                   <h3 className="font-semibold">Fetched Users:</h3>
                   <ul>
                     {fetchedUsers.map((user) => (
@@ -512,58 +579,64 @@ const RFPForm: React.FC = () => {
               )}
 
               {approvedUsers.map((approver, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
+                <div key={index} className="flex items-center text-sm space-x-2 ">
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label */}
+                    {/* <h1
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
-                    >
-                      Approver Name
-                    </Label>
-                    <Input
+                      > */}
+                    {/* > */}
+                      {/* Approver Name */}
+                    {/* </Label> */}
+                    {/* </h1> */}
+                    {/* <Input
                       disabled
                       value={approver.name}
                       placeholder="Name"
                       className="flex-1"
-                    />
+                    /> */}
+                    <h1>Name:-{approver.name} |</h1>
                   </div>
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Email
-                    </Label>
-                    <Input
+                    </Label> */}
+                    {/* <Input
                       disabled
                       value={approver.email}
                       placeholder="Email"
                       className="flex-1"
-                    />
+                    /> */}
+                    <h1>Email:-{approver.email} |</h1>
                   </div>
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
                     >
                       Phone
-                    </Label>
-                    <Input
+                    </Label> */}
+                    {/* <Input
                       disabled
                       value={approver.mobile}
                       placeholder="Phone"
                       className="flex-1"
-                    />
+                    /> */}
+                    <h1>Mobile:-{approver.mobile}</h1>
                   </div>
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label
                       className={`mb-8 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
-                    ></Label>
+                    ></Label> */}
                     <Button
                       type="button"
                       onClick={() => removeApprover(index)}
@@ -639,20 +712,22 @@ const RFPForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col w-[50%]">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Product Description
-                    </Label>
-                    <Input
-                      disabled
-                      value={product.specification}
-                      placeholder="Model"
-                      className="flex-1"
-                    />
-                  </div>
+            <Label
+              className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                index > 0 ? "hidden" : "visible"
+              }`}
+            >
+              Product Description
+            </Label>
+            <Input
+              value={product.specification}
+              onChange={(e) =>
+                handleProductChange(index, "specification", e.target.value)
+              }
+              placeholder="Enter product description"
+              className="flex-1"
+            />
+          </div>
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
@@ -676,11 +751,11 @@ const RFPForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label
                       className={`mb-8 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
-                    ></Label>
+                    ></Label> */}
                     <Button
                       type="button"
                       onClick={() => removeProduct(index)}
@@ -698,6 +773,7 @@ const RFPForm: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          {/* </div> */}
 
           <Card className="mb-4">
             <CardHeader>
@@ -781,17 +857,25 @@ const RFPForm: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-          <div className="flex justify-end mr-10">
-            <Button
-              type="submit"
-              className="px-4 py-2 rounded-lg bg-green-700"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Save Draft RFP"}
-            </Button>
-          </div>
+           <div className="flex justify-end space-x-4 mr-10">
+        {/* <Button
+          type="button"
+          className="px-4 py-2 rounded-lg bg-blue-700"
+          onClick={handleUpdate}
+          disabled={loading}
+        >
+          {loading ? "Updating..." : "Save Product Details"}
+        </Button> */}
+        <Button
+          type="submit"
+          className="px-4 py-2 rounded-lg bg-green-700"
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : "Save Draft RFP"}
+        </Button>
+      </div>
 
-          {error && <div className="text-red-500">{error}</div>}
+      {error && <div className="text-red-500">{error}</div>}
         </CardContent>
       </Card>
     </form>
