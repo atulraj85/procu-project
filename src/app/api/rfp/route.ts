@@ -198,7 +198,6 @@ export async function POST(request: NextRequest) {
       dateOfOrdering,
       deliveryLocation,
       deliveryByDate,
-      userId,
       rfpProducts,
       approvers,
       rfpStatus,
