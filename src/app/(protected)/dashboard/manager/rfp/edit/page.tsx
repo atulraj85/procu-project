@@ -10,7 +10,13 @@ import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getTodayDate } from "@/lib/getTodayDate";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -84,24 +90,30 @@ const EditRFPForm: React.FC = () => {
   const [fetchedProducts, setFetchedProducts] = useState<RFPProduct[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] = useState<string>("");
+  const [additionalInstructions, setAdditionalInstructions] =
+    useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [userInfo, setUserInfo] = useState<User>();
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlRfpId = searchParams.get("rfp");
   const formatDate = (dateString: string): string => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }).split('/').join('/');
+    return date
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .split("/")
+      .join("/");
   };
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const fetchRFPData = async () => {
@@ -114,8 +126,13 @@ const EditRFPForm: React.FC = () => {
         const rfpData = data[0];
 
         // Extract delivery location details
-        const [extractedAddress, extractedCity, extractedState, extractedCountry, extractedZipCode] = 
-          rfpData.deliveryLocation.split(", ");
+        const [
+          extractedAddress,
+          extractedCity,
+          extractedState,
+          extractedCountry,
+          extractedZipCode,
+        ] = rfpData.deliveryLocation.split(", ");
 
         setRfpId(rfpData.rfpId);
         setAddress(extractedAddress);
@@ -123,8 +140,6 @@ const EditRFPForm: React.FC = () => {
         setState(extractedState);
         setCountry(extractedCountry);
         setZipCode(extractedZipCode);
-
-       
 
         // Update approved products
         const formattedProducts = rfpData.products.map((product: any) => ({
@@ -152,7 +167,7 @@ const EditRFPForm: React.FC = () => {
             id: 1,
             name: rfpData.createdBy.name,
             email: rfpData.createdBy.email,
-            role: rfpData.createdBy.role ,
+            role: rfpData.createdBy.role,
             mobile: rfpData.createdBy.mobile,
           });
         }
@@ -179,7 +194,6 @@ const EditRFPForm: React.FC = () => {
             zipCode: extractedZipCode,
           },
         });
-
       } catch (error) {
         console.error("Error fetching RFP data:", error);
         setError("Failed to load RFP data");
@@ -271,7 +285,7 @@ const EditRFPForm: React.FC = () => {
     const approverExists = approvedUsers.some(
       (existingUser) => existingUser.email === user.email
     );
-    
+
     if (!approverExists) {
       setApprovedUsers((prevUsers) => [...prevUsers, user]);
       setFormData((prevData) => ({
@@ -404,36 +418,35 @@ const EditRFPForm: React.FC = () => {
     }
   };
   return (
-   
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between">
-              <div>
-                <CardTitle>Edit RFP</CardTitle>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between">
+            <div>
+              <CardTitle>Edit RFP</CardTitle>
+            </div>
+            {userInfo && (
+              <div className="flex">
+                <h1 className="px-3">Name: {userInfo.name}</h1>
+                <h1 className="px-3">Role: {userInfo.role}</h1>
+                <h1 className="px-3">Current Date: {getTodayDate()}</h1>
               </div>
-              {userInfo && (
-                <div className="flex">
-                  <h1 className="px-3">Name: {userInfo.name}</h1>
-                  <h1 className="px-3">Role: {userInfo.role}</h1>
-                  <h1 className="px-3">Current Date: {getTodayDate()}</h1>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Card className="mb-4">
+            <CardHeader>
+              {rfpId && (
+                <div className="flex justify-between">
+                  <p className="text-md text-muted-foreground">
+                    RFP ID: {rfpId}
+                  </p>
+                  <p>RFP Date: {formatDate(formData.dateOfOrdering)}</p>
                 </div>
               )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Card className="mb-4">
-              <CardHeader>
-                {rfpId && (
-                   <div className="flex justify-between">
-                   <p className="text-md text-muted-foreground">
-                     RFP ID: {rfpId}
-                   </p>
-                   <p>RFP Date: {formatDate(formData.dateOfOrdering)}</p>
-                 </div>
-                )}
-              </CardHeader>
-              <CardContent className="grid grid-cols-4 gap-2">
+            </CardHeader>
+            <CardContent className="grid grid-cols-4 gap-2">
               <div className="space-y-1 text-[19px]">
                 <Label>Requirement Type</Label>
                 <div className="flex space-x-4 mt-2">
@@ -477,328 +490,338 @@ const EditRFPForm: React.FC = () => {
                 )}
               </div>
               <div className="space-y-2">
-            <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
-            <Input
-              id="deliveryByDate"
-              name="deliveryByDate"
-              type="date"
-              value={formData.deliveryByDate}
-              onChange={handleInputChange}
-              className={errors.deliveryByDate ? "border-red-500" : ""}
-            />
-            {errors.deliveryByDate && (
-              <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
-            )}
-          </div>
-              </CardContent>
-            </Card>
-  
-            <Card className="mb-4">
-              <CardHeader>
-                <div className="flex justify-between">
-                  <div className="text-md">
-                  <p className="text-md text-muted-foreground">
-                  Approver Details (for GRN)
+                <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
+                <Input
+                  id="deliveryByDate"
+                  name="deliveryByDate"
+                  type="date"
+                  min={today}
+                  value={formData.deliveryByDate}
+                  onChange={handleInputChange}
+                  className={errors.deliveryByDate ? "border-red-500" : ""}
+                />
+                {errors.deliveryByDate && (
+                  <p className="text-red-500 text-sm">
+                    {errors.deliveryByDate}
                   </p>
-                  </div>
-                  <div>
-                    <Input
-                      type="text"
-                      placeholder="Search Approvers..."
-                      value={searchApproverTerm}
-                      onChange={(e) => handleSearchChange(e, "users")}
-                      className="flex-1"
-                    />
-                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-4">
+            <CardHeader>
+              <div className="flex justify-between">
+                <div className="text-md">
+                  <p className="text-md text-muted-foreground">
+                    Approver Details (for GRN)
+                  </p>
                 </div>
-                {errors.approvers && (
-                  <p className="text-red-500 text-sm">{errors.approvers}</p>
-                )}
-              </CardHeader>
-              <CardContent>
-                {fetchedUsers.length > 0 && (
-                  <div className="mt-2">
-                    <h3 className="font-semibold">Fetched Users:</h3>
-                    <ul>
-                      {fetchedUsers.map((user) => (
-                        <li
-                          key={user.id}
-                          className="py-1 cursor-pointer hover:bg-gray-200"
-                          onClick={() => addApprover(user)}
-                        >
-                          {user.name} | {user.email} | {user.mobile}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-  
-                {approvedUsers.map((approver, index) => (
-                  <div key={index} className="flex items-center space-x-2 mb-2">
-                    <div className="flex flex-col text-md">
-                      {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                <div>
+                  <Input
+                    type="text"
+                    placeholder="Search Approvers..."
+                    value={searchApproverTerm}
+                    onChange={(e) => handleSearchChange(e, "users")}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+              {errors.approvers && (
+                <p className="text-red-500 text-sm">{errors.approvers}</p>
+              )}
+            </CardHeader>
+            <CardContent>
+              {fetchedUsers.length > 0 && (
+                <div className="mt-2">
+                  <h3 className="font-semibold">Fetched Users:</h3>
+                  <ul>
+                    {fetchedUsers.map((user) => (
+                      <li
+                        key={user.id}
+                        className="py-1 cursor-pointer hover:bg-gray-200"
+                        onClick={() => addApprover(user)}
+                      >
+                        {user.name} | {user.email} | {user.mobile}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {approvedUsers.map((approver, index) => (
+                <div key={index} className="flex items-center space-x-2 mb-2">
+                  <div className="flex flex-col text-md">
+                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}>
                         Approver Name
                       </Label> */}
-                      <h1>Mobile:-{approver.name} |</h1>
-                      {/* <Input
+                    <h1>Mobile:-{approver.name} |</h1>
+                    {/* <Input
                         disabled
                         value={approver.name}
                         placeholder="Name"
                         className="flex-1"
                       /> */}
-                    </div>
-                    <div className="flex flex-col text-md">
-                      {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  </div>
+                  <div className="flex flex-col text-md">
+                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}>
                         Email
                       </Label>/ */}
-                      <h1>Mobile:-{approver.email} |</h1>
-                      {/* <Input
+                    <h1>Mobile:-{approver.email} |</h1>
+                    {/* <Input
                         disabled
                         value={approver.email}
                         placeholder="Email"
                         className="flex-1"
                       /> */}
-                    </div>
-                    <div className="flex flex-col text-md">
-                      {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                  </div>
+                  <div className="flex flex-col text-md">
+                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}>
                         Phone
                       </Label> */}
-                      {/* <Input
+                    {/* <Input
                         disabled
                         value={approver.mobile}
                         placeholder="Phone"
                         className="flex-1"
                       /> */}
-                      <h1>Mobile:-{approver.mobile}</h1>
-                    </div>
-                    <div className="flex flex-col">
-                      {/* <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                    <h1>Mobile:-{approver.mobile}</h1>
+                  </div>
+                  <div className="flex flex-col">
+                    {/* <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}></Label> */}
-                      <Button
-                        type="button"
-                        onClick={() => removeApprover(index)}
-                        variant="outline"
-                        size="icon"
-                        className="text-red-500"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      type="button"
+                      onClick={() => removeApprover(index)}
+                      variant="outline"
+                      size="icon"
+                      className="text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-  
-            <Card className="mb-4">
-              <CardHeader>
-                <CardTitle>Product Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center mb-4 space-x-2">
-                  <Input
-                    type="text"
-                    placeholder="Search Products..."
-                    value={searchProductTerm}
-                    onChange={(e) => handleSearchChange(e, "products")}
-                    className="flex-1"
-                  />
-                  <SheetSide />
                 </div>
-  
-                {fetchedProducts.length > 0 && (
-                  <div className="mt-2">
-                    <h3 className="font-semibold">Fetched Products:</h3>
-                    <ul>
-                      {fetchedProducts.map((product) => (
-                        <li
-                          key={product.productId}
-                          className="py-1 cursor-pointer hover:bg-gray-200"
-                          onClick={() => addProduct(product)}
-                        >
-                          {product.name} | {product.modelNo}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-  
-                {approvedProducts.map((product, index) => (
-                  <div
-                    key={product.productId}
-                    className="flex items-center space-x-2 mb-2"
-                  >
-                    <div className="flex flex-col">
-                      <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Product
-                      </Label>
-                      <Input
-                        disabled
-                        value={product.name}
-                        placeholder="Name"
-                        className="flex-1"
-                      />
-                    </div>
-                    <div className="flex flex-col w-[50%]">
-                      <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Product Description
-                      </Label>
-                      <Input
-                        // disabled
-                        value={product.specification}
-                        placeholder="Model"
-                        className="flex-1"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Quantity
-                      </Label>
-                      <Input
-                        type="number"
-                        value={product.quantity}
-                        onChange={(e) =>
-                          handleProductChange(
-                            index,
-                            "quantity",
-                            parseInt(e.target.value, 10)
-                          )
-                        }
-                        placeholder="Quantity"
-                        className="flex-1"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}></Label>
-                      <Button
-                        type="button"
-                        onClick={() => removeProduct(index)}
-                        variant="outline"
-                        size="icon"
-                        className="text-red-500"
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Product Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center mb-4 space-x-2">
+                <Input
+                  type="text"
+                  placeholder="Search Products..."
+                  value={searchProductTerm}
+                  onChange={(e) => handleSearchChange(e, "products")}
+                  className="flex-1"
+                />
+                <SheetSide />
+              </div>
+
+              {fetchedProducts.length > 0 && (
+                <div className="mt-2">
+                  <h3 className="font-semibold">Fetched Products:</h3>
+                  <ul>
+                    {fetchedProducts.map((product) => (
+                      <li
+                        key={product.productId}
+                        className="py-1 cursor-pointer hover:bg-gray-200"
+                        onClick={() => addProduct(product)}
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        {product.name} | {product.modelNo}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {approvedProducts.map((product, index) => (
+                <div
+                  key={product.productId}
+                  className="flex items-center space-x-2 mb-2"
+                >
+                  <div className="flex flex-col">
+                    <Label
+                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                        index > 0 ? "hidden" : "visible"
+                      }`}
+                    >
+                      Product
+                    </Label>
+                    <Input
+                      disabled
+                      value={product.name}
+                      placeholder="Name"
+                      className="flex-1"
+                    />
                   </div>
-                ))}
-                {errors.products && (
-                  <p className="text-red-500 text-sm">{errors.products}</p>
+                  <div className="flex flex-col w-[50%]">
+                    <Label
+                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                        index > 0 ? "hidden" : "visible"
+                      }`}
+                    >
+                      Product Description
+                    </Label>
+                    <Input
+                      // disabled
+                      value={product.specification}
+                      placeholder="Model"
+                      className="flex-1"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <Label
+                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                        index > 0 ? "hidden" : "visible"
+                      }`}
+                    >
+                      Quantity
+                    </Label>
+                    <Input
+                      type="number"
+                      value={product.quantity}
+                      onChange={(e) =>
+                        handleProductChange(
+                          index,
+                          "quantity",
+                          parseInt(e.target.value, 10)
+                        )
+                      }
+                      placeholder="Quantity"
+                      className="flex-1"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <Label
+                      className={`mb-8 font-bold text-[16px] text-slate-700 ${
+                        index > 0 ? "hidden" : "visible"
+                      }`}
+                    ></Label>
+                    <Button
+                      type="button"
+                      onClick={() => removeProduct(index)}
+                      variant="outline"
+                      size="icon"
+                      className="text-red-500"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {errors.products && (
+                <p className="text-red-500 text-sm">{errors.products}</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle>Delivery Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className={errors.address ? "border-red-500" : ""}
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-sm">{errors.address}</p>
                 )}
-              </CardContent>
-            </Card>
-  
-            <Card className="mb-4">
-              <CardHeader>
-                <CardTitle>Delivery Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="country">Country</Label>
                   <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={errors.address ? "border-red-500" : ""}
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className={errors.country ? "border-red-500" : ""}
                   />
-                  {errors.address && (
-                    <p className="text-red-500 text-sm">{errors.address}</p>
+                  {errors.country && (
+                    <p className="text-red-500 text-sm">{errors.country}</p>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className={errors.country ? "border-red-500" : ""}
-                    />
-                    {errors.country && (
-                      <p className="text-red-500 text-sm">{errors.country}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      className={errors.state ? "border-red-500" : ""}
-                    />
-                    {errors.state && (
-                      <p className="text-red-500 text-sm">{errors.state}</p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input
+                    id="state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className={errors.state ? "border-red-500" : ""}
+                  />
+                  {errors.state && (
+                    <p className="text-red-500 text-sm">{errors.state}</p>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className={errors.city ? "border-red-500" : ""}
-                    />
-                    {errors.city && (
-                      <p className="text-red-500 text-sm">{errors.city}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zipCode">Zip Code</Label>
-                    <Input
-                      id="zipCode"
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      className={errors.zipCode ? "border-red-500" : ""}
-                    />
-                    {errors.zipCode && (
-                      <p className="text-red-500 text-sm">{errors.zipCode}</p>
-                    )}
-                  </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className={errors.city ? "border-red-500" : ""}
+                  />
+                  {errors.city && (
+                    <p className="text-red-500 text-sm">{errors.city}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="additionalInstructions">
-                    Additional Delivery Instructions
-                  </Label>
-                  <Textarea
-                    id="additionalInstructions"
-                    value={additionalInstructions}
-                    onChange={(e) => setAdditionalInstructions(e.target.value)}
-                    rows={4}
+                  <Label htmlFor="zipCode">Zip Code</Label>
+                  <Input
+                    id="zipCode"
+                    value={zipCode}
+                    onChange={(e) => setZipCode(e.target.value)}
+                    className={errors.zipCode ? "border-red-500" : ""}
                   />
+                  {errors.zipCode && (
+                    <p className="text-red-500 text-sm">{errors.zipCode}</p>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-            <div className="flex justify-end mr-10">
-              <Button
-                type="submit"
-                className="px-4 py-2 rounded-lg bg-green-700"
-                disabled={loading}
-              >
-                {loading ? "Updating..." : "Update RFP"}
-              </Button>
-            </div>
-  
-            {error && <div className="text-red-500">{error}</div>}
-          </CardContent>
-        </Card>
-      </form>
-   
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="additionalInstructions">
+                  Additional Delivery Instructions
+                </Label>
+                <Textarea
+                  id="additionalInstructions"
+                  value={additionalInstructions}
+                  onChange={(e) => setAdditionalInstructions(e.target.value)}
+                  rows={4}
+                />
+              </div>
+            </CardContent>
+          </Card>
+          <div className="flex justify-end mr-10">
+            <Button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-green-700"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update RFP"}
+            </Button>
+          </div>
+
+          {error && <div className="text-red-500">{error}</div>}
+        </CardContent>
+      </Card>
+    </form>
   );
 };
 
