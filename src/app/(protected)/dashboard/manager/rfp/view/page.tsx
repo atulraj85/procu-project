@@ -78,6 +78,7 @@ interface Approver {
 }
 
 interface RFPData {
+  products: any;
   rfpId: string;
   requirementType: string;
   dateOfOrdering: string;
@@ -173,40 +174,72 @@ const ViewRFP: React.FC = () => {
   return (
     <form className="space-y-2">
       <Card>
-        <div className="flex justify-between mt-2 mb-3 px-6 ">
-          <div className="flex items-center">
-            <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
-              {rfpData.requirementType === "Product" ? "P" : "S"}
-            </Label>
-            <Label>
-              RFP ID: {rfpData.rfpId}
-            </Label>
+      <div className="flex justify-between mt-2 mb-3 px-6">
+  <div className="flex flex-col">
+    <div className="flex items-center mb-2">
+      <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+        {rfpData.requirementType === "Product" ? "P" : "S"}
+      </Label>
+      <Label>
+        RFP ID: {rfpData.rfpId}
+      </Label>
+    </div>
+    
+    {/* Product Details */}
+    <div className="ml-12">
+      {rfpData.products.map((product: { name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; modelNo: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; quantity: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; }, index: React.Key | null | undefined) => (
+        <div key={index} className="flex flex-col mb-1">
+          <div className="flex items-center space-x-4">
+            <Label className="font-medium">Name: {product.name}</Label>
+            <Label className="font-medium">Model: {product.modelNo}</Label>
+            <Label className="font-medium">Qty: {product.quantity}</Label>
           </div>
-          <div className="flex">
-            <div className="">
-              <Label>
-                RFP Date: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
-              </Label>
-              <div className="space-y-2">
-                <Label>
-                  Exp. Delivery Date: {new Date(rfpData.deliveryByDate).toLocaleDateString()}
-                </Label>
-              </div>
-            </div>
-            <div className="pl-3">
-              <Link href="/dashboard/manager">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="text-black-500 bg-red-400"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
+          {product.description && (
+            <Label className="text-sm text-gray-600">
+              Description: {product.description}
+            </Label>
+          )}
         </div>
+      ))}
+    </div>
+  </div>
+  
+  <div className="flex">
+    <div className="">
+      <Label>
+        RFP Date: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+      </Label>
+      <div className="space-y-2">
+        <Label>
+          Exp. Delivery Date: {new Date(rfpData.deliveryByDate).toLocaleDateString()}
+        </Label>
+      </div>
+    </div>
+    <div className="pl-3">
+      <Link href="/dashboard/manager">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="text-black-500 bg-red-400"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </Link>
+    </div>
+  </div>
+</div>
+        <CardContent>
+       
+        <div>
+                {rfpData.quotations.map((quotation, index) => (
+                  <Disclosure key={index} as="div" className="mb-4">
+                   
+                  </Disclosure>
+                ))}
+              </div>
+       
+        </CardContent>
 
         <CardContent>
           <Card className="mb-4">

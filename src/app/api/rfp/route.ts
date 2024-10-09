@@ -157,17 +157,19 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             mobile: true,
+            role: true
+
           },
         },
       },
     });
 
-    console.log(`Found ${records.length} records`);
+    // console.log(`Found ${records.length} records`);
 
     const formattedData = formatRFPData(records);
 
-    console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
-    console.log("records data:", JSON.stringify(records, null, 2));
+    // console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
+    // console.log("records data:", JSON.stringify(records, null, 2));
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
@@ -348,6 +350,7 @@ function formatRFPData(rfps: any[]) {
       name: rfp.user.name,
       email: rfp.user.email,
       mobile: rfp.user.mobile,
+      role:rfp.user.role
     },
   }));
 }
