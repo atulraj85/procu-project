@@ -162,7 +162,7 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
-  // console.log("initialData", initialData);
+  console.log("initialData", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
   // const [error, setError] = useState<string | null>(null);
@@ -181,6 +181,277 @@ export default function RFPUpdateForm({
   const router = useRouter();
   const [showPreferredQuotationError, setShowPreferredQuotationError] =
     useState("");
+  const [savingQuotation, setSavingQuotation] = useState<number | null>(null);
+  const [savedQuotations, setSavedQuotations] = useState<Set<number>>(
+    new Set()
+  );
+
+  const saveQuotation = async (index: number) => {
+    setSavingQuotation(index);
+    // try{
+    //   const quotationData = getValues(`quotations.${index}`);
+    //   const formData = new FormData();
+    //   formData.append("rfpId", rfpId);
+    //   formData.append("quotationIndex", index.toString());
+    //   formData.append("data", JSON.stringify(quotationData));
+
+    //   // // Append relevant files for this quotation
+    //   // Object.entries(files).forEach(([key, file]) => {
+    //   //   if (key.startsWith(`quotations.${index}`)) {
+    //   //     formData.append(key, file);
+    //   //   }
+    //   // });
+
+    //   Object.entries(files).forEach(([key, file]) => {
+    //     formData.append(key, file);
+    //   });
+
+    //   const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+    //     method: "PUT",
+    //     body: formData,
+    //   });
+
+    //   if (!response.ok) {
+    //     throw new Error("Failed to save quotation");
+    //   }
+
+    //   // Mark this quotation as saved
+    //   setSavedQuotations((prev) => new Set([...prev, index]));
+    //   toast({
+    //     title: "Success",
+    //     description: "Quotation saved successfully",
+    //   });
+    // }
+
+    try {
+      const quotationData = getValues(`quotations`);
+
+      const formData = new FormData();
+      formData.append("rfpId", rfpId);
+      const serializedData = JSON.stringify({
+        ...quotationData,
+        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+      });
+      formData.append("data", serializedData);
+
+      // console.log(files);
+
+      // Append files to formData
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
+
+      console.log("FormData to be sent:", Object.fromEntries(formData));
+
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Could not update quotations!`);
+      }
+
+      const result = await response.json();
+      // console.log("RFP updated successfully:", result);
+      setSuccess(true);
+
+      toast({
+        title: "🎉 Quotation Updated!",
+        description: response.ok,
+      });
+      // router.push("/dashboard/manager");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save quotation",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingQuotation(null);
+    }
+  };
+
+  const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
+    // Check if all quotations are saved
+    const unsavedQuotations = fields.findIndex(
+      (_, index) => !savedQuotations.has(index)
+    );
+    if (unsavedQuotations !== -1) {
+      toast({
+        title: "Error",
+        description: "Please save all quotations before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check for preferred quotation
+    if (!preferredVendorId) {
+      setShowPreferredQuotationError("Please select a preferred quotation");
+      return;
+    }
+
+    // If less than 3 quotations, show reason dialog
+    if (fields.length < 3) {
+      setShowReasonDialog(true);
+      return;
+    }
+
+    await submitForm(data);
+  };
+
+  const renderQuotation = (field: any, index: number) => {
+    const quotation = getValues(`quotations.${index}`);
+    const isVisible = visibleQuotationIndex === index;
+    const isSaved = savedQuotations.has(index);
+
+    return (
+      <div key={field.id} className="border rounded-lg p-4 mb-2">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2">
+          {/* Quotation ref */}
+          <div className="flex items-center gap-2">
+            <h3 className="text-md font-semibold">Quotation Ref No.</h3>
+            <Input {...control.register(`quotations.${index}.refNo`)} />
+            {errors?.quotations?.[index]?.refNo && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.quotations?.[index]?.refNo?.message ||
+                  "Error message not available"}
+              </p>
+            )}
+          </div>
+
+          {/* Total amounts */}
+          <TotalComponent setValue={setValue} control={control} index={index} />
+          {/* Preferred Quote checkbox */}
+          <div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={preferredVendorIndex === index}
+                disabled={
+                  preferredVendorIndex !== null &&
+                  preferredVendorIndex !== index
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setValue("preferredVendorId", quotation.vendorId);
+                    setPreferredVendorId(quotation.vendorId);
+                    setShowPreferredQuotationError("");
+                    setPreferredVendorIndex(index);
+                  } else {
+                    setPreferredVendorId("");
+                    setPreferredVendorIndex(null);
+                  }
+                }}
+              />
+              <div className="flex">
+                <Label className=" text-green-700">Preferred Quote</Label>
+                {showPreferredQuotationError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {showPreferredQuotationError ||
+                      "Please select a Quotation."}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <span
+            className="cursor-pointer"
+            onClick={() => toggleQuotationVisibility(index)}
+          >
+            {isVisible ? <ChevronDown /> : <ChevronUp />}{" "}
+          </span>
+        </div>
+
+        {isVisible && (
+          <div>
+            <div className="py-2 w-3/4">
+              <VendorSelector
+                errors={errors}
+                setValue={setValue}
+                index={index}
+                vendor={quotation.vendor}
+                globalFormData={globalFormData}
+                setShowCheckbox={undefined}
+              />
+            </div>
+
+            <div className="mb-2">
+              <CardTitle className="text-lg">
+                Products / Services Details
+              </CardTitle>
+              <div>
+                <ProductList
+                  errors={errors}
+                  products={
+                    quotation.products.length === 0
+                      ? initialData.products
+                      : quotation.products
+                  }
+                  setValue={setValue}
+                  getValues={getValues}
+                  control={control}
+                  index={index}
+                  globalFormData={globalFormData}
+                />
+
+                <OtherChargesList
+                  control={control}
+                  index={index}
+                  formData={FormData}
+                  globalFormData={globalFormData}
+                  errors={errors}
+                />
+              </div>
+            </div>
+
+            <SupportingDocumentsList
+              errors={errors}
+              control={control}
+              index={index}
+              setValue={setValue}
+              files={files}
+              setFiles={setFiles}
+              getValues={getValues}
+            />
+
+            <div className="flex gap-2 justify-end">
+              <Button
+                className="bg-primary mt-2"
+                type="button"
+                onClick={() => saveQuotation(index)}
+                disabled={savingQuotation === index}
+              >
+                {savingQuotation === index ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : isSaved ? (
+                  "Update"
+                ) : (
+                  "Save"
+                )}
+              </Button>
+              <Button
+                type="button"
+                onClick={() => handleDeleteClick(index)}
+                variant="outline"
+                className="text-red-500 mt-2"
+                disabled={savingQuotation === index}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remove
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const {
     control,
@@ -301,23 +572,23 @@ export default function RFPUpdateForm({
     setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
   };
 
-  const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
-    console.log("Error: ", errors);
+  // const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
+  //   console.log("Error: ", errors);
 
-    // console.log("Submitting quotation:", JSON.stringify(data));
+  //   // console.log("Submitting quotation:", JSON.stringify(data));
 
-    if (!preferredVendorId) {
-      console.log("Heelo");
-      setShowPreferredQuotationError("Please select a Quotation.");
-      return;
-    }
+  //   if (!preferredVendorId) {
+  //     console.log("Heelo");
+  //     setShowPreferredQuotationError("Please select a Quotation.");
+  //     return;
+  //   }
 
-    if (fields.length < 3) {
-      setShowReasonDialog(true);
-      return;
-    }
-    await submitForm(data);
-  };
+  //   if (fields.length < 3) {
+  //     setShowReasonDialog(true);
+  //     return;
+  //   }
+  //   await submitForm(data);
+  // };
 
   const submitForm = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
@@ -400,153 +671,7 @@ export default function RFPUpdateForm({
           </Link>
         </CardHeader>
         <CardContent>
-          {fields.map((field, index) => {
-            const quotation = getValues(`quotations.${index}`);
-            const isVisible = visibleQuotationIndex === index;
-            return (
-              <div key={field.id} className="border rounded-lg p-4 mb-2">
-                {/* Header */}
-                <div className="flex items-center justify-between gap-2">
-                  {/* Quotation ref */}
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-md font-semibold">Quotation Ref No.</h3>
-                    <Input {...control.register(`quotations.${index}.refNo`)} />
-                    {errors?.quotations?.[index]?.refNo && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {errors.quotations?.[index]?.refNo?.message ||
-                          "Error message not available"}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Total amounts */}
-                  <TotalComponent
-                    setValue={setValue}
-                    control={control}
-                    index={index}
-                  />
-                  {/* Preferred Quote checkbox */}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={preferredVendorIndex === index}
-                        disabled={
-                          preferredVendorIndex !== null &&
-                          preferredVendorIndex !== index
-                        }
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setValue("preferredVendorId", quotation.vendorId);
-                            setPreferredVendorId(quotation.vendorId);
-                            setShowPreferredQuotationError("");
-                            setPreferredVendorIndex(index);
-                          } else {
-                            setPreferredVendorId("");
-                            setPreferredVendorIndex(null);
-                          }
-                        }}
-                      />
-                      <div className="flex">
-                        <Label className=" text-green-700">
-                          Preferred Quote
-                        </Label>
-                        {showPreferredQuotationError && (
-                          <p className="text-red-500 text-sm mt-1">
-                            {showPreferredQuotationError ||
-                              "Please select a Quotation."}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Arrow */}
-                  <span
-                    className="cursor-pointer"
-                    onClick={() => toggleQuotationVisibility(index)}
-                  >
-                    {isVisible ? <ChevronDown /> : <ChevronUp />}{" "}
-                  </span>
-                </div>
-
-                {isVisible && (
-                  <div>
-                    <div className="py-2 w-3/4">
-                      <VendorSelector
-                        errors={errors}
-                        setValue={setValue}
-                        index={index}
-                        vendor={quotation.vendor}
-                        globalFormData={globalFormData}
-                        setShowCheckbox={undefined}
-                      />
-                    </div>
-
-                    <div className="mb-2">
-                      <CardTitle className="text-lg">
-                        Products / Services Details
-                      </CardTitle>
-                      <div>
-                        <ProductList
-                          errors={errors}
-                          products={
-                            quotation.products.length === 0
-                              ? initialData.products
-                              : quotation.products
-                          }
-                          setValue={setValue}
-                          getValues={getValues}
-                          control={control}
-                          index={index}
-                          globalFormData={globalFormData}
-                        />
-
-                        <OtherChargesList
-                          control={control}
-                          index={index}
-                          formData={FormData}
-                          globalFormData={globalFormData}
-                          errors={errors}
-                        />
-                      </div>
-                    </div>
-
-                    <SupportingDocumentsList
-                      errors={errors}
-                      control={control}
-                      index={index}
-                      setValue={setValue}
-                      files={files}
-                      setFiles={setFiles}
-                      getValues={getValues}
-                    />
-
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        className="bg-primary mt-2"
-                        type="button"
-                        // onClick={handleAddQuotation}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        onClick={() => handleDeleteClick(index)}
-                        variant="outline"
-                        size="icon"
-                        className="text-red-500 w-1/1 p-2 mt-2"
-                      >
-                        {/* <X className="h-4 w-4" /> */}
-                        <Trash2 className="h-4 w-4" />
-                        {"  "}
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {fields.map((field, index) => renderQuotation(field, index))}
           {fields.length < quotationLimit && (
             <Button
               className="bg-primary mt-2"
