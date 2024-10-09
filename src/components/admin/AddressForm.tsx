@@ -35,7 +35,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
       country: "",
       state: "",
       city: "",
-      zipCode: "",
+      postalCode: "",
     },
   });
 
@@ -169,7 +169,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ companyId, isAddingAddress })
                 />
                 <FormField
                   control={form.control}
-                  name="zipCode"
+                  name="postalCode"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Zip Code</FormLabel>

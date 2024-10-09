@@ -100,11 +100,11 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       console.log(data);
 
       form.reset({
-        email: company.email || "",
-        phone: company.phone || "",
-        website: company.website || "",
-        industry: company.industry || "",
-        status: company.status || "active",
+        email: company.email,
+        phone: company.phone,
+        website: company.website,
+        industry: company.industry,
+        status: company.status,
         logo: undefined,
         stamp: undefined,
       });
@@ -119,6 +119,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   };
 
   async function onSubmitForm(data: CompanyFormValues) {
+    console.log("hello");
     setIsLoading(true);
     console.log(data);
     try {
@@ -127,16 +128,23 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         if (key === "businessAddress" || key === "deliveryAddress") {
           continue;
         }
+      
         const value = data[key as keyof CompanyFormValues];
+      
+        // Check if the value is a File and that the file is not empty (null or undefined)
         if (value instanceof File) {
-          formData.append(key, value);
-          console.log(value);
+          if (value.size > 0) {  // Ensure the file is not empty by checking its size
+            formData.append(key, value);
+            console.log(value);
+          }
         } else {
+          // Append non-file values, skipping empty files
           formData.append(key, JSON.stringify(value) || "");
         }
       }
+      
 
-      formData.append("addresses", JSON.stringify(addresses));
+      // formData.append("addresses", JSON.stringify(addresses));
 
       formData.forEach((value, key) => {
         console.log(`${key}: ${value}`);
@@ -153,8 +161,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         form.reset();
         toast({
           title: "Success",
-          description: "Company saved successfully",
+          description: "Details Updated successfully",
         });
+        getCompanyDetails(companyId);
       }
     } catch (error) {
       console.log(error);
@@ -172,6 +181,19 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     return <Loader />;
   }
 
+
+  function formatFilePath(filePath: string): string {
+    // Extract the part after 'company' and replace backslashes with forward slashes
+    let formattedPath = filePath.split('company').pop()?.replace(/\\/g, '/') || '';
+    
+    // Remove any leading slashes
+    formattedPath = formattedPath.replace(/^\/+/, '');
+  
+    return '/' + formattedPath; // Return with a leading forward slash
+  }
+  
+  
+
   return (
     <div>
       <Form {...form}>
@@ -180,8 +202,12 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
             <CardContent className="mt-4">
               <div className="flex justify-between mb-6">
                 <div>
-                  <p><strong>{companyData?.name}</strong></p>
-                  <p><strong>{companyData?.gst}</strong></p>
+                  <p>
+                    <strong>{companyData?.name}</strong>
+                  </p>
+                  <p>
+                    <strong>{companyData?.gst}</strong>
+                  </p>
                 </div>
                 <div className="w-[30%]">
                   <p></p>
@@ -281,7 +307,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           src={
                             logoPreview
                               ? logoPreview
-                              : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
+                              : companyData.logo ? `/company/${formatFilePath(companyData.logo)}` : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
                           }
                           alt="Preview"
                           className="w-14 h-14 object-cover rounded-full"
@@ -331,7 +357,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           src={
                             stampPreview
                               ? stampPreview
-                              : "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
+                              :  companyData.stamp ? `/company/${formatFilePath(companyData.stamp)}` :  "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
                           }
                           alt="Preview"
                           className="w-14 h-14 object-cover rounded-full"
@@ -369,19 +395,19 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   )}
                 />
               </div>
+              <Button
+                type="submit"
+                // disabled={isLoading}
+                className="mt-4 w-36 my-4 bg-primary"
+              >
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
             </CardContent>
           </Card>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="my-4 bg-primary"
-          >
-            {isLoading ? "Saving..." : "Save Changes"}
-          </Button>
         </form>
       </Form>
       <div className="mt-6">
-        <AddressUpdate companyId={companyId}/>
+        <AddressUpdate companyId={companyId} />
       </div>
     </div>
   );

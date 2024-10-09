@@ -45,7 +45,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
       country: "",
       state: "",
       city: "",
-      zipCode: "",
+      postalCode: "",
     },
   });
 
@@ -76,7 +76,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
       country: "",
       state: "",
       city: "",
-      zipCode: "",
+      postalCode: "",
     });
   }, [companyId, isAddingAddress]);
 
@@ -232,7 +232,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
 
                     <FormField
                       control={form.control}
-                      name="zipCode"
+                      name="postalCode"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Zip Code</FormLabel>

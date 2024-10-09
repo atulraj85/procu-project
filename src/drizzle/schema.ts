@@ -459,7 +459,7 @@ export const AddressTable = pgTable(
     street: text("street").notNull(),
     city: text("city").notNull(),
     state: text("state").notNull(),
-    zipCode: text("zip_code").notNull(),
+    postalCode: text("postal_code").notNull(),
     country: text("country").notNull(),
     addressType: AddressType("address_type").notNull(),
     companyId: uuid("company_id").notNull(),
