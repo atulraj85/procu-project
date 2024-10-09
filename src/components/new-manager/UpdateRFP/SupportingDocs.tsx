@@ -94,6 +94,10 @@ const SupportingDocumentsList = ({
     });
   };
 
+  if (fields.length <= 0) {
+    append({ name: "", fileName: "" });
+  }
+
   return (
     <div>
       <Card>
@@ -171,7 +175,6 @@ const SupportingDocumentsList = ({
                           className="text-red-500"
                         >
                           <X className="h-4 w-4" />
-                          
                         </Button>
                       </div>
                     </div>
