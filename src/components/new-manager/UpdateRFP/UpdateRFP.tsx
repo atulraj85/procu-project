@@ -131,14 +131,14 @@ const TotalComponent: React.FC<TotalComponentProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 rounded text-sm">
-      <div>
+    <div className="grid grid-cols-2 gap-2 rounded text-sm ">
+      <div className="text-gray-400">
         <Label className="font-bold">Taxable Amount (INR)</Label>
         <div className="text-base font-medium">
           {formatCurrency(quotation?.total?.withoutGST)}
         </div>
       </div>
-      <div>
+      <div className="text-gray-400">
         <Label className="font-bold">Total (incl. GST) (INR)</Label>
         <div className="text-base font-medium">
           {formatCurrency(quotation?.total?.withGST)}
@@ -215,7 +215,7 @@ export default function RFPUpdateForm({
           .filter((product: any) => product.type === "otherCharge")
           .map((charge: any) => ({
             id: charge.id,
-            name: "Other Charges",
+            name: "Other Charges (if any)",
             unitPrice: parseFloat(charge.price),
             gst: charge.gst.toString(),
           })),
@@ -278,24 +278,20 @@ export default function RFPUpdateForm({
         totalAmountWithoutGST: 0,
         vendor: null,
       });
+      setVisibleQuotationIndex(fields.length);
       setShowReasonPrompt(true);
     } else {
       setShowReasonPrompt(false);
     }
   }, [fields.length, append]);
 
-  const [visibleQuotations, setVisibleQuotations] = useState(
-    fields.map(() => true)
-  );
+  const [visibleQuotationIndex, setVisibleQuotationIndex] = useState<
+    number | null
+  >(null);
 
   const toggleQuotationVisibility = (index: number) => {
-    setVisibleQuotations((prev) => {
-      const newVisibility = [...prev];
-      newVisibility[index] = !newVisibility[index];
-      return newVisibility;
-    });
+    setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
   };
-
   const handleSubmitReasonAndAddQuotation = async (
     data: z.infer<typeof rfpSchema>
   ) => {
@@ -423,7 +419,7 @@ export default function RFPUpdateForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle>Update RFP</CardTitle>
+          <CardTitle>Update RFP: {rfpId}</CardTitle>
           <Link href="/dashboard/manager">
             <Button
               type="button"
@@ -438,15 +434,14 @@ export default function RFPUpdateForm({
         <CardContent>
           {fields.map((field, index) => {
             const quotation = getValues(`quotations.${index}`);
+            const isVisible = visibleQuotationIndex === index;
             return (
-              <div key={field.id} className="border rounded-lg p-4">
+              <div key={field.id} className="border rounded-lg p-4 mb-2">
+                {/* Header */}
                 <div className="flex items-center justify-between gap-2">
                   {/* Quotation ref */}
                   <div className="flex items-center gap-2">
-                    <h3 className="text-md font-semibold">
-                      Quotation {/* {index + 1} */}
-                      Ref No.
-                    </h3>
+                    <h3 className="text-md font-semibold">Quotation Ref No.</h3>
                     <Input {...control.register(`quotations.${index}.refNo`)} />
                     {errors?.quotations?.[index]?.refNo && (
                       <p className="text-red-500 text-sm mt-1">
@@ -502,26 +497,12 @@ export default function RFPUpdateForm({
                     className="cursor-pointer"
                     onClick={() => toggleQuotationVisibility(index)}
                   >
-                    {visibleQuotations[index] ? <ChevronDown /> : <ChevronUp />}
+                    {isVisible ? <ChevronDown /> : <ChevronUp />}{" "}
                   </span>
                 </div>
 
-                {visibleQuotations[index] && (
+                {isVisible && (
                   <div>
-                    {/* <div className="my-2">
-                        <Label className=" text-green-700">
-                          Reason for Preferring this Quotation{" "}
-                        </Label>
-                        {preferredVendorIndex === index && (
-                          <Input
-                            className="mb-2"
-                            placeholder="Reason for preferring this vendor"
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                          />
-                        )}
-                      </div> */}
-
                     <div className="py-2 w-3/4">
                       <VendorSelector
                         errors={errors}
@@ -572,18 +553,27 @@ export default function RFPUpdateForm({
                       getValues={getValues}
                     />
 
-                    <Button
-                      type="button"
-                      onClick={() => handleDeleteClick(index)}
-                      variant="outline"
-                      size="icon"
-                      className="text-red-500 w-1/1 p-2 mt-2"
-                    >
-                      {/* <X className="h-4 w-4" /> */}
-                      <Trash2 className="h-4 w-4" />
-                      {"  "}
-                      Remove Quotation
-                    </Button>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        className="bg-primary mt-2"
+                        type="button"
+                        // onClick={handleAddQuotation}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => handleDeleteClick(index)}
+                        variant="outline"
+                        size="icon"
+                        className="text-red-500 w-1/1 p-2 mt-2"
+                      >
+                        {/* <X className="h-4 w-4" /> */}
+                        <Trash2 className="h-4 w-4" />
+                        {"  "}
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

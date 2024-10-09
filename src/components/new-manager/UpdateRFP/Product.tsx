@@ -237,6 +237,7 @@ const ProductList = ({
                   );
                   updateProductTotals(productIndex);
                 }}
+                readOnly
               />
               {errors?.quotations?.[index]?.products?.[productIndex]
                 ?.quantity && (

@@ -1,7 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -9,9 +6,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, PlusIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
+
+const calculateAmounts = (unitPrice: number, gst: string) => {
+  const taxableAmount = parseFloat(unitPrice.toString()) || 0;
+  const gstRate = gst === "NILL" ? 0 : parseFloat(gst) / 100;
+  const gstAmount = taxableAmount * gstRate;
+  const totalAmount = taxableAmount + gstAmount;
+
+  return {
+    taxableAmount: taxableAmount.toFixed(2),
+    totalAmount: totalAmount.toFixed(2),
+  };
+};
 
 const OtherChargesList = ({
   control,
@@ -35,7 +43,6 @@ const OtherChargesList = ({
     if (globalFormData.has("quotations")) {
       const quotations = JSON.parse(globalFormData.get("quotations") as string);
 
-      // Ensure the quotation at this index exists
       if (!quotations[index]) {
         quotations[index] = { otherCharges: [] };
       }
@@ -43,11 +50,18 @@ const OtherChargesList = ({
       quotations[index].otherCharges = fields;
       globalFormData.set("quotations", JSON.stringify(quotations));
     } else {
-      // If "quotations" doesn't exist in globalFormData, initialize it
       const newQuotations = [{ otherCharges: fields }];
       globalFormData.set("quotations", JSON.stringify(newQuotations));
     }
   }, [fields, index]);
+
+  if (fields.length <= 0) {
+    append({
+      name: "Other Charges (if any)",
+      gst: "NILL",
+      unitPrice: 0,
+    });
+  }
 
   useEffect(() => {
     updateGlobalFormData();
@@ -60,108 +74,107 @@ const OtherChargesList = ({
           {errors.quotations[index].otherCharges.message}
         </p>
       )}
-      {fields.map((field, chargeIndex) => (
-        <div key={field.id} className="flex space-x-4 items-start mt-2">
-          {/* Name */}
-          <div className="w-1/6">
-            <Input
-              {...control.register(
-                `quotations.${index}.otherCharges.${chargeIndex}.name`
+      {fields.map((field, chargeIndex) => {
+        const amounts = calculateAmounts(
+          control._formValues.quotations?.[index]?.otherCharges?.[chargeIndex]
+            ?.unitPrice || 0,
+          control._formValues.quotations?.[index]?.otherCharges?.[chargeIndex]
+            ?.gst || "NILL"
+        );
+
+        return (
+          <div key={field.id} className="flex space-x-4 items-start mt-2">
+            <div className="w-1/6">
+              <Input
+                {...control.register(
+                  `quotations.${index}.otherCharges.${chargeIndex}.name`
+                )}
+              />
+              {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]
+                ?.name && (
+                <p className="text-red-500 text-sm mt-1">
+                  {
+                    errors.quotations[index].otherCharges[chargeIndex].name
+                      .message
+                  }
+                </p>
               )}
-              // value={"Other Charges"}
-            />
-            {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]?.name && (
-              <p className="text-red-500 text-sm mt-1">
-                {
-                  errors.quotations[index].otherCharges[chargeIndex].name
-                    .message
-                }
-              </p>
-            )}
-          </div>
-          {/* Space */}
-          <div className="w-1/4"></div>
-          <div className="w-1/12">
-            <Input type="number" className="text-center" value={1} />
-          </div>
+            </div>
+            <div className="w-1/4"></div>
+            <div className="w-1/12"></div>
 
-          {/* Unit Price */}
-          <div className="w-1/12">
-            <Input
-              type="number"
-              step="0.01"
-              className="text-right"
-              {...control.register(
-                `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`,
-                {
-                  valueAsNumber: true, // This will ensure the value is treated as a number
-                }
+            <div className="w-1/12">
+              <Input
+                type="number"
+                step="0.01"
+                className="text-right"
+                {...control.register(
+                  `quotations.${index}.otherCharges.${chargeIndex}.unitPrice`,
+                  {
+                    valueAsNumber: true,
+                  }
+                )}
+              />
+            </div>
+
+            <div className="w-1/12">
+              <Controller
+                name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select GST" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["NILL", "0", "3", "5", "12", "18", "28"].map((gst) => (
+                        <SelectItem key={gst} value={gst}>
+                          {gst}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]
+                ?.gst && (
+                <p className="text-red-500 text-sm mt-1">
+                  {
+                    errors.quotations[index].otherCharges[chargeIndex].gst
+                      .message
+                  }
+                </p>
               )}
-            />
+            </div>
 
-            {/* {errors?.quotations?.[index]?.otherCharges[chargeIndex]
-              ?.unitPrice && (
-              <p className="text-red-500 text-sm mt-1">
-                {
-                  errors.quotations[index].otherCharges[chargeIndex].unitPrice
-                    .message
-                }
-              </p>
-            )} */}
-          </div>
-          {/* GST */}
-          <div className="w-1/12">
-            <Controller
-              name={`quotations.${index}.otherCharges.${chargeIndex}.gst`}
-              control={control}
-              render={({ field }) => (
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select GST" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["NILL", "0", "3", "5", "12", "18", "28"].map((gst) => (
-                      <SelectItem key={gst} value={gst}>
-                        {gst}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            {errors?.quotations?.[index]?.otherCharges?.[chargeIndex]?.gst && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.quotations[index].otherCharges[chargeIndex].gst.message}
-              </p>
-            )}
-          </div>
+            <div className="w-1/12">
+              <Input
+                className="text-right"
+                value={amounts.taxableAmount}
+                readOnly
+              />
+            </div>
 
-          {/* Close button */}
-          <div className="">
-            <Label className="font-bold text-[16px] text-slate-700"></Label>
-            <Button
-              type="button"
-              onClick={() => remove(chargeIndex)}
-              variant="outline"
-              size="icon"
-              className="text-red-500"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="w-1/12">
+              <Input
+                className="text-right"
+                value={amounts.totalAmount}
+                readOnly
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
-      <Button
+      {/* <Button
         type="button"
         className="bg-primary mt-2"
         onClick={() => {
-          append({ name: "Other Charges", gst: "NILL", unitPrice: 0 });
           updateGlobalFormData();
         }}
       >
         <PlusIcon />
-      </Button>
+      </Button> */}
     </div>
   );
 };
