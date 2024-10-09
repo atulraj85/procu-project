@@ -25,6 +25,13 @@ import OtherChargesList from "./OtherCharges";
 import { ProductList } from "./Product";
 import SupportingDocumentsList from "./SupportingDocs";
 import VendorSelector from "./Vendor";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const globalFormData = new FormData();
 
@@ -165,6 +172,7 @@ export default function RFPUpdateForm({
     number | null
   >(null);
   const [showReasonPrompt, setShowReasonPrompt] = useState(false);
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
   const [reason, setReason] = useState("");
   const quotationLimit = 3;
   const [preferredVendorId, setPreferredVendorId] = useState("");
@@ -233,9 +241,9 @@ export default function RFPUpdateForm({
     },
   });
 
-  useEffect(() => {
-    console.log("Current form errors:", JSON.stringify(errors));
-  }, [errors]);
+  // useEffect(() => {
+  //   console.log("Current form errors:", JSON.stringify(errors));
+  // }, [errors]);
 
   const [reasonError, setReasonError] = useState<string | null>(null);
 
@@ -292,72 +300,11 @@ export default function RFPUpdateForm({
   const toggleQuotationVisibility = (index: number) => {
     setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
   };
-  const handleSubmitReasonAndAddQuotation = async (
-    data: z.infer<typeof rfpSchema>
-  ) => {
-    console.log("Error: ", errors);
-
-    console.log(
-      "Submitting reason and adding quotation:",
-      JSON.stringify(data)
-    );
-
-    if (!preferredVendorId) {
-      setShowPreferredQuotationError("Please select a Quotation.");
-      return;
-    }
-
-    setIsLoading(true);
-    setSuccess(false);
-
-    try {
-      const formData = new FormData();
-      formData.append("rfpId", rfpId);
-      const serializedData = JSON.stringify({
-        ...data,
-        rfpStatus: "DRAFT",
-      });
-      formData.append("data", serializedData);
-
-      // Append files to formData
-      Object.entries(files).forEach(([key, file]) => {
-        formData.append(key, file);
-      });
-
-      console.log("FormData to be sent:", Object.fromEntries(formData));
-
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Could not update quotations!`);
-      }
-
-      const result = await response.json();
-      // console.log("RFP updated successfully:", result);
-      setSuccess(true);
-
-      toast({
-        title: "🎉 Quotation Updated!",
-        description: response.ok,
-      });
-      router.push("/dashboard/manager");
-    } catch (err) {
-      console.error("Error updating RFP:", err);
-      // setError(
-      //   err instanceof Error ? err.message : "An unknown error occurred"
-      // );
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
     console.log("Error: ", errors);
 
-    console.log("Submitting quotation:", JSON.stringify(data));
+    // console.log("Submitting quotation:", JSON.stringify(data));
 
     if (!preferredVendorId) {
       console.log("Heelo");
@@ -365,6 +312,14 @@ export default function RFPUpdateForm({
       return;
     }
 
+    if (fields.length < 3) {
+      setShowReasonDialog(true);
+      return;
+    }
+    await submitForm(data);
+  };
+
+  const submitForm = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
     // setError(null);
     setSuccess(false);
@@ -374,7 +329,7 @@ export default function RFPUpdateForm({
       formData.append("rfpId", rfpId);
       const serializedData = JSON.stringify({
         ...data,
-        rfpStatus: "SUBMITTED",
+        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
       });
       formData.append("data", serializedData);
 
@@ -413,6 +368,19 @@ export default function RFPUpdateForm({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleReasonSubmit = () => {
+    if (!reason.trim()) {
+      setReasonError(
+        "Please provide a reason for submitting less than 3 quotations"
+      );
+      return;
+    }
+
+    setReasonError(null);
+    setShowReasonDialog(false);
+    submitForm(getValues());
   };
 
   return (
@@ -615,6 +583,53 @@ export default function RFPUpdateForm({
         </div>
       )}
 
+      <Button className="bg-primary" type="submit" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Submitting...
+          </>
+        ) : (
+          "Submit RFP"
+        )}
+      </Button>
+
+      {/* Reason Dialog */}
+      <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reason Required</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="reason">
+              Please provide a reason for submitting less than 3 quotations:
+            </Label>
+            <Textarea
+              id="reason"
+              className="mt-2"
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setReasonError(null);
+              }}
+              placeholder="Enter your reason here..."
+            />
+            {reasonError && (
+              <p className="text-red-500 text-sm mt-1">{reasonError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowReasonDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleReasonSubmit}>Submit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {success && (
         <Alert>
           <AlertTitle>Success</AlertTitle>
@@ -622,59 +637,59 @@ export default function RFPUpdateForm({
         </Alert>
       )}
 
-      {fields.length === 3 ? (
-        <Button className="bg-primary" type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            "Submit RFP"
-          )}
-        </Button>
-      ) : (
-        <div>
-          <Textarea
-            className="w-1/3 mb-2"
-            placeholder="Reason for adding less than 3 quotations"
-            value={reason}
-            onChange={(e) => {
-              setReason(e.target.value);
-              setReasonError("");
-            }}
-          />
-
-          {reasonError && (
-            <p className="text-red-500 text-sm mt-1">{reasonError}</p>
-          )}
-
-          <Button
-            type="button"
-            className="bg-primary"
-            onClick={() => {
-              if (fields.length < 3 && !reason) {
-                setReasonError("Please select reason");
-              }
-
-              const formData = getValues();
-              if (reason) {
-                setReason(reason);
-                handleSubmitReasonAndAddQuotation(formData);
-              }
-            }}
-          >
+      {/* {fields.length === 3 ? (
+          <Button className="bg-primary" type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Submitting...
               </>
             ) : (
-              "Submit Reason and Add Quotation"
+              "Submit RFP"
             )}
           </Button>
-        </div>
-      )}
+        ) : (
+          <div>
+            <Textarea
+              className="w-1/3 mb-2"
+              placeholder="Reason for adding less than 3 quotations"
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                setReasonError("");
+              }}
+            />
+
+            {reasonError && (
+              <p className="text-red-500 text-sm mt-1">{reasonError}</p>
+            )}
+
+            <Button
+              type="button"
+              className="bg-primary"
+              onClick={() => {
+                if (fields.length < 3 && !reason) {
+                  setReasonError("Please select reason");
+                }
+
+                const formData = getValues();
+                if (reason) {
+                  setReason(reason);
+                  handleSubmitReasonAndAddQuotation(formData);
+                }
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Reason and Add Quotation"
+              )}
+            </Button>
+          </div>
+        )} */}
     </form>
   );
 }

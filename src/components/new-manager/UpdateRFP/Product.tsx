@@ -322,7 +322,7 @@ const ProductList = ({
                     getValues(
                       `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
                     )
-                  ) || 0
+                  ) || 0.00
                 ).toFixed(2)}
               />
             </div>
@@ -339,7 +339,7 @@ const ProductList = ({
                     getValues(
                       `quotations.${index}.products.${productIndex}.totalPriceWithGST`
                     )
-                  ) || 0
+                  ) || 0.00
                 ).toFixed(2)}
               />
             </div>
