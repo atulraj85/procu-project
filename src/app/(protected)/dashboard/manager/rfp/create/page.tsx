@@ -63,7 +63,7 @@ const RFPForm: React.FC = () => {
     requirementType: "Product",
     dateOfOrdering: getTodayDate(),
     deliveryLocation: "",
-    deliveryByDate: "",
+    deliveryByDate: getTodayDate(),
     lastDateToRespond: "",
     rfpStatus: "DRAFT",
     rfpProducts: [],
