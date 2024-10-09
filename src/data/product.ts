@@ -1,5 +1,6 @@
 import { ProductTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
+import { eq } from "drizzle-orm";
 
 type ProductData = {
   name: string;
@@ -38,7 +39,7 @@ export async function putProduct(id: string, data: ProductData) {
         productCategoryId: data.productCategoryId,
         updatedAt: new Date(),
       })
-      .where({ id: id}) // Assuming 'id' is the unique identifier for the product
+      .where(eq(ProductTable.id, id)) // Assuming 'id' is the unique identifier for the product
       .returning();
 
     return results[0] || null;

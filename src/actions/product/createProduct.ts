@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { ProductDataSchema } from "@/schemas/ProductSchema";
-import { createProduct } from "@/data/product";
+import { createProduct, putProduct } from "@/data/product";
 
 export async function saveProduct(data: z.infer<typeof ProductDataSchema>) {
   const validation = ProductDataSchema.safeParse(data);
@@ -13,7 +13,7 @@ export async function saveProduct(data: z.infer<typeof ProductDataSchema>) {
 
   try {
     await createProduct(validation.data);
-    
+
     return { success: "Saved successfully!" };
   } catch (err) {
     console.error("Failed to create product", err);
@@ -21,8 +21,10 @@ export async function saveProduct(data: z.infer<typeof ProductDataSchema>) {
   }
 }
 
-
-export async function updateProduct(data: z.infer<typeof ProductDataSchema>) {
+export async function updateProduct(
+  id: string,
+  data: z.infer<typeof ProductDataSchema>
+) {
   const validation = ProductDataSchema.safeParse(data);
 
   if (!validation.success) {
@@ -30,7 +32,7 @@ export async function updateProduct(data: z.infer<typeof ProductDataSchema>) {
   }
 
   try {
-    await createProduct(validation.data);
+    await putProduct(id, validation.data);
 
     return { success: "Saved successfully!" };
   } catch (err) {
