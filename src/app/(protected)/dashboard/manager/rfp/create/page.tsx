@@ -31,7 +31,7 @@ type User = {
   id: number;
   name: string;
   email: string;
-  role: string;
+  role:string,
   mobile: string;
 };
 
@@ -52,6 +52,7 @@ interface FormData {
     zipCode: string;
   };
 }
+
 
 const RFPForm: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -87,8 +88,7 @@ const RFPForm: React.FC = () => {
   const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] =
-    useState<string>("");
+  const [additionalInstructions, setAdditionalInstructions] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -96,8 +96,8 @@ const RFPForm: React.FC = () => {
     new Set()
   );
   const router = useRouter();
-  const userId = "";
-  const [userInfo, setUserInfo] = useState<User>();
+  const userId = localStorage.getItem("USER_ID");
+  const [userInfo , setUserInfo] =useState<User>()
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -127,6 +127,7 @@ const RFPForm: React.FC = () => {
     };
 
     fetchCompanyData();
+    
   }, []);
 
   useEffect(() => {
@@ -231,7 +232,7 @@ const RFPForm: React.FC = () => {
 
     updatedProducts[index] = { ...product, [field]: value };
     setApprovedProducts(updatedProducts);
-
+  
     setFormData((prevData) => ({
       ...prevData,
       rfpProducts: updatedProducts.map(
@@ -296,11 +297,11 @@ const RFPForm: React.FC = () => {
       console.error("Product ID is missing");
       return;
     }
-
+  
     const productExists = approvedProducts.some(
       (p) => p.rfpProductId === product.rfpProductId
     );
-
+  
     if (!productExists) {
       const newProduct = { ...product, quantity: 1 };
       setApprovedProducts((prevProducts) => [...prevProducts, newProduct]);
@@ -313,7 +314,7 @@ const RFPForm: React.FC = () => {
             quantity: 1,
             specification: product.specification,
             name: product.name,
-            modelNo: product.modelNo,
+            modelNo: product.modelNo
           },
         ],
       }));
@@ -337,14 +338,10 @@ const RFPForm: React.FC = () => {
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!formData.requirementType)
-      newErrors.requirementType = "Requirement type is required";
-    if (!formData.deliveryByDate)
-      newErrors.deliveryByDate = "Expected delivery date is required";
-    if (approvedUsers.length === 0)
-      newErrors.approvers = "At least one approver is required";
-    if (approvedProducts.length === 0)
-      newErrors.products = "At least one product is required";
+    if (!formData.requirementType) newErrors.requirementType = "Requirement type is required";
+    if (!formData.deliveryByDate) newErrors.deliveryByDate = "Expected delivery date is required";
+    if (approvedUsers.length === 0) newErrors.approvers = "At least one approver is required";
+    if (approvedProducts.length === 0) newErrors.products = "At least one product is required";
     if (!address) newErrors.address = "Address is required";
     if (!country) newErrors.country = "Country is required";
     if (!state) newErrors.state = "State is required";
@@ -357,7 +354,7 @@ const RFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       toast({
         title: "Error",

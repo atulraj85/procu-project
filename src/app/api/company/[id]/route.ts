@@ -116,6 +116,7 @@ export async function PUT(
       parsedAddresses?.map((address) => {
         const addressType = mapToAddressType(address.AddressType) || "BUSINESS";
         return {
+          addressName:address.addressName,
           addressId: address.addressId,
           addressName: address.addressName,
           street: address.street,

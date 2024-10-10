@@ -12,7 +12,6 @@ export interface SidebarItem {
   route: string;
 }
 
-
 export interface InfoItem {
   value: string;
   total: number;
@@ -33,10 +32,9 @@ export interface TableData {
   actions: "Register vendor";
 }
 
-
 export interface ILoginUserResponse {
   response: {
-    meta: Meta,
+    meta: Meta;
     data: {
       userId: string;
       token: string;
@@ -44,7 +42,6 @@ export interface ILoginUserResponse {
     };
   };
 }
-
 
 export interface IUserProfileResponse {
   response: {
@@ -89,7 +86,7 @@ interface LoginUserResponseData {
 interface CreateUserResponseData {
   id: number;
   email: string;
-  company:string;
+  company: string;
   name: string;
   password: string;
   randomize_channel: number;
@@ -102,7 +99,6 @@ interface Meta {
   message: string;
 }
 
-
 export enum RFPStatus {
   DRAFT = "DRAFT", // RFP Created but not submitted
   SUBMITTED = "SUBMITTED", // Submitted to finance
@@ -113,7 +109,6 @@ export enum RFPStatus {
   PAYMENT_DONE = "PAYMENT_DONE", // (PO Complete)
 }
 
-
 export function serializePrismaModel<T>(model: T): T {
   return JSON.parse(
     JSON.stringify(model, (key, value) =>
@@ -121,7 +116,6 @@ export function serializePrismaModel<T>(model: T): T {
     )
   );
 }
-
 
 export interface RequestBody {
   rfpId: string,
@@ -157,4 +151,44 @@ export interface VendorRequestBody {
   remarks?: string;
   pan?: string;
   verifiedById?: string;
+}
+
+interface Address {
+  id: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  // Add other fields as necessary
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  website: string;
+  industry: string;
+  status: string;
+  logo: string;
+  stamp: string;
+  gst?: string | null;
+  gstAddress?: string | null;
+  foundedDate?: string | null;
+  addresses: Address[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+ 
+export  interface AddressInterface {
+  id: string;
+  companyId: string;
+  addressName: string;
+  addressType: "SHIPPING" | "BUSINESS"; // Enum-like type for addressType
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
 }

@@ -1,18 +1,19 @@
 import { saveProduct, updateProduct } from "@/actions/product/createProduct";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { PlusIcon, XIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
 import { toast } from "../ui/use-toast";
+import { PlusIcon, XIcon } from "lucide-react";
 
 interface Product {
   id: string;
@@ -90,7 +91,18 @@ export default function SheetSide() {
     };
 
     try {
-      const response = await saveProduct(productData);
+      const response = await fetch("/api/product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create product");
+      }
+
       toast({
         title: "🎉 Product added successfully!",
         description: "",
