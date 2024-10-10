@@ -2,10 +2,12 @@ import { z } from "zod";
 
 const ProductSchema = z.object({
   specification: z.string().optional(),
-  rfpProductId: z.string({
-    required_error: "Product ID is required",
-    invalid_type_error: "Product ID must be a string",
-  }),
+  rfpProductId: z
+    .string({
+      required_error: "Product ID is required",
+      invalid_type_error: "Product ID must be a string",
+    })
+    .optional(),
   name: z.string().optional(),
   modelNo: z.string().optional(),
   quantity: z

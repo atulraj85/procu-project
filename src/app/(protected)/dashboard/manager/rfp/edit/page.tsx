@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
+  id: string;
   specification?: string | number | readonly string[] | undefined;
   rfpProductId: string;
   name?: string;
@@ -141,14 +142,13 @@ const EditRFPForm: React.FC = () => {
         console.log("22222222222222", rfpData.products);
         // Update approved products
         const formattedProducts = rfpData.products.map((product: any) => ({
-          rfpProductId: product.rfpProductId,
+          rfpProductId: product.id,
           name: product.name,
           modelNo: product.modelNo,
           quantity: product.quantity,
           specification: product.description,
         }));
-        console.log("22222222222222",formattedProducts);
-
+        console.log("22222222222222", formattedProducts);
 
         setApprovedProducts(formattedProducts);
 
@@ -299,7 +299,8 @@ const EditRFPForm: React.FC = () => {
     setFormData((prevData) => ({
       ...prevData,
       rfpProducts: updatedProducts.map(
-        ({ rfpProductId, quantity, specification, name, modelNo }) => ({
+        ({ id, rfpProductId, quantity, specification, name, modelNo }) => ({
+          id,
           rfpProductId,
           quantity,
           specification,
@@ -343,9 +344,8 @@ const EditRFPForm: React.FC = () => {
   };
 
   const addProduct = (product: RFPProduct) => {
-    const productExists = approvedProducts.some(
-      (p) => p.rfpProductId === product.rfpProductId
-    );
+    console.log("profuct", product);
+    const productExists = approvedProducts.some((p) => p.id === product.id);
 
     if (!productExists) {
       const newProduct = { ...product, quantity: 1 };
@@ -419,7 +419,7 @@ const EditRFPForm: React.FC = () => {
 
     // Correctly format products, ensuring rfpProductId is included
     const formattedProducts = approvedProducts.map((product) => ({
-      rfpProductId: product.rfpProductId, // Use rfpProductId instead of rfpProductId
+      rfpProductId: product.rfpProductId ? product.rfpProductId : product.id, // Use rfpProductId instead of rfpProductId
       quantity: product.quantity,
       description: product.specification, // Use description instead of specification
       name: product.name,
@@ -427,7 +427,7 @@ const EditRFPForm: React.FC = () => {
     }));
 
     const updatedFormData = {
-      id: id1, // Include the ID in the request body if needed
+      id: id1,
       requirementType: formData.requirementType,
       dateOfOrdering: formData.dateOfOrdering,
       deliveryLocation,
@@ -440,7 +440,7 @@ const EditRFPForm: React.FC = () => {
         city,
         zipCode,
       },
-      rfpProducts: formattedProducts, // Use 'products' instead of 'rfpProducts'
+      rfpProducts: formattedProducts,
       approvers: formData.approvers,
       additionalInstructions,
     };
