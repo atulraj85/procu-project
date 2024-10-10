@@ -124,6 +124,7 @@ export function serializePrismaModel<T>(model: T): T {
 
 
 export interface RequestBody {
+  rfpId: string,
   requirementType: string;
   dateOfOrdering: string;
   deliveryLocation: string;
