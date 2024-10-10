@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { getTodayDate } from "@/lib/getTodayDate";
-import { Save, X } from "lucide-react";
+import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
-  productId: string;
+  rfpProductId: string;
   name?: string;
   modelNo?: string;
   quantity: number;
@@ -179,7 +180,8 @@ const RFPForm: React.FC = () => {
         } else if (entity === "products") {
           const formattedProducts = data.map((product: any) => ({
             ...product,
-            productId: product.productId || product.id || String(product._id),
+            rfpProductId:
+              product.rfpProductId || product.id || String(product._id),
           }));
           setFetchedProducts(formattedProducts);
         }
@@ -233,8 +235,8 @@ const RFPForm: React.FC = () => {
     setFormData((prevData) => ({
       ...prevData,
       rfpProducts: updatedProducts.map(
-        ({ productId, quantity, specification, name, modelNo }) => ({
-          productId,
+        ({ rfpProductId, quantity, specification, name, modelNo }) => ({
+          rfpProductId,
           quantity,
           specification,
           name,
@@ -290,13 +292,13 @@ const RFPForm: React.FC = () => {
   };
 
   const addProduct = (product: RFPProduct) => {
-    if (!product.productId) {
+    if (!product.rfpProductId) {
       console.error("Product ID is missing");
       return;
     }
 
     const productExists = approvedProducts.some(
-      (p) => p.productId === product.productId
+      (p) => p.rfpProductId === product.rfpProductId
     );
 
     if (!productExists) {
@@ -307,7 +309,7 @@ const RFPForm: React.FC = () => {
         rfpProducts: [
           ...prevData.rfpProducts,
           {
-            productId: String(product.productId),
+            rfpProductId: String(product.rfpProductId),
             quantity: 1,
             specification: product.specification,
             name: product.name,
@@ -318,7 +320,7 @@ const RFPForm: React.FC = () => {
       setSearchProductTerm("");
       setFetchedProducts([]);
     } else {
-      console.warn(`Product with ID ${product.productId} already exists.`);
+      console.warn(`Product with ID ${product.rfpProductId} already exists.`);
     }
   };
 
@@ -355,6 +357,16 @@ const RFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    console.log("##########Form data", JSON.stringify(formData));
+
+    const validation = FirstRFPSchema.safeParse(formData);
+
+    if (!validation.success) {
+      console.log("################ validation error", validation.error);
+
+      return { error: "Invalid fields!" } as const;
+    }
 
     if (!validateForm()) {
       toast({
@@ -598,7 +610,7 @@ const RFPForm: React.FC = () => {
                   <ul>
                     {fetchedProducts.map((product) => (
                       <li
-                        key={product.productId}
+                        key={product.rfpProductId}
                         className="py-1 cursor-pointer hover:bg-gray-200"
                         onClick={() => {
                           if (product) {
@@ -617,7 +629,7 @@ const RFPForm: React.FC = () => {
 
               {approvedProducts.map((product, index) => (
                 <div
-                  key={product.productId}
+                  key={product.rfpProductId}
                   className="flex items-center space-x-2 mb-2"
                 >
                   <div className="flex flex-col">
@@ -804,6 +816,8 @@ const RFPForm: React.FC = () => {
           </Card>
           <div className="flex justify-end space-x-4 mr-10">
             {/* <Button
+          <div className="flex justify-end space-x-4 mr-10">
+            {/* <Button
           type="button"
           className="px-4 py-2 rounded-lg bg-blue-700"
           onClick={handleUpdate}
@@ -819,7 +833,16 @@ const RFPForm: React.FC = () => {
               {loading ? "Submitting..." : "Save Draft RFP"}
             </Button>
           </div>
+            <Button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-green-700"
+              disabled={loading}
+            >
+              {loading ? "Submitting..." : "Save Draft RFP"}
+            </Button>
+          </div>
 
+          {error && <div className="text-red-500">{error}</div>}
           {error && <div className="text-red-500">{error}</div>}
         </CardContent>
       </Card>

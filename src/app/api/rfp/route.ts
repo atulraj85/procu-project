@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
         rfpId: createdRFP.id,
         quantity: rfpProduct.quantity,
-        productId: rfpProduct.productId,
+        productId: rfpProduct.rfpProductId,
         updatedAt: new Date(),
       }));
       if (rfpProductValues && rfpProductValues.length > 0) {
