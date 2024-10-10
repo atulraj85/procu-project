@@ -15,7 +15,7 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
-  productId: string;
+  rfpProductId: string;
   name?: string;
   modelNo?: string;
   quantity: number;
@@ -138,15 +138,18 @@ const EditRFPForm: React.FC = () => {
         setState(extractedState);
         setCountry(extractedCountry);
         setZipCode(extractedZipCode);
-
+        console.log("22222222222222", rfpData.products);
         // Update approved products
         const formattedProducts = rfpData.products.map((product: any) => ({
-          productId: product.rfpProductId,
+          rfpProductId: product.rfpProductId,
           name: product.name,
           modelNo: product.modelNo,
           quantity: product.quantity,
           specification: product.description,
         }));
+        console.log("22222222222222",formattedProducts);
+
+
         setApprovedProducts(formattedProducts);
 
         // Update approved users
@@ -169,8 +172,8 @@ const EditRFPForm: React.FC = () => {
             mobile: rfpData.createdBy.mobile,
           });
         }
-    console.log("rfp data",rfpData);
-    
+        console.log("rfp data", rfpData);
+
         // Update form data
         setFormData({
           requirementType: rfpData.requirementType,
@@ -224,7 +227,7 @@ const EditRFPForm: React.FC = () => {
         } else if (entity === "products") {
           const formattedProducts = data.map((product: any) => ({
             ...product,
-            productId: product.productId || product.id || String(product._id),
+            rfpProductId: product.rfpProductId,
           }));
           setFetchedProducts(formattedProducts);
         }
@@ -278,13 +281,13 @@ const EditRFPForm: React.FC = () => {
 
     // Log product ID and changed value when updating specification
     if (field === "specification") {
-      console.log("Product ID:", product.productId);
+      console.log("Product ID:", product.rfpProductId);
       console.log("New specification value:", value);
-      // const response =  updateProduct(product.productId ,{
+      // const response =  updateProduct(product.rfpProductId ,{
       //   specification: value,
       // });
       // let newForm={
-      //   id : product.productId,
+      //   id : product.rfpProductId,
       //   specification :value
 
       // }
@@ -296,8 +299,8 @@ const EditRFPForm: React.FC = () => {
     setFormData((prevData) => ({
       ...prevData,
       rfpProducts: updatedProducts.map(
-        ({ productId, quantity, specification, name, modelNo }) => ({
-          productId,
+        ({ rfpProductId, quantity, specification, name, modelNo }) => ({
+          rfpProductId,
           quantity,
           specification,
           name,
@@ -341,7 +344,7 @@ const EditRFPForm: React.FC = () => {
 
   const addProduct = (product: RFPProduct) => {
     const productExists = approvedProducts.some(
-      (p) => p.productId === product.productId
+      (p) => p.rfpProductId === product.rfpProductId
     );
 
     if (!productExists) {
@@ -389,6 +392,19 @@ const EditRFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+
+    
+
+    if (!validateForm()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log("##########Form data", JSON.stringify(formData));
 
     const validation = FirstRFPSchema.safeParse(formData);
@@ -399,26 +415,17 @@ const EditRFPForm: React.FC = () => {
       return { error: "Invalid fields!" } as const;
     }
 
-    if (!validateForm()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-  
     const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-    
+
     // Correctly format products, ensuring rfpProductId is included
-    const formattedProducts = approvedProducts.map(product => ({
-      rfpProductId: product.productId, // Use rfpProductId instead of productId
+    const formattedProducts = approvedProducts.map((product) => ({
+      rfpProductId: product.rfpProductId, // Use rfpProductId instead of rfpProductId
       quantity: product.quantity,
       description: product.specification, // Use description instead of specification
       name: product.name,
-      modelNo: product.modelNo
+      modelNo: product.modelNo,
     }));
-  
+
     const updatedFormData = {
       id: id1, // Include the ID in the request body if needed
       requirementType: formData.requirementType,
@@ -435,14 +442,14 @@ const EditRFPForm: React.FC = () => {
       },
       rfpProducts: formattedProducts, // Use 'products' instead of 'rfpProducts'
       approvers: formData.approvers,
-      additionalInstructions
+      additionalInstructions,
     };
 
     console.log("Sending updated form data:", JSON.stringify(updatedFormData));
-  
+
     setLoading(true);
     setError(null);
-  
+
     try {
       const response = await fetch(`/api/rfp/${id1}`, {
         method: "PUT",
@@ -451,19 +458,19 @@ const EditRFPForm: React.FC = () => {
         },
         body: JSON.stringify(updatedFormData),
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to update RFP");
       }
-  
+
       const responseData = await response.json();
       console.log("Updated RFP response:", responseData);
-  
+
       toast({
         title: "Success",
         description: "RFP updated successfully",
       });
-  
+
       router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
@@ -693,7 +700,7 @@ const EditRFPForm: React.FC = () => {
                   <ul>
                     {fetchedProducts.map((product) => (
                       <li
-                        key={product.productId}
+                        key={product.rfpProductId}
                         className="py-1 cursor-pointer hover:bg-gray-200"
                         onClick={() => {
                           if (product) {
@@ -712,7 +719,7 @@ const EditRFPForm: React.FC = () => {
 
               {approvedProducts.map((product, index) => (
                 <div
-                  key={product.productId}
+                  key={product.rfpProductId}
                   className="flex items-center space-x-2 mb-2"
                 >
                   <div className="flex flex-col">
