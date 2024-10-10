@@ -70,6 +70,8 @@ export async function PUT(
         .delete(ApproversListTable)
         .where(eq(ApproversListTable.rfpId, updatedRFP.id));
 
+      console.log("########## rfpProducts",JSON.stringify(rfpProducts));
+
       // Insert new products
       if (rfpProducts && rfpProducts.length > 0) {
         const rfpProductValues = rfpProducts.map((rfpProduct) => ({

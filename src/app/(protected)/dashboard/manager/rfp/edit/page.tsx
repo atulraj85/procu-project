@@ -1,23 +1,15 @@
 "use client";
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import SheetSide from "@/components/new-manager/Product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import SheetSide from "@/components/new-manager/Product";
-import { useRouter, useSearchParams } from "next/navigation";
 import { getTodayDate } from "@/lib/getTodayDate";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { saveProduct, updateProduct } from "@/actions/product/createProduct";
+import { X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -83,7 +75,7 @@ const EditRFPForm: React.FC = () => {
   const [country, setCountry] = useState<string>("");
   const [state, setState] = useState<string>("");
   const [city, setCity] = useState<string>("");
-  const [id, setId ] = useState<string>("");
+  const [id1, setId] = useState<string>("");
   const [zipCode, setZipCode] = useState<string>("");
   const [rfpId, setRfpId] = useState<string>("");
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
@@ -117,6 +109,7 @@ const EditRFPForm: React.FC = () => {
 
   const today = new Date().toISOString().split("T")[0];
 
+  //Getting RFP data
   useEffect(() => {
     const fetchRFPData = async () => {
       if (!urlRfpId) return;
@@ -137,7 +130,7 @@ const EditRFPForm: React.FC = () => {
         ] = rfpData.deliveryLocation.split(", ");
 
         setRfpId(rfpData.rfpId);
-        setId(rfpData.id)
+        setId(rfpData.id);
         setAddress(extractedAddress);
         setCity(extractedCity);
         setState(extractedState);
@@ -206,6 +199,7 @@ const EditRFPForm: React.FC = () => {
     fetchRFPData();
   }, [urlRfpId]);
 
+  //Approver, Product change
   const handleSearchChange = async (
     e: ChangeEvent<HTMLInputElement>,
     entity: string
@@ -243,6 +237,7 @@ const EditRFPForm: React.FC = () => {
     }
   };
 
+  // Address change
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -269,6 +264,7 @@ const EditRFPForm: React.FC = () => {
     }
   };
 
+  //Product change handler
   const handleProductChange = (
     index: number,
     field: keyof RFPProduct,
@@ -276,11 +272,11 @@ const EditRFPForm: React.FC = () => {
   ) => {
     const updatedProducts = [...approvedProducts];
     const product = updatedProducts[index];
-    
+
     // Log product ID and changed value when updating specification
-    if (field === 'specification') {
-      console.log('Product ID:', product.productId);
-      console.log('New specification value:', value);
+    if (field === "specification") {
+      console.log("Product ID:", product.productId);
+      console.log("New specification value:", value);
       // const response =  updateProduct(product.productId ,{
       //   specification: value,
       // });
@@ -289,24 +285,23 @@ const EditRFPForm: React.FC = () => {
       //   specification :value
 
       // }
-
     }
-    
+
     updatedProducts[index] = { ...product, [field]: value };
     setApprovedProducts(updatedProducts);
-  
-    setFormData((prevData) => ({
-      ...prevData,
-      rfpProducts: updatedProducts.map(
-        ({ productId, quantity, specification, name, modelNo }) => ({
-          productId,
-          quantity,
-          specification,
-          name,
-          modelNo,
-        })
-      ),
-    }));
+
+    // setFormData((prevData) => ({
+    //   ...prevData,
+    //   rfpProducts: updatedProducts.map(
+    //     ({ productId, quantity, specification, name, modelNo }) => ({
+    //       productId,
+    //       quantity,
+    //       specification,
+    //       name,
+    //       modelNo,
+    //     })
+    //   ),
+    // }));
   };
 
   const addApprover = (user: User) => {
@@ -416,8 +411,12 @@ const EditRFPForm: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    console.log("Editing RFP Data: ", JSON.stringify(updatedFormData));
+
     try {
-      const response = await fetch(`/api/rfp/${id}`, {
+
+
+      const response = await fetch(`/api/rfp/${id1}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -700,22 +699,26 @@ const EditRFPForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col w-[50%]">
-            <Label
-              className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                index > 0 ? "hidden" : "visible"
-              }`}
-            >
-              Product Description
-            </Label>
-            <Input
-              value={product.specification}
-              onChange={(e) =>
-                handleProductChange(index, "specification", e.target.value)
-              }
-              placeholder="Enter product description"
-              className="flex-1"
-            />
-          </div>
+                    <Label
+                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                        index > 0 ? "hidden" : "visible"
+                      }`}
+                    >
+                      Product Description
+                    </Label>
+                    <Input
+                      value={product.specification}
+                      onChange={(e) =>
+                        handleProductChange(
+                          index,
+                          "specification",
+                          e.target.value
+                        )
+                      }
+                      placeholder="Enter product description"
+                      className="flex-1"
+                    />
+                  </div>
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${

@@ -157,8 +157,7 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             mobile: true,
-            role: true
-
+            role: true,
           },
         },
       },
@@ -349,7 +348,7 @@ function formatRFPData(rfps: any[]) {
       name: rfp.user.name,
       email: rfp.user.email,
       mobile: rfp.user.mobile,
-      role:rfp.user.role
+      role: rfp.user.role,
     },
   }));
 }
