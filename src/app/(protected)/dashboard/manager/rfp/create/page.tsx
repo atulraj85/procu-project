@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { getTodayDate } from "@/lib/getTodayDate";
 import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
-import { X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
@@ -226,7 +226,7 @@ const RFPForm: React.FC = () => {
     const product = updatedProducts[index];
 
     if (field === "specification") {
-      setModifiedProducts((prev) => new Set(prev).add(product.productId));
+      setModifiedProducts((prev) => new Set(prev).add(product.rfpProductId));
     }
 
     updatedProducts[index] = { ...product, [field]: value };
@@ -446,7 +446,7 @@ const RFPForm: React.FC = () => {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        {/* <CardContent> */}
           <Card className="mb-4">
             <CardHeader>
               {rfpId && (
@@ -668,12 +668,12 @@ const RFPForm: React.FC = () => {
                         placeholder="Enter product description"
                         className="flex-1"
                       />
-                      {modifiedProducts.has(product.productId) && (
+                      {modifiedProducts.has(product.rfpProductId) && (
                         <Button
                           type="button"
                           onClick={() =>
                             handleProductUpdate(
-                              product.productId,
+                              product.rfpProductId,
                               product.specification as string
                             )
                           }
@@ -840,11 +840,11 @@ const RFPForm: React.FC = () => {
             >
               {loading ? "Submitting..." : "Save Draft RFP"}
             </Button>
-          </div>
+          {/* </div> */}
 
           {error && <div className="text-red-500">{error}</div>}
           {error && <div className="text-red-500">{error}</div>}
-        </CardContent>
+        {/* </CardContent> */}
       </Card>
     </form>
   );
