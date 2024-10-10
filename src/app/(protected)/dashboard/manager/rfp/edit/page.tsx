@@ -83,6 +83,7 @@ const EditRFPForm: React.FC = () => {
   const [country, setCountry] = useState<string>("");
   const [state, setState] = useState<string>("");
   const [city, setCity] = useState<string>("");
+  const [id, setId ] = useState<string>("");
   const [zipCode, setZipCode] = useState<string>("");
   const [rfpId, setRfpId] = useState<string>("");
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
@@ -136,6 +137,7 @@ const EditRFPForm: React.FC = () => {
         ] = rfpData.deliveryLocation.split(", ");
 
         setRfpId(rfpData.rfpId);
+        setId(rfpData.id)
         setAddress(extractedAddress);
         setCity(extractedCity);
         setState(extractedState);
@@ -415,7 +417,7 @@ const EditRFPForm: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/rfp/${urlRfpId}`, {
+      const response = await fetch(`/api/rfp/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
