@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
           with: {
             user: {
               columns: {
+                id:true,
                 name: true,
                 email: true,
                 mobile: true,
@@ -157,8 +158,7 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             mobile: true,
-            role: true
-
+            role: true,
           },
         },
       },
@@ -200,7 +200,6 @@ export async function POST(request: NextRequest) {
       dateOfOrdering,
       deliveryLocation,
       deliveryByDate,
-      userId,
       rfpProducts,
       approvers,
       rfpStatus,
@@ -246,7 +245,7 @@ export async function POST(request: NextRequest) {
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
         rfpId: createdRFP.id,
         quantity: rfpProduct.quantity,
-        productId: rfpProduct.productId,
+        productId: rfpProduct.rfpProductId,
         updatedAt: new Date(),
       }));
       if (rfpProductValues && rfpProductValues.length > 0) {
@@ -306,6 +305,7 @@ function formatRFPData(rfps: any[]) {
     approvers:
       rfp.approversLists?.map((approver: any) => ({
         name: approver.user.name,
+        id: approver.user.id,
         email: approver.user.email,
         mobile: approver.user.mobile,
       })) || [],
@@ -350,7 +350,7 @@ function formatRFPData(rfps: any[]) {
       name: rfp.user.name,
       email: rfp.user.email,
       mobile: rfp.user.mobile,
-      role:rfp.user.role
+      role: rfp.user.role,
     },
   }));
 }

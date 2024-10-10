@@ -1,4 +1,4 @@
-import { saveProduct } from "@/actions/product/createProduct";
+import { saveProduct, updateProduct } from "@/actions/product/createProduct";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,7 @@ export default function SheetSide() {
   const [modelNo, setModelNo] = useState<string>("");
   const [specification, setSpecification] = useState<string>("");
   const [productCategoryId, setProductCategoryId] = useState<string>("");
-  const [products, setProducts] = useState<Product[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [productCategories, setProductCategories] = useState<ProductCategory[]>(
     []
@@ -44,19 +44,19 @@ export default function SheetSide() {
   const [showCategoryForm, setShowCategoryForm] = useState<boolean>(false);
 
   useEffect(() => {
-    fetchProducts();
+    // fetchProducts();
     fetchProductCategories();
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch("/api/product");
-      const data: Product[] = await response.json();
-      setProducts(data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  };
+  // const fetchProducts = async () => {
+  //   try {
+  //     const response = await fetch("/api/product");
+  //     const data: Product[] = await response.json();
+  //     // setProducts(data);
+  //   } catch (error) {
+  //     console.error("Error fetching products:", error);
+  //   }
+  // };
 
   const fetchProductCategories = async () => {
     try {
