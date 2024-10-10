@@ -394,7 +394,7 @@ const EditRFPForm: React.FC = () => {
     e.preventDefault();
 
 
-    
+
 
     if (!validateForm()) {
       toast({
@@ -512,171 +512,133 @@ const EditRFPForm: React.FC = () => {
                 </div>
               )}
             </CardHeader>
-            <CardContent className="grid grid-cols-4 gap-2">
-              <div className="space-y-1 text-[19px]">
-                <Label>Requirement Type</Label>
-                <div className="flex space-x-4 mt-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="product"
-                      name="requirementType"
-                      value="Product"
-                      checked={formData.requirementType === "Product"}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          requirementType: e.target.value,
-                        })
-                      }
-                    />
-                    <Label htmlFor="product">Product</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="service"
-                      name="requirementType"
-                      value="Service"
-                      checked={formData.requirementType === "Service"}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          requirementType: e.target.value,
-                        })
-                      }
-                    />
-                    <Label htmlFor="service">Service</Label>
-                  </div>
-                </div>
-                {errors.requirementType && (
-                  <p className="text-red-500 text-sm">
-                    {errors.requirementType}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deliveryByDate">Expected Delivery Date</Label>
-                <Input
-                  id="deliveryByDate"
-                  name="deliveryByDate"
-                  type="date"
-                  min={today}
-                  value={formData.deliveryByDate}
-                  onChange={handleInputChange}
-                  className={errors.deliveryByDate ? "border-red-500" : ""}
-                />
-                {errors.deliveryByDate && (
-                  <p className="text-red-500 text-sm">
-                    {errors.deliveryByDate}
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="mb-4">
-            <CardHeader>
-              <div className="flex justify-between">
-                <div className="text-md">
-                  <p className="text-md text-muted-foreground">
-                    Approver Details (for GRN)
-                  </p>
-                </div>
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="Search Approvers..."
-                    value={searchApproverTerm}
-                    onChange={(e) => handleSearchChange(e, "users")}
-                    className="flex-1"
-                  />
-                </div>
-              </div>
-              {errors.approvers && (
-                <p className="text-red-500 text-sm">{errors.approvers}</p>
-              )}
-            </CardHeader>
+                 
             <CardContent>
-              {fetchedUsers.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="font-semibold">Fetched Users:</h3>
-                  <ul>
-                    {fetchedUsers.map((user) => (
-                      <li
-                        key={user.id}
-                        className="py-1 cursor-pointer hover:bg-gray-200"
-                        onClick={() => addApprover(user)}
-                      >
-                        {user.name} | {user.email} | {user.mobile}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+  {/* All sections in one row */}
+  <div className="grid grid-cols-3 gap-6">
+    {/* Requirement Type Section */}
+    <div className="space-y-4">
+      <Label className="text-base font-medium">Requirement Type</Label>
+      <div className="flex space-x-6">
+        <div className="flex items-center space-x-2">
+          <input
+            type="radio"
+            id="product"
+            name="requirementType"
+            value="Product"
+            checked={formData.requirementType === "Product"}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                requirementType: e.target.value,
+              })
+            }
+            className="text-primary focus:ring-primary h-4 w-4"
+          />
+          <Label htmlFor="product" className="text-sm">Product</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <input
+            type="radio"
+            id="service"
+            name="requirementType"
+            value="Service"
+            checked={formData.requirementType === "Service"}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                requirementType: e.target.value,
+              })
+            }
+            className="text-primary focus:ring-primary h-4 w-4"
+          />
+          <Label htmlFor="service" className="text-sm">Service</Label>
+        </div>
+      </div>
+    </div>
 
-              {approvedUsers.map((approver, index) => (
-                <div key={index} className="flex items-center space-x-2 mb-2">
-                  <div className="flex flex-col text-md">
-                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Approver Name
-                      </namLabel> */}
-                    <h1>Name:-{approver.name} |</h1>
-                    {/* <Input
-                        disabled
-                        value={approver.name}
-                        placeholder="Name"
-                        className="flex-1"
-                      /> */}
-                  </div>
-                  <div className="flex flex-col text-md">
-                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Email
-                      </Label>/ */}
-                    <h1>Email:-{approver.email} |</h1>
-                    {/* <Input
-                        disabled
-                        value={approver.email}
-                        placeholder="Email"
-                        className="flex-1"
-                      /> */}
-                  </div>
-                  <div className="flex flex-col text-md">
-                    {/* <Label className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}>
-                        Phone
-                      </Label> */}
-                    {/* <Input
-                        disabled
-                        value={approver.mobile}
-                        placeholder="Phone"
-                        className="flex-1"
-                      /> */}
-                    <h1>Mobile:-{approver.mobile}</h1>
-                  </div>
-                  <div className="flex flex-col">
-                    {/* <Label className={`mb-8 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}></Label> */}
-                    <Button
-                      type="button"
-                      onClick={() => removeApprover(index)}
-                      variant="outline"
-                      size="icon"
-                      className="text-red-500"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
+    {/* Delivery Date Section */}
+    <div className="space-y-1">
+      <Label htmlFor="deliveryByDate" className="text-base font-medium">
+        Expected Delivery Date
+      </Label>
+      <Input
+        id="deliveryByDate"
+        name="deliveryByDate"
+        type="date"
+        min={today}
+        value={formData.deliveryByDate}
+        onChange={handleInputChange}
+        className={`${errors.deliveryByDate ? "border-red-500" : "w-[60%]"}`}
+      />
+      {errors.deliveryByDate && (
+        <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
+      )}
+    </div>
+
+    {/* Approvers Section */}
+    <div className="space-y-4">
+      <div>
+        <Label className="text-base font-medium mb-2 block">Approvers</Label>
+        <Input
+          type="text"
+          placeholder="Search Approvers..."
+          value={searchApproverTerm}
+          onChange={(e) => handleSearchChange(e, "users")}
+          // className="w-full"
+        />
+      </div>
+
+      {/* Fetched Users */}
+      {fetchedUsers.length > 0 && (
+        <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+          <ul className="space-y-1">
+            {fetchedUsers.map((user) => (
+              <li
+                key={user.id}
+                className="py-1.5 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
+                onClick={() => {
+                  addApprover(user);
+                  setSearchApproverTerm("");
+                  setFetchedUsers([]);
+                }}
+              >
+                {user.name} | {user.email} | {user.mobile}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Selected Approvers */}
+      <div className="space-y-2 max-h-40 overflow-y-auto">
+        {approvedUsers.map((approver, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between px-2 rounded-md"
+          >
+            <div className="grid grid-cols-2 flex-1">
+              <span className="text-sm truncate">{approver.name}</span>
+              <span className="text-sm truncate">{approver.email}</span>
+            </div>
+            <Button
+              type="button"
+              onClick={() => removeApprover(index)}
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:text-red-700 ml-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</CardContent>
           </Card>
+
+          
 
           <Card className="mb-4">
             <CardHeader>
