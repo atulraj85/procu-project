@@ -75,7 +75,7 @@ export async function PUT(
         const rfpProductValues = rfpProducts.map((rfpProduct) => ({
           rfpId: updatedRFP.id,
           quantity: rfpProduct.quantity,
-          productId: rfpProduct.productId,
+          productId: rfpProduct.rfpProductId,
           updatedAt: new Date(),
         }));
         await tx.insert(RFPProductTable).values(rfpProductValues);

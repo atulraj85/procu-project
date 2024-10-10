@@ -133,7 +133,7 @@ export interface RequestBody {
   userId: string;
   rfpStatus: RFPStatus;
   preferredVendorId: string;
-  rfpProducts: { productId: string; quantity: number }[];
+  rfpProducts: { rfpProductId: string; quantity: number }[];
   approvers: { approverId: string }[];
   quotations: { vendorId: string; billAmount: number }[]; // New field for quotations
 }

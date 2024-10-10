@@ -1,22 +1,16 @@
 "use client";
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import SheetSide from "@/components/new-manager/Product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import SheetSide from "@/components/new-manager/Product";
-import { useRouter, useSearchParams } from "next/navigation";
 import { getTodayDate } from "@/lib/getTodayDate";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
+import { X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -363,6 +357,15 @@ const EditRFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("##########Form data", JSON.stringify(formData));
+
+    const validation = FirstRFPSchema.safeParse(formData);
+
+    if (!validation.success) {
+      console.log("################ validation error", validation.error);
+
+      return { error: "Invalid fields!" } as const;
+    }
 
     if (!validateForm()) {
       toast({
