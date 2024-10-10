@@ -27,7 +27,7 @@ interface Approver {
 }
 
 type User = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -149,7 +149,7 @@ const EditRFPForm: React.FC = () => {
 
         // Update approved users
         const formattedApprovers = rfpData.approvers.map((approver: any) => ({
-          id: approver.email,
+          id: approver.id,
           name: approver.name,
           email: approver.email,
           role: "Approver",
@@ -160,14 +160,15 @@ const EditRFPForm: React.FC = () => {
         // Set user info
         if (rfpData.createdBy) {
           setUserInfo({
-            id: 1,
+            id: rfpData.createdBy.id,
             name: rfpData.createdBy.name,
             email: rfpData.createdBy.email,
             role: rfpData.createdBy.role,
             mobile: rfpData.createdBy.mobile,
           });
         }
-
+    console.log("rfp data",rfpData);
+    
         // Update form data
         setFormData({
           requirementType: rfpData.requirementType,
@@ -178,10 +179,10 @@ const EditRFPForm: React.FC = () => {
           rfpStatus: rfpData.rfpStatus,
           rfpProducts: formattedProducts,
           approvers: rfpData.approvers.map((approver: any) => ({
-            approverId: approver.email,
-            name: approver.name,
-            email: approver.email,
-            mobile: approver.mobile,
+            approverId: approver.id,
+            // name: approver.name,
+            // email: approver.email,
+            // mobile: approver.mobile,
           })),
           deliveryLocationDetails: {
             country: extractedCountry,
@@ -290,18 +291,18 @@ const EditRFPForm: React.FC = () => {
     updatedProducts[index] = { ...product, [field]: value };
     setApprovedProducts(updatedProducts);
 
-    // setFormData((prevData) => ({
-    //   ...prevData,
-    //   rfpProducts: updatedProducts.map(
-    //     ({ productId, quantity, specification, name, modelNo }) => ({
-    //       productId,
-    //       quantity,
-    //       specification,
-    //       name,
-    //       modelNo,
-    //     })
-    //   ),
-    // }));
+    setFormData((prevData) => ({
+      ...prevData,
+      rfpProducts: updatedProducts.map(
+        ({ productId, quantity, specification, name, modelNo }) => ({
+          productId,
+          quantity,
+          specification,
+          name,
+          modelNo,
+        })
+      ),
+    }));
   };
 
   const addApprover = (user: User) => {
@@ -316,7 +317,7 @@ const EditRFPForm: React.FC = () => {
         approvers: [
           ...prevData.approvers,
           {
-            approverId: user.email,
+            approverId: user.id,
             name: user.name,
             email: user.email,
             mobile: user.mobile,
@@ -386,7 +387,7 @@ const EditRFPForm: React.FC = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     if (!validateForm()) {
       toast({
         title: "Error",
@@ -395,27 +396,43 @@ const EditRFPForm: React.FC = () => {
       });
       return;
     }
-
+  
     const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
+    
+    // Correctly format products, ensuring rfpProductId is included
+    const formattedProducts = approvedProducts.map(product => ({
+      rfpProductId: product.productId, // Use rfpProductId instead of productId
+      quantity: product.quantity,
+      description: product.specification, // Use description instead of specification
+      name: product.name,
+      modelNo: product.modelNo
+    }));
+  
     const updatedFormData = {
-      ...formData,
+      id: id1, // Include the ID in the request body if needed
+      requirementType: formData.requirementType,
+      dateOfOrdering: formData.dateOfOrdering,
       deliveryLocation,
+      deliveryByDate: formData.deliveryByDate,
+      lastDateToRespond: formData.lastDateToRespond,
+      rfpStatus: formData.rfpStatus,
       deliveryLocationDetails: {
         country,
         state,
         city,
         zipCode,
       },
+      rfpProducts: formattedProducts, // Use 'products' instead of 'rfpProducts'
+      approvers: formData.approvers,
+      additionalInstructions
     };
 
+    console.log("Sending updated form data:", JSON.stringify(updatedFormData));
+  
     setLoading(true);
     setError(null);
-
-    console.log("Editing RFP Data: ", JSON.stringify(updatedFormData));
-
+  
     try {
-
-
       const response = await fetch(`/api/rfp/${id1}`, {
         method: "PUT",
         headers: {
@@ -423,18 +440,22 @@ const EditRFPForm: React.FC = () => {
         },
         body: JSON.stringify(updatedFormData),
       });
-
+  
       if (!response.ok) {
         throw new Error("Failed to update RFP");
       }
-
+  
+      const responseData = await response.json();
+      console.log("Updated RFP response:", responseData);
+  
       toast({
         title: "Success",
         description: "RFP updated successfully",
       });
-
+  
       router.push("/dashboard/manager");
     } catch (err) {
+      console.error("Error updating RFP:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -583,8 +604,8 @@ const EditRFPForm: React.FC = () => {
                         index > 0 ? "hidden" : "visible"
                       }`}>
                         Approver Name
-                      </Label> */}
-                    <h1>Mobile:-{approver.name} |</h1>
+                      </namLabel> */}
+                    <h1>Name:-{approver.name} |</h1>
                     {/* <Input
                         disabled
                         value={approver.name}
@@ -598,7 +619,7 @@ const EditRFPForm: React.FC = () => {
                       }`}>
                         Email
                       </Label>/ */}
-                    <h1>Mobile:-{approver.email} |</h1>
+                    <h1>Email:-{approver.email} |</h1>
                     {/* <Input
                         disabled
                         value={approver.email}

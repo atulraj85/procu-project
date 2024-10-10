@@ -35,6 +35,8 @@ export async function PUT(
       rfpStatus,
     }: RequestBody = await request.json();
 
+    console.log("###### rfpProducts", rfpProducts);
+
     // Validate the status
     if (!Object.values(RFPStatus).includes(rfpStatus)) {
       return NextResponse.json(
@@ -70,7 +72,7 @@ export async function PUT(
         .delete(ApproversListTable)
         .where(eq(ApproversListTable.rfpId, updatedRFP.id));
 
-      console.log("########## rfpProducts",JSON.stringify(rfpProducts));
+      console.log("########## rfpProducts", JSON.stringify(rfpProducts));
 
       // Insert new products
       if (rfpProducts && rfpProducts.length > 0) {

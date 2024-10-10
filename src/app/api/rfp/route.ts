@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
           with: {
             user: {
               columns: {
+                id:true,
                 name: true,
                 email: true,
                 mobile: true,
@@ -304,6 +305,7 @@ function formatRFPData(rfps: any[]) {
     approvers:
       rfp.approversLists?.map((approver: any) => ({
         name: approver.user.name,
+        id: approver.user.id,
         email: approver.user.email,
         mobile: approver.user.mobile,
       })) || [],
