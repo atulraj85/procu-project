@@ -124,7 +124,7 @@ export default function AdminDashboard() {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px]" disabled={user.role === 'ADMIN'}>
                       <SelectValue placeholder={user.role} />
                     </SelectTrigger>
                     <SelectContent>

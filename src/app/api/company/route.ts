@@ -8,19 +8,23 @@ import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
-// // Ensure the API route does not use bodyParser
-// export const config = {
-//   api: {
-//     bodyParser: false,
-//   },
-// };
+// Type Definitions
+type SortBy = keyof InferSelectModel<typeof CompanyTable>;
+type SortDirection = "asc" | "desc";
+type WhereField = keyof InferSelectModel<typeof CompanyTable>;
+
+const DEFAULT_SORTING_FIELD: SortBy = "id";
+const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 
 export async function POST(request: Request) {
   try {
-    console.log("in the compnay register route");
-    console.log(request);
+    console.log("in the company register route");
     const reqData = await request.formData();
     console.log(reqData);
+    
+
+   
+  
     
 
     // Extract fields from FormData
@@ -28,7 +32,7 @@ export async function POST(request: Request) {
     const files: Record<string, File[]> = {};
 
     // Convert FormData entries to an array and iterate
-    console.log("conveting form data into array");
+    console.log("converting form data into array");
     const entries = Array.from(reqData.entries());
     for (const [key, value] of entries) {
       if (value instanceof File) {
@@ -40,6 +44,17 @@ export async function POST(request: Request) {
         fields[key] = value as string;
       }
     }
+
+    const gst = fields.company_gstn;
+
+     // first find this compnay alreadi registerd or not
+     const result = await db.select().from(CompanyTable).where(eq(CompanyTable.gst, gst));
+
+     if(result){
+      console.log(result);
+      return NextResponse.json({error:"Compnay Already Registerd"}, {status:409});
+     }
+
 
     // Define paths for saving files
     const companyAssetsPath = path.join(process.cwd(), "public/company");
@@ -56,23 +71,29 @@ export async function POST(request: Request) {
       : null;
 
     // Create a new company entry in the database
-    console.log("error while creating company in db");
-    const company = db.insert(CompanyTable).values({
-      name: fields.name,
-      gst: fields.GST,
-      gstAddress: fields.gstAddress,
-      email: fields.email,
-      phone: fields.phone,
-      website: fields.website,
-      industry: fields.industry,
-      foundedDate: fields.foundedDate ? new Date(fields.foundedDate) : null,
-      status: fields.status,
-      logo: logoPath ? `/company/${path.basename(logoPath)}` : null, // Store the relative path
-      stamp: stampPath ? `/company/${path.basename(stampPath)}` : null, // Store the relative path
-      updatedAt: new Date(),
-    });
+    console.log("Creating company in db");
 
-    return NextResponse.json(company, { status: 201 });
+    console.log("#################### fields", fields);
+    const [insertedCompany] = await db
+      .insert(CompanyTable)
+      .values({
+        name: fields.company_name,
+        gst: fields.company_gstn,
+        gstAddress: fields.address,
+        email: fields.email,
+        phone: fields.phone,
+        // website: fields.website,
+        // industry: fields.industry,
+        // foundedDate: fields.foundedDate ? new Date(fields.foundedDate) : null,
+        // status: fields.status,
+        logo: logoPath ? `/company/${path.basename(logoPath)}` : null,
+        stamp: stampPath ? `/company/${path.basename(stampPath)}` : null,
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    // Return only the inserted company data
+    return NextResponse.json(insertedCompany, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -82,13 +103,6 @@ export async function POST(request: Request) {
   }
 }
 
-// Type Definitions
-type SortBy = keyof InferSelectModel<typeof CompanyTable>;
-type SortDirection = "asc" | "desc";
-type WhereField = keyof InferSelectModel<typeof CompanyTable>;
-
-const DEFAULT_SORTING_FIELD: SortBy = "id";
-const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;

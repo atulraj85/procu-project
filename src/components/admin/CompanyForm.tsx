@@ -95,19 +95,17 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       }
       const data = await response.json();
       setCompanyData(data);
-      const company = data;
-      setCompanyData(data);
-      console.log(data);
+      console.log(":compnay data",data);
 
-      form.reset({
-        email: company.email,
-        phone: company.phone,
-        website: company.website,
-        industry: company.industry,
-        status: company.status,
-        logo: undefined,
-        stamp: undefined,
-      });
+      // form.reset({
+      //   email: company.email,
+      //   phone: company.phone,
+      //   website: company.website,
+      //   industry: company.industry,
+      //   status: company.status,
+      //   logo: undefined,
+      //   stamp: undefined,
+      // });
     } catch (error) {
       console.error("Error fetching company details:", error);
       toast({
@@ -156,6 +154,8 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         method: "PUT",
         body: formData,
       });
+        
+      console.log(response);
 
       if (response.ok) {
         form.reset();
@@ -196,6 +196,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
   return (
     <div>
+      <h1 className="text-2xl font-bold mb-4">Company Details</h1>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-4">
           <Card>
@@ -215,7 +216,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                     <span className="text-xl">Address:</span>{" "}
                     {companyData.gstAddress
                       ? companyData.gstAddress
-                      : " address not come from backend "}
+                      : ""}
                   </strong>
                 </div>
               </div>
@@ -278,13 +279,13 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select
+                      <Select 
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        defaultValue={companyData.status}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a status" />
+                            <SelectValue placeholder="status" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
