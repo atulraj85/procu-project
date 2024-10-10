@@ -126,13 +126,13 @@ const VendorSelector = ({
 
   return (
     <div>
-      <div className="flex items-center mb-2 gap-2">
+      <div className="flex items-center w-full">
         <div className="font-bold">Vendor Details:</div>
         {error && <div className="text-red-500 ml-2">{error}</div>}
         {approvedVendor && (
           <div className="flex items-center text-sm ml-2">
             <div className="text-slate-700">
-              {`Vendor Name: ${approvedVendor.companyName}, Email: ${approvedVendor.email}, Phone: ${approvedVendor.mobile}, GSTIN: ${approvedVendor.gstin}`}
+              {`${approvedVendor.companyName} | Email: ${approvedVendor.email} | Phone: ${approvedVendor.mobile}`}
             </div>
             <Button
               type="button"
