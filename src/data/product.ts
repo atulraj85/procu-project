@@ -28,15 +28,12 @@ export async function createProduct(data: ProductData) {
   }
 }
 
-export async function putProduct(id: string, data: ProductData) {
+export async function putProduct(id: string, data: { specification: string }) {
   try {
     const results = await db
       .update(ProductTable)
       .set({
-        name: data.name,
-        modelNo: data.modelNo,
         specification: data.specification,
-        productCategoryId: data.productCategoryId,
         updatedAt: new Date(),
       })
       .where(eq(ProductTable.id, id)) // Assuming 'id' is the unique identifier for the product

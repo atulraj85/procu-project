@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Sheet, X } from "lucide-react";
+import { Plus, Save, Sheet, X } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import SheetSide from "@/components/new-manager/Product";
 import { useRouter } from "next/navigation";
@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { saveProduct, updateProduct } from "@/actions/product/createProduct";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -97,6 +98,7 @@ const RFPForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [modifiedProducts, setModifiedProducts] = useState<Set<string>>(new Set());
   const router = useRouter();
   const userId = "";
   const [userInfo, setUserInfo] = useState<User>();
@@ -224,15 +226,45 @@ const RFPForm: React.FC = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // const handleProductChange = (
+  //   index: number,
+  //   field: keyof RFPProduct,
+  //   value: RFPProduct[keyof RFPProduct]
+  // ) => {
+  //   const updatedProducts = [...approvedProducts];
+  //   updatedProducts[index] = { ...updatedProducts[index], [field]: value };
+  //   setApprovedProducts(updatedProducts);
+
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     rfpProducts: updatedProducts.map(
+  //       ({ productId, quantity, specification, name, modelNo }) => ({
+  //         productId,
+  //         quantity,
+  //         specification,
+  //         name,
+  //         modelNo,
+  //       })
+  //     ),
+  //   }));
+  // };
+
+  // Add function to handle form updates
   const handleProductChange = (
     index: number,
     field: keyof RFPProduct,
     value: RFPProduct[keyof RFPProduct]
   ) => {
     const updatedProducts = [...approvedProducts];
-    updatedProducts[index] = { ...updatedProducts[index], [field]: value };
+    const product = updatedProducts[index];
+    
+    if (field === 'specification') {
+      setModifiedProducts(prev => new Set(prev).add(product.productId));
+    }
+    
+    updatedProducts[index] = { ...product, [field]: value };
     setApprovedProducts(updatedProducts);
-
+  
     setFormData((prevData) => ({
       ...prevData,
       rfpProducts: updatedProducts.map(
@@ -247,70 +279,39 @@ const RFPForm: React.FC = () => {
     }));
   };
 
-  // Add function to handle form updates
-  const handleUpdate = async () => {
-    if (!validateForm()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-    const updatedFormData = {
-      ...formData,
-      deliveryLocation,
-      deliveryLocationDetails: {
-        country,
-        state,
-        city,
-        zipCode,
-      },
-    };
-
-    try {
-      const response = await fetch("/api/rfp", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedFormData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update RFP");
-      }
-
-      const result = await response.json();
-      if (result) {
-        toast({
-          title: "🎉 Update Successful!",
-          description: "Your RFP has been successfully updated.",
-        });
-        router.push("/dashboard/manager");
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Error updating RFP. Please try again later."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
+ 
   const addApprover = (user: User) => {
     setApprovedUsers((prevUsers) => [...prevUsers, user]);
     setFormData((prevData) => ({
       ...prevData,
       approvers: [...prevData.approvers, { approverId: String(user.id) }],
     }));
+  };
+  const handleProductUpdate = async (productId: string, specification: string) => {
+    try {
+      await updateProduct(productId, {
+        specification: specification,
+      });
+      
+      // Remove product from modified set after successful update
+      setModifiedProducts(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(productId);
+        return newSet;
+      });
+      
+      toast({
+        title: "Product Updated",
+        description: "Product specification has been successfully updated.",
+      });
+    } catch (error) {
+      console.error("Error updating product:", error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update product specification.",
+        variant: "destructive",
+      });
+    }
   };
 
   const removeApprover = (index: number) => {
@@ -696,39 +697,53 @@ const RFPForm: React.FC = () => {
                   key={product.productId}
                   className="flex items-center space-x-2 mb-2"
                 >
-                  <div className="flex flex-col">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Product
-                    </Label>
-                    <Input
-                      disabled
-                      value={product.name}
-                      placeholder="Name"
-                      className="flex-1"
-                    />
-                  </div>
-                  <div className="flex flex-col w-[50%]">
-            <Label
-              className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                index > 0 ? "hidden" : "visible"
-              }`}
+                <div className="flex flex-col">
+        <Label
+          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+            index > 0 ? "hidden" : "visible"
+          }`}
+        >
+          Product
+        </Label>
+        <Input
+          disabled
+          value={product.name}
+          placeholder="Name"
+          className="flex-1"
+        />
+      </div>
+      <div className="flex flex-col">
+        <Label
+          className={`mb-2 font-bold text-[16px] text-slate-700 ${
+            index > 0 ? "hidden" : "visible"
+          }`}
+        >
+          Product Description
+        </Label>
+        <div className="flex space-x-2">
+          <Input
+            value={product.specification}
+            onChange={(e) =>
+              handleProductChange(index, "specification", e.target.value)
+            }
+            placeholder="Enter product description"
+            className="flex-1"
+          />
+          {modifiedProducts.has(product.productId) && (
+          
+            <Button
+              type="button"
+              onClick={() => handleProductUpdate(product.productId, product.specification as string )}
+              className="bg-white hover:bg-white"
+
             >
-              Product Description
-            </Label>
-            <Input
-              value={product.specification}
-              onChange={(e) =>
-                handleProductChange(index, "specification", e.target.value)
-              }
-              placeholder="Enter product description"
-              className="flex-1"
-            />
-          </div>
-                  <div className="flex flex-col">
+              {/* Update */}
+              <Save size={20} strokeWidth={0.75} color="green" />
+            </Button>
+          )}
+        </div>
+      </div>
+                  <div className="flex flex-col w-1/12">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"

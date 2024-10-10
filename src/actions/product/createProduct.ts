@@ -1,7 +1,10 @@
 "use server";
 
 import { z } from "zod";
-import { ProductDataSchema } from "@/schemas/ProductSchema";
+import {
+  ProductDataSchema,
+  UpdateProductDataSchema,
+} from "@/schemas/ProductSchema";
 import { createProduct, putProduct } from "@/data/product";
 
 export async function saveProduct(data: z.infer<typeof ProductDataSchema>) {
@@ -23,9 +26,9 @@ export async function saveProduct(data: z.infer<typeof ProductDataSchema>) {
 
 export async function updateProduct(
   id: string,
-  data: z.infer<typeof ProductDataSchema>
+  data: z.infer<typeof UpdateProductDataSchema>
 ) {
-  const validation = ProductDataSchema.safeParse(data);
+  const validation = UpdateProductDataSchema.safeParse(data);
 
   if (!validation.success) {
     return { error: "Invalid fields!" } as const;

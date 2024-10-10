@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { saveProduct, updateProduct } from "@/actions/product/createProduct";
 
 interface RFPProduct {
   specification?: string | number | readonly string[] | undefined;
@@ -272,12 +273,37 @@ const EditRFPForm: React.FC = () => {
     value: RFPProduct[keyof RFPProduct]
   ) => {
     const updatedProducts = [...approvedProducts];
-    updatedProducts[index] = { ...updatedProducts[index], [field]: value };
-    setApprovedProducts(updatedProducts);
+    const product = updatedProducts[index];
+    
+    // Log product ID and changed value when updating specification
+    if (field === 'specification') {
+      console.log('Product ID:', product.productId);
+      console.log('New specification value:', value);
+      // const response =  updateProduct(product.productId ,{
+      //   specification: value,
+      // });
+      // let newForm={
+      //   id : product.productId,
+      //   specification :value
 
+      // }
+
+    }
+    
+    updatedProducts[index] = { ...product, [field]: value };
+    setApprovedProducts(updatedProducts);
+  
     setFormData((prevData) => ({
       ...prevData,
-      rfpProducts: updatedProducts,
+      rfpProducts: updatedProducts.map(
+        ({ productId, quantity, specification, name, modelNo }) => ({
+          productId,
+          quantity,
+          specification,
+          name,
+          modelNo,
+        })
+      ),
     }));
   };
 
@@ -636,7 +662,13 @@ const EditRFPForm: React.FC = () => {
                       <li
                         key={product.productId}
                         className="py-1 cursor-pointer hover:bg-gray-200"
-                        onClick={() => addProduct(product)}
+                        onClick={() => {
+                          if (product) {
+                            addProduct(product);
+                          } else {
+                            console.error("No Product selected");
+                          }
+                        }}
                       >
                         {product.name} | {product.modelNo}
                       </li>
@@ -666,20 +698,22 @@ const EditRFPForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col w-[50%]">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Product Description
-                    </Label>
-                    <Input
-                      // disabled
-                      value={product.specification}
-                      placeholder="Model"
-                      className="flex-1"
-                    />
-                  </div>
+            <Label
+              className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                index > 0 ? "hidden" : "visible"
+              }`}
+            >
+              Product Description
+            </Label>
+            <Input
+              value={product.specification}
+              onChange={(e) =>
+                handleProductChange(index, "specification", e.target.value)
+              }
+              placeholder="Enter product description"
+              className="flex-1"
+            />
+          </div>
                   <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
@@ -703,11 +737,11 @@ const EditRFPForm: React.FC = () => {
                     />
                   </div>
                   <div className="flex flex-col">
-                    <Label
+                    {/* <Label
                       className={`mb-8 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
                       }`}
-                    ></Label>
+                    ></Label> */}
                     <Button
                       type="button"
                       onClick={() => removeProduct(index)}
@@ -715,7 +749,7 @@ const EditRFPForm: React.FC = () => {
                       size="icon"
                       className="text-red-500"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4 " />
                     </Button>
                   </div>
                 </div>

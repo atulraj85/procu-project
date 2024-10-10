@@ -1,4 +1,4 @@
-import { saveProduct } from "@/actions/product/createProduct";
+import { saveProduct, updateProduct } from "@/actions/product/createProduct";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,6 +120,11 @@ export default function SheetSide() {
     }
 
     setIsAddingCategory(true);
+
+
+    
+
+
 
     try {
       const response = await fetch("/api/productCategory", {
