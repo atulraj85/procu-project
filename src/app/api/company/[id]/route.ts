@@ -48,6 +48,8 @@ export async function PUT(
     }
 
     const reqData = await request.formData();
+    console.log("requst data", reqData);
+    console.log("fomr entries",Object.fromEntries(reqData));
     const foundedDate = reqData.get("foundedDate") as string;
     // Extract company fields from FormData
     const fields: Record<string, string> = {};
@@ -77,8 +79,8 @@ export async function PUT(
     const updateData = {
       ...fields,
       ...(foundedDate ? { foundedDate: new Date(foundedDate) } : undefined),
-      ...(logoPath && { logo: logoPath }),
-      ...(stampPath && { stamp: stampPath }),
+      ...(logoPath !== "undefined" && { logo: logoPath }),
+      ...(stampPath !== "undefined" &&  { stamp: stampPath }),
     };
     // Remove invalid Date if foundedDate is falsy or an invalid date
     if (!foundedDate || isNaN(new Date(foundedDate).getTime())) {
@@ -96,7 +98,7 @@ export async function PUT(
     };
 
     // Update company.
-    // console.log("Updating company", updateData);
+    console.log("Updating company", updateData);
     await db
       .update(CompanyTable)
       .set({ ...updateData, updatedAt: new Date() })

@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { AddressformSchema } from "@/schemas/Company";
+import { AddressformSchema2 } from "@/schemas/Company";
 import {
   Select,
   SelectContent,
@@ -24,16 +24,18 @@ import {
 } from "@/components/ui/select";
 import Loader from "../shared/Loader";
 
-type FormValues = z.infer<typeof AddressformSchema>;
+type FormValues = z.infer<typeof AddressformSchema2>;
 
 interface AddressFormProps {
   companyId: string | null;
   isAddingAddress: () => void;
+  setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
+const NewAddress: React.FC<AddressFormProps> = ({
   companyId,
   isAddingAddress,
+  setRfpAddress
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -43,9 +45,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(AddressformSchema),
+    resolver: zodResolver(AddressformSchema2),
     defaultValues: {
-      addressName: "",
+    //   addressName: "", 
       street: "",
       country: "INDIA",
       state: "",
@@ -56,51 +58,67 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
-      console.log("fomr data", data);
-    const formDataWithAddressType = {
-      ...data,
-      addressType: "SHIPPING",
-      state: currentState,
-    };
 
-    try {
-      const response = await fetch(`/api/company/${companyId}/address`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formDataWithAddressType),
-      });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Address added successfully:", result);
-        toast({
-          title: "Success",
-          description: "Address added successfully!",
-          duration: 3000,
-        });
-        isAddingAddress();
-      } else {
-        console.error("Failed to add address:", response.statusText);
-        toast({
-          title: "Error",
-          description: "Failed to add address. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    const {street, city, postalCode, state, country  } = data;
+
+    const address = `${street}, ${city}, ${postalCode}, ${state}, ${country}`;
+    console.log(address);
+
+    setRfpAddress(address);
+
+    toast({
+            title: "Success",
+            description: "Delivery Address Selected",
+            
+          });
+          setIsSaving(false);
+
+    //   console.log("fomr data", data);
+    // const formDataWithAddressType = {
+    //   ...data,
+    //   addressType: "SHIPPING",
+    //   state: currentState,
+    // };
+
+    // try {
+    //   const response = await fetch(`/api/company/${companyId}/address`, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     body: JSON.stringify(formDataWithAddressType),
+    //   });
+
+    //   if (response.ok) {
+    //     const result = await response.json();
+    //     console.log("Address added successfully:", result);
+    //     toast({
+    //       title: "Success",
+    //       description: "Address added successfully!",
+    //       duration: 3000,
+    //     });
+    //     isAddingAddress();
+    //   } else {
+    //     console.error("Failed to add address:", response.statusText);
+    //     toast({
+    //       title: "Error",
+    //       description: "Failed to add address. Please try again.",
+    //       variant: "destructive",
+    //       duration: 3000,
+    //     });
+    //   }
+    // } catch (error) {
+    //   console.error("Error submitting form:", error);
+    //   toast({
+    //     title: "Error",
+    //     description: "An error occurred. Please try again.",
+    //     variant: "destructive",
+    //     duration: 3000,
+    //   });
+    // } finally {
+    //   setIsSaving(false);
+    // }
   };
 
   useEffect(() => { 
@@ -185,8 +203,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
+              <div className="grid grid-cols-1 gap-4">
+                {/* <FormField
                   control={form.control}
                   name="addressName"
                   render={({ field }) => (
@@ -201,7 +219,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
                 <FormField
                   control={form.control}
                   name="street"
@@ -308,7 +326,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                 className="mt-4 w-28 my-4 bg-primary"
                 disabled={isSaving}
               >
-                {isSaving ? "Saving..." : "ADD"}
+                {isSaving ? "Saving..." : "New Address"}
               </Button>
             </div>
           </CardContent>
@@ -318,4 +336,4 @@ const AddressForm: React.FC<AddressFormProps> = ({
   );
 };
 
-export default AddressForm;
+export default NewAddress;

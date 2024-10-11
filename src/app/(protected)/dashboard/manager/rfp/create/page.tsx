@@ -1,6 +1,6 @@
 "use client";
 import { updateProduct } from "@/actions/product/createProduct";
-import AddressUpdate from "@/components/admin/AddressUpdate";
+import CompanyAddresses from "@/components/rfpAddress/CompanyAddresses";
 import SheetSide from "@/components/new-manager/Product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,6 +79,7 @@ const RFPForm: React.FC = () => {
   const [state, setState] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [zipCode, setZipCode] = useState<string>("");
+
   const [rfpId, setRfpId] = useState<string>("");
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
   const [searchProductTerm, setSearchProductTerm] = useState("");
@@ -103,6 +104,8 @@ const RFPForm: React.FC = () => {
   const userId = currentUser?.id;
 
   const [userInfo, setUserInfo] = useState<User>();
+
+  const [rfpAddress, setRfpAddress] = useState<string>("");
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -382,16 +385,18 @@ const RFPForm: React.FC = () => {
       return { error: "Invalid fields!" } as const;
     }
 
-    const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
+    // const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
+
+    console.log(rfpAddress);
     const updatedFormData = {
       ...formData,
-      deliveryLocation,
-      deliveryLocationDetails: {
-        country,
-        state,
-        city,
-        zipCode,
-      },
+      deliveryLocation:rfpAddress,
+      // deliveryLocationDetails: {
+      //   country,
+      //   state,
+      //   city,
+      //   zipCode,
+      // },
     };
 
     setLoading(true);
@@ -436,6 +441,7 @@ const RFPForm: React.FC = () => {
   };
 
   return (
+    <div className="relative pb-10">
     <form onSubmit={handleSubmit} className="space-y-2">
       <Card>
         <CardHeader>
@@ -833,9 +839,6 @@ const RFPForm: React.FC = () => {
             </CardContent>
           </Card> */}
 
-          <div className="mt-6">
-            {userInfo && <AddressUpdate companyId={userInfo!.companyId} />}
-          </div>
 
           <div className="flex justify-end space-x-4 mr-10">
             {/* <Button
@@ -848,9 +851,9 @@ const RFPForm: React.FC = () => {
         >
           {loading ? "Updating..." : "Save Product Details"}
         </Button> */}
-            <Button
+            <Button 
               type="submit"
-              className="px-4 py-2 rounded-lg bg-primary"
+              className=" absolute bottom-0  px-4  rounded-lg bg-primary"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Save Draft RFP"}
@@ -863,6 +866,14 @@ const RFPForm: React.FC = () => {
         </CardContent>
       </Card>
     </form>
+
+              
+    <div className="my-6">
+      {userInfo && <CompanyAddresses companyId={userInfo.companyId} setRfpAddress={setRfpAddress} />}
+    </div>
+
+    </div>
+            
   );
 };
 

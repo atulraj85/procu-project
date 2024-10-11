@@ -96,15 +96,17 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       setCompanyData(data);
       console.log(":compnay data", data);
 
-      // form.reset({
-      //   email: company.email,
-      //   phone: company.phone,
-      //   website: company.website,
-      //   industry: company.industry,
-      //   status: company.status,
-      //   logo: undefined,
-      //   stamp: undefined,
-      // });
+      form.reset({
+        email: data.email,
+        phone: data.phone,
+        website: data.website,
+        industry: data.industry,
+        status: data.status,
+        logo: undefined,
+        stamp: undefined,
+      });
+      setLogoPreview(null);
+      setStampPreview(null);
     } catch (error) {
       console.error("Error fetching company details:", error);
       toast({
@@ -117,6 +119,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
   async function onSubmitForm(data: CompanyFormValues) {
     setIsLoading(true);
+    console.log(data);
     try {
       const formData = new FormData();
       for (const key in data) {
@@ -128,14 +131,20 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
 
         // Check if the value is a File and that the file is not empty (null or undefined)
         if (value instanceof File) {
-          if (value.size > 0) {
+          console.log("file data", value)
+          console.log(key, value);
+          // if (value) {
             // Ensure the file is not empty by checking its size
             formData.append(key, value);
             console.log(value);
-          }
+          // }
         } else {
           // Append non-file values, skipping empty files
-          formData.append(key, JSON.stringify(value) || "");
+          if(value !== "undefined"){
+            console.log(key, value);
+            formData.append(key, String(value));
+          }
+         
         }
       }
 
