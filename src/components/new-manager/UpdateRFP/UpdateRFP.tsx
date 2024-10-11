@@ -186,8 +186,8 @@ export default function RFPUpdateForm({
     new Set()
   );
 
-  const saveQuotation = async (index: number) => {
-    setSavingQuotation(index);
+  const saveQuotation = async (data: z.infer<typeof rfpSchema>) => {
+    // setSavingQuotation(index);
     // try{
     //   const quotationData = getValues(`quotations.${index}`);
     //   const formData = new FormData();
@@ -224,8 +224,19 @@ export default function RFPUpdateForm({
     // }
 
     try {
-      const quotationData = getValues(`quotations`);
+      if (!preferredVendorId) {
+        setShowPreferredQuotationError("Please select a preferred quotation");
+        return;
+      }
 
+      // If less than 3 quotations, show reason dialog
+      if (fields.length < 3) {
+        setShowReasonDialog(true);
+        return;
+      }
+
+      await submitForm(data);
+      const quotationData = data;
       const formData = new FormData();
       formData.append("rfpId", rfpId);
       const serializedData = JSON.stringify({
@@ -274,17 +285,17 @@ export default function RFPUpdateForm({
 
   const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
     // Check if all quotations are saved
-    const unsavedQuotations = fields.findIndex(
-      (_, index) => !savedQuotations.has(index)
-    );
-    if (unsavedQuotations !== -1) {
-      toast({
-        title: "Error",
-        description: "Please save all quotations before submitting",
-        variant: "destructive",
-      });
-      return;
-    }
+    // const unsavedQuotations = fields.findIndex(
+    //   (_, index) => !savedQuotations.has(index)
+    // );
+    // if (unsavedQuotations !== -1) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Please save all quotations before submitting",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     // Check for preferred quotation
     if (!preferredVendorId) {
@@ -422,7 +433,8 @@ export default function RFPUpdateForm({
               <Button
                 className="bg-primary mt-2"
                 type="button"
-                onClick={() => saveQuotation(index)}
+                // onClick={() => saveQuotation(index)}
+                onClick={() => saveQuotation(getValues())}
                 disabled={savingQuotation === index}
               >
                 {savingQuotation === index ? (
@@ -655,7 +667,7 @@ export default function RFPUpdateForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(saveQuotation)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP: {rfpId}</CardTitle>
