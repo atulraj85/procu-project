@@ -27,7 +27,7 @@ interface TableRow {
       mobile: string;
     };
   }>;
-}
+} 
 
 interface RfpData {
   rfpId: string;

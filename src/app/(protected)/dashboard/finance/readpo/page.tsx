@@ -81,7 +81,7 @@ const Page = () => {
   useEffect(() => {
     const fetchPoData = async () => {
       try {
-        const response = await fetch(`/api/po?poid=${poId}`);
+        const response = await fetch(`/api/po?poId=${poId}`);
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
         setPoData(data[0]);
