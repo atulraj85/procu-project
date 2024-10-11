@@ -112,6 +112,8 @@ const Page: React.FC = () => {
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
   const currentUser = useCurrentUser();
+  console.log("current user",currentUser!.id);
+  
 
   const USER_ID = currentUser!.id;
   const pageRef = useRef<HTMLDivElement>(null);
@@ -188,7 +190,9 @@ const Page: React.FC = () => {
       });
       return;
     }
-
+ 
+    console.log("form data ",formData);
+    
     const payload = {
       poId: formData.poId,
       quotationId: formData.quotationId,
