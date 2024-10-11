@@ -294,8 +294,7 @@ const Page: React.FC = () => {
       </div>
     );
   if (error) return <div>Error: {error.message}</div>;
-  console.log("img ",formData.companyLogo);
-  
+  console.log("img ", formData.companyLogo);
 
   return (
     <div ref={pageRef}>
@@ -312,7 +311,7 @@ const Page: React.FC = () => {
             </Button>
           </Link>
         </div>
-      
+
         <section className="flex justify-between w-[30%] pb-7">
           <div>
             <Image
