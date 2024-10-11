@@ -7,6 +7,7 @@ import { saveFile } from "@/utils/saveFiles";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
+import { companySchema } from "@/schemas/Comapny/InitialCompanySchema";
 
 // Type Definitions
 type SortBy = keyof InferSelectModel<typeof CompanyTable>;
@@ -17,58 +18,72 @@ const DEFAULT_SORTING_FIELD: SortBy = "id";
 const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 
 export async function POST(request: Request) {
+  const debug = true; // Set to true to enable debug logs
+
   try {
-    console.log("in the company register route");
-    const reqData = await request.formData();
-    // console.log(reqData);
+    if (debug) {
+      console.log("Starting company registration route");
+    }
 
-    // Extract fields from FormData
-    const fields: Record<string, string> = {};
-    const files: Record<string, File[]> = {};
+    const reqData = await request.json();
+    if (debug) {
+      console.log("Request data:", reqData);
+    }
 
-    // Convert FormData entries to an array and iterate
-    console.log("converting form data into array");
-    const entries = Array.from(reqData.entries());
-    for (const [key, value] of entries) {
-      if (value instanceof File) {
-        if (!files[key]) {
-          files[key] = [];
-        }
-        files[key].push(value);
-      } else {
-        fields[key] = value as string;
+    const validation = companySchema.safeParse(reqData);
+
+    if (!validation.success) {
+      if (debug) {
+        console.log("Validation error:", validation.error);
+      }
+      return { error: "Invalid fields!" } as const;
+    } else {
+      if (debug) {
+        console.log("Validation success:", validation.success);
       }
     }
 
-    const gst = fields.company_gstn;
-
-     // first find this compnay alreadi registerd or not
-     const result = await db.select().from(CompanyTable).where(eq(CompanyTable.gst, gst));
-
-     if(result){
-      console.log(result);
-      return NextResponse.json({error:"Compnay Already Registerd"}, {status:409});
-     }
-
-
-    // Define paths for saving files
-    const companyAssetsPath = path.join(process.cwd(), "public/company");
-    if (!fs.existsSync(companyAssetsPath)) {
-      fs.mkdirSync(companyAssetsPath, { recursive: true });
+    // Extract fields from FormData
+    const fields = validation.data;
+    if (debug) {
+      console.log("Validated fields:", fields);
     }
 
-    // Save logo and stamp files if they exist
-    const logoPath = files.logo
-      ? await saveFile(files.logo[0], companyAssetsPath)
-      : null;
-    const stampPath = files.stamp
-      ? await saveFile(files.stamp[0], companyAssetsPath)
-      : null;
+    // Convert FormData entries to an array and iterate
+    const gst = fields.company_gstn;
+    if (debug) {
+      console.log("GST number:", gst);
+    }
 
+    // first find this compnay alreadi registerd or not
+    if (debug) {
+      console.log("Checking if company exists with GST:", gst);
+    }
+
+    const result = await db
+      .select()
+      .from(CompanyTable)
+      .where(eq(CompanyTable.gst, gst));
+
+    if (debug) {
+      console.log("Company search result:", result);
+    }
+
+    if (result.length != 0) {
+      if (debug) {
+        console.log("Company already registered with GST:", gst);
+        console.log("Company already registered:", result);
+      }
+      return NextResponse.json(
+        { error: "Company Already Registerd!" },
+        { status: 409 }
+      );
+    }
     // Create a new company entry in the database
-    console.log("Creating company in db");
+    if (debug) {
+      console.log("Creating company in database with fields:", fields);
+    }
 
-    console.log("#################### fields", fields);
     const [insertedCompany] = await db
       .insert(CompanyTable)
       .values({
@@ -77,27 +92,30 @@ export async function POST(request: Request) {
         gstAddress: fields.address,
         email: fields.email,
         phone: fields.phone,
-        // website: fields.website,
-        // industry: fields.industry,
-        // foundedDate: fields.foundedDate ? new Date(fields.foundedDate) : null,
-        // status: fields.status,
-        logo: logoPath ? `/company/${path.basename(logoPath)}` : null,
-        stamp: stampPath ? `/company/${path.basename(stampPath)}` : null,
         updatedAt: new Date(),
       })
       .returning();
 
+    if (debug) {
+      console.log("Company created successfully:", insertedCompany);
+    }
+
     // Return only the inserted company data
     return NextResponse.json(insertedCompany, { status: 201 });
   } catch (error) {
-    console.error(error);
+    if (debug) {
+      console.log("Error in company registration:", error);
+      console.log(
+        "Error details:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
     return NextResponse.json(
       { error: "Failed to save company" },
       { status: 500 }
     );
   }
 }
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -152,107 +170,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-// export async function PUT(request: NextRequest) {
-//   try {
-//     const reqData = await request.formData();
-//     const { searchParams } = request.nextUrl;
-//     const id = searchParams.get("id");
-
-//     console.log(reqData);
-
-//     if (!id) {
-//       return NextResponse.json(
-//         { error: "ID is required for updating a record" },
-//         { status: 400 }
-//       );
-//     }
-
-//     const foundedDate = reqData.get('foundedDate') as string;
-
-//     // Extract company fields from FormData
-//     const fields: Record<string, string> = {};
-//     const files: Record<string, File> = {};
-
-//     const entries = Array.from(reqData.entries());
-//     for (const [key, value] of entries) {
-//       if (value instanceof File) {
-//         files[key] = value;
-//       } else {
-//         fields[key] = value as string;
-//       }
-//     }
-
-//     // Handle files (logo, stamp)
-//     const companyAssetsPath = path.join(process.cwd(), "public/company");
-//     if (!fs.existsSync(companyAssetsPath)) {
-//       fs.mkdirSync(companyAssetsPath, { recursive: true });
-//     }
-
-//     const logoPath = files.logo
-//       ? await saveFile(files.logo, companyAssetsPath)
-//       : undefined;
-//     const stampPath = files.stamp
-//       ? await saveFile(files.stamp, companyAssetsPath)
-//       : undefined;
-
-//     // Prepare update data for the company
-//     const updateData = {
-//       ...fields,
-//       foundedDate: foundedDate ? new Date(foundedDate) : undefined, // Parse foundedDate
-//       ...(logoPath && { logo: logoPath }),
-//       ...(stampPath && { stamp: stampPath }),
-//     };
-
-//     // Now handle address data
-//     const addressFields = {
-//       street: reqData.get("street") as string,
-//       city: reqData.get("city") as string,
-//       state: reqData.get("state") as string,
-//       postalCode: reqData.get("postalCode") as string,
-//       country: reqData.get("country") as string,
-//       addressType: reqData.get("addressType") as string, // Ensure that this matches your enum
-//     };
-
-//    const addressId = reqData.get("addressId") as string | null; // Ensure this is provided from frontend if address exists
-
-// const company = await prisma.company.update({
-//   where: { id },
-//   data: {
-//     ...updateData,
-//     addresses: {
-//       upsert: {
-//         where: { id: addressId || "" }, // Ensure to use the unique 'id' of the address
-//         create: {
-//           street: reqData.get("street") as string,
-//           city: reqData.get("city") as string,
-//           state: reqData.get("state") as string,
-//           postalCode: reqData.get("postalCode") as string,
-//           country: reqData.get("country") as string,
-//           addressType: reqData.get("addressType") as string, // Ensure addressType is valid
-//         },
-//         update: {
-//           street: reqData.get("street") as string,
-//           city: reqData.get("city") as string,
-//           state: reqData.get("state") as string,
-//           postalCode: reqData.get("postalCode") as string,
-//           country: reqData.get("country") as string,
-//           addressType: reqData.get("addressType") as string, // Ensure addressType is valid
-//         },
-//       },
-//     },
-//   },
-// });
-
-//     return NextResponse.json({ status: "success", data: company });
-//   } catch (error: any) {
-//     console.error(error);
-//     return NextResponse.json(
-//       { error: `Failed to update company: ${error.message}` },
-//       { status: 500 }
-//     );
-//   }
-// }
 
 export async function DELETE(request: Request) {
   try {

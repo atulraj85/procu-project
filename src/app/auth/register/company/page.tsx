@@ -8,17 +8,10 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { FiLoader } from "react-icons/fi";
 import { z } from "zod";
-
-// Define Zod schema for form validation
-const companySchema = z.object({
-  company_gstn: z.string().refine(validateGstn, { message: "Invalid GSTN" }),
-  company_name: z.string().min(1, "Company name is required"),
-  address: z.string().min(1, "Address is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits"),
-});
-
-type CompanyData = z.infer<typeof companySchema>;
+import {
+  CompanyData,
+  companySchema,
+} from "@/schemas/Comapny/InitialCompanySchema";
 
 type Error = Partial<Record<keyof CompanyData, string>>;
 
@@ -55,9 +48,7 @@ const Company: React.FC = () => {
     }
   };
 
-  const handleChangeVendorDetails = (
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChangeVendorDetails = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCompanyData((prevData) => ({ ...prevData, [name]: value }));
   };
@@ -65,36 +56,24 @@ const Company: React.FC = () => {
   const fetchCompanyDetails = async (GST: string) => {
     console.log(GST);
     try {
-      // const response1 = await fetch(`/api/company?GST=${GST}`);
-      // const result1 = await response1.json();
+      const response = await fetch(`/api/gst/${GST}`);
+      const result = await response.json();
+      console.log(GST);
 
-      // if (!result1.error) {
-      //   toast({
-      //     title: "Error",
-      //     description: "User already exists.",
-      //   });
+      console.log(result);
 
-        // window.location.reload();
-        // return router.push("/dashboard");
-      // } else {
-        const response = await fetch(`/api/gst/${GST}`);
-        const result = await response.json();
-        console.log(GST);
-
-        console.log(result);
-        
-        if (result.flag) {
-          const data = result.data;
-          setCompanyData({
-            ...companyData,
-            company_name: data.lgnm || "",
-            address: data.pradr.adr || "",
-          });
-        } else {
-          toast({
-            title: "Failed to fetch company details.",
-          });
-        }
+      if (result.flag) {
+        const data = result.data;
+        setCompanyData({
+          ...companyData,
+          company_name: data.lgnm || "",
+          address: data.pradr.adr || "",
+        });
+      } else {
+        toast({
+          title: "Failed to fetch company details.",
+        });
+      }
       // }
     } catch (error) {
       toast({
@@ -127,21 +106,23 @@ const Company: React.FC = () => {
       return;
     }
 
-    const formData = new FormData();
-    Object.entries(companyData).forEach(([key, value]) => {
-      formData.append(key, value);
-    });
+    // Convert companyData to JSON
+    const jsonData = JSON.stringify(companyData);
 
     try {
       const response = await fetch("/api/company", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json", // Set the content type to JSON
+        },
+        body: jsonData, // Send the JSON data
       });
 
       if (response.ok) {
         toast({
           title: "Company Created Successfully.",
         });
+        // Reset companyData state
         setCompanyData({
           company_gstn: "",
           company_name: "",
@@ -219,20 +200,25 @@ const Company: React.FC = () => {
                 >
                   {loader ? <FiLoader /> : <IoIosSearch />}
                 </button>
-                {errors.company_gstn && <p className="text-red-500">{errors.company_gstn}</p>}
+                {errors.company_gstn && (
+                  <p className="text-red-500">{errors.company_gstn}</p>
+                )}
               </div>
 
               <div className="flex flex-col gap-3 w-60 text-base">
                 <label className="font-bold">Company Name</label>
                 <Input
-                  disabled
+                  // disabled
+                  onChange={handleChangeVendorDetails}
                   type="text"
                   name="company_name"
                   value={companyData.company_name}
                   placeholder="Company Name"
                   className="p-2"
                 />
-                {errors.company_name && <p className="text-red-500">{errors.company_name}</p>}
+                {errors.company_name && (
+                  <p className="text-red-500">{errors.company_name}</p>
+                )}
               </div>
             </div>
 
@@ -240,14 +226,17 @@ const Company: React.FC = () => {
               <div className="flex flex-col gap-3 w-60 text-base">
                 <label className="font-bold">Address</label>
                 <Input
-                  disabled
+                  // disabled
+                  onChange={handleChangeVendorDetails}
                   type="text"
                   name="address"
                   value={companyData.address}
                   placeholder="Address"
                   className="p-2"
                 />
-                {errors.address && <p className="text-red-500">{errors.address}</p>}
+                {errors.address && (
+                  <p className="text-red-500">{errors.address}</p>
+                )}
               </div>
 
               <div className="flex flex-col gap-3 w-60 text-base">

@@ -118,7 +118,6 @@ export async function PUT(
         return {
           addressName:address.addressName,
           addressId: address.addressId,
-          addressName: address.addressName,
           street: address.street,
           city: address.city,
           state: address.state,

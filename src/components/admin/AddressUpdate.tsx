@@ -82,7 +82,8 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
 
   const handleAddressSelect = (searchTitle: string) => {
     const selectedAddress = addresses?.find(
-      (address) => address.addressName.toLowerCase() === searchTitle.toLowerCase()
+      (address) =>
+        address.addressName.toLowerCase() === searchTitle.toLowerCase()
     );
     if (selectedAddress) {
       setCurrAddressID(selectedAddress.id);
@@ -102,13 +103,16 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
     };
 
     try {
-      const response = await fetch(`/api/company/${companyId}/address/${currAddressID}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(FormData),
-      });
+      const response = await fetch(
+        `/api/company/${companyId}/address/${currAddressID}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(FormData),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update address");
@@ -134,7 +138,6 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
 
   const toggleAddingAddress = () => {
     setIsAddingAddress((prev) => !prev);
-    
   };
 
   return (
@@ -147,7 +150,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Delivery Address</CardTitle>
+                <CardTitle>Address Details</CardTitle>
                 <div className="flex justify-between items-center">
                   <Select onValueChange={handleAddressSelect}>
                     <SelectTrigger className="w-[180px]">
@@ -155,7 +158,7 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
                     </SelectTrigger>
                     <SelectContent>
                       {addresses?.map((item, idx) => (
-                        <SelectItem key={idx+1} value={item.addressName}>
+                        <SelectItem key={idx + 1} value={item.addressName}>
                           {item.addressName}
                         </SelectItem>
                       ))}
@@ -171,89 +174,96 @@ const AddressUpdate: React.FC<Props> = ({ companyId }) => {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-2">
-                  <FormField
-                    control={form.control}
-                    name="street"
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
-                  <div className="grid grid-cols-4 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="country"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Country</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>State</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>City</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="postalCode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Zip Code</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+              {addresses?.length === 0 ? (
+                <div className="item-center justify-center flex m-10">
+                  Please create a new address
                 </div>
+              ) : (
+                <CardContent>
+                  <div className="flex flex-col gap-2">
+                    <FormField
+                      control={form.control}
+                      name="street"
+                      render={({ field }) => (
+                        <FormItem className="col-span-3">
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button 
-                  type="submit" 
-                  className="mt-4 w-36 my-4 bg-primary"
-                  disabled={isSaving}
-                >
-                  {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
-              </CardContent>
+                    <div className="grid grid-cols-4 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="postalCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Zip Code</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="mt-4 w-36 my-4 bg-primary"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardContent>
+              )}
             </Card>
           </form>
         </Form>

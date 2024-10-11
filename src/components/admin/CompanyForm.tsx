@@ -1,10 +1,6 @@
 "use client";
 import Loader from "@/components/shared/Loader";
-import * as z from "zod";
-import { CiCircleRemove } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
-import { addresses } from "./address";
-import { CompanyFormSchema } from "@/schemas/Company";
 import {
   Form,
   FormControl,
@@ -22,13 +18,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { Card, CardContent } from "../ui/card";
 import { useCurrentUser } from "@/hooks/auth";
+import { CompanyFormSchema } from "@/schemas/Company";
+import { Company } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { CiCircleRemove } from "react-icons/ci";
+import * as z from "zod";
+import { Card, CardContent } from "../ui/card";
 import AddressUpdate from "./AddressUpdate";
-import { Company } from "@/types";
 
 type CompanyFormValues = z.infer<typeof CompanyFormSchema>;
 
@@ -95,7 +94,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
       }
       const data = await response.json();
       setCompanyData(data);
-      console.log(":compnay data",data);
+      console.log(":compnay data", data);
 
       // form.reset({
       //   email: company.email,
@@ -117,21 +116,20 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
   };
 
   async function onSubmitForm(data: CompanyFormValues) {
-    console.log("hello");
     setIsLoading(true);
-    console.log(data);
     try {
       const formData = new FormData();
       for (const key in data) {
         if (key === "businessAddress" || key === "deliveryAddress") {
           continue;
         }
-      
+
         const value = data[key as keyof CompanyFormValues];
-      
+
         // Check if the value is a File and that the file is not empty (null or undefined)
         if (value instanceof File) {
-          if (value.size > 0) {  // Ensure the file is not empty by checking its size
+          if (value.size > 0) {
+            // Ensure the file is not empty by checking its size
             formData.append(key, value);
             console.log(value);
           }
@@ -140,7 +138,6 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
           formData.append(key, JSON.stringify(value) || "");
         }
       }
-      
 
       // formData.append("addresses", JSON.stringify(addresses));
 
@@ -154,7 +151,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         method: "PUT",
         body: formData,
       });
-        
+
       console.log(response);
 
       if (response.ok) {
@@ -181,18 +178,16 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
     return <Loader />;
   }
 
-
   function formatFilePath(filePath: string): string {
     // Extract the part after 'company' and replace backslashes with forward slashes
-    let formattedPath = filePath.split('company').pop()?.replace(/\\/g, '/') || '';
-    
+    let formattedPath =
+      filePath.split("company").pop()?.replace(/\\/g, "/") || "";
+
     // Remove any leading slashes
-    formattedPath = formattedPath.replace(/^\/+/, '');
-  
-    return '/' + formattedPath; // Return with a leading forward slash
+    formattedPath = formattedPath.replace(/^\/+/, "");
+
+    return "/" + formattedPath; // Return with a leading forward slash
   }
-  
-  
 
   return (
     <div>
@@ -214,9 +209,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   <p></p>
                   <strong>
                     <span className="text-xl">Address:</span>{" "}
-                    {companyData.gstAddress
-                      ? companyData.gstAddress
-                      : ""}
+                    {companyData.gstAddress ? companyData.gstAddress : ""}
                   </strong>
                 </div>
               </div>
@@ -279,7 +272,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select 
+                      <Select
                         onValueChange={field.onChange}
                         defaultValue={companyData.status}
                       >
@@ -308,7 +301,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           src={
                             logoPreview
                               ? logoPreview
-                              : companyData.logo ? `/company/${formatFilePath(companyData.logo)}` : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
+                              : companyData.logo
+                              ? `/company/${formatFilePath(companyData.logo)}`
+                              : "https://cdn.pixabay.com/photo/2017/03/19/20/19/ball-2157465_640.png"
                           }
                           alt="Preview"
                           className="w-14 h-14 object-cover rounded-full"
@@ -358,7 +353,9 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
                           src={
                             stampPreview
                               ? stampPreview
-                              :  companyData.stamp ? `/company/${formatFilePath(companyData.stamp)}` :  "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
+                              : companyData.stamp
+                              ? `/company/${formatFilePath(companyData.stamp)}`
+                              : "https://img.freepik.com/free-vector/guarantee-best-quality-stamp_1017-7145.jpg?size=626&ext=jpg&ga=GA1.1.525718953.1713282863&semt=ais_hybrid"
                           }
                           alt="Preview"
                           className="w-14 h-14 object-cover rounded-full"

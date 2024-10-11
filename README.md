@@ -8,6 +8,8 @@
 ### WorkFlow:
 
 1. Creation of Company:
+   1. Getting details from GST number /api/gst/number (Error while creating company)
+   2. 
 2. Creation of Admin:
 3. Roles:
    1. Admin:
