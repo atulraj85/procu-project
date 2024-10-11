@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Loader from "../shared/Loader";
 
 type FormValues = z.infer<typeof AddressformSchema>;
 
@@ -39,6 +40,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
   const [states, setStates] = useState<{ value: string; label: string }[]>([]);
   const [cities, setCities] = useState<{ value: string; label: string }[]>([]);
   const [currentState, setCurrentState] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
@@ -54,7 +56,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
-
+      console.log("fomr data", data);
     const formDataWithAddressType = {
       ...data,
       addressType: "SHIPPING",
@@ -106,6 +108,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
       try {
         const response = await fetch("/api/address/states/IN");
         if (!response.ok) {
+          
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
@@ -117,6 +120,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
             label: state.name,
           })
         );
+        setIsLoading(true);
 
         console.log("transformedStates", transformedStates);
 
@@ -135,6 +139,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
       try {
         const response = await fetch(`/api/address/cities/IN/${value}`);
         if (!response.ok) {
+
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
@@ -160,6 +165,11 @@ const AddressForm: React.FC<AddressFormProps> = ({
     form.setValue("state", value);
     fetchCities(value);
   };
+
+
+  if(!isLoading){
+    return <Loader/>
+  }
 
   return (
     <Form {...form}>
@@ -244,11 +254,11 @@ const AddressForm: React.FC<AddressFormProps> = ({
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      {currentState && (
+                      {/* {currentState && (
                         <p className="text-sm text-gray-500 mt-1">
                           Current State: {currentState}
                         </p>
-                      )}
+                      )} */}
                     </FormItem>
                   )}
                 />
