@@ -244,7 +244,7 @@ const VendorDetails = () => {
     // console.log("new", newVendor);
 
     try {
-      const response = await fetch(`/api/vendor?id=${vendorData.id}`, {
+      const response = await fetch(`/api/vendor/${vendorData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -280,6 +280,7 @@ const VendorDetails = () => {
         <div className="flex flex-col gap-3 w-60 text-base relative">
           <label className="font-bold">GSTN</label>
           <Input
+            disabled
             type="text"
             name="vendor_gstn"
             value={vendorData.vendor_gstn}
@@ -300,6 +301,7 @@ const VendorDetails = () => {
         <div className="flex flex-col gap-3 w-60 text-base">
           <label className="font-bold">Company Name</label>
           <Input
+            disabled
             type="text"
             name="company_name"
             value={vendorData.company_name}
@@ -313,6 +315,7 @@ const VendorDetails = () => {
         <div className="flex flex-col gap-3 w-60 text-base">
           <label className="font-bold">PAN Card</label>
           <Input
+            disabled
             type="text"
             name="pan_card"
             value={vendorData.pan_card}

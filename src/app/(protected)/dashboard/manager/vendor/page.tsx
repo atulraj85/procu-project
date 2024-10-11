@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/Table/data-table";
 import { columns } from "@/components/Table/columns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCurrentUser } from "@/hooks/auth";
 
 interface Vendor {
   gstin: any;
@@ -213,8 +214,9 @@ const VendorDetails: React.FC = () => {
     setErrors(newErrors);
     return isValid;
   };
-  const USER_ID = localStorage.getItem("USER_ID");
 
+  const currentUser = useCurrentUser();
+  const USER_ID = currentUser?.id;
   const handleChangeVendorDetails = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -233,42 +235,40 @@ const VendorDetails: React.FC = () => {
   };
 
   const fetchVendorDetails = async (gstn: string) => {
-    // console.log("Checking GSTN:", gstn);
-  
     try {
       // First, check if vendor exists in database
       const response1 = await fetch(`/api/vendor?gstin=${gstn}`);
       const result1 = await response1.json();
-      // console.log("Database check result:", result1);
-  
-      if (result1.vendor) {
+
+      // Check if the response has any data
+      if (response1.ok && Array.isArray(result1) && result1.length > 0) {
         // Vendor found in database
         toast({
           title: "Vendor exists",
           description: "This GSTN is already registered in the system.",
         });
-        
-        // Optionally, you can populate the form with existing data
-        setVendorData({
-          ...vendorData,
-          company_name: result1.vendor.companyName || "",
-          state: result1.vendor.customerState || "",
-          pin_code: result1.vendor.zip || "",
-          address: result1.vendor.address || "",
-          city: result1.vendor.customerCity || "",
-          pan_card: result1.vendor.pan || "",
-          person_name: result1.vendor.primaryName || "",
-          email: result1.vendor.email || "",
-          contact_no: result1.vendor.mobile || "",
-          website: result1.vendor.website || "",
-        });
+        window.location.reload();
+
+        // Uncomment and modify this section if you want to populate form with existing data
+        /* setVendorData({
+        ...vendorData,
+        company_name: result1[0].companyName || "",
+        state: result1[0].customerState || "",
+        pin_code: result1[0].zip || "",
+        address: result1[0].address || "",
+        city: result1[0].customerCity || "",
+        pan_card: result1[0].pan || "",
+        person_name: result1[0].primaryName || "",
+        email: result1[0].email || "",
+        contact_no: result1[0].mobile || "",
+        website: result1[0].website || "",
+      }); */
       } else {
         // Vendor not found in database, fetch from external API
         const response2 = await fetch(`/api/vendor/gst/${gstn}`);
         const result2 = await response2.json();
-        // console.log("External API result:", result2);
-  
-        if (result2.flag) {
+
+        if (response2.ok && result2.flag) {
           const data = result2.data;
           setVendorData({
             ...vendorData,
@@ -279,10 +279,11 @@ const VendorDetails: React.FC = () => {
             city: data.pradr.addr.city || "",
             pan_card: data.gstin.slice(2, 12) || "",
           });
-          
+
           toast({
             title: "GSTN details fetched",
-            description: "Vendor details have been populated from GST database.",
+            description:
+              "Vendor details have been populated from GST database.",
           });
         } else {
           toast({
@@ -301,6 +302,7 @@ const VendorDetails: React.FC = () => {
       });
     }
   };
+
   const handleSearchGSTN = () => {
     if (validateGstn(vendorData.vendor_gstn).isValid) {
       // console.log("data", vendorData.vendor_gstn);
@@ -488,16 +490,13 @@ const VendorDetails: React.FC = () => {
 
   return (
     <Card>
-      
       <CardContent>
-        
-      
         <Sheet>
-        <div className="flex justify-between pt-4">
-        <CardTitle>Vendor List</CardTitle>
-          <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
-            Add Vendor
-          </SheetTrigger>
+          <div className="flex justify-between pt-4">
+            <CardTitle>Vendor List</CardTitle>
+            <SheetTrigger className="bg-primary  justify-end py-2 px-4 text-white  rounded ">
+              Add Vendor
+            </SheetTrigger>
           </div>
           <SheetContent>
             <SheetHeader>
