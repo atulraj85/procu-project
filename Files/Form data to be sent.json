@@ -1,0 +1,5 @@
+{
+  "rfpId": "RFP-2024-10-11-0005",
+  "data": "{\"rfpId\":\"RFP-2024-10-11-0005\",\"rfpStatus\":\"DRAFT\",\"preferredQuotationId\":null,\"quotations\":[{\"id\":\"\",\"refNo\":\"11\",\"vendorId\":\"198ab4b9-7be0-4426-828a-5bf4b1e8b57b\",\"products\":[{\"id\":\"3e41c1b6-07e3-440e-8774-977d9cc08777\",\"name\":\"Item 1\",\"modelNo\":\"ITM454\",\"quantity\":2,\"unitPrice\":100,\"description\":\"Macbook Air M3 16GB 512GB\",\"rfpProductId\":\"5bf84222-6d2e-4293-9f9b-f841ca1e0245\",\"gst\":\"5\",\"totalPriceWithoutGST\":200,\"totalPriceWithGST\":210}],\"otherCharges\":[{\"name\":\"Other Charges (if any)\",\"gst\":\"5\",\"unitPrice\":100}],\"total\":{\"withoutGST\":300,\"withGST\":315},\"supportingDocuments\":[{\"name\":\"Test\",\"fileName\":\"zb2rhaRb6V97ueNrcZXLZKFFmg9aC5pj3rEkzNmMkHK168G83.pdf\"}],\"totalAmount\":0,\"totalAmountWithoutGST\":0,\"vendor\":null}],\"preferredVendorId\":\"198ab4b9-7be0-4426-828a-5bf4b1e8b57b\"}",
+  "198ab4b9-7be0-4426-828a-5bf4b1e8b57b/Test": {}
+}

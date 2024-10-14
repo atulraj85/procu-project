@@ -670,7 +670,58 @@ export default function RFPUpdateForm({
     <form onSubmit={handleSubmit(saveQuotation)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle>Update RFP: {rfpId}</CardTitle>
+          {/* <CardTitle>Update RFP: {rfpId}</CardTitle> */}
+
+          <div className="flex justify-end  mt-2 mb-3">
+            {/* RFP and product details */}
+            <div className="flex flex-col">
+              <div className="flex items-center mb-2">
+                <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+                  {initialData.requirementType === "Product" ? "P" : "S"}
+                </Label>
+                <Label>RFP ID: {initialData.rfpId}</Label>
+              </div>
+
+              {/* Product Details */}
+              <div className="">
+                {initialData.products.map(
+                  (product: any, index: React.Key | null | undefined) => (
+                    <div key={index} className="flex flex-col mb-1">
+                      <div className="flex items-center space-x-4">
+                        <Label className="font-medium">
+                          Name: {product.name}
+                        </Label>
+                        <Label className="font-medium">
+                          Model: {product.modelNo}
+                        </Label>
+                        <Label className="font-medium">
+                          Qty: {product.quantity}
+                        </Label>
+                      </div>
+                      {product.description && (
+                        <Label className="text-sm text-gray-600">
+                          Description: {product.description}
+                        </Label>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+
+            {/* Add space here */}
+            <div className="flex flex-col">
+              <Label>
+                RFP Date:
+                {new Date(initialData.dateOfOrdering).toLocaleDateString()}
+              </Label>
+              <Label>
+                Exp. Delivery Date:{" "}
+                {new Date(initialData.deliveryByDate).toLocaleDateString()}
+              </Label>
+            </div>
+          </div>
+
           <Link href="/dashboard/manager">
             <Button
               type="button"
