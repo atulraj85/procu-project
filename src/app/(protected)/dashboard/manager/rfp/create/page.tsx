@@ -391,12 +391,12 @@ const RFPForm: React.FC = () => {
     const updatedFormData = {
       ...formData,
       deliveryLocation:rfpAddress,
-      // deliveryLocationDetails: {
-      //   country,
-      //   state,
-      //   city,
-      //   zipCode,
-      // },
+      deliveryLocationDetails: {
+        country,
+        state,
+        city,
+        zipCode,
+      },
     };
 
     setLoading(true);

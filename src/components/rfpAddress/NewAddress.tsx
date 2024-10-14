@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AddressformSchema2 } from "@/schemas/Company";
+import { PlusIcon, XIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -22,6 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+
+
 import Loader from "../shared/Loader";
 
 type FormValues = z.infer<typeof AddressformSchema2>;
@@ -30,12 +41,14 @@ interface AddressFormProps {
   companyId: string | null;
   isAddingAddress: () => void;
   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
+  setSelectedAddr: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const NewAddress: React.FC<AddressFormProps> = ({
   companyId,
   isAddingAddress,
-  setRfpAddress
+  setRfpAddress,
+  setSelectedAddr
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -66,6 +79,8 @@ const NewAddress: React.FC<AddressFormProps> = ({
     console.log(address);
 
     setRfpAddress(address);
+    setSelectedAddr(address);
+    isAddingAddress();
 
     toast({
             title: "Success",
@@ -73,6 +88,14 @@ const NewAddress: React.FC<AddressFormProps> = ({
             
           });
           setIsSaving(false);
+          form.reset( {
+            //   addressName: "", 
+              street: "",
+              country: "INDIA",
+              state: "",
+              city: "",
+              postalCode: "",
+            },);
 
     //   console.log("fomr data", data);
     // const formDataWithAddressType = {
@@ -190,15 +213,19 @@ const NewAddress: React.FC<AddressFormProps> = ({
   }
 
   return (
+
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
-              <div>Delivery Address</div>
-              <Button className="w-28 bg-primary" onClick={isAddingAddress}>
+              <div>New Delivery Address</div>
+              {/* <Button className="w-28 bg-primary" onClick={isAddingAddress}>
                 Back
-              </Button>
+              </Button> */}
+              {/* <XIcon size={30} onClick={isAddingAddress}  className="bg-red-400 p-1 cursor-pointer rounded-md"/> */}
+
+
             </CardTitle>
           </CardHeader>
           <CardContent>

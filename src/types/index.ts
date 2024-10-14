@@ -189,6 +189,6 @@ export  interface AddressInterface {
   street: string;
   city: string;
   state: string;
-  zipCode: string;
+  postalCode: string;
   country: string;
 }
