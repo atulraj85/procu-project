@@ -103,9 +103,9 @@ const SupportingDocumentsList = ({
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Supporting Documents</CardTitle>
-          {errors?.quotations?.[index]?.supportingDocuments && (
+          {errors?.supportingDocuments && (
             <p className="text-red-500 text-sm mt-1">
-              {errors.quotations[index].supportingDocuments.message}
+              {errors.supportingDocuments.message}
             </p>
           )}
         </CardHeader>
@@ -156,7 +156,8 @@ const SupportingDocumentsList = ({
                       ) : (
                         <Input
                           type="file"
-                          onChange={(e) => handleFileChange(e, docIndex)}
+                            onChange={(e) => handleFileChange(e, docIndex)}
+                            required
                         />
                       )}
                       {fileError && ( // Assuming fileError is the state for file validation

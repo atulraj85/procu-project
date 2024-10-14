@@ -67,10 +67,7 @@ export const rfpSchema = z.object({
   rfpStatus: z.string(),
   preferredQuotationId: z.string().nullable(),
   preferredVendorId: z.string().optional().nullable(),
-  // reason: z
-  //   .string()
-  //   .min(10, "Please describe your reason thoroughly.")
-  //   .optional(),
+  products: z.any().optional(),
   quotations: z
     .array(quotationSchema)
     .min(1, "At least one quotation is required")

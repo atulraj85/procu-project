@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Loader from "@/components/shared/Loader";
 import RFPUpdateForm from "@/components/new-manager/UpdateRFP/UpdateRFP";
+import Quotation from "@/components/new-manager/NewUpdateRFP/Quotation";
+// import RFPForm from "@/components/new-manager/UpdateRFP/UpdateRFP2";
 
 const Page = () => {
   const searchParams = useSearchParams();
@@ -51,8 +53,10 @@ const Page = () => {
   return (
     <div>
       {rfpId && rfpData ? (
-        <RFPUpdateForm rfpId={rfpId} initialData={rfpData} />
+        // <RFPUpdateForm rfpId={rfpId} initialData={rfpData} />
+        <Quotation rfpId={rfpId} initialData={rfpData} />
       ) : (
+        // <RFPForm />
         <div>No RFP data available</div>
       )}
     </div>

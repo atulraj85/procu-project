@@ -33,8 +33,8 @@ const OtherChargesList = ({
   formData: any;
   globalFormData: any;
   errors: any;
-}) => {
-  const { fields, append } = useFieldArray({
+  }) => {
+    const { fields, append } = useFieldArray({
     control,
     name: `quotations.${index}.otherCharges`,
   });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { rfpSchema } from "@/schemas/RFPSchema";
+import { quotationSchema, rfpSchema } from "@/schemas/RFPSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, ChevronUp, Loader2, Trash2, X } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { TotalComponent } from "./TotalCharge";
+import QuotationForm from "./QuotationFrom";
 
 const globalFormData = new FormData();
 
@@ -116,7 +117,7 @@ export default function RFPUpdateForm({
         return;
       }
 
-      await submitForm(data);
+      // await submitForm(data);
       const quotationData = data;
       const formData = new FormData();
       formData.append("rfpId", rfpId);
@@ -363,7 +364,7 @@ export default function RFPUpdateForm({
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
-      // products: initialData.products,
+      products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
         refNo: quotation.refNo,
@@ -410,9 +411,7 @@ export default function RFPUpdateForm({
     },
   });
 
-  // useEffect(() => {
-  //   console.log("Current form errors:", JSON.stringify(errors));
-  // }, [errors]);
+  console.log("Errrrror RFP UPdate", errors);
 
   const [reasonError, setReasonError] = useState<string | null>(null);
 
@@ -552,218 +551,238 @@ export default function RFPUpdateForm({
     submitForm(getValues());
   };
 
+  const handleQuotationSubmit = async (
+    index: number,
+    data: z.infer<typeof quotationSchema>
+  ) => {
+    // Your logic to save individual quotation
+    // This could be an API call or update to your form state
+    console.log(`Saving quotation ${index}:`, data);
+    // Update the main form state
+    setValue(`quotations.${index}`, data);
+    toast({
+      title: "Success",
+      description: "Quotation saved successfully",
+    });
+  };
+
+  console.log("GlobalForm Data", JSON.stringify(globalFormData));
+
   return (
-    <form onSubmit={handleSubmit(saveQuotation)} className="space-y-8">
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
-          {/* <CardTitle>Update RFP: {rfpId}</CardTitle> */}
+    <div>
+      {fields.map((field, index) => (
+        <QuotationForm
+          key={field.id}
+          index={index}
+          initialData={initialData}
+          fieldData={field}
+          onSubmit={(data) => handleQuotationSubmit(index, data)}
+          onDelete={() => remove(index)}
+          isPreferred={preferredVendorId === field.vendorId}
+          onPreferredChange={(checked) => {
+            if (checked) {
+              setPreferredVendorId(field.vendorId);
+            } else {
+              setPreferredVendorId("");
+            }
+          }}
+          files={files}
+          setFiles={setFiles}
+          globalFormData={globalFormData}
+        />
+      ))}
 
-          <div className="flex justify-end  mt-2 mb-3">
-            {/* RFP and product details */}
-            <div className="flex flex-col">
-              <div className="flex items-center mb-2">
-                <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
-                  {initialData.requirementType === "Product" ? "P" : "S"}
-                </Label>
-                <Label>RFP ID: {initialData.rfpId}</Label>
-              </div>
-
-              {/* Product Details */}
-              <div className="">
-                {initialData.products.map(
-                  (product: any, index: React.Key | null | undefined) => (
-                    <div key={index} className="flex flex-col mb-1">
-                      <div className="flex items-center space-x-4">
-                        <Label className="font-medium">
-                          Name: {product.name}
-                        </Label>
-                        <Label className="font-medium">
-                          Model: {product.modelNo}
-                        </Label>
-                        <Label className="font-medium">
-                          Qty: {product.quantity}
-                        </Label>
-                      </div>
-                      {product.description && (
-                        <Label className="text-sm text-gray-600">
-                          Description: {product.description}
-                        </Label>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* Add space here */}
-            <div className="flex flex-col">
-              <Label>
-                RFP Date:
-                {new Date(initialData.dateOfOrdering).toLocaleDateString()}
-              </Label>
-              <Label>
-                Exp. Delivery Date:{" "}
-                {new Date(initialData.deliveryByDate).toLocaleDateString()}
-              </Label>
-            </div>
-          </div>
-
-          <Link href="/dashboard/manager">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="text-black-500 bg-red-400"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {fields.map((field, index) => renderQuotation(field, index))}
-          {fields.length < quotationLimit && (
-            <Button
-              className="bg-primary mt-2"
-              type="button"
-              onClick={handleAddQuotation}
-            >
-              Add Quotation
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {isDeleteDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
-            <p className="mb-4">
-              Are you sure you want to delete this quotation? This action cannot
-              be undone.
-            </p>
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setIsDeleteDialogOpen(false)}
-                className="mr-2"
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteConfirm}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
+      {fields.length < quotationLimit && (
+        <Button
+          className="bg-primary mt-2"
+          type="button"
+          onClick={handleAddQuotation}
+        >
+          Add Quotation
+        </Button>
       )}
+    </div>
 
-      <Button className="bg-primary" type="submit" disabled={isLoading}>
-        {isLoading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Submitting...
-          </>
-        ) : (
-          "Submit RFP"
-        )}
-      </Button>
+    // (
+    //   // <form onSubmit={handleSubmit(saveQuotation)} className="space-y-8">
+    //   //   <Card>
+    //   //     <CardHeader className="flex flex-row justify-between items-center">
+    //   //       {/* <CardTitle>Update RFP: {rfpId}</CardTitle> */}
 
-      {/* Reason Dialog */}
-      <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reason Required</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="reason">
-              Please provide a reason for submitting less than 3 quotations:
-            </Label>
-            <Textarea
-              id="reason"
-              className="mt-2"
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                setReasonError(null);
-              }}
-              placeholder="Enter your reason here..."
-            />
-            {reasonError && (
-              <p className="text-red-500 text-sm mt-1">{reasonError}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowReasonDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleReasonSubmit}>Submit</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    //   //       <div className="flex justify-end  mt-2 mb-3">
+    //   //         {/* RFP and product details */}
+    //   //         <div className="flex flex-col">
+    //   //           <div className="flex items-center mb-2">
+    //   //             <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+    //   //               {initialData.requirementType === "Product" ? "P" : "S"}
+    //   //             </Label>
+    //   //             <Label>RFP ID: {initialData.rfpId}</Label>
+    //   //           </div>
 
-      {success && (
-        <Alert>
-          <AlertTitle>Success</AlertTitle>
-          <AlertDescription>RFP updated successfully.</AlertDescription>
-        </Alert>
-      )}
+    //   //           {/* Product Details */}
+    //   //           <div className="">
+    //   //             {initialData.products.map(
+    //   //               (product: any, index: React.Key | null | undefined) => (
+    //   //                 <div key={index} className="flex flex-col mb-1">
+    //   //                   <div className="flex items-center space-x-4">
+    //   //                     <Label className="font-medium">
+    //   //                       Name: {product.name}
+    //   //                     </Label>
+    //   //                     <Label className="font-medium">
+    //   //                       Model: {product.modelNo}
+    //   //                     </Label>
+    //   //                     <Label className="font-medium">
+    //   //                       Qty: {product.quantity}
+    //   //                     </Label>
+    //   //                   </div>
+    //   //                   {product.description && (
+    //   //                     <Label className="text-sm text-gray-600">
+    //   //                       Description: {product.description}
+    //   //                     </Label>
+    //   //                   )}
+    //   //                 </div>
+    //   //               )
+    //   //             )}
+    //   //           </div>
+    //   //         </div>
 
-      {/* {fields.length === 3 ? (
-          <Button className="bg-primary" type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Submit RFP"
-            )}
-          </Button>
-        ) : (
-          <div>
-            <Textarea
-              className="w-1/3 mb-2"
-              placeholder="Reason for adding less than 3 quotations"
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                setReasonError("");
-              }}
-            />
+    //   //         {/* Add space here */}
+    //   //         <div className="flex flex-col">
+    //   //           <Label>
+    //   //             RFP Date:
+    //   //             {new Date(initialData.dateOfOrdering).toLocaleDateString()}
+    //   //           </Label>
+    //   //           <Label>
+    //   //             Exp. Delivery Date:{" "}
+    //   //             {new Date(initialData.deliveryByDate).toLocaleDateString()}
+    //   //           </Label>
+    //   //         </div>
+    //   //       </div>
 
-            {reasonError && (
-              <p className="text-red-500 text-sm mt-1">{reasonError}</p>
-            )}
+    //   //       <Link href="/dashboard/manager">
+    //   //         <Button
+    //   //           type="button"
+    //   //           variant="outline"
+    //   //           size="icon"
+    //   //           className="text-black-500 bg-red-400"
+    //   //         >
+    //   //           <X className="h-4 w-4" />
+    //   //         </Button>
+    //   //       </Link>
+    //   //     </CardHeader>
+    //   //     <CardContent>
+    //   //       {/* {fields.map((field, index) => renderQuotation(field, index))} */}
+    //   //       {fields.map((field, index) => (
+    //   //         <QuotationForm
+    //   //           key={field.id}
+    //   //           index={index}
+    //   //           initialData={initialData}
+    //   //           fieldData={field}
+    //   //           onSubmit={(data) => handleQuotationSubmit(index, data)}
+    //   //           onDelete={() => remove(index)}
+    //   //           isPreferred={preferredVendorId === field.vendorId}
+    //   //           onPreferredChange={(checked) => {
+    //   //             if (checked) {
+    //   //               setPreferredVendorId(field.vendorId);
+    //   //             } else {
+    //   //               setPreferredVendorId("");
+    //   //             }
+    //   //           }}
+    //   //           files={files}
+    //   //           setFiles={setFiles}
+    //   //           globalFormData={globalFormData}
+    //   //         />
+    //   //       ))}
+    //   //       {fields.length < quotationLimit && (
+    //   //         <Button
+    //   //           className="bg-primary mt-2"
+    //   //           type="button"
+    //   //           onClick={handleAddQuotation}
+    //   //         >
+    //   //           Add Quotation
+    //   //         </Button>
+    //   //       )}
+    //   //     </CardContent>
+    //   //   </Card>
 
-            <Button
-              type="button"
-              className="bg-primary"
-              onClick={() => {
-                if (fields.length < 3 && !reason) {
-                  setReasonError("Please select reason");
-                }
+    //   //   {isDeleteDialogOpen && (
+    //   //     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    //   //       <div className="bg-white p-6 rounded-lg">
+    //   //         <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
+    //   //         <p className="mb-4">
+    //   //           Are you sure you want to delete this quotation? This action cannot
+    //   //           be undone.
+    //   //         </p>
+    //   //         <div className="flex justify-end">
+    //   //           <Button
+    //   //             variant="outline"
+    //   //             onClick={() => setIsDeleteDialogOpen(false)}
+    //   //             className="mr-2"
+    //   //           >
+    //   //             Cancel
+    //   //           </Button>
+    //   //           <Button variant="destructive" onClick={handleDeleteConfirm}>
+    //   //             Delete
+    //   //           </Button>
+    //   //         </div>
+    //   //       </div>
+    //   //     </div>
+    //   //   )}
 
-                const formData = getValues();
-                if (reason) {
-                  setReason(reason);
-                  handleSubmitReasonAndAddQuotation(formData);
-                }
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Reason and Add Quotation"
-              )}
-            </Button>
-          </div>
-        )} */}
-    </form>
+    //   //   <Button className="bg-primary" type="submit" disabled={isLoading}>
+    //   //     {isLoading ? (
+    //   //       <>
+    //   //         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+    //   //         Submitting...
+    //   //       </>
+    //   //     ) : (
+    //   //       "Submit RFP"
+    //   //     )}
+    //   //   </Button>
+
+    //   //   {/* Reason Dialog */}
+    //   //   <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
+    //   //     <DialogContent>
+    //   //       <DialogHeader>
+    //   //         <DialogTitle>Reason Required</DialogTitle>
+    //   //       </DialogHeader>
+    //   //       <div className="py-4">
+    //   //         <Label htmlFor="reason">
+    //   //           Please provide a reason for submitting less than 3 quotations:
+    //   //         </Label>
+    //   //         <Textarea
+    //   //           id="reason"
+    //   //           className="mt-2"
+    //   //           value={reason}
+    //   //           onChange={(e) => {
+    //   //             setReason(e.target.value);
+    //   //             setReasonError(null);
+    //   //           }}
+    //   //           placeholder="Enter your reason here..."
+    //   //         />
+    //   //         {reasonError && (
+    //   //           <p className="text-red-500 text-sm mt-1">{reasonError}</p>
+    //   //         )}
+    //   //       </div>
+    //   //       <DialogFooter>
+    //   //         <Button
+    //   //           variant="outline"
+    //   //           onClick={() => setShowReasonDialog(false)}
+    //   //         >
+    //   //           Cancel
+    //   //         </Button>
+    //   //         <Button onClick={handleReasonSubmit}>Submit</Button>
+    //   //       </DialogFooter>
+    //   //     </DialogContent>
+    //   //   </Dialog>
+
+    //   //   {success && (
+    //   //     <Alert>
+    //   //       <AlertTitle>Success</AlertTitle>
+    //   //       <AlertDescription>RFP updated successfully.</AlertDescription>
+    //   //     </Alert>
+    //   //   )}
+    //   // </form>
+    // )
   );
 }

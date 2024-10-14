@@ -17,13 +17,11 @@ const VendorSelector = ({
   index,
   setValue,
   vendor,
-  globalFormData,
   errors,
 }: {
   index: number;
   setValue: any;
   vendor: any;
-  globalFormData: any;
   errors: any;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,8 +42,6 @@ const VendorSelector = ({
     async (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setSearchTerm(value);
-
-    
 
       if (value) {
         try {
@@ -75,22 +71,6 @@ const VendorSelector = ({
         setError("Vendor ID is missing");
         return;
       }
-
-      // Check if the vendor is already added to any quotation
-      const quotations = JSON.parse(
-        (globalFormData.get("quotations") as string) || "[]"
-      );
-      const isVendorAlreadyAdded = quotations.some(
-        (quotation: any) => quotation.vendorId === vendor.id
-      );
-
-      if (isVendorAlreadyAdded) {
-        setError(
-          `Vendor with ID ${vendor.id} is already added to a quotation.`
-        );
-        return;
-      }
-
       setApprovedVendor(vendor);
       setDisableVendorSearch(true);
       setSearchTerm("");
@@ -99,16 +79,6 @@ const VendorSelector = ({
       const vendorData = {
         vendorId: vendor.id,
       };
-
-      if (!globalFormData.has("quotations")) {
-        globalFormData.set("quotations", JSON.stringify([]));
-      }
-
-      const updatedQuotations = JSON.parse(
-        globalFormData.get("quotations") as string
-      );
-      updatedQuotations[index] = { ...updatedQuotations[index], ...vendorData };
-      globalFormData.set("quotations", JSON.stringify(updatedQuotations));
     },
     [index]
   );
@@ -117,15 +87,6 @@ const VendorSelector = ({
     setApprovedVendor(null);
     setValue(`quotations.${index}.vendorId`, "");
     setDisableVendorSearch(false);
-
-    // Remove vendor data from global FormData
-    if (globalFormData.has("quotations")) {
-      const quotations = JSON.parse(globalFormData.get("quotations") as string);
-      if (quotations[index]) {
-        delete quotations[index].vendorId;
-      }
-      globalFormData.set("quotations", JSON.stringify(quotations));
-    }
   };
 
   return (

@@ -45,7 +45,6 @@ const ProductList = ({
     name: `quotations.${index}.products`,
   });
 
-  const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
 
   const updateProductTotals = useCallback(
@@ -97,7 +96,6 @@ const ProductList = ({
 
   useEffect(() => {
     setIsLoading(true);
-    setError(null);
 
     try {
       if (Array.isArray(products) && products.length > 0) {
@@ -135,9 +133,7 @@ const ProductList = ({
         });
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
+      console.log(err);
     } finally {
       setIsLoading(false);
     }
@@ -190,11 +186,6 @@ const ProductList = ({
                 )}
                 readOnly
               />
-              {errors?.quotations?.[index]?.products?.[productIndex]?.name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.quotations[index].products[productIndex].name.message}
-                </p>
-              )}
             </div>
             {/* Description */}
             <div className="w-1/4">
@@ -203,20 +194,6 @@ const ProductList = ({
                   `quotations.${index}.products.${productIndex}.description`
                 )}
               />
-              {/* <Input
-                {...control.register(
-                  `quotations.${index}.products.${productIndex}.description`
-                )}
-              /> */}
-              {errors?.quotations?.[index]?.products?.[productIndex]
-                ?.modelNo && (
-                <p className="text-red-500 text-sm mt-1">
-                  {
-                    errors.quotations[index].products[productIndex].modelNo
-                      .message
-                  }
-                </p>
-              )}
             </div>
             {/* Quantity */}
             <div className="w-1/12">
@@ -239,16 +216,8 @@ const ProductList = ({
                 }}
                 readOnly
               />
-              {errors?.quotations?.[index]?.products?.[productIndex]
-                ?.quantity && (
-                <p className="text-red-500 text-sm mt-1">
-                  {
-                    errors.quotations[index].products[productIndex].quantity
-                      .message
-                  }
-                </p>
-              )}
             </div>
+
             {/* unit price */}
             <div className="w-1/12">
               <Controller
@@ -267,13 +236,10 @@ const ProductList = ({
                   />
                 )}
               />
-              {errors?.quotations?.[index]?.products?.[productIndex]
-                ?.unitPrice && (
+
+              {errors?.products?.[productIndex]?.unitPrice && (
                 <p className="text-red-500 text-sm mt-1">
-                  {
-                    errors.quotations[index].products[productIndex].unitPrice
-                      .message
-                  }
+                  {errors.products[productIndex].unitPrice.message}
                 </p>
               )}
             </div>
@@ -303,9 +269,9 @@ const ProductList = ({
                   </Select>
                 )}
               />
-              {errors?.quotations?.[index]?.products?.[productIndex]?.gst && (
+              {errors?.products?.[productIndex]?.gst && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.quotations[index].products[productIndex].gst.message}
+                  {errors.products[productIndex].gst.message}
                 </p>
               )}
             </div>
@@ -322,7 +288,7 @@ const ProductList = ({
                     getValues(
                       `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`
                     )
-                  ) || 0.00
+                  ) || 0.0
                 ).toFixed(2)}
               />
             </div>
@@ -339,7 +305,7 @@ const ProductList = ({
                     getValues(
                       `quotations.${index}.products.${productIndex}.totalPriceWithGST`
                     )
-                  ) || 0.00
+                  ) || 0.0
                 ).toFixed(2)}
               />
             </div>
