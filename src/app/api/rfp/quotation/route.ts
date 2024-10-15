@@ -50,13 +50,10 @@ export async function PUT(request: NextRequest) {
           JSON.stringify(quotation, null, 2)
         );
 
-
         console.log(
           "Processing quotation products:",
           JSON.stringify(products, null, 2)
         );
-
-        
 
         if (!isValidUUID(vendorId)) {
           console.error(`Invalid vendorId: ${vendorId}`);
@@ -130,10 +127,10 @@ export async function PUT(request: NextRequest) {
       })
     );
 
-    console.log(
-      "Processed quotations:",
-      JSON.stringify(processedQuotations, null, 2)
-    );
+    // console.log(
+    //   "Processed quotations:",
+    //   JSON.stringify(processedQuotations, null, 2)
+    // );
 
     const existingRFP = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, id),
@@ -146,7 +143,7 @@ export async function PUT(request: NextRequest) {
       throw new Error(`RFP with id ${id} not found`);
     }
 
-    console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
+    // console.log("Existing RFP found:", JSON.stringify(existingRFP, null, 2));
 
     // Update or create quotations
     const updatedQuotations = await Promise.all(
@@ -162,6 +159,10 @@ export async function PUT(request: NextRequest) {
     );
 
     // Step 1: Update the RFP with the new status and preferred quotation
+
+    await console.log("UpdatedQuotations", updatedQuotations);
+    console.log("preferredVendorId", preferredVendorId);
+
     await db
       .update(RFPTable)
       .set({

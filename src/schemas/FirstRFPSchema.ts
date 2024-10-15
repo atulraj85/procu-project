@@ -36,9 +36,6 @@ export const FirstRFPSchema = z.object({
   dateOfOrdering: z
     .string({
       required_error: "Date of ordering is required",
-    })
-    .refine((date) => !isNaN(Date.parse(date)), {
-      message: "Invalid date format for date of ordering",
     }),
   deliveryLocation: z.string({
     required_error: "Delivery location is required",

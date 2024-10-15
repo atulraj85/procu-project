@@ -162,7 +162,7 @@ export default function RFPUpdateForm({
   rfpId: string;
   initialData: any;
 }) {
-  console.log("initialData", initialData);
+  // console.log("initialData", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -179,79 +179,150 @@ export default function RFPUpdateForm({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
   const [showPreferredQuotationError, setShowPreferredQuotationError] =
-    useState("");
+    useState(false);
   const [savingQuotation, setSavingQuotation] = useState<number | null>(null);
   const [savedQuotations, setSavedQuotations] = useState<Set<number>>(
     new Set()
   );
+
+  const [savingRFPQuotation, setSavingRFPQuotation] = useState(false);
 
   const [quotationRefError, setQuotationRefError] = useState("");
   const [quotationVendorError, setQuotationVendorError] = useState("");
   const [quotationUnitPriceError, setQuotationUnitPriceError] = useState("");
   const [quotationUnitPriceOtherError, setQuotationUnitPriceOtherError] =
     useState("");
+  const [reasonError, setReasonError] = useState<string | null>(null);
+
   const [quotationDocNameError, setQuotationDocNameError] = useState("");
-
-  const saveQuotation = async (data: z.infer<typeof rfpSchema>) => {
-    try {
-      if (!preferredVendorId) {
-        setShowPreferredQuotationError("Please select a preferred quotation");
-        return;
-      }
-
-      // If less than 3 quotations, show reason dialog
-      if (fields.length < 3) {
-        setShowReasonDialog(true);
-        return;
-      }
-
-      await submitForm(data);
-      const quotationData = data;
-      const formData = new FormData();
-      formData.append("rfpId", rfpId);
-      const serializedData = JSON.stringify({
-        ...quotationData,
-        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
-      });
-      formData.append("data", serializedData);
-
-      // console.log(files);
-
-      // Append files to formData
-      Object.entries(files).forEach(([key, file]) => {
-        formData.append(key, file);
-      });
-
-      console.log("FormData to be sent:", Object.fromEntries(formData));
-
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Could not update quotations!`);
-      }
-
-      const result = await response.json();
-      // console.log("RFP updated successfully:", result);
-      setSuccess(true);
-
-      toast({
-        title: "🎉 Quotation Updated!",
-        description: response.ok,
-      });
-      // router.push("/dashboard/manager");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save quotation",
-        variant: "destructive",
-      });
-    } finally {
-      setSavingQuotation(null);
-    }
+  const [visibleQuotationIndex, setVisibleQuotationIndex] = useState<
+    number | null
+  >(null);
+  const toggleQuotationVisibility = (index: number) => {
+    setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
   };
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useForm<z.infer<typeof rfpSchema>>({
+    resolver: zodResolver(rfpSchema),
+    defaultValues: {
+      rfpId: initialData.rfpId,
+      rfpStatus: initialData.rfpStatus,
+      preferredQuotationId: initialData.preferredQuotationId,
+      quotations: initialData.quotations.map((quotation: any) => ({
+        id: quotation.id,
+        refNo: quotation.refNo,
+        vendorId: quotation.vendor?.id,
+        vendor: quotation.vendor,
+        totalAmount: quotation.totalAmount,
+        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
+        products: quotation.products
+          .filter((product: any) => product.type === "product")
+          .map((product: any) => ({
+            id: product.id,
+            rfpProductId: product.rfpProductId,
+            name: product.name,
+            description: product.description,
+            modelNo: product.modelNo,
+            quantity: product.quantity,
+            unitPrice: parseFloat(product.price),
+            gst: product.gst.toString(),
+            totalPriceWithoutGST: parseFloat(product.price) * product.quantity,
+            totalPriceWithGST:
+              parseFloat(product.price) *
+              product.quantity *
+              (1 + product.GST / 100),
+          })),
+        otherCharges: quotation.products
+          .filter((product: any) => product.type === "otherCharge")
+          .map((charge: any) => ({
+            id: charge.id,
+            name: "Other Charges (if any)",
+            unitPrice: parseFloat(charge.price),
+            gst: charge.gst.toString(),
+          })),
+        total: {
+          withGST: parseFloat(quotation.totalAmount),
+          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
+        },
+        supportingDocuments: quotation.supportingDocuments.map((doc: any) => ({
+          id: doc.id,
+          name: doc.documentName,
+          fileName: doc.documentName,
+          location: doc.location,
+        })),
+      })),
+    },
+  });
+
+  useEffect(() => {
+    const currentQuotations = JSON.stringify(getValues().quotations);
+    if (globalFormData.get("quotations") !== currentQuotations) {
+      globalFormData.set("quotations", currentQuotations);
+    }
+  }, [getValues]);
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "quotations",
+  });
+
+  // const saveQuotation = async (data: z.infer<typeof rfpSchema>) => {
+  //   // try {
+  //   //   if (!preferredVendorId) {
+  //   //     setShowPreferredQuotationError("Please select a preferred quotation");
+  //   //     return;
+  //   //   }
+  //   //   // If less than 3 quotations, show reason dialog
+  //   //   if (fields.length < 3) {
+  //   //     setShowReasonDialog(true);
+  //   //     return;
+  //   //   }
+  //   //   await submitForm(data);
+  //   //   const quotationData = data;
+  //   //   const formData = new FormData();
+  //   //   formData.append("rfpId", rfpId);
+  //   //   const serializedData = JSON.stringify({
+  //   //     ...quotationData,
+  //   //     rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+  //   //   });
+  //   //   formData.append("data", serializedData);
+  //   //   // console.log(files);
+  //   //   // Append files to formData
+  //   //   Object.entries(files).forEach(([key, file]) => {
+  //   //     formData.append(key, file);
+  //   //   });
+  //   //   console.log("FormData to be sent:", Object.fromEntries(formData));
+  //   //   const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+  //   //     method: "PUT",
+  //   //     body: formData,
+  //   //   });
+  //   //   if (!response.ok) {
+  //   //     throw new Error(`Could not update quotations!`);
+  //   //   }
+  //   //   const result = await response.json();
+  //   //   // console.log("RFP updated successfully:", result);
+  //   //   setSuccess(true);
+  //   //   toast({
+  //   //     title: "🎉 Quotation Updated!",
+  //   //     description: response.ok,
+  //   //   });
+  //   //   // router.push("/dashboard/manager");
+  //   // } catch (error) {
+  //   //   toast({
+  //   //     title: "Error",
+  //   //     description: "Failed to save quotation",
+  //   //     variant: "destructive",
+  //   //   });
+  //   // } finally {
+  //   //   setSavingQuotation(null);
+  //   // }
+  // };
 
   const validateQuotation = (data: z.infer<typeof rfpSchema>): boolean => {
     const result = data.quotations.map((quotation, id) => {
@@ -289,32 +360,68 @@ export default function RFPUpdateForm({
     return result.every(Boolean);
   };
 
+  const updateQuotationFromDB = async () => {
+    try {
+      console.log("Fetching RFP data for ID:", initialData.rfpId);
 
+      const rfpResponse = await fetch(`/api/rfp?rfpId=${initialData.rfpId}`);
+      console.log("Quotation state before update: ", getValues("quotations"));
+      if (!rfpResponse.ok) {
+        throw new Error(`HTTP error! status: ${rfpResponse.status}`);
+      }
+      const rfpResult = await rfpResponse.json();
+      console.log("updateQuotationFromDB", rfpResult);
+      const updatedQuotations = rfpResult[0].quotations;
+      setValue("quotations", updatedQuotations);
+      // console.log("Quotation state after update: ", getValues("quotations"));
 
-  
+      console.log("Testing quotation", getValues(`quotations.0.id`));
+
+      console.log(updatedQuotations);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save quotation",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingQuotation(null);
+    }
+  };
+
   const saveQuote = async (index: number, data: z.infer<typeof rfpSchema>) => {
     if (validateQuotation(data)) {
-      console.log("working");
       try {
         //check quotation ref no to non blank
         // check vendor no blank
         // Product / other charges items quantity and unit price not blank && numeric/decimal && non negative
         // Supporting doc, non blank name, document
 
+        setSavingRFPQuotation(true);
         console.log("Save quote", data);
 
-        const quotationData = data.quotations[index];
+        const tempQuotations = data.quotations;
+        data.quotations = [tempQuotations[index]];
+
+        const finalData = { ...data };
+
+        console.log("finalData", finalData);
+
+        const quotationData = data.quotations;
+
+        console.log("Quotation data", quotationData);
+
+        console.log(`Quotation at index: ${index}`, quotationData[index]);
+
         const formData = new FormData();
         formData.append("rfpId", rfpId);
         const serializedData = JSON.stringify({
-          ...quotationData,
+          ...data,
+
           rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
         });
         formData.append("data", serializedData);
 
-        // console.log(files);
-
-        // Append files to formData
         Object.entries(files).forEach(([key, file]) => {
           formData.append(key, file);
         });
@@ -334,14 +441,17 @@ export default function RFPUpdateForm({
         }
 
         const result = await response.json();
-        // console.log("RFP updated successfully:", result);
-        setSuccess(true);
+        console.log("RFP updated successfully:", result);
+        // setSuccess(true);
+
+        // updateQuotationFromDB();
+
+        setSavingRFPQuotation(false);
 
         toast({
           title: "🎉 Quotation Updated!",
           description: response.ok,
         });
-        // router.push("/dashboard/manager");
       } catch (error) {
         toast({
           title: "Error",
@@ -355,59 +465,66 @@ export default function RFPUpdateForm({
   };
 
   const saveRFP = async (data: z.infer<typeof rfpSchema>) => {
+    if (data.quotations.length === 0) {
+      console.log(" atleast 1 quotation needed");
+      return;
+    }
+
+    if (data.quotations.length < 3) {
+      console.log("Please provide reason for < 3 quotes");
+      setShowReasonDialog(true);
+      return;
+    }
+
+    if (!data.preferredVendorId) {
+      setShowPreferredQuotationError(true);
+      console.log("Set 1 preferred quotation");
+      return;
+    }
+
     try {
       // atleast 1 quotation
       // check if number of quotations < 3 then ask reason why
       // only one preferred quotation (not eq to 0 , greater than 1, exact 1)
+      // all quotations should be saved first
 
-      if (data.quotations.length === 0) {
-        console.log(" atleast 1 quotation needed");
+      console.log("Save RFP", data);
+      setIsLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("rfpId", rfpId);
+      const serializedData = JSON.stringify({
+        // rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+        ...data,
+      });
+      formData.append("data", serializedData);
+
+      Object.entries(files).forEach(([key, file]) => {
+        formData.append(key, file);
+      });
+
+      console.log("FormData to be sent:", Object.fromEntries(formData));
+
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Could not update quotations!`);
       }
 
-      if (data.quotations.length < 3) {
-        console.log("Please provide reason for < 3 quotes");
-      }
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
+      setSuccess(true);
+      setIsLoading(false);
 
-      if (!data.preferredVendorId) {
-        console.log("Set 1 preferred quotation");
-      }
-
-      // const quotationData = data;
-      // const formData = new FormData();
-      // formData.append("rfpId", rfpId);
-      // const serializedData = JSON.stringify({
-      //   ...quotationData,
-      //   rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
-      // });
-      // formData.append("data", serializedData);
-
-      // // console.log(files);
-
-      // // Append files to formData
-      // Object.entries(files).forEach(([key, file]) => {
-      //   formData.append(key, file);
-      // });
-
-      // console.log("FormData to be sent:", Object.fromEntries(formData));
-
-      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
-
-      // if (!response.ok) {
-      //   throw new Error(`Could not update quotations!`);
-      // }
-
-      // const result = await response.json();
-      // // console.log("RFP updated successfully:", result);
-      // setSuccess(true);
-
-      // toast({
-      //   title: "🎉 Quotation Updated!",
-      //   description: response.ok,
-      // });
-      // router.push("/dashboard/manager");
+      toast({
+        title: "🎉 RFP Submitted!",
+        description: response.ok,
+      });
+      router.push("/dashboard/manager");
     } catch (error) {
       toast({
         title: "Error",
@@ -447,7 +564,7 @@ export default function RFPUpdateForm({
           {/* Total amounts */}
           <TotalComponent setValue={setValue} control={control} index={index} />
           {/* Preferred Quote checkbox */}
-          {/* <div>
+          <div>
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={preferredVendorIndex === index}
@@ -459,7 +576,7 @@ export default function RFPUpdateForm({
                   if (checked) {
                     setValue("preferredVendorId", quotation.vendorId);
                     setPreferredVendorId(quotation.vendorId);
-                    setShowPreferredQuotationError("");
+                    setShowPreferredQuotationError(false);
                     setPreferredVendorIndex(index);
                   } else {
                     setPreferredVendorId("");
@@ -469,15 +586,9 @@ export default function RFPUpdateForm({
               />
               <div className="flex">
                 <Label className=" text-green-700">Preferred Quote</Label>
-                {showPreferredQuotationError && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {showPreferredQuotationError ||
-                      "Please select a Quotation."}
-                  </p>
-                )}
               </div>
             </div>
-          </div> */}
+          </div>
 
           {/* Arrow */}
           <span
@@ -551,7 +662,18 @@ export default function RFPUpdateForm({
                 onClick={() => saveQuote(index, getValues())}
                 disabled={savingQuotation === index}
               >
-                {savingQuotation === index ? (
+                {/* {savingQuotation === index ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : isSaved ? (
+                  "Update"
+                ) : (
+                  "Save"
+                )} */}
+
+                {savingRFPQuotation ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
@@ -578,78 +700,6 @@ export default function RFPUpdateForm({
       </div>
     );
   };
-
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    getValues,
-  } = useForm<z.infer<typeof rfpSchema>>({
-    resolver: zodResolver(rfpSchema),
-    defaultValues: {
-      rfpId: initialData.rfpId,
-      rfpStatus: initialData.rfpStatus,
-      preferredQuotationId: initialData.preferredQuotationId,
-      quotations: initialData.quotations.map((quotation: any) => ({
-        id: quotation.id,
-        refNo: quotation.refNo,
-        vendorId: quotation.vendor?.id,
-        vendor: quotation.vendor,
-        totalAmount: quotation.totalAmount,
-        totalAmountWithoutGST: quotation.totalAmountWithoutGST,
-        products: quotation.products
-          .filter((product: any) => product.type === "product")
-          .map((product: any) => ({
-            id: product.id,
-            rfpProductId: product.rfpProductId,
-            name: product.name,
-            description: product.description,
-            modelNo: product.modelNo,
-            quantity: product.quantity,
-            unitPrice: parseFloat(product.price),
-            gst: product.gst.toString(),
-            totalPriceWithoutGST: parseFloat(product.price) * product.quantity,
-            totalPriceWithGST:
-              parseFloat(product.price) *
-              product.quantity *
-              (1 + product.GST / 100),
-          })),
-        otherCharges: quotation.products
-          .filter((product: any) => product.type === "otherCharge")
-          .map((charge: any) => ({
-            id: charge.id,
-            name: "Other Charges (if any)",
-            unitPrice: parseFloat(charge.price),
-            gst: charge.gst.toString(),
-          })),
-        total: {
-          withGST: parseFloat(quotation.totalAmount),
-          withoutGST: parseFloat(quotation.totalAmountWithoutGST),
-        },
-        supportingDocuments: quotation.supportingDocuments.map((doc: any) => ({
-          id: doc.id,
-          name: doc.documentName,
-          fileName: doc.documentName,
-          location: doc.location,
-        })),
-      })),
-    },
-  });
-
-  const [reasonError, setReasonError] = useState<string | null>(null);
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "quotations",
-  });
-
-  useEffect(() => {
-    const currentQuotations = JSON.stringify(getValues().quotations);
-    if (globalFormData.get("quotations") !== currentQuotations) {
-      globalFormData.set("quotations", currentQuotations);
-    }
-  }, [getValues]);
 
   const handleDeleteClick = (index: number) => {
     setDeleteIndex(index);
@@ -684,14 +734,6 @@ export default function RFPUpdateForm({
       setShowReasonPrompt(false);
     }
   }, [fields.length, append]);
-
-  const [visibleQuotationIndex, setVisibleQuotationIndex] = useState<
-    number | null
-  >(null);
-
-  const toggleQuotationVisibility = (index: number) => {
-    setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
-  };
 
   const submitForm = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
@@ -758,7 +800,7 @@ export default function RFPUpdateForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(saveQuotation)} className="space-y-8">
+    <form onSubmit={handleSubmit(saveRFP)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle>Update RFP: {rfpId}</CardTitle>
@@ -810,6 +852,13 @@ export default function RFPUpdateForm({
           </div>
         </div>
       )}
+
+      {preferredVendorIndex ||
+        (showPreferredQuotationError && (
+          <p className="text-red-500 text-sm mt-1">
+            "Please select a Preferred Quotation."
+          </p>
+        ))}
 
       <Button
         className="bg-primary"
