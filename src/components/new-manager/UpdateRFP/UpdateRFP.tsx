@@ -364,7 +364,6 @@ export default function RFPUpdateForm({
         formData.append("rfpId", rfpId);
         const serializedData = JSON.stringify({
           ...data,
-
           rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
         });
         formData.append("data", serializedData);
@@ -389,6 +388,10 @@ export default function RFPUpdateForm({
 
         const result = await response.json();
         console.log("RFP updated successfully:", result);
+
+        setValue(`quotations.${index}.id`, result.quotations[index].id);
+
+        console.log("Current form", getValues());
         // setSuccess(true);
 
         // updateQuotationFromDB();
@@ -441,8 +444,8 @@ export default function RFPUpdateForm({
 
       formData.append("rfpId", rfpId);
       const serializedData = JSON.stringify({
-        // rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
         ...data,
+        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
       });
       formData.append("data", serializedData);
 
