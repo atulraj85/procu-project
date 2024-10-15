@@ -31,7 +31,6 @@ export const CompanyFormSchema = z.object({
     postalCode: z.string().min(1, "Zip Code is required"),
   });
   export const AddressformSchema2 = z.object({
-    // addressName: z.string().min(1, "Title is required"),
     street: z.string().min(1, "Street is required"),
     country: z.string().min(1, "Country is required"),
     state: z.string().min(1, "State is required"),

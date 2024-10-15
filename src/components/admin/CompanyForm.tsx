@@ -28,6 +28,7 @@ import { CiCircleRemove } from "react-icons/ci";
 import * as z from "zod";
 import { Card, CardContent } from "../ui/card";
 import AddressUpdate from "./AddressUpdate";
+import ViewAddress from "./ViewAddress";
 
 type CompanyFormValues = z.infer<typeof CompanyFormSchema>;
 
@@ -414,7 +415,7 @@ export function CompanyForm({ initialData, onSubmit }: CompanyFormProps) {
         </form>
       </Form>
       <div className="mt-6">
-        <AddressUpdate companyId={companyId} />
+        <ViewAddress companyId={companyId} />
       </div>
     </div>
   );

@@ -27,21 +27,23 @@ import {
 import Loader from "../shared/Loader";
 
 type FormValues = z.infer<typeof AddressformSchema2>;
-// type AdrresProp = z.infer<typeof AddressformSchema>;
+type AdrresProp = z.infer<typeof AddressformSchema>;
+
 interface AddressFormProps {
   isAddingAddress: () => void;
   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
   setSelectedAddr: React.Dispatch<React.SetStateAction<string | null>>;
-  handleNewAdress: ()=> void;
-  setAddressProp:React.Dispatch<React.SetStateAction<FormValues | null>>;
+  handleNewAdress: () => void;
+  addressProp: FormValues | null;
+  setAddressProp: React.Dispatch<React.SetStateAction<FormValues | null>>;
 }
 
-const NewAddress: React.FC<AddressFormProps> = ({
-  setAddressProp,
-  isAddingAddress,
+const EditAddress: React.FC<AddressFormProps> = ({
   setRfpAddress,
   setSelectedAddr,
-  handleNewAdress
+  handleNewAdress,
+  addressProp,
+  setAddressProp
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -53,61 +55,63 @@ const NewAddress: React.FC<AddressFormProps> = ({
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema2),
     defaultValues: {
-      street: "",
+      street: addressProp?.street || "",
       country: "INDIA",
-      state: "",
-      city: "",
-      postalCode: "",
+      state: addressProp?.state || "",
+      city: addressProp?.city || "",
+      postalCode: addressProp?.postalCode || "",
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
-
     setAddressProp(data);
 
-    const {street, city, postalCode, state, country} = data;
+    const { street, city, postalCode, state, country } = data;
     const address = `${street}, ${city}, ${postalCode}, ${currState}, ${country}`;
     
     setRfpAddress(address);
     setSelectedAddr(address);
-    isAddingAddress();
     handleNewAdress();
-
+    
     toast({
       title: "Success",
-      description: "Delivery Address Selected",
+      description: "Delivery Address Edited",
     });
     
-    form.reset();
+    form.reset({
+      street: data?.street || "",
+      country: "INDIA",
+      state: data?.state || "",
+      city: data?.city || "",
+      postalCode: data?.postalCode || "",
+    });
     setIsSaving(false);
   };
 
-  useEffect(() => { 
-    const fetchStates = async () => {
-      try {
-        const response = await fetch("/api/address/states/IN");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-
-        const transformedStates = data.map(
-          (state: { code: string; name: string }) => ({
-            value: state.code,
-            label: state.name,
-          })
-        );
-
-        setStates(transformedStates);
-        setIsLoading(true);
-      } catch (error) {
-        console.error("There was a problem with the fetch operation:", error);
+  const fetchStates = async () => {
+    try {
+      const response = await fetch("/api/address/states/IN");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
       }
-    };
+      const data = await response.json();
 
-    fetchStates();
-  }, []);
+      const transformedStates = data.map(
+        (state: { code: string; name: string }) => ({
+          value: state.code,
+          label: state.name,
+        })
+      );
+
+      setStates(transformedStates);
+      
+      return transformedStates;
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+      return [];
+    }
+  };
 
   const fetchCities = async (stateCode: string) => {
     if (stateCode) {
@@ -124,21 +128,46 @@ const NewAddress: React.FC<AddressFormProps> = ({
         }));
 
         setCities(transformedCities);
+        setIsLoading(true);
+        return transformedCities;
       } catch (error) {
         console.error("There was a problem fetching cities:", error);
+        return [];
       }
     }
+    return [];
   };
 
-  const handleStateChange = (value: string) => {
-    const selectedState = states.find((state)=> state.value === value);
-    if(selectedState){
-      setCurrState(selectedState?.label);
+  useEffect(() => {
+    const initializeForm = async () => {
+      const fetchedStates = await fetchStates();
+      if (fetchedStates.length > 0 && addressProp?.state) {
+        const selectedState = fetchedStates.find((state:{ value: string; label: string }) => state.value === addressProp.state);
+        if (selectedState) {
+          setCurrState(selectedState.label);
+          const fetchedCities = await fetchCities(addressProp.state);
+          if (fetchedCities.length > 0 && addressProp.city) {
+            const selectedCity = fetchedCities.find((city:{ value: string; label: string }) => city.value === addressProp.city);
+            if (selectedCity) {
+              form.setValue("city", selectedCity.value);
+            }
+          }
+        }
+      }
+    };
+
+    initializeForm();
+  }, [addressProp, form]);
+
+  const handleStateChange = async (value: string) => {
+    const selectedState = states.find((state) => state.value === value);
+    if (selectedState) {
+      setCurrState(selectedState.label);
     }
     
     form.setValue("state", value);
     form.setValue("city", ""); // Reset city when state changes
-    fetchCities(value);
+    await fetchCities(value);
   };
 
   const handleCityChange = (value: string) => {
@@ -154,7 +183,7 @@ const NewAddress: React.FC<AddressFormProps> = ({
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle>New Delivery Address</CardTitle>
+            <CardTitle>Edit Delivery Address</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
@@ -258,7 +287,7 @@ const NewAddress: React.FC<AddressFormProps> = ({
                 className="mt-4 w-28 my-4 bg-primary"
                 disabled={isSaving}
               >
-                {isSaving ? "Saving..." : "Add"}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </CardContent>
@@ -268,4 +297,4 @@ const NewAddress: React.FC<AddressFormProps> = ({
   );
 };
 
-export default NewAddress;
+export default EditAddress;
