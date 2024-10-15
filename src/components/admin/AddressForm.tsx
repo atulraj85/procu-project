@@ -23,17 +23,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Loader from "../shared/Loader";
+import { formatRevalidate } from "next/dist/server/lib/revalidate";
 
 type FormValues = z.infer<typeof AddressformSchema>;
 
 interface AddressFormProps {
   companyId: string | null;
-  isAddingAddress: () => void;
+  // isAddingAddress: () => void;
 }
 
 const AddressForm: React.FC<AddressFormProps> = ({
   companyId,
-  isAddingAddress,
+  // isAddingAddress,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
@@ -80,7 +81,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
           description: "Address added successfully!",
           duration: 3000,
         });
-        isAddingAddress();
+        form.reset();
+        // isAddingAddress();
       } else {
         console.error("Failed to add address:", response.statusText);
         toast({
@@ -176,11 +178,11 @@ const AddressForm: React.FC<AddressFormProps> = ({
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <div>Delivery Address</div>
-              <Button className="w-28 bg-primary" onClick={isAddingAddress}>
-                Back
-              </Button>
+            <CardTitle className="flex justify-between ">
+            
+              {/* <Button className="w-28 bg-primary" onClick={isAddingAddress}> */}
+                {/* Back
+              </Button> */}
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { SidebarItem } from "../../types/index";
 import Image from "next/image";
 import Procu from "./Procu";
@@ -10,6 +10,9 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ items, setActiveComponent }) => {
+
+      const [active, setActive] = useState<string>("Dashboard");
+      
   return (
     <aside className="flex h-screen w-56 flex-col overflow-y-auto border-r bg-white px-5 py-8">
       <div className="text-black text-xl m-3 -ml-0.5">
@@ -21,8 +24,8 @@ const Sidebar: React.FC<SidebarProps> = ({ items, setActiveComponent }) => {
             <Link href={item.route} key={index}>
               <div className="space-y-3 ">
                 <div
-                  className="flex transform items-center rounded-lg px-3 py-2 text-gray-600 transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700 cursor-pointer {}"
-                  onClick={() => setActiveComponent(item.value)}
+                  className={`flex transform items-center rounded-lg px-3 py-2 text-gray-600 transition-colors duration-300  hover:text-gray-700 hover:bg-slate-50 cursor-pointer ${active === item.value ? "bg-gray-100 text-gray-700 cursor-pointer" : ""}`}
+                  onClick={() => setActive(item.value)}
                 >
                   <Image
                     src={item.imgUrl}

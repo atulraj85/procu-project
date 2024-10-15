@@ -155,10 +155,10 @@ export const Po1: ColumnDef<TableRow>[] = [
     header: "Vendor Mobile",
     accessorFn: (row) => row.quotations[0]?.vendor.mobile,
   },
-  {
-    header: "Taxable Amount",
-    accessorFn: (row) => row.quotations[0]?.totalAmountWithoutGST,
-  },
+  // {
+  //   header: "Taxable Amount",
+  //   accessorFn: (row) => row.quotations[0]?.totalAmountWithoutGST,
+  // },
   {
     header: "Total Amount",
     accessorFn: (row) => row.quotations[0]?.totalAmount,

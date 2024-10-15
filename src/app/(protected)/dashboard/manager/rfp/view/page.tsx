@@ -35,24 +35,24 @@ interface Vendor {
 }
 
 interface Product {
-  GST: string ;
+  GST: string;
   price: string | number | readonly string[] | undefined;
   id: string;
-  gst:string;
+  gst: string;
   name: string;
   modelNo: string;
   quantity: number;
   description?: string;
-  type: 'product' | 'otherCharge';
+  type: "product" | "otherCharge";
 }
 
 interface OtherCharge {
   name: string;
-  GST : string;
+  GST: string;
   price: string | number;
   gst: string | number;
   description?: string;
-  type: 'otherCharge';
+  type: "otherCharge";
 }
 
 interface SupportingDocument {
@@ -117,17 +117,31 @@ const ViewRFP: React.FC = () => {
   }, [rfp]);
 
   const calculateTaxableAmount = (item: Product | OtherCharge) => {
-    const price = typeof item.price === 'string' ? parseFloat(item.price) : Number(item.price);
-    return price * (('quantity' in item && item.type !== 'otherCharge') ? item.quantity : 1);
+    const price =
+      typeof item.price === "string"
+        ? parseFloat(item.price)
+        : Number(item.price);
+    return (
+      price *
+      ("quantity" in item && item.type !== "otherCharge" ? item.quantity : 1)
+    );
   };
 
   const calculateTotalAmount = (item: Product | OtherCharge) => {
     const taxableAmount = calculateTaxableAmount(item);
-    const gst = typeof item.GST === 'string' ? parseFloat(item.GST) : Number(item.GST || item.gst || 0);
+    const gst =
+      typeof item.GST === "string"
+        ? parseFloat(item.GST)
+        : Number(item.GST || item.gst || 0);
     return taxableAmount * (1 + gst / 100);
   };
 
-  if (loading) return <div><Loader /></div>;
+  if (loading)
+    return (
+      <div>
+        <Loader />
+      </div>
+    );
   if (error) return <div className="text-red-500">{error}</div>;
   if (!rfpData) return <div>No RFP data found.</div>;
 
@@ -143,7 +157,7 @@ const ViewRFP: React.FC = () => {
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
-          <IoDocumentTextOutline />
+            <IoDocumentTextOutline />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-3xl">
@@ -174,71 +188,71 @@ const ViewRFP: React.FC = () => {
   return (
     <form className="space-y-2">
       <Card>
-      <div className="flex justify-between mt-2 mb-3 px-6">
-  <div className="flex flex-col">
-    <div className="flex items-center mb-2">
-      <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
-        {rfpData.requirementType === "Product" ? "P" : "S"}
-      </Label>
-      <Label>
-        RFP ID: {rfpData.rfpId}
-      </Label>
-    </div>
-    
-    {/* Product Details */}
-    <div className="ml-12">
-      {rfpData.products.map((product: { name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; modelNo: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; quantity: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; description: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | React.PromiseLikeOfReactNode | null | undefined; }, index: React.Key | null | undefined) => (
-        <div key={index} className="flex flex-col mb-1">
-          <div className="flex items-center space-x-4">
-            <Label className="font-medium">Name: {product.name}</Label>
-            <Label className="font-medium">Model: {product.modelNo}</Label>
-            <Label className="font-medium">Qty: {product.quantity}</Label>
+        <div className="flex justify-between mt-2 mb-3 px-6">
+          <div className="flex flex-col">
+            <div className="flex items-center mb-2">
+              <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+                {rfpData.requirementType === "Product" ? "P" : "S"}
+              </Label>
+              <Label>RFP ID: {rfpData.rfpId}</Label>
+            </div>
+
+            {/* Product Details */}
+            <div className="ml-12">
+              {rfpData.products.map((product: any, index: any) => (
+                <div key={index} className="flex flex-col mb-1">
+                  <div className="flex items-center space-x-4">
+                    <Label className="font-medium">Name: {product.name}</Label>
+                    <Label className="font-medium">
+                      Model: {product.modelNo}
+                    </Label>
+                    <Label className="font-medium">
+                      Qty: {product.quantity}
+                    </Label>
+                  </div>
+                  {product.description && (
+                    <Label className="text-sm text-gray-600">
+                      Description: {product.description}
+                    </Label>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          {product.description && (
-            <Label className="text-sm text-gray-600">
-              Description: {product.description}
-            </Label>
-          )}
-        </div>
-      ))}
-    </div>
-  </div>
-  
-  <div className="flex">
-    <div className="">
-      <Label>
-        RFP Date: {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
-      </Label>
-      <div className="space-y-2">
-        <Label>
-          Exp. Delivery Date: {new Date(rfpData.deliveryByDate).toLocaleDateString()}
-        </Label>
-      </div>
-    </div>
-    <div className="pl-3">
-      <Link href="/dashboard/manager">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="text-black-500 bg-red-400"
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </Link>
-    </div>
-  </div>
-</div>
-        <CardContent>
-       
-        <div>
-                {rfpData.quotations.map((quotation, index) => (
-                  <Disclosure key={index} as="div" className="mb-4">
-                   
-                  </Disclosure>
-                ))}
+
+          <div className="flex">
+            <div className="">
+              <Label>
+                RFP Date:{" "}
+                {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
+              </Label>
+              <div className="space-y-2">
+                <Label>
+                  Exp. Delivery Date:{" "}
+                  {new Date(rfpData.deliveryByDate).toLocaleDateString()}
+                </Label>
               </div>
-       
+            </div>
+            <div className="pl-3">
+              <Link href="/dashboard/manager">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="text-black-500 bg-red-400"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <CardContent>
+          <div>
+            {rfpData.quotations.map((quotation, index) => (
+              <Disclosure key={index} as="div" className="mb-4"></Disclosure>
+            ))}
+          </div>
         </CardContent>
 
         <CardContent>
@@ -258,79 +272,141 @@ const ViewRFP: React.FC = () => {
                           }`}
                         >
                           <span className="flex">
-                            <span className="font-bold">Quot. Ref No : </span> {quotation.refNo}
+                            <span className="font-bold">Quot. Ref No : </span>{" "}
+                            {quotation.refNo}
                             {quotation.id === rfpData.preferredQuotationId && (
                               <span className="text-yellow-600 pl-4 font-semibold">
                                 <Star className="mr-2" />
                               </span>
                             )}
                           </span>
-                          <div><span className="font-bold">Total Amount (INR) :</span> {quotation.totalAmount}</div>
+                          <div>
+                            <span className="font-bold">
+                              Total Amount (INR) :
+                            </span>{" "}
+                            {quotation.totalAmount}
+                          </div>
                         </Disclosure.Button>
                         <Disclosure.Panel className="p-4">
                           <h4 className="font-semibold">Vendor Details</h4>
                           <div className="flex items-center space-x-2 mb-2">
                             <div className="flex flex-col">
-                              <Label>{quotation.vendor.companyName} | {quotation.vendor.email} | {quotation.vendor.mobile}</Label>
+                              <Label>
+                                {quotation.vendor.companyName} |{" "}
+                                {quotation.vendor.email} |{" "}
+                                {quotation.vendor.mobile}
+                              </Label>
                             </div>
                           </div>
-                          <h4 className="font-semibold mt-4">Products and Other Charges</h4>
+                          <h4 className="font-semibold mt-4">
+                            Products and Other Charges
+                          </h4>
                           <table className="min-w-full border-collapse border border-gray-300 mt-2">
                             <thead>
                               <tr className="bg-gray-100">
-                                <th className="border border-gray-300 p-2 text-left">Name</th>
-                                <th className="border border-gray-300 p-2 text-left">Description</th>
-                                <th className="border border-gray-300 p-2 text-left">Qty</th>
-                                <th className="border border-gray-300 p-2 text-left">Unit Price</th>
-                                <th className="border border-gray-300 p-2 text-left">GST %</th>
-                                <th className="border border-gray-300 p-2 text-left">Taxable Amt.</th>
-                                <th className="border border-gray-300 p-2 text-left">Total Amt.</th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Name
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Description
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Qty
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Unit Price
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  GST %
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Taxable Amt.
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  Total Amt.
+                                </th>
                               </tr>
                               <tr className="bg-gray-100">
                                 <th className="border border-gray-300 p-2 text-left"></th>
                                 <th className="border border-gray-300 p-2 text-left"></th>
                                 <th className="border border-gray-300 p-2 text-left"></th>
-                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  (INR)
+                                </th>
                                 <th className="border border-gray-300 p-2 text-left"></th>
-                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
-                                <th className="border border-gray-300 p-2 text-left">(INR)</th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  (INR)
+                                </th>
+                                <th className="border border-gray-300 p-2 text-left">
+                                  (INR)
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               {[
                                 ...quotation.products,
-                                ...(Array.isArray(quotation.otherCharges) ? quotation.otherCharges : [])
+                                ...(Array.isArray(quotation.otherCharges)
+                                  ? quotation.otherCharges
+                                  : []),
                               ].map((item, idx) => (
                                 <tr key={idx}>
                                   <td className="border border-gray-300 p-2">
-                                    {item.type === 'otherCharge' ? 'Other Charge' : item.name}
+                                    {item.type === "otherCharge"
+                                      ? "Other Charge"
+                                      : item.name}
                                   </td>
                                   <td className="border border-gray-300 p-2">
-                                    {item.type === 'otherCharge' ? '' : (item.description || 'N/A')}
+                                    {item.type === "otherCharge"
+                                      ? ""
+                                      : item.description || "N/A"}
                                   </td>
                                   <td className="border border-gray-300 p-2">
-                                    {item.type === 'otherCharge' ? '' : (item.quantity || '')}
+                                    {item.type === "otherCharge"
+                                      ? ""
+                                      : item.quantity || ""}
                                   </td>
-                                  <td className="border border-gray-300 p-2">{item.price}</td>
-                                  <td className="border border-gray-300 p-2">{item.GST || item.gst || 0}</td>
-                                  <td className="border border-gray-300 p-2">{calculateTaxableAmount(item).toFixed(2)}</td>
-                                  <td className="border border-gray-300 p-2">{calculateTotalAmount(item).toFixed(2)}</td>
+                                  <td className="border border-gray-300 p-2">
+                                    {item.price}
+                                  </td>
+                                  <td className="border border-gray-300 p-2">
+                                    {item.GST || item.gst || 0}
+                                  </td>
+                                  <td className="border border-gray-300 p-2">
+                                    {calculateTaxableAmount(item).toFixed(2)}
+                                  </td>
+                                  <td className="border border-gray-300 p-2">
+                                    {calculateTotalAmount(item).toFixed(2)}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
                             <tfoot>
                               <tr className="bg-gray-200">
-                                <td colSpan={5} className="border border-gray-300 p-2 font-bold text-right">Total:</td>
-                                <td className="border border-gray-300 p-2 font-bold">{quotation.totalAmountWithoutGST}</td>
-                                <td className="border border-gray-300 p-2 font-bold">{quotation.totalAmount}</td>
+                                <td
+                                  colSpan={5}
+                                  className="border border-gray-300 p-2 font-bold text-right"
+                                >
+                                  Total:
+                                </td>
+                                <td className="border border-gray-300 p-2 font-bold">
+                                  {quotation.totalAmountWithoutGST}
+                                </td>
+                                <td className="border border-gray-300 p-2 font-bold">
+                                  {quotation.totalAmount}
+                                </td>
                               </tr>
                             </tfoot>
                           </table>
-                          
-                          <h4 className="font-semibold mt-4 mb-2">Supporting Documents</h4>
+
+                          <h4 className="font-semibold mt-4 mb-2">
+                            Supporting Documents
+                          </h4>
                           <div className="flex flex-wrap gap-4">
                             {quotation.supportingDocuments.map((doc, idx) => (
-                              <div key={idx} className="flex items-center space-x-2">
+                              <div
+                                key={idx}
+                                className="flex items-center space-x-2"
+                              >
                                 <span>{doc.documentName}</span>
                                 <DocumentPreview document={doc} />
                               </div>
@@ -347,14 +423,15 @@ const ViewRFP: React.FC = () => {
           <div className="flex">
             <Card className="mb-4 mr-2 w-[75%]">
               <CardHeader>
-               
                 <Label className="font-bold text-20">Approver Details</Label>
               </CardHeader>
               <CardContent>
                 {rfpData.approvers.map((approver, index) => (
                   <div key={index} className="flex items-center space-x-2 mb-2">
                     <div>
-                      <h1>{approver.name} | {approver.email} | {approver.mobile}</h1>
+                      <h1>
+                        {approver.name} | {approver.email} | {approver.mobile}
+                      </h1>
                     </div>
                   </div>
                 ))}
@@ -362,7 +439,6 @@ const ViewRFP: React.FC = () => {
             </Card>
             <Card className="mb-4">
               <CardHeader>
-               
                 <Label className="font-bold text-20">Delivery Location</Label>
               </CardHeader>
               <CardContent>

@@ -91,17 +91,7 @@ export default function SheetSide() {
     };
 
     try {
-      const response = await fetch("/api/product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(productData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create product");
-      }
+      const response = await saveProduct(productData);
 
       toast({
         title: "🎉 Product added successfully!",

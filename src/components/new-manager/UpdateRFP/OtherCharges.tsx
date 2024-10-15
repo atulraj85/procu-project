@@ -27,12 +27,14 @@ const OtherChargesList = ({
   formData,
   globalFormData,
   errors,
+  handleError,
 }: {
   control: any;
   index: number;
   formData: any;
   globalFormData: any;
   errors: any;
+  handleError: any;
 }) => {
   const { fields, append } = useFieldArray({
     control,
@@ -83,7 +85,7 @@ const OtherChargesList = ({
   if (fields.length <= 0) {
     append({
       name: "Other Charges (if any)",
-      gst: "NILL",
+      gst: "0",
       unitPrice: 0,
     });
   }
@@ -99,6 +101,7 @@ const OtherChargesList = ({
   }, [fields, updateGlobalFormData]);
 
   const handleUnitPriceChange = (chargeIndex: number, newValue: number) => {
+    handleError("")
     const gst =
       control._getWatch(
         `quotations.${index}.otherCharges.${chargeIndex}.gst`
@@ -166,6 +169,7 @@ const OtherChargesList = ({
                 />
               )}
             />
+            {errors && <p className="text-red-500 text-sm mt-1">{errors}</p>}
           </div>
           <div className="w-1/12">
             <Controller

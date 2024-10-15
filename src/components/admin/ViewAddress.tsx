@@ -4,9 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AddressformSchema } from "@/schemas/Company";
-import { AddressformSchema2 } from "@/schemas/Company";
 import { IoIosAddCircle } from "react-icons/io";
 import { CiEdit } from "react-icons/ci";
+import AddressForm from "./AddressForm";
 import {
   Form,
   FormControl,
@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import EditAddress from "./EditAddress";
 
 import {
   Sheet,
@@ -35,26 +34,23 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import NewAddress from "./NewAddress";
 import { toast } from "@/components/ui/use-toast";
 import { AddressInterface } from "@/types";
 import { cosineDistance } from "drizzle-orm";
 
 type FormValues = z.infer<typeof AddressformSchema>;
-type addrersProps = z.infer<typeof AddressformSchema2>;
 
 interface Props {
   companyId: string ;
-  setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
+//   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
+const ViewAddress: React.FC<Props> = ({ companyId,  }) => {
   const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
   const [addresses, setAddresses] = useState<AddressInterface[] | null>(null);
   const [currAddressID, setCurrAddressID] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [selectedAddr, setSelectedAddr] = useState<string | null>(null);
-  const [addressProp, setAddressProp] = useState<addrersProps | null>(null);
   const [newAddress, setNewAddress] = useState(false);
 
   const form = useForm<FormValues>({
@@ -101,51 +97,23 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
   }, [companyId, isAddingAddress]);
 
   const handleAddressSelect = (searchTitle: string) => {
-    setAddressProp(null);
     const selectedAddress = addresses?.find(
       (address) =>
         address.addressName.toLowerCase() === searchTitle.toLowerCase()
     );
     if (selectedAddress) {
-      // setAddressProp(selectedAddress);
       setCurrAddressID(selectedAddress.id);
       form.reset(selectedAddress);
       console.log(selectedAddress.addressName);
       console.log(selectedAddress);
     }
 
-    
     const address = `${selectedAddress?.street}, ${selectedAddress?.city}, ${selectedAddress?.postalCode}, ${selectedAddress?.state}, ${selectedAddress?.country}`;
     setSelectedAddr(address);
     console.log(address);
-    setRfpAddress(address);
-  };
-
-  // const onSubmitForm = async (data: FormValues) => {
-  //   setIsSaving(true);
-  //   console.log(data);
-
-  //   const { street, city, postalCode, state, country } = data;
-
-  //   const address = `${street}, ${city}, ${postalCode}, ${state}, ${country}`;
-  //   console.log(address);
-
-  //   setRfpAddress(address);
-
-  //   toast({
-  //     title: "Success",
-  //     description: "Delivery Address Selected",
-  //   });
-
-  //   setIsSaving(false);
     
-  // };
-
-  const toggleAddingAddress = () => {
-    setIsAddingAddress((prev)=> prev);
-    setNewAddress((prev) => !prev);
-
   };
+
 
   const handleNewAdress = ()=>{
     setIsAddingAddress(false);
@@ -163,7 +131,7 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
           <CardTitle></CardTitle>
           <div className="flex gap-6">
 
-          {isAddingAddress  && <Select onValueChange={handleAddressSelect}>
+          {isAddingAddress && <Select onValueChange={handleAddressSelect}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select Address" />
               </SelectTrigger>
@@ -185,7 +153,8 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
             
             </div>}
 
-           {addressProp && <Sheet>
+
+            <Sheet>
               <SheetTrigger>
                 <div className="relative group">
                   <CiEdit className="text-3xl cursor-pointer text-green-300" />
@@ -197,18 +166,17 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Edit Delivery Address</SheetTitle>
-                  <EditAddress
-                    addressProp={addressProp}
-                    setAddressProp={setAddressProp}
-                    setRfpAddress={setRfpAddress}
-                    isAddingAddress={toggleAddingAddress}
-                    setSelectedAddr={setSelectedAddr}
-                    handleNewAdress={handleNewAdress}
+                  <SheetTitle>Add new Delivery Address</SheetTitle>
+                  <AddressForm
+                    companyId={companyId}
+                    // setRfpAddress={setRfpAddress}
+                    // isAddingAddress={toggleAddingAddress}
+                    // setSelectedAddr={setSelectedAddr}
+                    // handleNewAdress={handleNewAdress}
                   />
                 </SheetHeader>
               </SheetContent>
-            </Sheet>}
+            </Sheet>
 
             <Sheet>
               <SheetTrigger>
@@ -223,12 +191,8 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
               <SheetContent>
                 <SheetHeader>
                   <SheetTitle>Add new Delivery Address</SheetTitle>
-                  <NewAddress
-                  setAddressProp={setAddressProp}
-                    setRfpAddress={setRfpAddress}
-                    isAddingAddress={toggleAddingAddress}
-                    setSelectedAddr={setSelectedAddr}
-                    handleNewAdress={handleNewAdress}
+                  <AddressForm
+                    companyId={companyId}
                   />
                 </SheetHeader>
               </SheetContent>
@@ -238,8 +202,108 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
         </CardHeader>
       </Card>
 
+      {/* {!isAddingAddress ? (
+      
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmitForm)} className="space-y-8">
+            {addresses?.length === 0 ? (
+              <div className="item-center justify-center flex m-10">
+                Please create a new address
+              </div>
+            ) : (
+              <Card>
+                <CardContent>
+                  <div className="flex flex-col gap-2">
+                    <FormField
+                      control={form.control}
+                      name="street"
+                      render={({ field }) => (
+                        <FormItem className="col-span-3">
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Input {...field} disabled />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-4 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="state"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="postalCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Zip Code</FormLabel>
+                            <FormControl>
+                              <Input {...field} disabled />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="mt-4 w-36 my-4 bg-primary"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? "Saving..." : "Select Address"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </form>
+        </Form>
+      ) : ( */}
+
+      {/* )} */}
     </div>
   );
 };
 
-export default CompanyAddresses;
+export default ViewAddress;
