@@ -271,59 +271,6 @@ export default function RFPUpdateForm({
     control,
     name: "quotations",
   });
-
-  // const saveQuotation = async (data: z.infer<typeof rfpSchema>) => {
-  //   // try {
-  //   //   if (!preferredVendorId) {
-  //   //     setShowPreferredQuotationError("Please select a preferred quotation");
-  //   //     return;
-  //   //   }
-  //   //   // If less than 3 quotations, show reason dialog
-  //   //   if (fields.length < 3) {
-  //   //     setShowReasonDialog(true);
-  //   //     return;
-  //   //   }
-  //   //   await submitForm(data);
-  //   //   const quotationData = data;
-  //   //   const formData = new FormData();
-  //   //   formData.append("rfpId", rfpId);
-  //   //   const serializedData = JSON.stringify({
-  //   //     ...quotationData,
-  //   //     rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
-  //   //   });
-  //   //   formData.append("data", serializedData);
-  //   //   // console.log(files);
-  //   //   // Append files to formData
-  //   //   Object.entries(files).forEach(([key, file]) => {
-  //   //     formData.append(key, file);
-  //   //   });
-  //   //   console.log("FormData to be sent:", Object.fromEntries(formData));
-  //   //   const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-  //   //     method: "PUT",
-  //   //     body: formData,
-  //   //   });
-  //   //   if (!response.ok) {
-  //   //     throw new Error(`Could not update quotations!`);
-  //   //   }
-  //   //   const result = await response.json();
-  //   //   // console.log("RFP updated successfully:", result);
-  //   //   setSuccess(true);
-  //   //   toast({
-  //   //     title: "🎉 Quotation Updated!",
-  //   //     description: response.ok,
-  //   //   });
-  //   //   // router.push("/dashboard/manager");
-  //   // } catch (error) {
-  //   //   toast({
-  //   //     title: "Error",
-  //   //     description: "Failed to save quotation",
-  //   //     variant: "destructive",
-  //   //   });
-  //   // } finally {
-  //   //   setSavingQuotation(null);
-  //   // }
-  // };
-
   const validateQuotation = (data: z.infer<typeof rfpSchema>): boolean => {
     const result = data.quotations.map((quotation, id) => {
       if (quotation.refNo === "") {
@@ -470,16 +417,15 @@ export default function RFPUpdateForm({
       return;
     }
 
-    if (data.quotations.length < 3) {
-      console.log("Please provide reason for < 3 quotes");
-      setShowReasonDialog(true);
-      return;
-    }
-
     if (!data.preferredVendorId) {
       setShowPreferredQuotationError(true);
       console.log("Set 1 preferred quotation");
       return;
+    }
+
+    if (data.quotations.length < 3) {
+      console.log("Please provide reason for < 3 quotes");
+      setShowReasonDialog(true);
     }
 
     try {
