@@ -48,12 +48,12 @@ interface FormData {
   userId?: string;
   rfpProducts: RFPProduct[];
   approvers: Approver[];
-  deliveryLocationDetails: {
-    country: string;
-    state: string;
-    city: string;
-    zipCode: string;
-  };
+  // deliveryLocationDetails: {
+  //   country: string;
+  //   state: string;
+  //   city: string;
+  //   zipCode: string;
+  // };
 }
 
 const RFPForm: React.FC = () => {
@@ -66,12 +66,12 @@ const RFPForm: React.FC = () => {
     rfpStatus: "DRAFT",
     rfpProducts: [],
     approvers: [],
-    deliveryLocationDetails: {
-      country: "",
-      state: "",
-      city: "",
-      zipCode: "",
-    },
+    // deliveryLocationDetails: {
+    //   country: "",
+    //   state: "",
+    //   city: "",
+    //   zipCode: "",
+    // },
   });
 
   const [address, setAddress] = useState<string>("");
@@ -209,17 +209,7 @@ const RFPForm: React.FC = () => {
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
-      deliveryLocation: `${value}, ${prevData.deliveryLocationDetails.city}, ${prevData.deliveryLocationDetails.state}, ${prevData.deliveryLocationDetails.country}, ${prevData.deliveryLocationDetails.zipCode}`,
-    }));
-    if (name === "country") {
-      setCountry(value);
-    } else if (name === "state") {
-      setState(value);
-    } else if (name === "city") {
-      setCity(value);
-    } else if (name === "zipCode") {
-      setZipCode(value);
-    }
+    }))
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -386,17 +376,18 @@ const RFPForm: React.FC = () => {
     }
 
     // const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-
+    // const formattedDate = formData.dateOfOrdering.split("/").reverse().join("-"); 
     console.log(rfpAddress);
     const updatedFormData = {
       ...formData,
       deliveryLocation:rfpAddress,
-      deliveryLocationDetails: {
-        country,
-        state,
-        city,
-        zipCode,
-      },
+      
+      // deliveryLocationDetails: {
+      //   country,
+      //   state,
+      //   city,
+      //   zipCode,
+      // },
     };
 
     setLoading(true);
@@ -442,9 +433,8 @@ const RFPForm: React.FC = () => {
 
   return (
     <div className="relative pb-10">
-    <form onSubmit={handleSubmit} className="space-y-2">
       <Card>
-        <CardHeader>
+      <CardHeader>
           <div className=" flex justify-between">
             <div>
               <CardTitle>Create RFP</CardTitle>
@@ -459,6 +449,9 @@ const RFPForm: React.FC = () => {
             )}
           </div>
         </CardHeader>
+    <form onSubmit={handleSubmit} className="space-y-2">
+      
+        
         <CardContent>
           <Card className="mb-4">
             <CardHeader>
@@ -609,7 +602,7 @@ const RFPForm: React.FC = () => {
 
           {/* <div className="flex justify-between  space-x-2"> */}
 
-          <Card className="mb-4">
+          <Card className="">
             <CardHeader>
               <CardTitle>Product Details</CardTitle>
             </CardHeader>
@@ -756,88 +749,7 @@ const RFPForm: React.FC = () => {
 
           {/* Hidden old address */}
 
-          {/* <Card className="mb-4">
-            <CardHeader>
-              <CardTitle>Delivery Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className={errors.address ? "border-red-500" : ""}
-                />
-                {errors.address && (
-                  <p className="text-red-500 text-sm">{errors.address}</p>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Input
-                    id="country"
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className={errors.country ? "border-red-500" : ""}
-                  />
-                  {errors.country && (
-                    <p className="text-red-500 text-sm">{errors.country}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">State</Label>
-                  <Input
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    className={errors.state ? "border-red-500" : ""}
-                  />
-                  {errors.state && (
-                    <p className="text-red-500 text-sm">{errors.state}</p>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className={errors.city ? "border-red-500" : ""}
-                  />
-                  {errors.city && (
-                    <p className="text-red-500 text-sm">{errors.city}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zipCode">Zip Code</Label>
-                  <Input
-                    id="zipCode"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    className={errors.zipCode ? "border-red-500" : ""}
-                  />
-                  {errors.zipCode && (
-                    <p className="text-red-500 text-sm">{errors.zipCode}</p>
-                  )}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="additionalInstructions">
-                  Additional Delivery Instructions
-                </Label>
-                <Textarea
-                  id="additionalInstructions"
-                  value={additionalInstructions}
-                  onChange={(e) => setAdditionalInstructions(e.target.value)}
-                  rows={4}
-                />
-              </div>
-            </CardContent>
-          </Card> */}
+         
 
 
           <div className="flex justify-end space-x-4 mr-10">
@@ -853,7 +765,7 @@ const RFPForm: React.FC = () => {
         </Button> */}
             <Button 
               type="submit"
-              className=" absolute bottom-0  px-4  rounded-lg bg-primary"
+              className=" absolute bottom-[-12px]  px-4  rounded-lg bg-primary"
               disabled={loading}
             >
               {loading ? "Submitting..." : "Save Draft RFP"}
@@ -863,15 +775,16 @@ const RFPForm: React.FC = () => {
           {/* </div> */}
 
           {error && <div className="text-red-500">{error}</div>}
-        </CardContent>
-      </Card>
+          </CardContent>
     </form>
+    
+
 
               
-    <div className="my-6">
+    <div className="mx-6 mb-4 mt-[-6px]">
       {userInfo && <CompanyAddresses companyId={userInfo.companyId} setRfpAddress={setRfpAddress} />}
     </div>
-
+    </Card>
     </div>
             
   );

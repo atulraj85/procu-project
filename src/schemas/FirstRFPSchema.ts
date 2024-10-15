@@ -36,10 +36,10 @@ export const FirstRFPSchema = z.object({
   dateOfOrdering: z
     .string({
       required_error: "Date of ordering is required",
-    })
-    .refine((date) => !isNaN(Date.parse(date)), {
-      message: "Invalid date format for date of ordering",
     }),
+    // .refine((date) => !isNaN(Date.parse(date)), {
+    //   message: "Invalid date format for date of ordering",
+    // }),
   deliveryLocation: z.string({
     required_error: "Delivery location is required",
     invalid_type_error: "Delivery location must be a string",
@@ -47,10 +47,10 @@ export const FirstRFPSchema = z.object({
   deliveryByDate: z
     .string({
       required_error: "Delivery by date is required",
-    })
-    .refine((date) => !isNaN(Date.parse(date)), {
-      message: "Invalid date format for delivery by date",
     }),
+    // .refine((date) => !isNaN(Date.parse(date)), {
+    //   message: "Invalid date format for delivery by date",
+    // }),
 
   rfpStatus: z.string({
     required_error: "RFP status is required",

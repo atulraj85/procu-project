@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { AddressformSchema2 } from "@/schemas/Company";
-import { PlusIcon, XIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,15 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
-
 
 import Loader from "../shared/Loader";
 
@@ -42,25 +32,26 @@ interface AddressFormProps {
   isAddingAddress: () => void;
   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
   setSelectedAddr: React.Dispatch<React.SetStateAction<string | null>>;
+  handleNewAdress: ()=> void;
 }
 
 const NewAddress: React.FC<AddressFormProps> = ({
   companyId,
   isAddingAddress,
   setRfpAddress,
-  setSelectedAddr
+  setSelectedAddr,
+  handleNewAdress
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [states, setStates] = useState<{ value: string; label: string }[]>([]);
   const [cities, setCities] = useState<{ value: string; label: string }[]>([]);
-  const [currentState, setCurrentState] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [currState, setCurrState] = useState<string>("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema2),
     defaultValues: {
-    //   addressName: "", 
       street: "",
       country: "INDIA",
       state: "",
@@ -72,76 +63,21 @@ const NewAddress: React.FC<AddressFormProps> = ({
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
 
-
-    const {street, city, postalCode, state, country  } = data;
-
-    const address = `${street}, ${city}, ${postalCode}, ${state}, ${country}`;
-    console.log(address);
-
+    const {street, city, postalCode, state, country} = data;
+    const address = `${street}, ${city}, ${postalCode}, ${currState}, ${country}`;
+    
     setRfpAddress(address);
     setSelectedAddr(address);
     isAddingAddress();
+    handleNewAdress();
 
     toast({
-            title: "Success",
-            description: "Delivery Address Selected",
-            
-          });
-          setIsSaving(false);
-          form.reset( {
-            //   addressName: "", 
-              street: "",
-              country: "INDIA",
-              state: "",
-              city: "",
-              postalCode: "",
-            },);
-
-    //   console.log("fomr data", data);
-    // const formDataWithAddressType = {
-    //   ...data,
-    //   addressType: "SHIPPING",
-    //   state: currentState,
-    // };
-
-    // try {
-    //   const response = await fetch(`/api/company/${companyId}/address`, {
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //     body: JSON.stringify(formDataWithAddressType),
-    //   });
-
-    //   if (response.ok) {
-    //     const result = await response.json();
-    //     console.log("Address added successfully:", result);
-    //     toast({
-    //       title: "Success",
-    //       description: "Address added successfully!",
-    //       duration: 3000,
-    //     });
-    //     isAddingAddress();
-    //   } else {
-    //     console.error("Failed to add address:", response.statusText);
-    //     toast({
-    //       title: "Error",
-    //       description: "Failed to add address. Please try again.",
-    //       variant: "destructive",
-    //       duration: 3000,
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error submitting form:", error);
-    //   toast({
-    //     title: "Error",
-    //     description: "An error occurred. Please try again.",
-    //     variant: "destructive",
-    //     duration: 3000,
-    //   });
-    // } finally {
-    //   setIsSaving(false);
-    // }
+      title: "Success",
+      description: "Delivery Address Selected",
+    });
+    
+    form.reset();
+    setIsSaving(false);
   };
 
   useEffect(() => { 
@@ -149,43 +85,37 @@ const NewAddress: React.FC<AddressFormProps> = ({
       try {
         const response = await fetch("/api/address/states/IN");
         if (!response.ok) {
-          
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
 
-        // Transform the data into the desired format
         const transformedStates = data.map(
-          (state: { code: any; name: any }) => ({
+          (state: { code: string; name: string }) => ({
             value: state.code,
             label: state.name,
           })
         );
+
+        setStates(transformedStates);
         setIsLoading(true);
-
-        console.log("transformedStates", transformedStates);
-
-        setStates(transformedStates); // Set the states in the state
       } catch (error) {
         console.error("There was a problem with the fetch operation:", error);
       }
     };
 
-    fetchStates(); // Call the fetch function
+    fetchStates();
   }, []);
-  // useEffect(() => {
-  const fetchCities = async (value: string) => {
-    console.log(currentState);
-    if (value) {
-      try {
-        const response = await fetch(`/api/address/cities/IN/${value}`);
-        if (!response.ok) {
 
+  const fetchCities = async (stateCode: string) => {
+    if (stateCode) {
+      try {
+        const response = await fetch(`/api/address/cities/IN/${stateCode}`);
+        if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
 
-        const transformedCities = data.map((city: { name: any }) => ({
+        const transformedCities = data.map((city: { name: string }) => ({
           value: city.name,
           label: city.name,
         }));
@@ -197,70 +127,47 @@ const NewAddress: React.FC<AddressFormProps> = ({
     }
   };
 
-  // fetchCities();
-  // }, [currentState]);
-
-  const handleStateChange = (value: any) => {
-    const selectedState = states.find((state) => state.value === value);
-    setCurrentState(selectedState ? selectedState.label : "");
+  const handleStateChange = (value: string) => {
+    const selectedState = states.find((state)=> state.value === value);
+    if(selectedState){
+      setCurrState(selectedState?.label);
+    }
+    
     form.setValue("state", value);
+    form.setValue("city", ""); // Reset city when state changes
     fetchCities(value);
   };
 
+  const handleCityChange = (value: string) => {
+    form.setValue("city", value);
+  };
 
-  if(!isLoading){
-    return <Loader/>
+  if (!isLoading) {
+    return <Loader />;
   }
 
   return (
-
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <div>New Delivery Address</div>
-              {/* <Button className="w-28 bg-primary" onClick={isAddingAddress}>
-                Back
-              </Button> */}
-              {/* <XIcon size={30} onClick={isAddingAddress}  className="bg-red-400 p-1 cursor-pointer rounded-md"/> */}
-
-
-            </CardTitle>
+            <CardTitle>New Delivery Address</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-1 gap-4">
-                {/* <FormField
-                  control={form.control}
-                  name="addressName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. Home, Office, Warehouse"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                /> */}
-                <FormField
-                  control={form.control}
-                  name="street"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="street"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Street Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
@@ -269,7 +176,7 @@ const NewAddress: React.FC<AddressFormProps> = ({
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled/>
+                        <Input {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -299,11 +206,6 @@ const NewAddress: React.FC<AddressFormProps> = ({
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      {/* {currentState && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Current State: {currentState}
-                        </p>
-                      )} */}
                     </FormItem>
                   )}
                 />
@@ -314,8 +216,8 @@ const NewAddress: React.FC<AddressFormProps> = ({
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        onValueChange={handleCityChange}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>

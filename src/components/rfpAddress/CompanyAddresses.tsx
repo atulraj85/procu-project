@@ -40,7 +40,7 @@ import { cosineDistance } from "drizzle-orm";
 type FormValues = z.infer<typeof AddressformSchema>;
 
 interface Props {
-  companyId: string;
+  companyId: string ;
   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
 }
 
@@ -130,43 +130,7 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
     });
 
     setIsSaving(false);
-    // const FormData = {
-    //   ...data,
-    //   addressType: "SHIPPING",
-    // };
-
-    // try {
-    //   const response = await fetch(
-    //     `/api/company/${companyId}/address/${currAddressID}`,
-    //     {
-    //       method: "PUT",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(FormData),
-    //     }
-    //   );
-
-    //   if (!response.ok) {
-    //     throw new Error("Failed to update address");
-    //   }
-
-    //   toast({
-    //     title: "Success",
-    //     description: "Address updated successfully",
-    //   });
-
-    //   getAddresses(companyId);
-    // } catch (error) {
-    //   console.error("Error updating address:", error);
-    //   toast({
-    //     title: "Error",
-    //     description: "Failed to update address",
-    //     variant: "destructive",
-    //   });
-    // } finally {
-    //   setIsSaving(false);
-    // }
+    
   };
 
   const toggleAddingAddress = () => {
@@ -180,7 +144,7 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
     setTimeout(()=>{
       setIsAddingAddress(true);
     }, 2000);
-    
+    // setSelectedAddr("");
   }
 
   return (
@@ -213,18 +177,18 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
               New Address
 
             </Button> */}
-           {selectedAddr && <div className="flex gap-2  w-full">
+          <div className="flex gap-2  w-full">
             
-              <div className="w-[50%]">
+            {selectedAddr && <div className={`w-[50%] ${selectedAddr ? "": "hidden" }`}>
             
               <Input readOnly type="text" value={selectedAddr} className=" col-span-1" />
             
-            </div>
+            </div>}
 
             <Sheet>
               <SheetTrigger>
                 <div className="relative group">
-                  <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" onClick={()=> handleNewAdress()}/>
+                  <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" />
                   {/* Hover text */}
                   <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
                     New 
@@ -239,11 +203,12 @@ const CompanyAddresses: React.FC<Props> = ({ companyId, setRfpAddress }) => {
                     setRfpAddress={setRfpAddress}
                     isAddingAddress={toggleAddingAddress}
                     setSelectedAddr={setSelectedAddr}
+                    handleNewAdress={handleNewAdress}
                   />
                 </SheetHeader>
               </SheetContent>
             </Sheet>
-            </div>}
+            </div>
           </div>
         </CardHeader>
       </Card>
