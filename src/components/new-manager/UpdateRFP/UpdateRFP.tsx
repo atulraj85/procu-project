@@ -803,17 +803,69 @@ export default function RFPUpdateForm({
     <form onSubmit={handleSubmit(saveRFP)} className="space-y-8">
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle>Update RFP: {rfpId}</CardTitle>
-          <Link href="/dashboard/manager">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="text-black-500 bg-red-400"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex justify-between mt-2 mb-3 px-6 w-full ">
+            <div className="flex flex-col">
+              <div className="flex items-center mb-2">
+                <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
+                  {initialData.requirementType === "Product" ? "P" : "S"}
+                </Label>
+                <Label>RFP ID: {initialData.rfpId}</Label>
+              </div>
+
+              {/* Product Details */}
+              <div className="ml-12">
+                {initialData.products.map((product: any, index: any) => (
+                  <div key={index} className="flex flex-col mb-1">
+                    <div className="flex items-center space-x-4">
+                      <Label className="font-medium">
+                        Name: {product.name}
+                      </Label>
+                      <Label className="font-medium">
+                        Model: {product.modelNo}
+                      </Label>
+                      <Label className="font-medium">
+                        Qty: {product.quantity}
+                      </Label>
+                    </div>
+                    {product.description && (
+                      <Label className="text-sm text-gray-600">
+                        Description: {product.description}
+                      </Label>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-6">
+              <div className="flex">
+                <div className="">
+                  <Label>
+                    RFP Date:{" "}
+                    {new Date(initialData.dateOfOrdering).toLocaleDateString()}
+                  </Label>
+                  <div className="space-y-2">
+                    <Label>
+                      Exp. Delivery Date:{" "}
+                      {new Date(
+                        initialData.deliveryByDate
+                      ).toLocaleDateString()}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+              <Link href="/dashboard/manager">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="text-black-500 bg-red-400"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {fields.map((field, index) => renderQuotation(field, index))}
