@@ -19,6 +19,7 @@ type SupportingDocument = {
 
 const SupportingDocumentsList = ({
   errors,
+  handleError,
   control,
   index,
   setValue,
@@ -27,6 +28,7 @@ const SupportingDocumentsList = ({
   getValues,
 }: {
   errors: any;
+  handleError: any;
   control: Control<any>;
   index: number;
   setValue: UseFormSetValue<any>;
@@ -131,17 +133,12 @@ const SupportingDocumentsList = ({
                           `quotations.${index}.supportingDocuments.${docIndex}.name`
                         )}
                         placeholder="Enter document name"
+                        onChange={() => {
+                          handleError("");
+                        }}
                       />
-                      {errors?.quotations?.[index]?.supportingDocuments?.[
-                        docIndex
-                      ]?.name && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {
-                            errors.quotations[index].supportingDocuments[
-                              docIndex
-                            ].name.message
-                          }
-                        </p>
+                      {errors && (
+                        <p className="text-red-500 text-sm mt-1">{errors}</p>
                       )}
                     </div>
 
@@ -156,8 +153,8 @@ const SupportingDocumentsList = ({
                       ) : (
                         <Input
                           type="file"
-                            onChange={(e) => handleFileChange(e, docIndex)}
-                            required
+                          onChange={(e) => handleFileChange(e, docIndex)}
+                          required
                         />
                       )}
                       {fileError && ( // Assuming fileError is the state for file validation

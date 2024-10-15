@@ -1,0 +1,20 @@
+export const RFPTable = pgTable(
+  "rfps",
+  {
+    id {Auto generate},
+    rfpId {Auto Generate},
+    requirementType {Product/Service}
+    dateOfOrdering: {String},
+    deliveryLocation: {String},
+    deliveryByDate: {String},
+    userId: {UUID},
+    rfpStatus: {RFPStatus},
+    preferredQuotationId: UUID,
+    createdAt: {String},
+    updatedAt: {String},
+    user: references: [UserTable],
+    approversLists: many(ApproversListTable),
+    rfpProducts: many(RFPProductTable),
+})
+
+

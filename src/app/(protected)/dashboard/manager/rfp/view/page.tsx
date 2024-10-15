@@ -198,28 +198,24 @@ const ViewRFP: React.FC = () => {
 
             {/* Product Details */}
             <div className="ml-12">
-              {rfpData.products.map(
-                (product: any, index: React.Key | null | undefined) => (
-                  <div key={index} className="flex flex-col mb-1">
-                    <div className="flex items-center space-x-4">
-                      <Label className="font-medium">
-                        Name: {product.name}
-                      </Label>
-                      <Label className="font-medium">
-                        Model: {product.modelNo}
-                      </Label>
-                      <Label className="font-medium">
-                        Qty: {product.quantity}
-                      </Label>
-                    </div>
-                    {product.description && (
-                      <Label className="text-sm text-gray-600">
-                        Description: {product.description}
-                      </Label>
-                    )}
+              {rfpData.products.map((product: any, index: any) => (
+                <div key={index} className="flex flex-col mb-1">
+                  <div className="flex items-center space-x-4">
+                    <Label className="font-medium">Name: {product.name}</Label>
+                    <Label className="font-medium">
+                      Model: {product.modelNo}
+                    </Label>
+                    <Label className="font-medium">
+                      Qty: {product.quantity}
+                    </Label>
                   </div>
-                )
-              )}
+                  {product.description && (
+                    <Label className="text-sm text-gray-600">
+                      Description: {product.description}
+                    </Label>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 

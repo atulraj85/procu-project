@@ -24,12 +24,14 @@ type Product = {
   totalPriceWithGST?: number;
 };
 const ProductList = ({
+
   products,
   control,
   index,
   getValues,
   setValue,
   errors,
+  handleError,
   globalFormData,
 }: {
   products: Product[];
@@ -38,7 +40,8 @@ const ProductList = ({
   getValues: any;
   setValue: any;
   errors: any;
-  globalFormData: any;
+    globalFormData: any;
+  handleError: any
 }) => {
   const { fields, replace } = useFieldArray({
     control,
@@ -49,6 +52,7 @@ const ProductList = ({
 
   const updateProductTotals = useCallback(
     (productIndex: number) => {
+      handleError("")
       const unitPrice = getValues(
         `quotations.${index}.products.${productIndex}.unitPrice`
       );
@@ -107,7 +111,7 @@ const ProductList = ({
           unitPrice: product.unitPrice || 0,
           description: product.description || "",
           rfpProductId: product.rfpProductId || "",
-          gst: product.gst || "NILL",
+          gst: product.gst || "0",
           totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
           totalPriceWithGST: product.totalPriceWithGST || 0,
         }));
@@ -236,12 +240,7 @@ const ProductList = ({
                   />
                 )}
               />
-
-              {errors?.products?.[productIndex]?.unitPrice && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.products[productIndex].unitPrice.message}
-                </p>
-              )}
+              {errors && <p className="text-red-500 text-sm mt-1">{errors}</p>}
             </div>
             {/* GST */}
             <div className="w-1/12">
