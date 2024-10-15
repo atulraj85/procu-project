@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useCurrentUser } from "@/hooks/auth";
 import { getTodayDate } from "@/lib/getTodayDate";
 import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
-import { X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
@@ -47,12 +47,6 @@ interface FormData {
   userId?: string;
   rfpProducts: RFPProduct[];
   approvers: Approver[];
-  // deliveryLocationDetails: {
-  //   country: string;
-  //   state: string;
-  //   city: string;
-  //   zipCode: string;
-  // };
 }
 
 const RFPForm: React.FC = () => {
@@ -65,12 +59,6 @@ const RFPForm: React.FC = () => {
     rfpStatus: "DRAFT",
     rfpProducts: [],
     approvers: [],
-    // deliveryLocationDetails: {
-    //   country: "",
-    //   state: "",
-    //   city: "",
-    //   zipCode: "",
-    // },
   });
 
   const [address, setAddress] = useState<string>("");
@@ -86,11 +74,11 @@ const RFPForm: React.FC = () => {
   const [fetchedProducts, setFetchedProducts] = useState<RFPProduct[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [userSelected, setUserSelected] = useState(false);
-  const [product, setProduct] = useState<RFPProduct>();
+  // const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  const [additionalInstructions, setAdditionalInstructions] =
-    useState<string>("");
+  // const [additionalInstructions, setAdditionalInstructions] =
+  // useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -105,10 +93,12 @@ const RFPForm: React.FC = () => {
   const [userInfo, setUserInfo] = useState<User>();
 
   const [rfpAddress, setRfpAddress] = useState<string>("");
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
+        setLoading(true);
         const response = await fetch("/api/company");
         const data = await response.json();
 
@@ -128,6 +118,7 @@ const RFPForm: React.FC = () => {
             console.warn("No shipping address found for the company");
           }
         }
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching company data:", error);
       }
@@ -139,10 +130,12 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     async function fetchUserInformation() {
       try {
+        setLoading(true);
+
         const response = await fetch(`/api/users?id=${userId}`);
         const data = await response.json();
         setUserInfo(data[0]);
-        // console.log("user", data[0]);
+        setLoading(false);
       } catch (error) {}
     }
     fetchUserInformation();
@@ -151,12 +144,15 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     const fetchRfpId = async () => {
       try {
+        setLoading(true);
+
         const response = await fetch("/api/rfp/rfpid");
         if (!response.ok) {
           throw new Error("Failed to fetch RFP ID");
         }
         const data = await response.json();
         setRfpId(data);
+        setLoading(false);
       } catch (err) {
         console.error("Error fetching RFP ID:", err);
       }
@@ -210,8 +206,6 @@ const RFPForm: React.FC = () => {
       [name]: value,
     }));
   };
-
-  const today = new Date().toISOString().split("T")[0];
 
   // Add function to handle form updates
   const handleProductChange = (
