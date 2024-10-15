@@ -209,7 +209,7 @@ const RFPForm: React.FC = () => {
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
-    }))
+    }));
   };
 
   const today = new Date().toISOString().split("T")[0];
@@ -376,12 +376,12 @@ const RFPForm: React.FC = () => {
     }
 
     // const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-    // const formattedDate = formData.dateOfOrdering.split("/").reverse().join("-"); 
+    // const formattedDate = formData.dateOfOrdering.split("/").reverse().join("-");
     console.log(rfpAddress);
     const updatedFormData = {
       ...formData,
-      deliveryLocation:rfpAddress,
-      
+      deliveryLocation: rfpAddress,
+
       // deliveryLocationDetails: {
       //   country,
       //   state,
@@ -434,7 +434,7 @@ const RFPForm: React.FC = () => {
   return (
     <div className="relative pb-10">
       <Card>
-      <CardHeader>
+        <CardHeader>
           <div className=" flex justify-between">
             <div>
               <CardTitle>Create RFP</CardTitle>
@@ -449,27 +449,25 @@ const RFPForm: React.FC = () => {
             )}
           </div>
         </CardHeader>
-    <form onSubmit={handleSubmit} className="space-y-2">
-      
-        
         <CardContent>
           <Card className="mb-4">
-            <CardHeader>
-              {rfpId && (
-                <div className="flex justify-between">
-                  <p className="text-md text-muted-foreground">
-                    RFP ID: {rfpId}
-                  </p>
-                  <p>RFP Date: {getTodayDate()}</p>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent className="flex justify-between space-x-6">
-              <div className="grid grid-cols-4 gap-4">
-                {/* Requirement Type Section */}
-                <div className="col-span-2">
-                  <div className="flex space-x-4 mb-6">
-                    <div className="flex items-center space-x-2">
+            <form onSubmit={handleSubmit} className="space-y-2">
+              <CardHeader>
+                {rfpId && (
+                  <div className="flex justify-between">
+                    <p className="text-md text-muted-foreground">
+                      RFP ID: {rfpId}
+                    </p>
+                    <p>RFP Date: {getTodayDate()}</p>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent className="space-x-6">
+                <div className="flex flex-row justify-between  gap-4">
+                  {/* Requirement Type Section */}
+                  <div className="flex space-x-4">
+                    <div>Requirement Type:</div>
+                    <div className="">
                       <input
                         type="radio"
                         id="product"
@@ -488,7 +486,7 @@ const RFPForm: React.FC = () => {
                         Product
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="">
                       <input
                         type="radio"
                         id="service"
@@ -510,7 +508,7 @@ const RFPForm: React.FC = () => {
                   </div>
 
                   {/* Delivery Date Section */}
-                  <div className="space-y-2">
+                  <div className="-mt-8">
                     <Label
                       htmlFor="deliveryByDate"
                       className="text-sm font-medium"
@@ -524,269 +522,257 @@ const RFPForm: React.FC = () => {
                       min={today}
                       value={formData.deliveryByDate}
                       onChange={handleInputChange}
-                      className={`w-full ${
+                      className={` ${
                         errors.deliveryByDate ? "border-red-500" : ""
                       }`}
                     />
                     {errors.deliveryByDate && (
-                      <p className="text-red-500 text-sm mt-1">
+                      <p className="text-red-500 text-sm">
                         {errors.deliveryByDate}
                       </p>
                     )}
                   </div>
-                </div>
-              </div>
 
-              {/* Approvers Section */}
-              <div className="space-y-4">
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="Search Approvers..."
-                    value={searchApproverTerm}
-                    onChange={(e) => handleSearchChange(e, "users")}
-                    className="w-full mb-2"
-                  />
-                </div>
-
-                {/* Fetched Users */}
-                {fetchedUsers.length > 0 && (
-                  <div className="border rounded-md p-2 mb-4  overflow-y-auto">
-                    <h3 className="font-medium mb-2">Fetched Users:</h3>
-                    <ul className="space-y-1">
-                      {fetchedUsers.map((user) => (
-                        <li
-                          key={user.id}
-                          className="py-1 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
-                          onClick={() => {
-                            if (user) {
-                              addApprover(user);
-                              setSearchApproverTerm("");
-                              setFetchedUsers([]);
-                            }
-                          }}
-                        >
-                          {user.name} | {user.email} | {user.mobile}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Selected Approvers */}
-                <div className="space-y-2">
-                  {approvedUsers.map((approver, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between px-2 rounded-md"
-                    >
-                      <div className="flex">
-                        <h3 className="text-sm">{approver.name} </h3>
-                        <h3 className="text-sm"> | Email:-{approver.email}</h3>
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={() => removeApprover(index)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 ml-2"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* <div className="flex justify-between  space-x-2"> */}
-
-          <Card className="">
-            <CardHeader>
-              <CardTitle>Product Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center mb-4 space-x-2">
-                <Input
-                  type="text"
-                  placeholder="Search Products..."
-                  value={searchProductTerm}
-                  onChange={(e) => handleSearchChange(e, "products")}
-                  className="flex-1"
-                />
-                <SheetSide />
-              </div>
-
-              {fetchedProducts.length > 0 && (
-                <div className="mt-2">
-                  <h3 className="font-semibold">Fetched Products:</h3>
-                  <ul>
-                    {fetchedProducts.map((product) => (
-                      <li
-                        key={product.rfpProductId}
-                        className="py-1 cursor-pointer hover:bg-gray-200"
-                        onClick={() => {
-                          if (product) {
-                            addProduct(product);
-                          } else {
-                            console.error("No Product selected");
-                          }
-                        }}
-                      >
-                        {product.name} | {product.modelNo}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {approvedProducts.map((product, index) => (
-                <div
-                  key={product.rfpProductId}
-                  className="flex items-center space-x-2 mb-2"
-                >
-                  <div className="flex flex-col">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Product
-                    </Label>
-                    <Input
-                      disabled
-                      value={product.name}
-                      placeholder="Name"
-                      className="flex-1"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Product Description
-                    </Label>
-                    <div className="flex space-x-2">
+                  {/* Approvers Section */}
+                  <div className="space-y-4">
+                    <div>
                       <Input
-                        value={product.specification}
-                        onChange={(e) =>
-                          handleProductChange(
-                            index,
-                            "specification",
-                            e.target.value
-                          )
-                        }
-                        placeholder="Enter product description"
+                        type="text"
+                        placeholder="Search Approvers..."
+                        value={searchApproverTerm}
+                        onChange={(e) => handleSearchChange(e, "users")}
+                        className="w-full mb-2"
+                      />
+                    </div>
+
+                    {/* Fetched Users */}
+                    {fetchedUsers.length > 0 && (
+                      <div className="border rounded-md p-2 mb-4  overflow-y-auto">
+                        <h3 className="font-medium mb-2">Fetched Users:</h3>
+                        <ul className="space-y-1">
+                          {fetchedUsers.map((user) => (
+                            <li
+                              key={user.id}
+                              className="py-1 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
+                              onClick={() => {
+                                if (user) {
+                                  addApprover(user);
+                                  setSearchApproverTerm("");
+                                  setFetchedUsers([]);
+                                }
+                              }}
+                            >
+                              {user.name} | {user.email} | {user.mobile}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Selected Approvers */}
+                    <div className="space-y-2">
+                      {approvedUsers.map((approver, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between px-2 rounded-md"
+                        >
+                          <div className="flex">
+                            <h3 className="text-sm">{approver.name} </h3>
+                            <h3 className="text-sm">
+                              {" "}
+                              | Email:-{approver.email}
+                            </h3>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={() => removeApprover(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 ml-2"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="">
+                  <CardHeader>
+                    <CardTitle>Product Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center mb-4 space-x-2">
+                      <Input
+                        type="text"
+                        placeholder="Search Products..."
+                        value={searchProductTerm}
+                        onChange={(e) => handleSearchChange(e, "products")}
                         className="flex-1"
                       />
-                      {modifiedProducts.has(product.rfpProductId) && (
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            handleProductUpdate(
-                              product.rfpProductId,
-                              product.specification as string
-                            )
-                          }
-                          className="bg-white hover:bg-white"
-                        >
-                          {/* Update */}
-                          <Save size={20} strokeWidth={0.75} color="green" />
-                        </Button>
-                      )}
+                      <SheetSide />
                     </div>
-                  </div>
-                  <div className="flex flex-col w-1/12">
-                    <Label
-                      className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      Quantity
-                    </Label>
-                    <Input
-                      type="number"
-                      value={product.quantity}
-                      onChange={(e) =>
-                        handleProductChange(
-                          index,
-                          "quantity",
-                          parseInt(e.target.value, 10)
-                        )
-                      }
-                      placeholder="Quantity"
-                      className="flex-1"
-                    />
-                  </div>
-                  <div className="flex flex-col">
-                    <Label
-                      className={`mb-2 font-bold text-[16px]  text-white ${
-                        index > 0 ? "hidden" : "visible"
-                      }`}
-                    >
-                      kkk
-                    </Label>
-                    <Button
-                      type="button"
-                      onClick={() => removeProduct(index)}
-                      variant="outline"
-                      size="icon"
-                      className="text-red-500"
-                    >
-                      <X className="h-4 w-4 " />
-                    </Button>
-                  </div>
+
+                    {fetchedProducts.length > 0 && (
+                      <div className="mt-2">
+                        <h3 className="font-semibold">Fetched Products:</h3>
+                        <ul>
+                          {fetchedProducts.map((product) => (
+                            <li
+                              key={product.rfpProductId}
+                              className="py-1 cursor-pointer hover:bg-gray-200"
+                              onClick={() => {
+                                if (product) {
+                                  addProduct(product);
+                                } else {
+                                  console.error("No Product selected");
+                                }
+                              }}
+                            >
+                              {product.name} | {product.modelNo}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {approvedProducts.map((product, index) => (
+                      <div
+                        key={product.rfpProductId}
+                        className="flex items-center space-x-2 mb-2"
+                      >
+                        <div className="flex flex-col">
+                          <Label
+                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                              index > 0 ? "hidden" : "visible"
+                            }`}
+                          >
+                            Product
+                          </Label>
+                          <Input
+                            disabled
+                            value={product.name}
+                            placeholder="Name"
+                            className="flex-1"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <Label
+                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                              index > 0 ? "hidden" : "visible"
+                            }`}
+                          >
+                            Product Description
+                          </Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              value={product.specification}
+                              onChange={(e) =>
+                                handleProductChange(
+                                  index,
+                                  "specification",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter product description"
+                              className="flex-1"
+                            />
+                            {modifiedProducts.has(product.rfpProductId) && (
+                              <Button
+                                type="button"
+                                onClick={() =>
+                                  handleProductUpdate(
+                                    product.rfpProductId,
+                                    product.specification as string
+                                  )
+                                }
+                                className="bg-white hover:bg-white"
+                              >
+                                {/* Update */}
+                                <Save
+                                  size={20}
+                                  strokeWidth={0.75}
+                                  color="green"
+                                />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col w-1/12">
+                          <Label
+                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
+                              index > 0 ? "hidden" : "visible"
+                            }`}
+                          >
+                            Quantity
+                          </Label>
+                          <Input
+                            type="number"
+                            value={product.quantity}
+                            onChange={(e) =>
+                              handleProductChange(
+                                index,
+                                "quantity",
+                                parseInt(e.target.value, 10)
+                              )
+                            }
+                            placeholder="Quantity"
+                            className="flex-1"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <Label
+                            className={`mb-2 font-bold text-[16px]  text-white ${
+                              index > 0 ? "hidden" : "visible"
+                            }`}
+                          >
+                            kkk
+                          </Label>
+                          <Button
+                            type="button"
+                            onClick={() => removeProduct(index)}
+                            variant="outline"
+                            size="icon"
+                            className="text-red-500"
+                          >
+                            <X className="h-4 w-4 " />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {errors.products && (
+                      <p className="text-red-500 text-sm">{errors.products}</p>
+                    )}
+                  </CardContent>
                 </div>
-              ))}
-              {errors.products && (
-                <p className="text-red-500 text-sm">{errors.products}</p>
+              </CardContent>
+
+              <div className="flex justify-end space-x-4 mr-10">
+                <Button
+                  type="submit"
+                  className=" absolute bottom-[-12px]  px-4  rounded-lg bg-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Submitting..." : "Save Draft RFP"}
+                </Button>
+              </div>
+
+              {error && <div className="text-red-500">{error}</div>}
+            </form>
+
+            <div className="mx-6 mb-4 mt-[-6px]">
+              {userInfo && (
+                <CompanyAddresses
+                  companyId={userInfo.companyId}
+                  setRfpAddress={setRfpAddress}
+                />
               )}
-            </CardContent>
+            </div>
           </Card>
-
-          {/* Hidden old address */}
-
-         
-
-
-          <div className="flex justify-end space-x-4 mr-10">
-            {/* <Button
-          <div className="flex justify-end space-x-4 mr-10">
-            {/* <Button
-          type="button"
-          className="px-4 py-2 rounded-lg bg-blue-700"
-          onClick={handleUpdate}
-          disabled={loading}
-        >
-          {loading ? "Updating..." : "Save Product Details"}
-        </Button> */}
-            <Button 
-              type="submit"
-              className=" absolute bottom-[-12px]  px-4  rounded-lg bg-primary"
-              disabled={loading}
-            >
-              {loading ? "Submitting..." : "Save Draft RFP"}
-            </Button>
-          </div>
-
-          {/* </div> */}
-
-          {error && <div className="text-red-500">{error}</div>}
-          </CardContent>
-    </form>
-    
-
-
-              
-    <div className="mx-6 mb-4 mt-[-6px]">
-      {userInfo && <CompanyAddresses companyId={userInfo.companyId} setRfpAddress={setRfpAddress} />}
+        </CardContent>
+      </Card>
     </div>
-    </Card>
-    </div>
-            
   );
 };
 
