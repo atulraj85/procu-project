@@ -165,7 +165,6 @@ export default function RFPUpdateForm({
   console.log("initialData", initialData);
 
   const [isLoading, setIsLoading] = useState(false);
-  // const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [files, setFiles] = useState<{ [key: string]: File }>({});
   const [preferredVendorIndex, setPreferredVendorIndex] = useState<
@@ -186,43 +185,14 @@ export default function RFPUpdateForm({
     new Set()
   );
 
+  const [quotationRefError, setQuotationRefError] = useState("");
+  const [quotationVendorError, setQuotationVendorError] = useState("");
+  const [quotationUnitPriceError, setQuotationUnitPriceError] = useState("");
+  const [quotationUnitPriceOtherError, setQuotationUnitPriceOtherError] =
+    useState("");
+  const [quotationDocNameError, setQuotationDocNameError] = useState("");
+
   const saveQuotation = async (data: z.infer<typeof rfpSchema>) => {
-    // setSavingQuotation(index);
-    // try{
-    //   const quotationData = getValues(`quotations.${index}`);
-    //   const formData = new FormData();
-    //   formData.append("rfpId", rfpId);
-    //   formData.append("quotationIndex", index.toString());
-    //   formData.append("data", JSON.stringify(quotationData));
-
-    //   // // Append relevant files for this quotation
-    //   // Object.entries(files).forEach(([key, file]) => {
-    //   //   if (key.startsWith(`quotations.${index}`)) {
-    //   //     formData.append(key, file);
-    //   //   }
-    //   // });
-
-    //   Object.entries(files).forEach(([key, file]) => {
-    //     formData.append(key, file);
-    //   });
-
-    //   const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-    //     method: "PUT",
-    //     body: formData,
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error("Failed to save quotation");
-    //   }
-
-    //   // Mark this quotation as saved
-    //   setSavedQuotations((prev) => new Set([...prev, index]));
-    //   toast({
-    //     title: "Success",
-    //     description: "Quotation saved successfully",
-    //   });
-    // }
-
     try {
       if (!preferredVendorId) {
         setShowPreferredQuotationError("Please select a preferred quotation");
@@ -283,33 +253,170 @@ export default function RFPUpdateForm({
     }
   };
 
-  const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
-    // Check if all quotations are saved
-    // const unsavedQuotations = fields.findIndex(
-    //   (_, index) => !savedQuotations.has(index)
-    // );
-    // if (unsavedQuotations !== -1) {
-    //   toast({
-    //     title: "Error",
-    //     description: "Please save all quotations before submitting",
-    //     variant: "destructive",
-    //   });
-    //   return;
-    // }
+  const validateQuotation = (data: z.infer<typeof rfpSchema>): boolean => {
+    const result = data.quotations.map((quotation, id) => {
+      if (quotation.refNo === "") {
+        setQuotationRefError("Ref Number is required");
+        console.log("Enter ref no");
+        return false;
+      }
 
-    // Check for preferred quotation
-    if (!preferredVendorId) {
-      setShowPreferredQuotationError("Please select a preferred quotation");
-      return;
+      if (quotation.vendorId === "") {
+        setQuotationVendorError("Vendor is empty");
+        console.log("Vendor is empty");
+        return false;
+      }
+
+      const productsValid = quotation.products.every((product, id) => {
+        if (product.unitPrice <= 0) {
+          setQuotationUnitPriceError("Unit price is empty!");
+          console.log("unit price is empty");
+          return false;
+        }
+        return true;
+      });
+
+      if (!productsValid) {
+        return false;
+      }
+
+      // Note: The `otherCharges` mapping was incomplete in the original code.
+      // You may want to add validation logic for `otherCharges` here.
+
+      return true;
+    });
+
+    return result.every(Boolean);
+  };
+
+
+
+  
+  const saveQuote = async (index: number, data: z.infer<typeof rfpSchema>) => {
+    if (validateQuotation(data)) {
+      console.log("working");
+      try {
+        //check quotation ref no to non blank
+        // check vendor no blank
+        // Product / other charges items quantity and unit price not blank && numeric/decimal && non negative
+        // Supporting doc, non blank name, document
+
+        console.log("Save quote", data);
+
+        const quotationData = data.quotations[index];
+        const formData = new FormData();
+        formData.append("rfpId", rfpId);
+        const serializedData = JSON.stringify({
+          ...quotationData,
+          rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+        });
+        formData.append("data", serializedData);
+
+        // console.log(files);
+
+        // Append files to formData
+        Object.entries(files).forEach(([key, file]) => {
+          formData.append(key, file);
+        });
+
+        console.log("FormData to be sent:", Object.fromEntries(formData));
+
+        const response = await fetch(
+          `/api/rfp/quotation?id=${initialData.id}`,
+          {
+            method: "PUT",
+            body: formData,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Could not update quotations!`);
+        }
+
+        const result = await response.json();
+        // console.log("RFP updated successfully:", result);
+        setSuccess(true);
+
+        toast({
+          title: "🎉 Quotation Updated!",
+          description: response.ok,
+        });
+        // router.push("/dashboard/manager");
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save quotation",
+          variant: "destructive",
+        });
+      } finally {
+        setSavingQuotation(null);
+      }
     }
+  };
 
-    // If less than 3 quotations, show reason dialog
-    if (fields.length < 3) {
-      setShowReasonDialog(true);
-      return;
+  const saveRFP = async (data: z.infer<typeof rfpSchema>) => {
+    try {
+      // atleast 1 quotation
+      // check if number of quotations < 3 then ask reason why
+      // only one preferred quotation (not eq to 0 , greater than 1, exact 1)
+
+      if (data.quotations.length === 0) {
+        console.log(" atleast 1 quotation needed");
+      }
+
+      if (data.quotations.length < 3) {
+        console.log("Please provide reason for < 3 quotes");
+      }
+
+      if (!data.preferredVendorId) {
+        console.log("Set 1 preferred quotation");
+      }
+
+      // const quotationData = data;
+      // const formData = new FormData();
+      // formData.append("rfpId", rfpId);
+      // const serializedData = JSON.stringify({
+      //   ...quotationData,
+      //   rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+      // });
+      // formData.append("data", serializedData);
+
+      // // console.log(files);
+
+      // // Append files to formData
+      // Object.entries(files).forEach(([key, file]) => {
+      //   formData.append(key, file);
+      // });
+
+      // console.log("FormData to be sent:", Object.fromEntries(formData));
+
+      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+      //   method: "PUT",
+      //   body: formData,
+      // });
+
+      // if (!response.ok) {
+      //   throw new Error(`Could not update quotations!`);
+      // }
+
+      // const result = await response.json();
+      // // console.log("RFP updated successfully:", result);
+      // setSuccess(true);
+
+      // toast({
+      //   title: "🎉 Quotation Updated!",
+      //   description: response.ok,
+      // });
+      // router.push("/dashboard/manager");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save quotation",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingQuotation(null);
     }
-
-    await submitForm(data);
   };
 
   const renderQuotation = (field: any, index: number) => {
@@ -324,19 +431,23 @@ export default function RFPUpdateForm({
           {/* Quotation ref */}
           <div className="flex items-center gap-2">
             <h3 className="text-md font-semibold">Quotation Ref No.</h3>
-            <Input {...control.register(`quotations.${index}.refNo`)} />
-            {errors?.quotations?.[index]?.refNo && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.quotations?.[index]?.refNo?.message ||
-                  "Error message not available"}
-              </p>
-            )}
+            <div className="flex-row">
+              <Input
+                {...control.register(`quotations.${index}.refNo`)}
+                onChange={() => {
+                  setQuotationRefError("");
+                }}
+              />
+              {quotationRefError && (
+                <p className="text-red-500 text-sm mt-1">{quotationRefError}</p>
+              )}
+            </div>
           </div>
 
           {/* Total amounts */}
           <TotalComponent setValue={setValue} control={control} index={index} />
           {/* Preferred Quote checkbox */}
-          <div>
+          {/* <div>
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={preferredVendorIndex === index}
@@ -366,7 +477,7 @@ export default function RFPUpdateForm({
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Arrow */}
           <span
@@ -381,7 +492,8 @@ export default function RFPUpdateForm({
           <div>
             <div className="py-2 w-3/4">
               <VendorSelector
-                errors={errors}
+                errors={quotationVendorError}
+                handleError={setQuotationVendorError}
                 setValue={setValue}
                 index={index}
                 vendor={quotation.vendor}
@@ -396,7 +508,8 @@ export default function RFPUpdateForm({
               </CardTitle>
               <div>
                 <ProductList
-                  errors={errors}
+                  errors={quotationUnitPriceError}
+                  handleError={setQuotationUnitPriceError}
                   products={
                     quotation.products.length === 0
                       ? initialData.products
@@ -414,13 +527,15 @@ export default function RFPUpdateForm({
                   index={index}
                   formData={FormData}
                   globalFormData={globalFormData}
-                  errors={errors}
+                  errors={quotationUnitPriceOtherError}
+                  handleError={setQuotationUnitPriceOtherError}
                 />
               </div>
             </div>
 
             <SupportingDocumentsList
-              errors={errors}
+              errors={quotationDocNameError}
+              handleError={setQuotationDocNameError}
               control={control}
               index={index}
               setValue={setValue}
@@ -433,8 +548,7 @@ export default function RFPUpdateForm({
               <Button
                 className="bg-primary mt-2"
                 type="button"
-                // onClick={() => saveQuotation(index)}
-                onClick={() => saveQuotation(getValues())}
+                onClick={() => saveQuote(index, getValues())}
                 disabled={savingQuotation === index}
               >
                 {savingQuotation === index ? (
@@ -477,7 +591,6 @@ export default function RFPUpdateForm({
       rfpId: initialData.rfpId,
       rfpStatus: initialData.rfpStatus,
       preferredQuotationId: initialData.preferredQuotationId,
-      // products: initialData.products,
       quotations: initialData.quotations.map((quotation: any) => ({
         id: quotation.id,
         refNo: quotation.refNo,
@@ -523,10 +636,6 @@ export default function RFPUpdateForm({
       })),
     },
   });
-
-  // useEffect(() => {
-  //   console.log("Current form errors:", JSON.stringify(errors));
-  // }, [errors]);
 
   const [reasonError, setReasonError] = useState<string | null>(null);
 
@@ -583,24 +692,6 @@ export default function RFPUpdateForm({
   const toggleQuotationVisibility = (index: number) => {
     setVisibleQuotationIndex(visibleQuotationIndex === index ? null : index);
   };
-
-  // const onSubmit = async (data: z.infer<typeof rfpSchema>) => {
-  //   console.log("Error: ", errors);
-
-  //   // console.log("Submitting quotation:", JSON.stringify(data));
-
-  //   if (!preferredVendorId) {
-  //     console.log("Heelo");
-  //     setShowPreferredQuotationError("Please select a Quotation.");
-  //     return;
-  //   }
-
-  //   if (fields.length < 3) {
-  //     setShowReasonDialog(true);
-  //     return;
-  //   }
-  //   await submitForm(data);
-  // };
 
   const submitForm = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
@@ -720,7 +811,14 @@ export default function RFPUpdateForm({
         </div>
       )}
 
-      <Button className="bg-primary" type="submit" disabled={isLoading}>
+      <Button
+        className="bg-primary"
+        type="submit"
+        disabled={isLoading}
+        onClick={() => {
+          saveRFP(getValues());
+        }}
+      >
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -773,60 +871,6 @@ export default function RFPUpdateForm({
           <AlertDescription>RFP updated successfully.</AlertDescription>
         </Alert>
       )}
-
-      {/* {fields.length === 3 ? (
-          <Button className="bg-primary" type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Submit RFP"
-            )}
-          </Button>
-        ) : (
-          <div>
-            <Textarea
-              className="w-1/3 mb-2"
-              placeholder="Reason for adding less than 3 quotations"
-              value={reason}
-              onChange={(e) => {
-                setReason(e.target.value);
-                setReasonError("");
-              }}
-            />
-
-            {reasonError && (
-              <p className="text-red-500 text-sm mt-1">{reasonError}</p>
-            )}
-
-            <Button
-              type="button"
-              className="bg-primary"
-              onClick={() => {
-                if (fields.length < 3 && !reason) {
-                  setReasonError("Please select reason");
-                }
-
-                const formData = getValues();
-                if (reason) {
-                  setReason(reason);
-                  handleSubmitReasonAndAddQuotation(formData);
-                }
-              }}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Reason and Add Quotation"
-              )}
-            </Button>
-          </div>
-        )} */}
     </form>
   );
 }

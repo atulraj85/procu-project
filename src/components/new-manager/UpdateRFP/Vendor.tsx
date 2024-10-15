@@ -20,6 +20,7 @@ const VendorSelector = ({
   vendor,
   globalFormData,
   errors,
+  handleError,
 }: {
   index: number;
   setValue: any;
@@ -27,6 +28,7 @@ const VendorSelector = ({
   vendor: any;
   globalFormData: any;
   errors: any;
+  handleError: any;
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [fetchedVendors, setFetchedVendors] = useState<Vendor[]>([]);
@@ -44,7 +46,7 @@ const VendorSelector = ({
     async (e: ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setSearchTerm(value);
-
+      handleError("");
       if (value) {
         try {
           const response = await fetch(`/api/ajax/vendors?q=${value}`);
@@ -127,7 +129,11 @@ const VendorSelector = ({
   return (
     <div>
       <div className="flex items-center w-full">
-        <div className="font-bold">Vendor Details:</div>
+        <div className="flex-row">
+          <div className="font-bold">Vendor Details:</div>
+          {errors && <p className="text-red-500 text-sm mt-1">{errors}</p>}
+        </div>
+
         {error && <div className="text-red-500 ml-2">{error}</div>}
         {approvedVendor && (
           <div className="flex items-center text-sm ml-2">
@@ -144,11 +150,6 @@ const VendorSelector = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-        )}
-        {errors?.quotations?.[index]?.vendorId && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.quotations[index].vendorId.message}
-          </p>
         )}
 
         {!disableVendorSearch && (
