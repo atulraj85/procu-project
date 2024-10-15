@@ -1,11 +1,11 @@
 import { z } from "zod";
 
-const ProductSchema = z.object({
-  specification: z.string().optional(),
+export const ProductSchema = z.object({
+  description: z.string().optional(),
   rfpProductId: z
     .string({
-      required_error: "Product ID is required",
-      invalid_type_error: "Product ID must be a string",
+      required_error: "RFPProduct ID is required",
+      invalid_type_error: "RFPProduct ID must be a string",
     })
     .optional(),
   name: z.string().optional(),
@@ -18,7 +18,7 @@ const ProductSchema = z.object({
     .positive("Quantity must be a positive number"),
 });
 
-const ApproverSchema = z.object({
+export const ApproverSchema = z.object({
   approverId: z.string({
     required_error: "Approver ID is required",
     invalid_type_error: "Approver ID must be a string",
@@ -74,4 +74,6 @@ export const FirstRFPSchema = z.object({
 });
 
 // Type inference
-type FirstRFP = z.infer<typeof FirstRFPSchema>;
+export type FirstRFP = z.infer<typeof FirstRFPSchema>;
+export type Product = z.infer<typeof ProductSchema>;
+export type Approver = z.infer<typeof ApproverSchema>;

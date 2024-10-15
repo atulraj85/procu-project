@@ -1,13 +1,10 @@
 import { deleteCompany } from "@/data/company";
 import { CompanyTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import fs from "fs";
 
-import { saveFile } from "@/utils/saveFiles";
+import { companySchema } from "@/schemas/Comapny/InitialCompanySchema";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import path from "path";
-import { companySchema } from "@/schemas/Comapny/InitialCompanySchema";
 
 // Type Definitions
 type SortBy = keyof InferSelectModel<typeof CompanyTable>;
@@ -36,7 +33,9 @@ export async function POST(request: Request) {
       if (debug) {
         console.log("Validation error:", validation.error);
       }
-      return { error: "Invalid fields!" } as const;
+      // return
+
+      return NextResponse.json({ error: "Invalid fields!" });
     } else {
       if (debug) {
         console.log("Validation success:", validation.success);

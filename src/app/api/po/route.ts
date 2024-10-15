@@ -224,7 +224,7 @@ function formatPOData(inputData: any[]): any[] {
             quantity: pricing.rfpProduct.quantity,
             price: pricing.price,
             description: pricing.rfpProduct.product.specification,
-            gst: pricing.GST,
+            gst: pricing.gst,
             type: "product",
           })),
           ...(po.quotation.otherCharges || []).map((charge: any) => ({

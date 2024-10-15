@@ -112,6 +112,8 @@ const Page: React.FC = () => {
   const searchParams = useSearchParams();
   const rfp = searchParams.get("rfp");
   const currentUser = useCurrentUser();
+  console.log("current user",currentUser!.id);
+  
 
   const USER_ID = currentUser!.id;
   const pageRef = useRef<HTMLDivElement>(null);
@@ -188,7 +190,9 @@ const Page: React.FC = () => {
       });
       return;
     }
-
+ 
+    console.log("form data ",formData);
+    
     const payload = {
       poId: formData.poId,
       quotationId: formData.quotationId,
@@ -294,6 +298,7 @@ const Page: React.FC = () => {
       </div>
     );
   if (error) return <div>Error: {error.message}</div>;
+  console.log("img ", formData.companyLogo);
 
   return (
     <div ref={pageRef}>
@@ -311,14 +316,14 @@ const Page: React.FC = () => {
           </Link>
         </div>
 
-        <section className="flex justify-between pb-7">
+        <section className="flex justify-between w-[30%] pb-7">
           <div>
             <Image
               className="rounded-full"
               height={75}
               width={75}
               alt="Company logo"
-              src={formData.companyLogo}
+              src="/company/sign.png"
             />
             <h1 className="font-bold flex justify-end">
               {formData.companyName}

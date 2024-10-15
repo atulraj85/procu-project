@@ -69,21 +69,18 @@ const AddressTypeEnum = z.enum(AddressType.enumValues, {
 
 export const AddressSchema = z.object({
   addressName: z
-  .string({ required_error: "Street is required!" })
-  .min(1, { message: "Street is required!" }),
+    .string({ required_error: "Street is required!" })
+    .min(1, { message: "Street is required!" }),
   street: z
     .string({ required_error: "Street is required!" })
     .min(1, { message: "Street is required!" }),
-  addressName: z
-    .string({ required_error: "AddressName is required!" })
-    .min(1, { message: "AddressName is required!" }),
   city: z
     .string({ required_error: "City is required!" })
     .min(1, { message: "City is required!" }),
   state: z
     .string({ required_error: "State is required!" })
     .min(1, { message: "State is required!" }),
-    postalCode: z
+  postalCode: z
     .string({ required_error: "Postal code is required!" })
     .min(1, { message: "Postal code is required!" }),
 
