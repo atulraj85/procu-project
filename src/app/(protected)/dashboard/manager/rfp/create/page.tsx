@@ -94,6 +94,7 @@ const RFPForm: React.FC = () => {
 
   const [rfpAddress, setRfpAddress] = useState<string>("");
   const today = new Date().toISOString().split("T")[0];
+  const newErrors: { [key: string]: string } = {};
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -165,6 +166,8 @@ const RFPForm: React.FC = () => {
     e: ChangeEvent<HTMLInputElement>,
     entity: string
   ) => {
+    newErrors.approvers = "";
+    setErrors(newErrors);
     const value = e.target.value;
     if (entity === "users") {
       setSearchApproverTerm(value);
@@ -326,8 +329,6 @@ const RFPForm: React.FC = () => {
   };
 
   const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
     if (!formData.requirementType)
       newErrors.requirementType = "Requirement type is required";
     if (!formData.deliveryByDate)
@@ -345,6 +346,8 @@ const RFPForm: React.FC = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
+  console.log(errors, formData);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -513,7 +516,11 @@ const RFPForm: React.FC = () => {
                       name="deliveryByDate"
                       type="date"
                       min={today}
-                      value={formData.deliveryByDate}
+                      value={
+                        formData.deliveryByDate
+                          ? formData.deliveryByDate
+                          : getTodayDate()
+                      }
                       onChange={handleInputChange}
                       className={` ${
                         errors.deliveryByDate ? "border-red-500" : ""
@@ -588,6 +595,9 @@ const RFPForm: React.FC = () => {
                         </div>
                       ))}
                     </div>
+                    {errors.approvers && (
+                      <p className="text-red-500 text-sm">{errors.approvers}</p>
+                    )}
                   </div>
                 </div>
 
