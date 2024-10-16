@@ -82,7 +82,7 @@ const Dashboard: React.FC = () => {
   const fetchRfpData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/rfp");
+      const response = await fetch("/api/rfp?sortBy=createdAt&order=desc");
       const data = await response.json();
 
       const formattedData: RfpData[] = data.map((item: any) => ({
