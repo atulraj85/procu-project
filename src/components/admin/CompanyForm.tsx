@@ -27,7 +27,6 @@ import { useForm } from "react-hook-form";
 import { CiCircleRemove } from "react-icons/ci";
 import * as z from "zod";
 import { Card, CardContent } from "../ui/card";
-import AddressUpdate from "./AddressUpdate";
 import ViewAddress from "./ViewAddress";
 
 type CompanyFormValues = z.infer<typeof CompanyFormSchema>;

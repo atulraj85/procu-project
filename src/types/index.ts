@@ -192,3 +192,16 @@ export  interface AddressInterface {
   postalCode: string;
   country: string;
 }
+
+
+// export interface AddressProp {
+//   id: string; // Unique identifier for the address
+//   addressName: string; // Name of the address (e.g., "Office 1")
+//   street: string; // Street address
+//   city: string; // City name
+//   state: string; // State name
+//   postalCode: string; // Postal/ZIP code
+//   country: string; // Country name
+//   companyId: string; // Identifier for the associated company
+//   addressType: 'SHIPPING'; // Type of address (could be either SHIPPING or BILLING)
+// }
