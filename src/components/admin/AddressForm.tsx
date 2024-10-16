@@ -57,7 +57,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
-      console.log("fomr data", data);
+    console.log("fomr data", data);
     const formDataWithAddressType = {
       ...data,
       addressType: "SHIPPING",
@@ -82,6 +82,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
           duration: 3000,
         });
         form.reset();
+
+        window.location.reload();
         // isAddingAddress();
       } else {
         console.error("Failed to add address:", response.statusText);
@@ -105,12 +107,11 @@ const AddressForm: React.FC<AddressFormProps> = ({
     }
   };
 
-  useEffect(() => { 
+  useEffect(() => {
     const fetchStates = async () => {
       try {
         const response = await fetch("/api/address/states/IN");
         if (!response.ok) {
-          
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
@@ -141,7 +142,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
       try {
         const response = await fetch(`/api/address/cities/IN/${value}`);
         if (!response.ok) {
-
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
@@ -168,9 +168,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
     fetchCities(value);
   };
 
-
-  if(!isLoading){
-    return <Loader/>
+  if (!isLoading) {
+    return <Loader />;
   }
 
   return (
@@ -179,9 +178,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
         <Card>
           <CardHeader>
             <CardTitle className="flex justify-between ">
-            
               {/* <Button className="w-28 bg-primary" onClick={isAddingAddress}> */}
-                {/* Back
+              {/* Back
               </Button> */}
             </CardTitle>
           </CardHeader>
@@ -226,7 +224,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                     <FormItem>
                       <FormLabel>Country</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled/>
+                        <Input {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
