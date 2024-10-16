@@ -54,7 +54,7 @@ const RFPForm: React.FC = () => {
     requirementType: "Product",
     dateOfOrdering: getTodayDate(),
     deliveryLocation: "",
-    deliveryByDate: getTodayDate(),
+    deliveryByDate: "",
     lastDateToRespond: "",
     rfpStatus: "DRAFT",
     rfpProducts: [],
@@ -203,7 +203,10 @@ const RFPForm: React.FC = () => {
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    errors.deliveryByDate = "";
+    setErrors(errors);
     const { name, value } = e.target;
+
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -337,17 +340,13 @@ const RFPForm: React.FC = () => {
       newErrors.approvers = "At least one approver is required";
     if (approvedProducts.length === 0)
       newErrors.products = "At least one product is required";
-    if (!address) newErrors.address = "Address is required";
-    if (!country) newErrors.country = "Country is required";
-    if (!state) newErrors.state = "State is required";
-    if (!city) newErrors.city = "City is required";
-    if (!zipCode) newErrors.zipCode = "Zip code is required";
+    if (!rfpAddress) newErrors.address = "Address is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  console.log(errors, formData);
+  console.log("Errors", errors, "Formdata", formData);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -518,8 +517,8 @@ const RFPForm: React.FC = () => {
                       min={today}
                       value={
                         formData.deliveryByDate
-                          ? formData.deliveryByDate
-                          : getTodayDate()
+                        // ? formData.deliveryByDate
+                        // : getTodayDate()
                       }
                       onChange={handleInputChange}
                       className={` ${
@@ -769,6 +768,8 @@ const RFPForm: React.FC = () => {
                 <CompanyAddresses
                   companyId={userInfo.companyId}
                   setRfpAddress={setRfpAddress}
+                  errors={errors}
+                  setErrors={setErrors}
                 />
               )}
             </div>
