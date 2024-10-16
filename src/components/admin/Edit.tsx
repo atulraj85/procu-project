@@ -14,7 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { AddressformSchema2 } from "@/schemas/Company";
 import { AddressformSchema } from "@/schemas/Company";
+import { AddressInterface } from "@/types";
 import {
   Select,
   SelectContent,
@@ -22,150 +24,160 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import Loader from "../shared/Loader";
-import { formatRevalidate } from "next/dist/server/lib/revalidate";
 
 type FormValues = z.infer<typeof AddressformSchema>;
+// type AdrresProp = z.infer<typeof AddressformSchema>;
 
 interface AddressFormProps {
-  companyId: string | null;
-  // isAddingAddress: () => void;
+  companyId: string;
+  addressProp: AddressInterface | null;
+  setAddressProp: React.Dispatch<React.SetStateAction<AddressInterface | null>>;
 }
 
-const AddressForm: React.FC<AddressFormProps> = ({
-  companyId,
-  // isAddingAddress,
-}) => {
+const Edit: React.FC<AddressFormProps> = ({ addressProp, setAddressProp, companyId }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const [states, setStates] = useState<{ value: string; label: string }[]>([]);
   const [cities, setCities] = useState<{ value: string; label: string }[]>([]);
-  const [currentState, setCurrentState] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [currState, setCurrState] = useState<string>("");
+    console.log(addressProp?.id);
   const form = useForm<FormValues>({
     resolver: zodResolver(AddressformSchema),
     defaultValues: {
-      addressName: "",
-      street: "",
+    addressName:addressProp?.addressName,
+      street: addressProp?.street || "",
       country: "INDIA",
-      state: "",
-      city: "",
-      postalCode: "",
+      postalCode: addressProp?.postalCode || "",
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     setIsSaving(true);
-    console.log("fomr data", data);
-    const formDataWithAddressType = {
+    const formData = {
       ...data,
       addressType: "SHIPPING",
-      state: currentState,
     };
 
     try {
-      const response = await fetch(`/api/company/${companyId}/address`, {
-        method: "POST",
+      const response = await fetch(`/api/company/${companyId}/address/${addressProp?.id}`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formDataWithAddressType),
+        body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Address added successfully:", result);
-        toast({
-          title: "Success",
-          description: "Address added successfully!",
-          duration: 3000,
-        });
-        form.reset();
-
-        window.location.reload();
-        // isAddingAddress();
-      } else {
-        console.error("Failed to add address:", response.statusText);
-        toast({
-          title: "Error",
-          description: "Failed to add address. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+      if (!response.ok) {
+        throw new Error("Failed to update address");
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+      window.location.reload();
       toast({
-        title: "Error",
-        description: "An error occurred. Please try again.",
-        variant: "destructive",
-        duration: 3000,
+        title: "Success",
+        description: "Address updated successfully",
       });
+
+    //   form.reset({
+    //     addressName:data.?addressName,
+    //     street: data?.street || "",
+    //     country: "INDIA",
+    //     state: data?.state || "",
+    //     city: data?.city || "",
+    //     postalCode: data?.postalCode || "",
+    //   });
+    } catch (error) {
+      console.error("Error updating address", error);
     } finally {
       setIsSaving(false);
     }
   };
 
-  useEffect(() => {
-    const fetchStates = async () => {
+  const fetchStates = async () => {
+    try {
+      const response = await fetch("/api/address/states/IN");
+      if (!response.ok) throw new Error("Network response was not ok");
+
+      const data = await response.json();
+      const transformedStates = data.map((state: { code: string; name: string }) => ({
+        value: state.code,
+        label: state.name,
+      }));
+
+      setStates(transformedStates);
+      return transformedStates;
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+      return [];
+    }
+  };
+
+  const fetchCities = async (stateCode: string) => {
+    if (stateCode) {
       try {
-        const response = await fetch("/api/address/states/IN");
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
+        const response = await fetch(`/api/address/cities/IN/${stateCode}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+
         const data = await response.json();
-
-        // Transform the data into the desired format
-        const transformedStates = data.map(
-          (state: { code: any; name: any }) => ({
-            value: state.code,
-            label: state.name,
-          })
-        );
-        setIsLoading(true);
-
-        console.log("transformedStates", transformedStates);
-
-        setStates(transformedStates); // Set the states in the state
-      } catch (error) {
-        console.error("There was a problem with the fetch operation:", error);
-      }
-    };
-
-    fetchStates(); // Call the fetch function
-  }, []);
-  // useEffect(() => {
-  const fetchCities = async (value: string) => {
-    console.log(currentState);
-    if (value) {
-      try {
-        const response = await fetch(`/api/address/cities/IN/${value}`);
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-
-        const transformedCities = data.map((city: { name: any }) => ({
+        const transformedCities = data.map((city: { name: string }) => ({
           value: city.name,
           label: city.name,
         }));
 
         setCities(transformedCities);
+        return transformedCities;
       } catch (error) {
         console.error("There was a problem fetching cities:", error);
+        return [];
       }
     }
+    return [];
   };
 
-  // fetchCities();
-  // }, [currentState]);
+  useEffect(() => {
+    const initializeForm = async () => {
+      const fetchedStates = await fetchStates();
+      if (fetchedStates.length > 0 && addressProp?.state) {
+        const selectedState = fetchedStates.find(
+          (state: { value: string; label: string }) =>
+            state.label.toLowerCase() === addressProp.state.toLowerCase()
+        );
+        if (selectedState) {
+          setCurrState(selectedState.label);
+          form.setValue("state", selectedState.value);
 
-  const handleStateChange = (value: any) => {
+          const fetchedCities = await fetchCities(selectedState.value);
+          if (fetchedCities.length > 0 && addressProp.city) {
+            const selectedCity = fetchedCities.find(
+              (city: { value: string }) =>
+                city.value.toLowerCase() === addressProp.city.toLowerCase()
+            );
+            if (selectedCity) {
+              form.setValue("city", selectedCity.value);
+              setIsLoading(true);
+            }
+          }
+        }
+      }
+    };
+
+    initializeForm();
+  }, [addressProp, form]);
+
+  const handleStateChange = async (value: string) => {
     const selectedState = states.find((state) => state.value === value);
-    setCurrentState(selectedState ? selectedState.label : "");
+    if (selectedState) {
+      setCurrState(selectedState.label);
+    }
+
     form.setValue("state", value);
-    fetchCities(value);
+    form.setValue("city", ""); // Reset city when state changes
+    await fetchCities(value);
+  };
+
+  const handleCityChange = (value: string) => {
+    form.setValue("city", value);
   };
 
   if (!isLoading) {
@@ -177,45 +189,42 @@ const AddressForm: React.FC<AddressFormProps> = ({
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
-            <CardTitle className="flex justify-between ">
-              {/* <Button className="w-28 bg-primary" onClick={isAddingAddress}> */}
-              {/* Back
-              </Button> */}
-            </CardTitle>
+            <CardTitle>Edit Delivery Address</CardTitle>
           </CardHeader>
           <CardContent>
+
+
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="addressName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          placeholder="e.g. Home, Office, Warehouse"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="street"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Street Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+            <div className="w-[30%]">
+            <FormField
+                control={form.control}
+                name="addressName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               </div>
+
+              <FormField
+                control={form.control}
+                name="street"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Street Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
@@ -236,10 +245,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>State</FormLabel>
-                      <Select
-                        onValueChange={handleStateChange}
-                        value={field.value}
-                      >
+                      <Select onValueChange={handleStateChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select state" />
@@ -254,11 +260,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      {/* {currentState && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Current State: {currentState}
-                        </p>
-                      )} */}
                     </FormItem>
                   )}
                 />
@@ -268,10 +269,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={handleCityChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select city" />
@@ -303,12 +301,8 @@ const AddressForm: React.FC<AddressFormProps> = ({
                   )}
                 />
               </div>
-              <Button
-                type="submit"
-                className="mt-4 w-28 my-4 bg-primary"
-                disabled={isSaving}
-              >
-                {isSaving ? "Saving..." : "ADD"}
+              <Button type="submit" className="mt-4 w-28 my-4 bg-primary" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </div>
           </CardContent>
@@ -318,4 +312,4 @@ const AddressForm: React.FC<AddressFormProps> = ({
   );
 };
 
-export default AddressForm;
+export default Edit;
