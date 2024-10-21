@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           with: {
             user: {
               columns: {
-                id:true,
+                id: true,
                 name: true,
                 email: true,
                 mobile: true,
@@ -83,17 +83,7 @@ export async function GET(request: NextRequest) {
           },
         },
         rfpProducts: {
-          columns: { id: true, quantity: true },
-          with: {
-            product: {
-              columns: {
-                id: true,
-                name: true,
-                modelNo: true,
-                specification: true, // Ensure this is included}
-              },
-            },
-          },
+          columns: { id: true, quantity: true, description: true, name: true },
         },
         quotations: {
           columns: {
@@ -244,6 +234,8 @@ export async function POST(request: NextRequest) {
 
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
         rfpId: createdRFP.id,
+        name: rfpProduct.name,
+        description: rfpProduct.description,
         quantity: rfpProduct.quantity,
         productId: rfpProduct.rfpProductId,
         updatedAt: new Date(),
@@ -316,7 +308,7 @@ function formatRFPData(rfps: any[]) {
         modelNo: product.product.modelNo,
         quantity: product.quantity,
         rfpProductId: product.id,
-        description: product.product.specification,
+        description: product.product.description,
       })) || [],
     quotations:
       rfp.quotations?.map((quotation: any) => ({
@@ -335,7 +327,7 @@ function formatRFPData(rfps: any[]) {
             modelNo: pricing.rfpProduct.product.modelNo,
             quantity: pricing.rfpProduct.quantity,
             price: pricing.price,
-            description: pricing.rfpProduct.product.specification,
+            description: pricing.rfpProduct.product.description,
             gst: pricing.gst,
             type: "product",
           })),
