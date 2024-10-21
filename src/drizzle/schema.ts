@@ -965,6 +965,7 @@ export const ApproversListTable = pgTable(
     };
   }
 );
+
 export const ApproversListTableRelations = relations(
   ApproversListTable,
   ({ one }) => ({
@@ -1007,6 +1008,13 @@ export const RFPProductTable = pgTable(
     };
   }
 );
+
+export const RFPProductTableRelations = relations(RFPProductTable, ({ one }) => ({
+  rfp: one(RFPTable, {
+    fields: [RFPProductTable.rfpId],
+    references: [RFPTable.id],
+  })
+}));
 
 export const GoodStatusTable = pgTable(
   "good_statuses",

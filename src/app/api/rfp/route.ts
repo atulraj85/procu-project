@@ -114,16 +114,11 @@ export async function GET(request: NextRequest) {
               columns: { price: true, gst: true },
               with: {
                 rfpProduct: {
-                  columns: { id: true, quantity: true },
-                  with: {
-                    product: {
-                      columns: {
-                        id: true,
-                        name: true,
-                        modelNo: true,
-                        specification: true, // Ensure this is included
-                      },
-                    },
+                  columns: {
+                    id: true,
+                    quantity: true,
+                    name: true,
+                    description: true,
                   },
                 },
               },
@@ -154,12 +149,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // console.log(`Found ${records.length} records`);
+    console.log(`Found ${records.length} records`);
 
     const formattedData = formatRFPData(records);
 
-    // console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
-    // console.log("records data:", JSON.stringify(records, null, 2));
+    console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
+    console.log("records data:", JSON.stringify(records, null, 2));
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
@@ -237,7 +232,7 @@ export async function POST(request: NextRequest) {
         name: rfpProduct.name,
         description: rfpProduct.description,
         quantity: rfpProduct.quantity,
-        productId: rfpProduct.rfpProductId,
+        // productId: rfpProduct.rfpProductId,
         updatedAt: new Date(),
       }));
       if (rfpProductValues && rfpProductValues.length > 0) {
