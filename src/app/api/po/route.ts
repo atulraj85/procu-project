@@ -127,17 +127,7 @@ export async function GET(request: NextRequest) {
               columns: { price: true, gst: true },
               with: {
                 rfpProduct: {
-                  columns: { id: true, quantity: true },
-                  with: {
-                    product: {
-                      columns: {
-                        id: true,
-                        name: true,
-                        modelNo: true,
-                        specification: true,
-                      },
-                    },
-                  },
+                  columns: { id: true, quantity: true, description: true },
                 },
               },
             },
