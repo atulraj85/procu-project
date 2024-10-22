@@ -35,14 +35,14 @@ interface Props {
   companyId: string;
   setRfpAddress: React.Dispatch<React.SetStateAction<string>>;
   errors: any;
-  setErrors: any
+  setErrors: any;
 }
 
 const CompanyAddresses: React.FC<Props> = ({
   companyId,
   setRfpAddress,
   errors,
-  setErrors
+  setErrors,
 }) => {
   const [isAddingAddress, setIsAddingAddress] = useState<boolean>(true);
   const [addresses, setAddresses] = useState<AddressInterface[] | null>(null);
@@ -95,10 +95,16 @@ const CompanyAddresses: React.FC<Props> = ({
     });
   }, [companyId, isAddingAddress]);
 
+  useEffect(() => {
+    if (addresses) {
+      handleAddressSelect(addresses[0].addressName);
+    }
+  }, [addresses]);
+
   const handleAddressSelect = (searchTitle: string) => {
     setAddressProp(null);
-      errors.address = "";
-      setErrors(errors);
+    errors.address = "";
+    setErrors(errors);
     const selectedAddress = addresses?.find(
       (address) =>
         address.addressName.toLowerCase() === searchTitle.toLowerCase()
@@ -154,58 +160,85 @@ const CompanyAddresses: React.FC<Props> = ({
     <div>
       <Card>
         <CardHeader>
-          <CardTitle></CardTitle>
-          <div className="flex gap-6">
-            {isAddingAddress && (
-              <Select onValueChange={handleAddressSelect}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Address" />
-                </SelectTrigger>
-                <SelectContent>
-                  {addresses?.map((item, idx) => (
-                    <SelectItem key={idx} value={item.addressName}>
-                      {item.addressName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-
-            <div className="flex gap-4  w-full">
-              {selectedAddr && (
-                <div className={`w-[50%] ${selectedAddr ? "" : "hidden"}`}>
-                  <Input
-                    readOnly
-                    type="text"
-                    value={selectedAddr}
-                    className=" col-span-1"
-                    onChange={() => {
-                    
-                    }}
-                  />
-                </div>
+          {addresses && (
+            <div className="flex gap-6">
+              {isAddingAddress && (
+                <Select
+                  onValueChange={handleAddressSelect}
+                  defaultValue={addresses[0].addressName}
+                >
+                  {" "}
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select Address" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {addresses?.map((item, idx) => (
+                      <SelectItem key={idx} value={item.addressName}>
+                        {item.addressName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
 
-              {errors.address && (
-                <p className="text-red-500 text-sm">{errors.address}</p>
-              )}
+              <div className="flex gap-4  w-full">
+                {selectedAddr && (
+                  <div className={`w-[50%] ${selectedAddr ? "" : "hidden"}`}>
+                    <Input
+                      readOnly
+                      type="text"
+                      value={selectedAddr}
+                      className=" col-span-1"
+                      onChange={() => {}}
+                    />
+                  </div>
+                )}
 
-              {addressProp && (
+                {errors.address && (
+                  <p className="text-red-500 text-sm">{errors.address}</p>
+                )}
+
+                {addressProp && (
+                  <Sheet>
+                    <SheetTrigger>
+                      <div className="relative group">
+                        <CiEdit className="text-3xl cursor-pointer text-green-300" />
+                        {/* Hover text */}
+                        <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
+                          Edit
+                        </span>
+                      </div>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Edit Delivery Address</SheetTitle>
+                        <EditAddress
+                          addressProp={addressProp}
+                          setAddressProp={setAddressProp}
+                          setRfpAddress={setRfpAddress}
+                          isAddingAddress={toggleAddingAddress}
+                          setSelectedAddr={setSelectedAddr}
+                          handleNewAdress={handleNewAdress}
+                        />
+                      </SheetHeader>
+                    </SheetContent>
+                  </Sheet>
+                )}
+
                 <Sheet>
                   <SheetTrigger>
                     <div className="relative group">
-                      <CiEdit className="text-3xl cursor-pointer text-green-300" />
+                      <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" />
                       {/* Hover text */}
                       <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
-                        Edit
+                        New
                       </span>
                     </div>
                   </SheetTrigger>
                   <SheetContent>
                     <SheetHeader>
-                      <SheetTitle>Edit Delivery Address</SheetTitle>
-                      <EditAddress
-                        addressProp={addressProp}
+                      <SheetTitle>Add new Delivery Address</SheetTitle>
+                      <NewAddress
                         setAddressProp={setAddressProp}
                         setRfpAddress={setRfpAddress}
                         isAddingAddress={toggleAddingAddress}
@@ -215,33 +248,9 @@ const CompanyAddresses: React.FC<Props> = ({
                     </SheetHeader>
                   </SheetContent>
                 </Sheet>
-              )}
-
-              <Sheet>
-                <SheetTrigger>
-                  <div className="relative group">
-                    <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" />
-                    {/* Hover text */}
-                    <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
-                      New
-                    </span>
-                  </div>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Add new Delivery Address</SheetTitle>
-                    <NewAddress
-                      setAddressProp={setAddressProp}
-                      setRfpAddress={setRfpAddress}
-                      isAddingAddress={toggleAddingAddress}
-                      setSelectedAddr={setSelectedAddr}
-                      handleNewAdress={handleNewAdress}
-                    />
-                  </SheetHeader>
-                </SheetContent>
-              </Sheet>
+              </div>
             </div>
-          </div>
+          )}
         </CardHeader>
       </Card>
     </div>
