@@ -127,7 +127,7 @@ export interface RequestBody {
   userId: string;
   rfpStatus: RFPStatus;
   preferredVendorId: string;
-  rfpProducts: { rfpProductId: string; quantity: number }[];
+  rfpProducts: { rfpProductId: string; quantity: number, name: string, description: string }[];
   approvers: { approverId: string }[];
   quotations: { vendorId: string; billAmount: number }[]; // New field for quotations
 }

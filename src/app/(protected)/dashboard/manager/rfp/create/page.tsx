@@ -1,7 +1,6 @@
 "use client";
 import { updateProduct } from "@/actions/product/createProduct";
 import CompanyAddresses from "@/components/rfpAddress/CompanyAddresses";
-import SheetSide from "@/components/new-manager/Product";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,14 +9,12 @@ import { toast } from "@/components/ui/use-toast";
 import { useCurrentUser } from "@/hooks/auth";
 import { getTodayDate } from "@/lib/getTodayDate";
 import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
-import { Save, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
-  specification?: string | number | readonly string[] | undefined;
-  rfpProductId: string;
-  name?: string;
+  description?: string | number | readonly string[] | undefined;
   modelNo?: string;
   quantity: number;
 }
@@ -60,13 +57,6 @@ const RFPForm: React.FC = () => {
     rfpProducts: [],
     approvers: [],
   });
-
-  const [address, setAddress] = useState<string>("");
-  const [country, setCountry] = useState<string>("");
-  const [state, setState] = useState<string>("");
-  const [city, setCity] = useState<string>("");
-  const [zipCode, setZipCode] = useState<string>("");
-
   const [rfpId, setRfpId] = useState<string>("");
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
   const [searchProductTerm, setSearchProductTerm] = useState("");
@@ -95,6 +85,10 @@ const RFPForm: React.FC = () => {
   const [rfpAddress, setRfpAddress] = useState<string>("");
   const today = new Date().toISOString().split("T")[0];
   const newErrors: { [key: string]: string } = {};
+  const [newProduct, setNewProduct] = useState({
+    description: "",
+    quantity: 1,
+  });
 
   useEffect(() => {
     const fetchCompanyData = async () => {
@@ -110,11 +104,6 @@ const RFPForm: React.FC = () => {
           );
 
           if (shippingAddress) {
-            setAddress(shippingAddress.street);
-            setCountry(shippingAddress.country);
-            setState(shippingAddress.state);
-            setCity(shippingAddress.city);
-            setZipCode(shippingAddress.postalCode);
           } else {
             console.warn("No shipping address found for the company");
           }
@@ -214,34 +203,34 @@ const RFPForm: React.FC = () => {
   };
 
   // Add function to handle form updates
-  const handleProductChange = (
-    index: number,
-    field: keyof RFPProduct,
-    value: RFPProduct[keyof RFPProduct]
-  ) => {
-    const updatedProducts = [...approvedProducts];
-    const product = updatedProducts[index];
+  // const handleProductChange = (
+  //   index: number,
+  //   field: keyof RFPProduct,
+  //   value: RFPProduct[keyof RFPProduct]
+  // ) => {
+  //   const updatedProducts = [...approvedProducts];
+  //   const product = updatedProducts[index];
 
-    if (field === "specification") {
-      setModifiedProducts((prev) => new Set(prev).add(product.rfpProductId));
-    }
+  //   if (field === "description") {
+  //     setModifiedProducts((prev) => new Set(prev).add(product.rfpProductId));
+  //   }
 
-    updatedProducts[index] = { ...product, [field]: value };
-    setApprovedProducts(updatedProducts);
+  //   updatedProducts[index] = { ...product, [field]: value };
+  //   setApprovedProducts(updatedProducts);
 
-    setFormData((prevData) => ({
-      ...prevData,
-      rfpProducts: updatedProducts.map(
-        ({ rfpProductId, quantity, specification, name, modelNo }) => ({
-          rfpProductId,
-          quantity,
-          specification,
-          name,
-          modelNo,
-        })
-      ),
-    }));
-  };
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     rfpProducts: updatedProducts.map(
+  //       ({ rfpProductId, quantity, description, name, modelNo }) => ({
+  //         rfpProductId,
+  //         quantity,
+  //         description,
+  //         name,
+  //         modelNo,
+  //       })
+  //     ),
+  //   }));
+  // };
 
   const addApprover = (user: User) => {
     setApprovedUsers((prevUsers) => [...prevUsers, user]);
@@ -250,35 +239,35 @@ const RFPForm: React.FC = () => {
       approvers: [...prevData.approvers, { approverId: String(user.id) }],
     }));
   };
-  const handleProductUpdate = async (
-    productId: string,
-    specification: string
-  ) => {
-    try {
-      await updateProduct(productId, {
-        specification: specification,
-      });
+  // const handleProductUpdate = async (
+  //   productId: string,
+  //   specification: string
+  // ) => {
+  //   try {
+  //     await updateProduct(productId, {
+  //       specification: specification,
+  //     });
 
-      // Remove product from modified set after successful update
-      setModifiedProducts((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(productId);
-        return newSet;
-      });
+  //     // Remove product from modified set after successful update
+  //     setModifiedProducts((prev) => {
+  //       const newSet = new Set(prev);
+  //       newSet.delete(productId);
+  //       return newSet;
+  //     });
 
-      toast({
-        title: "Product Updated",
-        description: "Product specification has been successfully updated.",
-      });
-    } catch (error) {
-      console.error("Error updating product:", error);
-      toast({
-        title: "Update Failed",
-        description: "Failed to update product specification.",
-        variant: "destructive",
-      });
-    }
-  };
+  //     toast({
+  //       title: "Product Updated",
+  //       description: "Product specification has been successfully updated.",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating product:", error);
+  //     toast({
+  //       title: "Update Failed",
+  //       description: "Failed to update product specification.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   const removeApprover = (index: number) => {
     setApprovedUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
@@ -288,36 +277,31 @@ const RFPForm: React.FC = () => {
     }));
   };
 
-  const addProduct = (product: RFPProduct) => {
-    if (!product.rfpProductId) {
-      console.error("Product ID is missing");
-      return;
-    }
+  const handleProductInputChange = (field: string, value: string | number) => {
+    setNewProduct((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
-    const productExists = approvedProducts.some(
-      (p) => p.rfpProductId === product.rfpProductId
-    );
+  const addProduct = () => {
+    if (newProduct.description.trim()) {
+      const productToAdd = {
+        description: newProduct.description,
+        quantity: newProduct.quantity,
+      };
 
-    if (!productExists) {
-      const newProduct = { ...product, quantity: 1 };
-      setApprovedProducts((prevProducts) => [...prevProducts, newProduct]);
-      setFormData((prevData) => ({
-        ...prevData,
-        rfpProducts: [
-          ...prevData.rfpProducts,
-          {
-            rfpProductId: String(product.rfpProductId),
-            quantity: 1,
-            specification: product.specification,
-            name: product.name,
-            modelNo: product.modelNo,
-          },
-        ],
+      setApprovedProducts((prev) => [...prev, productToAdd]);
+      setFormData((prev) => ({
+        ...prev,
+        rfpProducts: [...prev.rfpProducts, productToAdd],
       }));
-      setSearchProductTerm("");
-      setFetchedProducts([]);
-    } else {
-      console.warn(`Product with ID ${product.rfpProductId} already exists.`);
+
+      // Reset the form
+      setNewProduct({
+        description: "",
+        quantity: 1,
+      });
     }
   };
 
@@ -376,13 +360,6 @@ const RFPForm: React.FC = () => {
     const updatedFormData = {
       ...formData,
       deliveryLocation: rfpAddress,
-
-      // deliveryLocationDetails: {
-      //   country,
-      //   state,
-      //   city,
-      //   zipCode,
-      // },
     };
 
     setLoading(true);
@@ -600,153 +577,79 @@ const RFPForm: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="">
-                  <CardHeader>
-                    <CardTitle>Product Details</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center mb-4 space-x-2">
+                <div>
+                  <CardTitle>Product Details</CardTitle>
+                </div>
+                <div className="space-y-4 mt-4">
+                  {/* Product Input Form */}
+                  <div className="flex items-center space-x-2">
+                    {/*
                       <Input
-                        type="text"
-                        placeholder="Search Products..."
-                        value={searchProductTerm}
-                        onChange={(e) => handleSearchChange(e, "products")}
+                        placeholder="Product Name"
+                        value={newProduct.name}
+                        onChange={(e) =>
+                          handleProductInputChange("name", e.target.value)
+                        }
                         className="flex-1"
                       />
-                      <SheetSide />
-                    </div>
+                       */}
+                    <Input
+                      placeholder="Product Description"
+                      value={newProduct.description}
+                      onChange={(e) =>
+                        handleProductInputChange("description", e.target.value)
+                      }
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Qty"
+                      min="1"
+                      value={newProduct.quantity}
+                      onChange={(e) =>
+                        handleProductInputChange(
+                          "quantity",
+                          parseInt(e.target.value, 10) || 1
+                        )
+                      }
+                      className="w-24"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addProduct}
+                      className="bg-primary text-white"
+                    >
+                      Add Product
+                    </Button>
+                  </div>
 
-                    {fetchedProducts.length > 0 && (
-                      <div className="mt-2">
-                        <h3 className="font-semibold">Fetched Products:</h3>
-                        <ul>
-                          {fetchedProducts.map((product) => (
-                            <li
-                              key={product.rfpProductId}
-                              className="py-1 cursor-pointer hover:bg-gray-200"
-                              onClick={() => {
-                                if (product) {
-                                  addProduct(product);
-                                } else {
-                                  console.error("No Product selected");
-                                }
-                              }}
-                            >
-                              {product.name} | {product.modelNo}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
+                  {/* Display Added Products */}
+                  <div className="space-y-2">
                     {approvedProducts.map((product, index) => (
                       <div
-                        key={product.rfpProductId}
-                        className="flex items-center space-x-2 mb-2"
+                        key={index}
+                        className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
                       >
-                        <div className="flex flex-col">
-                          <Label
-                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                              index > 0 ? "hidden" : "visible"
-                            }`}
-                          >
-                            Product
-                          </Label>
-                          <Input
-                            disabled
-                            value={product.name}
-                            placeholder="Name"
-                            className="flex-1"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <Label
-                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                              index > 0 ? "hidden" : "visible"
-                            }`}
-                          >
-                            Product Description
-                          </Label>
-                          <div className="flex space-x-2">
-                            <Input
-                              value={product.specification}
-                              onChange={(e) =>
-                                handleProductChange(
-                                  index,
-                                  "specification",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Enter product description"
-                              className="flex-1"
-                            />
-                            {modifiedProducts.has(product.rfpProductId) && (
-                              <Button
-                                type="button"
-                                onClick={() =>
-                                  handleProductUpdate(
-                                    product.rfpProductId,
-                                    product.specification as string
-                                  )
-                                }
-                                className="bg-white hover:bg-white"
-                              >
-                                {/* Update */}
-                                <Save
-                                  size={20}
-                                  strokeWidth={0.75}
-                                  color="green"
-                                />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-col w-1/12">
-                          <Label
-                            className={`mb-2 font-bold text-[16px] text-slate-700 ${
-                              index > 0 ? "hidden" : "visible"
-                            }`}
-                          >
-                            Quantity
-                          </Label>
-                          <Input
-                            type="number"
-                            value={product.quantity}
-                            onChange={(e) =>
-                              handleProductChange(
-                                index,
-                                "quantity",
-                                parseInt(e.target.value, 10)
-                              )
-                            }
-                            placeholder="Quantity"
-                            className="flex-1"
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <Label
-                            className={`mb-2 font-bold text-[16px]  text-white ${
-                              index > 0 ? "hidden" : "visible"
-                            }`}
-                          >
-                            kkk
-                          </Label>
-                          <Button
-                            type="button"
-                            onClick={() => removeProduct(index)}
-                            variant="outline"
-                            size="icon"
-                            className="text-red-500"
-                          >
-                            <X className="h-4 w-4 " />
-                          </Button>
-                        </div>
+                        <span className="">{product.description}</span>
+                        <span className="w-24 text-center">
+                          {product.quantity}
+                        </span>
+                        <Button
+                          type="button"
+                          onClick={() => removeProduct(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
-                    {errors.products && (
-                      <p className="text-red-500 text-sm">{errors.products}</p>
-                    )}
-                  </CardContent>
+                  </div>
+
+                  {errors.products && (
+                    <p className="text-red-500 text-sm">{errors.products}</p>
+                  )}
                 </div>
               </CardContent>
 
@@ -781,3 +684,144 @@ const RFPForm: React.FC = () => {
 };
 
 export default RFPForm;
+
+//  <div className="">
+//    <CardHeader>
+//      <CardTitle>Product Details</CardTitle>
+//    </CardHeader>
+//    <CardContent>
+//      <div className="flex items-center mb-4 space-x-2">
+//        <Input
+//          type="text"
+//          placeholder="Search Products..."
+//          value={searchProductTerm}
+//          onChange={(e) => handleSearchChange(e, "products")}
+//          className="flex-1"
+//        />
+//        <SheetSide />/ Add Product
+//      </div>
+
+//      {fetchedProducts.length > 0 && (
+//        <div className="mt-2">
+//          <h3 className="font-semibold">Fetched Products:</h3>
+//          <ul>
+//            {fetchedProducts.map((product) => (
+//              <li
+//                key={product.rfpProductId}
+//                className="py-1 cursor-pointer hover:bg-gray-200"
+//                onClick={() => {
+//                  if (product) {
+//                    addProduct(product);
+//                  } else {
+//                    console.error("No Product selected");
+//                  }
+//                }}
+//              >
+//                {product.name} | {product.modelNo}
+//              </li>
+//            ))}
+//          </ul>
+//        </div>
+//      )}
+
+//      {approvedProducts.map((product, index) => (
+//        <div
+//          key={product.rfpProductId}
+//          className="flex items-center space-x-2 mb-2"
+//        >
+//          <div className="flex flex-col">
+//            <Label
+//              className={`mb-2 font-bold text-[16px] text-slate-700 ${
+//                index > 0 ? "hidden" : "visible"
+//              }`}
+//            >
+//              Product
+//            </Label>
+//            <Input
+//              disabled
+//              value={product.name}
+//              placeholder="Name"
+//              className="flex-1"
+//            />
+//          </div>
+//          <div className="flex flex-col">
+//            <Label
+//              className={`mb-2 font-bold text-[16px] text-slate-700 ${
+//                index > 0 ? "hidden" : "visible"
+//              }`}
+//            >
+//              Product Description
+//            </Label>
+//            <div className="flex space-x-2">
+//              <Input
+//                value={product.description}
+//                onChange={(e) =>
+//                  handleProductChange(index, "description", e.target.value)
+//                }
+//                placeholder="Enter product description"
+//                className="flex-1"
+//              />
+//              {modifiedProducts.has(product.rfpProductId) && (
+//                <Button
+//                  type="button"
+//                  onClick={() =>
+//                    handleProductUpdate(
+//                      product.rfpProductId,
+//                      product.description as string
+//                    )
+//                  }
+//                  className="bg-white hover:bg-white"
+//                >
+//                  {/* Update */}
+//                  <Save size={20} strokeWidth={0.75} color="green" />
+//                </Button>
+//              )}
+//            </div>
+//          </div>
+//          <div className="flex flex-col w-1/12">
+//            <Label
+//              className={`mb-2 font-bold text-[16px] text-slate-700 ${
+//                index > 0 ? "hidden" : "visible"
+//              }`}
+//            >
+//              Quantity
+//            </Label>
+//            <Input
+//              type="number"
+//              value={product.quantity}
+//              onChange={(e) =>
+//                handleProductChange(
+//                  index,
+//                  "quantity",
+//                  parseInt(e.target.value, 10)
+//                )
+//              }
+//              placeholder="Quantity"
+//              className="flex-1"
+//            />
+//          </div>
+//          <div className="flex flex-col">
+//            <Label
+//              className={`mb-2 font-bold text-[16px]  text-white ${
+//                index > 0 ? "hidden" : "visible"
+//              }`}
+//            >
+//              kkk
+//            </Label>
+//            <Button
+//              type="button"
+//              onClick={() => removeProduct(index)}
+//              variant="outline"
+//              size="icon"
+//              className="text-red-500"
+//            >
+//              <X className="h-4 w-4 " />
+//            </Button>
+//          </div>
+//        </div>
+//      ))}
+//      {errors.products && (
+//        <p className="text-red-500 text-sm">{errors.products}</p>
+//      )}
+//    </CardContent>
+//  </div>;

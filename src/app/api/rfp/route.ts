@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           with: {
             user: {
               columns: {
-                id:true,
+                id: true,
                 name: true,
                 email: true,
                 mobile: true,
@@ -83,17 +83,7 @@ export async function GET(request: NextRequest) {
           },
         },
         rfpProducts: {
-          columns: { id: true, quantity: true },
-          with: {
-            product: {
-              columns: {
-                id: true,
-                name: true,
-                modelNo: true,
-                specification: true, // Ensure this is included}
-              },
-            },
-          },
+          columns: { id: true, quantity: true, description: true },
         },
         quotations: {
           columns: {
@@ -124,16 +114,10 @@ export async function GET(request: NextRequest) {
               columns: { price: true, gst: true },
               with: {
                 rfpProduct: {
-                  columns: { id: true, quantity: true },
-                  with: {
-                    product: {
-                      columns: {
-                        id: true,
-                        name: true,
-                        modelNo: true,
-                        specification: true, // Ensure this is included
-                      },
-                    },
+                  columns: {
+                    id: true,
+                    quantity: true,
+                    description: true,
                   },
                 },
               },
@@ -164,12 +148,12 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // console.log(`Found ${records.length} records`);
+    console.log(`Found ${records.length} records`);
 
     const formattedData = formatRFPData(records);
 
-    // console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
-    // console.log("records data:", JSON.stringify(records, null, 2));
+    console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
+    console.log("records data:", JSON.stringify(records, null, 2));
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
@@ -244,8 +228,8 @@ export async function POST(request: NextRequest) {
 
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
         rfpId: createdRFP.id,
+        description: rfpProduct.description,
         quantity: rfpProduct.quantity,
-        productId: rfpProduct.rfpProductId,
         updatedAt: new Date(),
       }));
       if (rfpProductValues && rfpProductValues.length > 0) {
@@ -291,66 +275,90 @@ export async function POST(request: NextRequest) {
 }
 
 function formatRFPData(rfps: any[]) {
-  return rfps?.map((rfp: any) => ({
-    id: rfp.id,
-    rfpId: rfp.rfpId,
-    requirementType: rfp.requirementType,
-    dateOfOrdering: rfp.dateOfOrdering,
-    deliveryLocation: rfp.deliveryLocation,
-    deliveryByDate: rfp.deliveryByDate,
-    rfpStatus: rfp.rfpStatus,
-    preferredQuotationId: rfp.preferredQuotationId,
-    created_at: rfp.created_at,
-    updated_at: rfp.updated_at,
-    approvers:
-      rfp.approversLists?.map((approver: any) => ({
-        name: approver.user.name,
-        id: approver.user.id,
-        email: approver.user.email,
-        mobile: approver.user.mobile,
-      })) || [],
-    products:
-      rfp.rfpProducts?.map((product: any) => ({
-        id: product.product.id,
-        name: product.product.name,
-        modelNo: product.product.modelNo,
-        quantity: product.quantity,
-        rfpProductId: product.id,
-        description: product.product.specification,
-      })) || [],
-    quotations:
-      rfp.quotations?.map((quotation: any) => ({
-        id: quotation.id,
-        totalAmount: quotation.totalAmount,
-        refNo: quotation.refNo,
-        totalAmountWithoutGST: quotation.totalAmountWithoutGst,
-        created_at: quotation.created_at,
-        updated_at: quotation.updated_at,
-        vendor: quotation.vendor,
-        products: [
-          ...quotation?.vendorPricings?.map((pricing: any) => ({
-            id: pricing.rfpProduct.product.id,
-            rfpProductId: pricing.rfpProduct.id,
-            name: pricing.rfpProduct.product.name,
-            modelNo: pricing.rfpProduct.product.modelNo,
-            quantity: pricing.rfpProduct.quantity,
-            price: pricing.price,
-            description: pricing.rfpProduct.product.specification,
-            gst: pricing.gst,
-            type: "product",
-          })),
-          ...(quotation.otherCharges || []).map((charge: any) => ({
-            ...charge,
-            type: "otherCharge",
-          })),
-        ],
-        supportingDocuments: quotation.supportingDocuments || [],
-      })) || [],
-    createdBy: {
-      name: rfp.user.name,
-      email: rfp.user.email,
-      mobile: rfp.user.mobile,
-      role: rfp.user.role,
-    },
-  }));
+  if (!Array.isArray(rfps)) {
+    console.warn("Expected array input for formatRFPData");
+    return [];
+  }
+
+  return rfps
+    .map((rfp) => {
+      if (!rfp) return null;
+
+      return {
+        id: rfp?.id,
+        rfpId: rfp?.rfpId,
+        requirementType: rfp?.requirementType,
+        dateOfOrdering: rfp?.dateOfOrdering,
+        deliveryLocation: rfp?.deliveryLocation,
+        deliveryByDate: rfp?.deliveryByDate,
+        rfpStatus: rfp?.rfpStatus,
+        preferredQuotationId: rfp?.preferredQuotationId,
+        created_at: rfp?.createdAt,
+        updated_at: rfp?.updatedAt,
+
+        // Handle approvers list
+        approvers:
+          rfp?.approversLists?.map((approver: any) => ({
+            name: approver?.user?.name,
+            id: approver?.user?.id,
+            email: approver?.user?.email,
+            mobile: approver?.user?.mobile,
+          })) || [],
+
+        // Handle products
+        products:
+          rfp?.rfpProducts?.map((product: any) => ({
+            id: product?.id,
+            name: product?.name,
+            quantity: product?.quantity,
+            description: product?.description,
+          })) || [],
+
+        // Handle quotations
+        quotations:
+          rfp?.quotations?.map((quotation: any) => {
+            // Prepare vendor pricings
+            const vendorPricings =
+              quotation?.vendorPricings?.map((pricing: any) => ({
+                id: pricing?.rfpProduct?.id,
+                rfpProductId: pricing?.rfpProduct?.id,
+                quantity: pricing?.rfpProduct?.quantity,
+                price: pricing?.price,
+                description: pricing?.rfpProduct?.description,
+                gst: pricing?.gst,
+                type: "product",
+              })) || [];
+
+            // Prepare other charges
+            const otherCharges =
+              quotation?.otherCharges?.map((charge: any) => ({
+                ...charge,
+                type: "otherCharge",
+              })) || [];
+
+            return {
+              id: quotation?.id,
+              totalAmount: quotation?.totalAmount,
+              refNo: quotation?.refNo,
+              totalAmountWithoutGST: quotation?.totalAmountWithoutGst,
+              created_at: quotation?.createdAt,
+              updated_at: quotation?.updatedAt,
+              vendor: quotation?.vendor,
+              products: [...vendorPricings, ...otherCharges],
+              supportingDocuments: quotation?.supportingDocuments || [],
+            };
+          }) || [],
+
+        // Handle user info
+        createdBy: rfp?.user
+          ? {
+              name: rfp.user?.name,
+              email: rfp.user?.email,
+              mobile: rfp.user?.mobile,
+              role: rfp.user?.role,
+            }
+          : null,
+      };
+    })
+    .filter(Boolean); // Remove any null entries
 }

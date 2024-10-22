@@ -22,6 +22,20 @@
       "when": 1728291787247,
       "tag": "0002_medical_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1729496823047,
+      "tag": "0003_dizzy_whiplash",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1729571260282,
+      "tag": "0004_clear_vindicator",
+      "breakpoints": true
     }
   ]
 }

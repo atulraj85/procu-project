@@ -5,30 +5,19 @@
 - Shadcn
 - Tailwind
 
-### WorkFlow:
-
-1. Creation of Company:
-   1. Getting details from GST number /api/gst/number (Error while creating company)
-   2. 
-2. Creation of Admin:
-3. Roles:
-   1. Admin:
-      1. Dashboard
-      2. Users
-      3. Company
-   2. Procurement Manager
-      1. Dashboard
-      2. Create RFP
-      3. Vendor
-   3. Finance Manager
-      1. Dashboard
-      2. Create PO
-
 # Database and ORM
 
 - **Generate Migration**: Use command `npx drizzle-kit generate` to generate migration file for the changes.
 - **Apply Migrations**: Use command `npx drizzle-kit migrate` to apply migrations.
 - **Drizzle Studio (Visual Interface)**: Use command `npx drizzle-kit studio` tp open a visual interface for interacting with your database schema, running queries, and managing migrations. Drizzle Studio provides a user-friendly way to explore and manage your database during development.
+
+## Generate DBML for Database :
+
+```
+npx drizzle-dbml-cli src/drizzle/schema.ts -o schema.dbml
+```
+
+This will create schema.dbml file in root dir
 
 # Authentication Setup with Prisma, Nodemailer, and bcryptjs using "[https://authjs.dev/](https://authjs.dev/)" framework
 
