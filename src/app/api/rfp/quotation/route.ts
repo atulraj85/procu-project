@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
             create: products.map((product: any) => ({
               price: new Decimal(product.unitPrice).toNumber(),
               GST: parseInt(product.gst),
-              rfpProduct: { connect: { id: product.rfpProductId } },
+              rfpProduct: { connect: { id: product.id } },
             })),
           },
           otherCharges: {
