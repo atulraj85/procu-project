@@ -15,8 +15,6 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 interface RFPProduct {
   description?: string | number | readonly string[] | undefined;
-  // rfpProductId: string;
-  name?: string;
   modelNo?: string;
   quantity: number;
 }
@@ -88,7 +86,6 @@ const RFPForm: React.FC = () => {
   const today = new Date().toISOString().split("T")[0];
   const newErrors: { [key: string]: string } = {};
   const [newProduct, setNewProduct] = useState({
-    name: "",
     description: "",
     quantity: 1,
   });
@@ -288,10 +285,8 @@ const RFPForm: React.FC = () => {
   };
 
   const addProduct = () => {
-    if (newProduct.name.trim()) {
+    if (newProduct.description.trim()) {
       const productToAdd = {
-        // rfpProductId: Date.now().toString(),
-        name: newProduct.name,
         description: newProduct.description,
         quantity: newProduct.quantity,
       };
@@ -304,7 +299,6 @@ const RFPForm: React.FC = () => {
 
       // Reset the form
       setNewProduct({
-        name: "",
         description: "",
         quantity: 1,
       });
@@ -583,13 +577,13 @@ const RFPForm: React.FC = () => {
                   </div>
                 </div>
 
-                <CardHeader>
+                <div>
                   <CardTitle>Product Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Product Input Form */}
-                    <div className="flex items-center space-x-2">
+                </div>
+                <div className="space-y-4 mt-4">
+                  {/* Product Input Form */}
+                  <div className="flex items-center space-x-2">
+                    {/*
                       <Input
                         placeholder="Product Name"
                         value={newProduct.name}
@@ -598,69 +592,65 @@ const RFPForm: React.FC = () => {
                         }
                         className="flex-1"
                       />
-                      <Input
-                        placeholder="Description"
-                        value={newProduct.description}
-                        onChange={(e) =>
-                          handleProductInputChange(
-                            "description",
-                            e.target.value
-                          )
-                        }
-                        className="flex-1"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Qty"
-                        min="1"
-                        value={newProduct.quantity}
-                        onChange={(e) =>
-                          handleProductInputChange(
-                            "quantity",
-                            parseInt(e.target.value, 10) || 1
-                          )
-                        }
-                        className="w-24"
-                      />
-                      <Button
-                        type="button"
-                        onClick={addProduct}
-                        className="bg-primary text-white"
-                      >
-                        Add Product
-                      </Button>
-                    </div>
-
-                    {/* Display Added Products */}
-                    <div className="space-y-2">
-                      {approvedProducts.map((product, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
-                        >
-                          <span className="flex-1">{product.name}</span>
-                          <span className="flex-1">{product.description}</span>
-                          <span className="w-24 text-center">
-                            {product.quantity}
-                          </span>
-                          <Button
-                            type="button"
-                            onClick={() => removeProduct(index)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {errors.products && (
-                      <p className="text-red-500 text-sm">{errors.products}</p>
-                    )}
+                       */}
+                    <Input
+                      placeholder="Product Description"
+                      value={newProduct.description}
+                      onChange={(e) =>
+                        handleProductInputChange("description", e.target.value)
+                      }
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Qty"
+                      min="1"
+                      value={newProduct.quantity}
+                      onChange={(e) =>
+                        handleProductInputChange(
+                          "quantity",
+                          parseInt(e.target.value, 10) || 1
+                        )
+                      }
+                      className="w-24"
+                    />
+                    <Button
+                      type="button"
+                      onClick={addProduct}
+                      className="bg-primary text-white"
+                    >
+                      Add Product
+                    </Button>
                   </div>
-                </CardContent>
+
+                  {/* Display Added Products */}
+                  <div className="space-y-2">
+                    {approvedProducts.map((product, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
+                      >
+                        <span className="">{product.description}</span>
+                        <span className="w-24 text-center">
+                          {product.quantity}
+                        </span>
+                        <Button
+                          type="button"
+                          onClick={() => removeProduct(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {errors.products && (
+                    <p className="text-red-500 text-sm">{errors.products}</p>
+                  )}
+                </div>
               </CardContent>
 
               <div className="flex justify-end space-x-4 mr-10">

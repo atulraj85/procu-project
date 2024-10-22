@@ -985,7 +985,6 @@ export const RFPProductTable = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey().notNull(),
     rfpId: uuid("rfp_id").notNull(),
-    name: text("name").notNull(),
     quantity: integer("quantity").notNull(),
     description: text("description"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })

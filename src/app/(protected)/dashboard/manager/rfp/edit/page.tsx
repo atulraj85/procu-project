@@ -393,9 +393,6 @@ const EditRFPForm: React.FC = () => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-
-
-
     if (!validateForm()) {
       toast({
         title: "Error",
@@ -512,133 +509,150 @@ const EditRFPForm: React.FC = () => {
                 </div>
               )}
             </CardHeader>
-                 
+
             <CardContent>
-  {/* All sections in one row */}
-  <div className="grid grid-cols-3 gap-6">
-    {/* Requirement Type Section */}
-    <div className="space-y-4">
-      <Label className="text-base font-medium">Requirement Type</Label>
-      <div className="flex space-x-6">
-        <div className="flex items-center space-x-2">
-          <input
-            type="radio"
-            id="product"
-            name="requirementType"
-            value="Product"
-            checked={formData.requirementType === "Product"}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                requirementType: e.target.value,
-              })
-            }
-            className="text-primary focus:ring-primary h-4 w-4"
-          />
-          <Label htmlFor="product" className="text-sm">Product</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            type="radio"
-            id="service"
-            name="requirementType"
-            value="Service"
-            checked={formData.requirementType === "Service"}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                requirementType: e.target.value,
-              })
-            }
-            className="text-primary focus:ring-primary h-4 w-4"
-          />
-          <Label htmlFor="service" className="text-sm">Service</Label>
-        </div>
-      </div>
-    </div>
+              {/* All sections in one row */}
+              <div className="grid grid-cols-3 gap-6">
+                {/* Requirement Type Section */}
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">
+                    Requirement Type
+                  </Label>
+                  <div className="flex space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="product"
+                        name="requirementType"
+                        value="Product"
+                        checked={formData.requirementType === "Product"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            requirementType: e.target.value,
+                          })
+                        }
+                        className="text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <Label htmlFor="product" className="text-sm">
+                        Product
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="service"
+                        name="requirementType"
+                        value="Service"
+                        checked={formData.requirementType === "Service"}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            requirementType: e.target.value,
+                          })
+                        }
+                        className="text-primary focus:ring-primary h-4 w-4"
+                      />
+                      <Label htmlFor="service" className="text-sm">
+                        Service
+                      </Label>
+                    </div>
+                  </div>
+                </div>
 
-    {/* Delivery Date Section */}
-    <div className="space-y-1">
-      <Label htmlFor="deliveryByDate" className="text-base font-medium">
-        Expected Delivery Date
-      </Label>
-      <Input
-        id="deliveryByDate"
-        name="deliveryByDate"
-        type="date"
-        min={today}
-        value={formData.deliveryByDate}
-        onChange={handleInputChange}
-        className={`${errors.deliveryByDate ? "border-red-500" : "w-[60%]"}`}
-      />
-      {errors.deliveryByDate && (
-        <p className="text-red-500 text-sm">{errors.deliveryByDate}</p>
-      )}
-    </div>
+                {/* Delivery Date Section */}
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="deliveryByDate"
+                    className="text-base font-medium"
+                  >
+                    Expected Delivery Date
+                  </Label>
+                  <Input
+                    id="deliveryByDate"
+                    name="deliveryByDate"
+                    type="date"
+                    min={today}
+                    value={formData.deliveryByDate}
+                    onChange={handleInputChange}
+                    className={`${
+                      errors.deliveryByDate ? "border-red-500" : "w-[60%]"
+                    }`}
+                  />
+                  {errors.deliveryByDate && (
+                    <p className="text-red-500 text-sm">
+                      {errors.deliveryByDate}
+                    </p>
+                  )}
+                </div>
 
-    {/* Approvers Section */}
-    <div className="space-y-4">
-      <div>
-        <Label className="text-base font-medium mb-2 block">Approvers</Label>
-        <Input
-          type="text"
-          placeholder="Search Approvers..."
-          value={searchApproverTerm}
-          onChange={(e) => handleSearchChange(e, "users")}
-          // className="w-full"
-        />
-      </div>
+                {/* Approvers Section */}
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base font-medium mb-2 block">
+                      Approvers
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="Search Approvers..."
+                      value={searchApproverTerm}
+                      onChange={(e) => handleSearchChange(e, "users")}
+                      // className="w-full"
+                    />
+                  </div>
 
-      {/* Fetched Users */}
-      {fetchedUsers.length > 0 && (
-        <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
-          <ul className="space-y-1">
-            {fetchedUsers.map((user) => (
-              <li
-                key={user.id}
-                className="py-1.5 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
-                onClick={() => {
-                  addApprover(user);
-                  setSearchApproverTerm("");
-                  setFetchedUsers([]);
-                }}
-              >
-                {user.name} | {user.email} | {user.mobile}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                  {/* Fetched Users */}
+                  {fetchedUsers.length > 0 && (
+                    <div className="border rounded-md p-3 max-h-40 overflow-y-auto">
+                      <ul className="space-y-1">
+                        {fetchedUsers.map((user) => (
+                          <li
+                            key={user.id}
+                            className="py-1.5 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
+                            onClick={() => {
+                              addApprover(user);
+                              setSearchApproverTerm("");
+                              setFetchedUsers([]);
+                            }}
+                          >
+                            {user.name} | {user.email} | {user.mobile}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-      {/* Selected Approvers */}
-      <div className="space-y-2 max-h-40 overflow-y-auto">
-        {approvedUsers.map((approver, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between px-2 rounded-md"
-          >
-            <div className="grid grid-cols-2 flex-1">
-              <span className="text-sm truncate">{approver.name}</span>
-              <span className="text-sm truncate">{approver.email}</span>
-            </div>
-            <Button
-              type="button"
-              onClick={() => removeApprover(index)}
-              variant="ghost"
-              size="sm"
-              className="text-red-500 hover:text-red-700 ml-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-</CardContent>
+                  {/* Selected Approvers */}
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {approvedUsers.map((approver, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between px-2 rounded-md"
+                      >
+                        <div className="grid grid-cols-2 flex-1">
+                          <span className="text-sm truncate">
+                            {approver.name}
+                          </span>
+                          <span className="text-sm truncate">
+                            {approver.email}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => removeApprover(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 ml-2"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
-
-          
 
           <Card className="mb-4">
             <CardHeader>
@@ -684,7 +698,7 @@ const EditRFPForm: React.FC = () => {
                   key={product.rfpProductId}
                   className="flex items-center space-x-2 mb-2"
                 >
-                  <div className="flex flex-col">
+                  {/* <div className="flex flex-col">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
                         index > 0 ? "hidden" : "visible"
@@ -698,7 +712,7 @@ const EditRFPForm: React.FC = () => {
                       placeholder="Name"
                       className="flex-1"
                     />
-                  </div>
+                  </div> */}
                   <div className="flex flex-col w-[50%]">
                     <Label
                       className={`mb-2 font-bold text-[16px] text-slate-700 ${
