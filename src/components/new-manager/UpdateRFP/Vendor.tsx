@@ -185,14 +185,6 @@ const VendorSelector = ({
             </ul>
           </div>
         )}
-        {disableVendorSearch && (
-          <div className=" border-orange-500 text-orange-500">
-            <div className="text-sm">
-              You need to remove the current vendor first to modify existing
-              vendor details.
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

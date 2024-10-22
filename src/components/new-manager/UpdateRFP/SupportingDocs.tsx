@@ -40,16 +40,19 @@ const SupportingDocumentsList = ({
     control,
     name: `quotations.${index}.supportingDocuments`,
   });
-  const [fileError, setFileError] = useState("");
 
   const handleFileChange = (
     e: ChangeEvent<HTMLInputElement>,
     docIndex: number
   ) => {
+    console.log("Herererere");
+    handleError("");
+
     const file = e.target.files?.[0];
-    setFileError("");
 
     if (file) {
+      handleError("");
+
       const documentName = getValues(
         `quotations.${index}.supportingDocuments.${docIndex}.name`
       );
@@ -65,8 +68,8 @@ const SupportingDocumentsList = ({
         file.name
       );
     }
-    if (!file) {
-      setFileError("Please upload a file.");
+    if (file === null) {
+      console.log("No file available");
       return;
     }
   };
@@ -156,9 +159,6 @@ const SupportingDocumentsList = ({
                           onChange={(e) => handleFileChange(e, docIndex)}
                           required
                         />
-                      )}
-                      {fileError && ( // Assuming fileError is the state for file validation
-                        <p className="text-red-500 text-sm mt-1">{fileError}</p>
                       )}
                     </div>
 

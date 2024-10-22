@@ -285,6 +285,32 @@ export default function RFPUpdateForm({
         return false;
       }
 
+      quotation.supportingDocuments.map((document) => {
+        if (document.name === "") {
+          console.log(document);
+          setQuotationDocNameError("No name selected!");
+          console.log("Document name is missing!");
+          return false;
+        }
+      });
+
+      quotation.supportingDocuments.map((document) => {
+        if (document.fileName === "") {
+          console.log(document);
+          setQuotationDocNameError("File details are not added!");
+          console.log("Document name is missing!");
+          return false;
+        }
+      });
+
+      quotation.otherCharges.map((other) => {
+        if (other.unitPrice <= 0) {
+          setQuotationUnitPriceOtherError("Unit is empty!");
+          console.log("unit price is empty");
+          return false;
+        }
+      });
+
       const productsValid = quotation.products.every((product, id) => {
         if (product.unitPrice <= 0) {
           setQuotationUnitPriceError("Unit price is empty!");
@@ -389,12 +415,10 @@ export default function RFPUpdateForm({
         const result = await response.json();
         console.log("RFP updated successfully:", result);
 
-        setValue(`quotations.${index}.id`, result.quotations[index].id);
+        // setValue(`quotations.${index}.id`, result.quotations[index].id);
 
         console.log("Current form", getValues());
         // setSuccess(true);
-
-        // updateQuotationFromDB();
 
         setSavingRFPQuotation(false);
 
@@ -550,6 +574,17 @@ export default function RFPUpdateForm({
 
         {isVisible && (
           <div>
+            <SupportingDocumentsList
+              errors={quotationDocNameError}
+              handleError={setQuotationDocNameError}
+              control={control}
+              index={index}
+              setValue={setValue}
+              files={files}
+              setFiles={setFiles}
+              getValues={getValues}
+            />
+
             <div className="py-2 w-3/4">
               <VendorSelector
                 errors={quotationVendorError}
@@ -563,9 +598,6 @@ export default function RFPUpdateForm({
             </div>
 
             <div className="mb-2">
-              <CardTitle className="text-lg">
-                Products / Services Details
-              </CardTitle>
               <div>
                 <ProductList
                   errors={quotationUnitPriceError}
@@ -592,17 +624,6 @@ export default function RFPUpdateForm({
                 />
               </div>
             </div>
-
-            <SupportingDocumentsList
-              errors={quotationDocNameError}
-              handleError={setQuotationDocNameError}
-              control={control}
-              index={index}
-              setValue={setValue}
-              files={files}
-              setFiles={setFiles}
-              getValues={getValues}
-            />
 
             <div className="flex gap-2 justify-end">
               <Button
