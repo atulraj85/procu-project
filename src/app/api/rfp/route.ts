@@ -309,7 +309,6 @@ function formatRFPData(rfps: any[]) {
         products:
           rfp?.rfpProducts?.map((product: any) => ({
             id: product?.id,
-            name: product?.name,
             quantity: product?.quantity,
             description: product?.description,
           })) || [],
