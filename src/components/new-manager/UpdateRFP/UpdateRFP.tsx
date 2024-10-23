@@ -460,44 +460,40 @@ export default function RFPUpdateForm({
       // check if number of quotations < 3 then ask reason why
       // only one preferred quotation (not eq to 0 , greater than 1, exact 1)
       // all quotations should be saved first
-
-      console.log("Save RFP", data);
-      setIsLoading(true);
-
-      const formData = new FormData();
-
-      formData.append("rfpId", rfpId);
-      const serializedData = JSON.stringify({
-        ...data,
-        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
-      });
-      formData.append("data", serializedData);
-
-      Object.entries(files).forEach(([key, file]) => {
-        formData.append(key, file);
-      });
-
-      console.log("FormData to be sent:", Object.fromEntries(formData));
-
-      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Could not update quotations!`);
-      }
-
-      const result = await response.json();
-      console.log("RFP updated successfully:", result);
-      setSuccess(true);
-      setIsLoading(false);
-
-      toast({
-        title: "🎉 RFP Submitted!",
-        description: response.ok,
-      });
-      router.push("/dashboard/manager");
+      // console.log("Save RFP", data);
+      // setIsLoading(true);
+      // const formData = new FormData();
+      // let rfpStatusValue = "";
+      // console.log("Reason: ", reason);
+      // if (fields.length < 3) {
+      //   rfpStatusValue = "SUBMITTED";
+      // }
+      // formData.append("rfpId", rfpId);
+      // const serializedData = JSON.stringify({
+      //   ...data,
+      //   rfpStatus: rfpStatusValue,
+      // });
+      // formData.append("data", serializedData);
+      // Object.entries(files).forEach(([key, file]) => {
+      //   formData.append(key, file);
+      // });
+      // console.log("FormData to be sent:", Object.fromEntries(formData));
+      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+      //   method: "PUT",
+      //   body: formData,
+      // });
+      // if (!response.ok) {
+      //   throw new Error(`Could not update quotations!`);
+      // }
+      // const result = await response.json();
+      // console.log("RFP updated successfully:", result);
+      // setSuccess(true);
+      // setIsLoading(false);
+      // toast({
+      //   title: "🎉 RFP Submitted!",
+      //   description: response.ok,
+      // });
+      // router.push("/dashboard/manager");
     } catch (error) {
       toast({
         title: "Error",
@@ -707,42 +703,48 @@ export default function RFPUpdateForm({
 
   const submitForm = async (data: z.infer<typeof rfpSchema>) => {
     setIsLoading(true);
-    // setError(null);
     setSuccess(false);
 
     try {
+      console.log("submitForm", data);
       const formData = new FormData();
+      let rfpStatusValue = "";
+      console.log("Reason: ", reason);
+
+
+      if (fields.length < 3 && reason) {
+        rfpStatusValue = "SUBMITTED";
+      }
+
+
       formData.append("rfpId", rfpId);
+
       const serializedData = JSON.stringify({
         ...data,
-        rfpStatus: fields.length < 3 ? "DRAFT" : "SUBMITTED",
+        rfpStatus: rfpStatusValue,
       });
       formData.append("data", serializedData);
 
-      // console.log(files);
-
-      // Append files to formData
       Object.entries(files).forEach(([key, file]) => {
         formData.append(key, file);
       });
 
       console.log("FormData to be sent:", Object.fromEntries(formData));
 
+
       const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
         method: "PUT",
         body: formData,
       });
-
       if (!response.ok) {
         throw new Error(`Could not update quotations!`);
       }
-
       const result = await response.json();
-      // console.log("RFP updated successfully:", result);
+      console.log("RFP updated successfully:", result);
       setSuccess(true);
-
+      setIsLoading(false);
       toast({
-        title: "🎉 Quotation Updated!",
+        title: "🎉 RFP Submitted!",
         description: response.ok,
       });
       router.push("/dashboard/manager");
@@ -762,7 +764,11 @@ export default function RFPUpdateForm({
         "Please provide a reason for submitting less than 3 quotations"
       );
       return;
+    } else {
+      setReason(reason);
     }
+
+    console.log("Reason ", reason);
 
     setReasonError(null);
     setShowReasonDialog(false);
@@ -915,6 +921,8 @@ export default function RFPUpdateForm({
               className="mt-2"
               value={reason}
               onChange={(e) => {
+                console.log("Reson input fomr ", e.target.value);
+
                 setReason(e.target.value);
                 setReasonError(null);
               }}
