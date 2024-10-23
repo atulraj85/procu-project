@@ -386,7 +386,7 @@ export default function RFPUpdateForm({
         const result = await response.json();
         console.log("RFP updated successfully:", result);
 
-        // setValue(`quotations.${index}.id`, result.quotations[index].id);
+        setValue(`quotations.${index}.id`, result.quotations[index].id);
 
         console.log("Current form", getValues());
         // setSuccess(true);
@@ -652,22 +652,22 @@ export default function RFPUpdateForm({
 
       console.log("FormData to be sent:", Object.fromEntries(formData));
 
-      // const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
-      //   method: "PUT",
-      //   body: formData,
-      // });
-      // if (!response.ok) {
-      //   throw new Error(`Could not update quotations!`);
-      // }
-      // const result = await response.json();
-      // console.log("RFP updated successfully:", result);
-      // setSuccess(true);
-      // setIsLoading(false);
-      // toast({
-      //   title: "🎉 RFP Submitted!",
-      //   description: response.ok,
-      // });
-      // router.push("/dashboard/manager");
+      const response = await fetch(`/api/rfp/quotation?id=${initialData.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error(`Could not update quotations!`);
+      }
+      const result = await response.json();
+      console.log("RFP updated successfully:", result);
+      setSuccess(true);
+      setIsLoading(false);
+      toast({
+        title: "🎉 RFP Submitted!",
+        description: response.ok,
+      });
+      router.push("/dashboard/manager");
     } catch (err) {
       console.error("Error updating RFP:", err);
       // setError(

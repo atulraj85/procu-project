@@ -675,7 +675,7 @@ const RFPForm: React.FC = () => {
                     className="px-4 last:rounded-lg bg-primary"
                     disabled={!savedRFP}
                   >
-                    {loading ? "Submitting..." : "Add Quotation"}
+                    Add Quotation
                   </Button>
                 </div>
               </div>
@@ -683,14 +683,16 @@ const RFPForm: React.FC = () => {
               {error && <div className="text-red-500">{error}</div>}
             </form>
 
-            <div className="mx-6 mb-4 mt-[-6px]">
+            <div className="">
               {userInfo && (
-                <CompanyAddresses
-                  companyId={userInfo.companyId}
-                  setRfpAddress={setRfpAddress}
-                  errors={errors}
-                  setErrors={setErrors}
-                />
+                <div>
+                  <CompanyAddresses
+                    companyId={userInfo.companyId}
+                    setRfpAddress={setRfpAddress}
+                    errors={errors}
+                    setErrors={setErrors}
+                  />
+                </div>
               )}
             </div>
           </Card>
