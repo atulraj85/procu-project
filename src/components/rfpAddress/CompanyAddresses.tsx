@@ -122,27 +122,6 @@ const CompanyAddresses: React.FC<Props> = ({
     console.log(address);
     setRfpAddress(address);
   };
-
-  // const onSubmitForm = async (data: FormValues) => {
-  //   setIsSaving(true);
-  //   console.log(data);
-
-  //   const { street, city, postalCode, state, country } = data;
-
-  //   const address = `${street}, ${city}, ${postalCode}, ${state}, ${country}`;
-  //   console.log(address);
-
-  //   setRfpAddress(address);
-
-  //   toast({
-  //     title: "Success",
-  //     description: "Delivery Address Selected",
-  //   });
-
-  //   setIsSaving(false);
-
-  // };
-
   const toggleAddingAddress = () => {
     setIsAddingAddress((prev) => prev);
     setNewAddress((prev) => !prev);
@@ -157,103 +136,99 @@ const CompanyAddresses: React.FC<Props> = ({
   };
 
   return (
-    <div>
-      <Card>
-        <CardHeader>
-          {addresses && (
-            <div className="flex gap-6">
-              {isAddingAddress && (
-                <Select
-                  onValueChange={handleAddressSelect}
-                  defaultValue={addresses[0].addressName}
-                >
-                  {" "}
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select Address" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {addresses?.map((item, idx) => (
-                      <SelectItem key={idx} value={item.addressName}>
-                        {item.addressName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              <div className="flex gap-4  w-full">
-                {selectedAddr && (
-                  <div className={`w-[50%] ${selectedAddr ? "" : "hidden"}`}>
-                    <Input
-                      readOnly
-                      type="text"
-                      value={selectedAddr}
-                      className=" col-span-1"
-                      onChange={() => {}}
-                    />
-                  </div>
-                )}
-
-                {errors.address && (
-                  <p className="text-red-500 text-sm">{errors.address}</p>
-                )}
-
-                {addressProp && (
-                  <Sheet>
-                    <SheetTrigger>
-                      <div className="relative group">
-                        <CiEdit className="text-3xl cursor-pointer text-green-300" />
-                        {/* Hover text */}
-                        <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
-                          Edit
-                        </span>
-                      </div>
-                    </SheetTrigger>
-                    <SheetContent>
-                      <SheetHeader>
-                        <SheetTitle>Edit Delivery Address</SheetTitle>
-                        <EditAddress
-                          addressProp={addressProp}
-                          setAddressProp={setAddressProp}
-                          setRfpAddress={setRfpAddress}
-                          isAddingAddress={toggleAddingAddress}
-                          setSelectedAddr={setSelectedAddr}
-                          handleNewAdress={handleNewAdress}
-                        />
-                      </SheetHeader>
-                    </SheetContent>
-                  </Sheet>
-                )}
-
-                <Sheet>
-                  <SheetTrigger>
-                    <div className="relative group">
-                      <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" />
-                      {/* Hover text */}
-                      <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
-                        New
-                      </span>
-                    </div>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>Add new Delivery Address</SheetTitle>
-                      <NewAddress
-                        setAddressProp={setAddressProp}
-                        setRfpAddress={setRfpAddress}
-                        isAddingAddress={toggleAddingAddress}
-                        setSelectedAddr={setSelectedAddr}
-                        handleNewAdress={handleNewAdress}
-                      />
-                    </SheetHeader>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            </div>
+    <CardHeader>
+      {addresses && (
+        <div className="flex gap-6">
+          {isAddingAddress && (
+            <Select
+              onValueChange={handleAddressSelect}
+              defaultValue={addresses[0].addressName}
+            >
+              {" "}
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Address" />
+              </SelectTrigger>
+              <SelectContent>
+                {addresses?.map((item, idx) => (
+                  <SelectItem key={idx} value={item.addressName}>
+                    {item.addressName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
-        </CardHeader>
-      </Card>
-    </div>
+
+          <div className="flex gap-4  w-full">
+            {selectedAddr && (
+              <div className={`w-[50%] ${selectedAddr ? "" : "hidden"}`}>
+                <Input
+                  readOnly
+                  type="text"
+                  value={selectedAddr}
+                  className=" col-span-1"
+                  onChange={() => {}}
+                />
+              </div>
+            )}
+
+            {errors.address && (
+              <p className="text-red-500 text-sm">{errors.address}</p>
+            )}
+
+            {addressProp && (
+              <Sheet>
+                <SheetTrigger>
+                  <div className="relative group">
+                    <CiEdit className="text-3xl cursor-pointer text-green-300" />
+                    {/* Hover text */}
+                    <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
+                      Edit
+                    </span>
+                  </div>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle>Edit Delivery Address</SheetTitle>
+                    <EditAddress
+                      addressProp={addressProp}
+                      setAddressProp={setAddressProp}
+                      setRfpAddress={setRfpAddress}
+                      isAddingAddress={toggleAddingAddress}
+                      setSelectedAddr={setSelectedAddr}
+                      handleNewAdress={handleNewAdress}
+                    />
+                  </SheetHeader>
+                </SheetContent>
+              </Sheet>
+            )}
+
+            <Sheet>
+              <SheetTrigger>
+                <div className="relative group">
+                  <IoIosAddCircle className="text-3xl cursor-pointer text-green-300" />
+                  {/* Hover text */}
+                  <span className="absolute -bottom-6 left-0 opacity-0 text-sm text-gray-600 transition-opacity duration-300 group-hover:opacity-100">
+                    New
+                  </span>
+                </div>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Add new Delivery Address</SheetTitle>
+                  <NewAddress
+                    setAddressProp={setAddressProp}
+                    setRfpAddress={setRfpAddress}
+                    isAddingAddress={toggleAddingAddress}
+                    setSelectedAddr={setSelectedAddr}
+                    handleNewAdress={handleNewAdress}
+                  />
+                </SheetHeader>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      )}
+    </CardHeader>
   );
 };
 
