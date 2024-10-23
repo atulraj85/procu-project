@@ -95,11 +95,11 @@ const CompanyAddresses: React.FC<Props> = ({
     });
   }, [companyId, isAddingAddress]);
 
-  useEffect(() => {
-    if (addresses) {
-      handleAddressSelect(addresses[0].addressName);
-    }
-  }, [addresses]);
+  // useEffect(() => {
+  //   if (addresses) {
+  //     handleAddressSelect(addresses[0].addressName);
+  //   }
+  // }, [addresses]);
 
   const handleAddressSelect = (searchTitle: string) => {
     setAddressProp(null);
@@ -142,7 +142,7 @@ const CompanyAddresses: React.FC<Props> = ({
           {isAddingAddress && (
             <Select
               onValueChange={handleAddressSelect}
-              defaultValue={addresses[0].addressName}
+              // defaultValue={addresses[0].addressName}
             >
               {" "}
               <SelectTrigger className="w-[180px]">
