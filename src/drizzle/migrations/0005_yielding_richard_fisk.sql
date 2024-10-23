@@ -1,0 +1,1 @@
+ALTER TABLE "rfps" ADD COLUMN "reason" text;

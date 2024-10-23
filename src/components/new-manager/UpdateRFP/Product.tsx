@@ -69,9 +69,6 @@ const ProductList = ({
         quantity,
         gst
       );
-
-      // console.log("Calculated totals:", { totalWithoutGST, totalWithGST });
-
       setValue(
         `quotations.${index}.products.${productIndex}.totalPriceWithoutGST`,
         totalWithoutGST
@@ -162,9 +159,9 @@ const ProductList = ({
     <div>
       <div className="space-y-4">
         <div className="flex space-x-4">
-          <div className="w-1/6">
+          {/* <div className="w-1/6">
             <Label>Name</Label>
-          </div>
+          </div> */}
           <div className="w-1/4">
             <Label>Product Description</Label>
           </div>
@@ -187,7 +184,7 @@ const ProductList = ({
         {fields.map((field, productIndex) => (
           <div key={field.id} className="flex space-x-4 items-start">
             {/* Name */}
-            <div className="w-1/6">
+            {/* <div className="w-1/6">
               <Input
                 {...control.register(
                   `quotations.${index}.products.${productIndex}.name`
@@ -199,7 +196,7 @@ const ProductList = ({
                   {errors.quotations[index].products[productIndex].name.message}
                 </p>
               )}
-            </div>
+            </div> */}
             {/* Description */}
             <div className="w-1/4">
               <Input

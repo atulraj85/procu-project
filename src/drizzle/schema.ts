@@ -292,6 +292,7 @@ export const RFPTable = pgTable(
     }).notNull(),
     userId: uuid("user_id").notNull(),
     rfpStatus: RFPStatus("rfp_status").default("DRAFT").notNull(),
+    reason: text("reason"),
     preferredQuotationId: uuid("preferred_quotation_id"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -1008,12 +1009,15 @@ export const RFPProductTable = pgTable(
   }
 );
 
-export const RFPProductTableRelations = relations(RFPProductTable, ({ one }) => ({
-  rfp: one(RFPTable, {
-    fields: [RFPProductTable.rfpId],
-    references: [RFPTable.id],
+export const RFPProductTableRelations = relations(
+  RFPProductTable,
+  ({ one }) => ({
+    rfp: one(RFPTable, {
+      fields: [RFPProductTable.rfpId],
+      references: [RFPTable.id],
+    }),
   })
-}));
+);
 
 export const GoodStatusTable = pgTable(
   "good_statuses",

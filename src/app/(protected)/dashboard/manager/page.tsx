@@ -1,10 +1,10 @@
 "use client";
-import { columns1 } from "@/components/Table/columns";
 import { DataTable } from "@/components/Table/data-table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
+import { columns1 } from "@/components/Table/columns";
 
 interface TableRow {
   rfpId: string;
@@ -44,17 +44,24 @@ const Dashboard = () => {
         dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
         deliveryLocation: item.deliveryLocation,
         deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
-        lastDateToRespond: new Date(item.lastDateToRespond).toLocaleDateString(),
+        lastDateToRespond: new Date(
+          item.lastDateToRespond
+        ).toLocaleDateString(),
         rfpStatus: item.rfpStatus,
+        quotations: item.quotations,
       }));
 
-      const filteredData = formattedData.filter((item: { rfpStatus: string }) => {
-        return (
-          (status === "OPEN" && (item.rfpStatus === "SUBMITTED" || item.rfpStatus === "PO_CREATED")) ||
-          (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
-          (status === "DRAFT" && item.rfpStatus === "DRAFT")
-        );
-      });
+      const filteredData = formattedData.filter(
+        (item: { rfpStatus: string }) => {
+          return (
+            (status === "OPEN" &&
+              (item.rfpStatus === "SUBMITTED" ||
+                item.rfpStatus === "PO_CREATED")) ||
+            (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
+            (status === "DRAFT" && item.rfpStatus === "DRAFT")
+          );
+        }
+      );
 
       setContent(filteredData);
       setLoading(false);

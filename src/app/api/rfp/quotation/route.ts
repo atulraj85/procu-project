@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest) {
     const data = JSON.parse(formData.get("data") as string);
     console.log("Parsed form data:", JSON.stringify(data, null, 2));
 
-    const { quotations, preferredVendorId, rfpStatus } = data;
+    const { quotations, preferredVendorId, rfpStatus, reason } = data;
     const processedQuotations = await Promise.all(
       (quotations || []).map(async (quotation: any) => {
         const {
@@ -167,6 +167,7 @@ export async function PUT(request: NextRequest) {
       .update(RFPTable)
       .set({
         rfpStatus,
+        reason,
         preferredQuotationId: preferredVendorId
           ? updatedQuotations.find((q) => q.vendorId === preferredVendorId)?.id
           : undefined,

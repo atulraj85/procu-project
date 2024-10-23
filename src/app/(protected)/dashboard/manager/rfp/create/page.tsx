@@ -81,6 +81,7 @@ const RFPForm: React.FC = () => {
   const userId = currentUser?.id;
 
   const [userInfo, setUserInfo] = useState<User>();
+  const [savedRFP, setSavedRFP] = useState(false);
 
   const [rfpAddress, setRfpAddress] = useState<string>("");
   const today = new Date().toISOString().split("T")[0];
@@ -389,8 +390,8 @@ const RFPForm: React.FC = () => {
           title: "🎉 Draft Submitted!",
           description: "Your RFP draft has been successfully submitted.",
         });
-        router.push("/dashboard/manager");
-        // window.location.reload();
+        // router.push("/dashboard/manager");
+        setSavedRFP(true);
       }
     } catch (err) {
       setError(
@@ -654,26 +655,44 @@ const RFPForm: React.FC = () => {
               </CardContent>
 
               <div className="flex justify-end space-x-4 mr-10">
-                <Button
-                  type="submit"
-                  className=" absolute bottom-[-12px]  px-4  rounded-lg bg-primary"
-                  disabled={loading}
-                >
-                  {loading ? "Submitting..." : "Save Draft RFP"}
-                </Button>
+                <div className="flex absolute bottom-[-12px] gap-2">
+                  <Button
+                    type="submit"
+                    className=" px-4  rounded-lg bg-primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Submitting..." : "Save RFP"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (savedRFP) {
+                        router.push(
+                          `/dashboard/manager/rfp/quotation?rfp=${rfpId}`
+                        );
+                      }
+                    }}
+                    className="px-4 last:rounded-lg bg-primary"
+                    disabled={!savedRFP}
+                  >
+                    Add Quotation
+                  </Button>
+                </div>
               </div>
 
               {error && <div className="text-red-500">{error}</div>}
             </form>
 
-            <div className="mx-6 mb-4 mt-[-6px]">
+            <div className="">
               {userInfo && (
-                <CompanyAddresses
-                  companyId={userInfo.companyId}
-                  setRfpAddress={setRfpAddress}
-                  errors={errors}
-                  setErrors={setErrors}
-                />
+                <div>
+                  <CompanyAddresses
+                    companyId={userInfo.companyId}
+                    setRfpAddress={setRfpAddress}
+                    errors={errors}
+                    setErrors={setErrors}
+                  />
+                </div>
               )}
             </div>
           </Card>
