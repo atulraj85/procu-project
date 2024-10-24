@@ -95,33 +95,6 @@ const CompanyAddresses: React.FC<Props> = ({
     });
   }, [companyId, isAddingAddress]);
 
-  // useEffect(() => {
-  //   if (addresses) {
-  //     handleAddressSelect(addresses[0].addressName);
-  //   }
-  // }, [addresses]);
-
-  const handleAddressSelect = (searchTitle: string) => {
-    setAddressProp(null);
-    errors.address = "";
-    setErrors(errors);
-    const selectedAddress = addresses?.find(
-      (address) =>
-        address.addressName.toLowerCase() === searchTitle.toLowerCase()
-    );
-    if (selectedAddress) {
-      // setAddressProp(selectedAddress);
-      setCurrAddressID(selectedAddress.id);
-      form.reset(selectedAddress);
-      console.log(selectedAddress.addressName);
-      console.log(selectedAddress);
-    }
-
-    const address = `${selectedAddress?.street}, ${selectedAddress?.city}, ${selectedAddress?.postalCode}, ${selectedAddress?.state}, ${selectedAddress?.country}`;
-    setSelectedAddr(address);
-    console.log(address);
-    setRfpAddress(address);
-  };
   const toggleAddingAddress = () => {
     setIsAddingAddress((prev) => prev);
     setNewAddress((prev) => !prev);
@@ -129,35 +102,23 @@ const CompanyAddresses: React.FC<Props> = ({
 
   const handleNewAdress = () => {
     setIsAddingAddress(false);
-    setTimeout(() => {
-      setIsAddingAddress(true);
-    }, 2000);
-    // setSelectedAddr("");
+    setIsAddingAddress(true);
   };
+
+  useEffect(() => {
+    if (addresses && addresses.length > 0) {
+      const firstAddress = addresses[0];
+      const formattedAddress = `${firstAddress.street}, ${firstAddress.city}, ${firstAddress.postalCode}, ${firstAddress.state}, ${firstAddress.country}`;
+      setSelectedAddr(formattedAddress);
+      setRfpAddress(firstAddress.id); // or formattedAddress depending on your needs
+      setAddressProp(firstAddress);
+    }
+  }, [addresses]);
 
   return (
     <CardHeader>
       {addresses && (
         <div className="flex gap-6">
-          {isAddingAddress && (
-            <Select
-              onValueChange={handleAddressSelect}
-              // defaultValue={addresses[0].addressName}
-            >
-              {" "}
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Address" />
-              </SelectTrigger>
-              <SelectContent>
-                {addresses?.map((item, idx) => (
-                  <SelectItem key={idx} value={item.addressName}>
-                    {item.addressName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-
           <div className="flex gap-4  w-full">
             {selectedAddr && (
               <div className={`w-[50%] ${selectedAddr ? "" : "hidden"}`}>
