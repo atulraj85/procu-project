@@ -18,9 +18,9 @@ export async function generateRFPId() {
     // where: like(RFPTable.rfpId, `${prefix}%`),
     orderBy: desc(RFPTable.rfpId),
   });
-  console.log("2. Last RFP components:", lastRFP);
+  console.log("2. Last RFP components:", lastRFP!.rfpId);
 
-  return lastRFP;
+  return lastRFP!.rfpId;
 
   // let nextNumber = 0;
   // if (lastRFP && lastRFP.rfpId) {

@@ -10,10 +10,23 @@ export async function GET(request: NextRequest) {
 
     // Generate RFP ID
     const rfpid = await generateRFPId();
-    console.log("2. Generated RFP ID:", rfpid);
+
+    const newRFPId = (rfpid: string) => {
+      let nextNumber = 0;
+
+      const today = new Date();
+      const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
+      const lastNumber = parseInt(rfpid.split("-").pop() || "0", 10); // Default to "0" if undefined
+      nextNumber = lastNumber + 1;
+      const formattedNumber = String(nextNumber).padStart(4, "0");
+
+      return `RFP-${dateString}-${formattedNumber}`;
+    };
+
+    console.log("2. Generated RFP ID:", newRFPId);
 
     // Create response
-    const response = NextResponse.json(rfpid);
+    const response = NextResponse.json(newRFPId(rfpid));
     console.log("3. Created response object");
 
     // Log the full response for debugging
