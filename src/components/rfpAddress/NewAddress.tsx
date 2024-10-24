@@ -60,29 +60,31 @@ const NewAddress: React.FC<AddressFormProps> = ({
       postalCode: "",
     },
   });
+const onSubmit = async (data: FormValues) => {
+  setIsSaving(true);
 
-  const onSubmit = async (data: FormValues) => {
-    setIsSaving(true);
+  setAddressProp(data);
 
-    setAddressProp(data);
+  const { street, city, postalCode, state, country } = data;
+  const address = `${street}, ${city}, ${postalCode}, ${currState}, ${country}`;
 
-    const {street, city, postalCode, state, country} = data;
-    const address = `${street}, ${city}, ${postalCode}, ${currState}, ${country}`;
-    
-    setRfpAddress(address);
-    setSelectedAddr(address);
-    isAddingAddress();
-    handleNewAdress();
+  // Move these after the form reset and state updates
+  form.reset();
+  setIsSaving(false);
 
-    toast({
-      title: "Success",
-      description: "Delivery Address Selected",
-    });
-    
-    form.reset();
-    setIsSaving(false);
-  };
+  // Now update the parent states
+  setRfpAddress(address);
+  setSelectedAddr(address);
 
+  // Call these last
+  handleNewAdress();
+  isAddingAddress();
+
+  toast({
+    title: "Success",
+    description: "Delivery Address Selected",
+  });
+};
   useEffect(() => { 
     const fetchStates = async () => {
       try {
