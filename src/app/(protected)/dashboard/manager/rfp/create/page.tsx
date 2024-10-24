@@ -41,6 +41,7 @@ interface FormData {
   lastDateToRespond: string;
   rfpStatus: string;
   userId?: string;
+  rfpId: string;
   rfpProducts: RFPProduct[];
   approvers: Approver[];
 }
@@ -54,6 +55,7 @@ const RFPForm: React.FC = () => {
     lastDateToRespond: "",
     rfpStatus: "DRAFT",
     rfpProducts: [],
+    rfpId: "",
     approvers: [],
   });
   const [rfpId, setRfpId] = useState<string>("");
@@ -154,6 +156,11 @@ const RFPForm: React.FC = () => {
         }
 
         setRfpId(data);
+
+        setFormData((prevData) => ({
+          ...prevData,
+          rfpId: data,
+        }));
         console.log("Frontend: Successfully set RFP ID:", data);
       } catch (err) {
         console.error("Frontend: Error fetching RFP ID:", err);
@@ -316,6 +323,7 @@ const RFPForm: React.FC = () => {
     const updatedFormData = {
       ...formData,
       deliveryLocation: rfpAddress,
+      rfpId: rfpId,
     };
 
     setLoading(true);

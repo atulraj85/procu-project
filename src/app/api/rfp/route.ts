@@ -187,6 +187,7 @@ export async function POST(request: NextRequest) {
       rfpProducts,
       approvers,
       rfpStatus,
+      rfpId,
     }: RequestBody = await request.json();
 
     console.log(dateOfOrdering);
@@ -199,29 +200,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate RFP ID
-    let rfpId: any;
-    try {
-      rfpId = await generateRFPId();
-    } catch (error: any) {
-      console.error("Error generating RFP id", error);
-      return NextResponse.json(
-        { error: `Failed to create RFP: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    // // Generate RFP ID
+    // let rfpId: any;
+    // try {
+    //   rfpId = await generateRFPId();
+    // } catch (error: any) {
+    //   console.error("Error generating RFP id", error);
+    //   return NextResponse.json(
+    //     { error: `Failed to create RFP: ${error.message}` },
+    //     { status: 500 }
+    //   );
+    // }
 
     const newRFP = await db.transaction(async (tx) => {
       const [createdRFP] = await tx
         .insert(RFPTable)
         .values({
-          rfpId,
           requirementType,
           dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
           userId: currentLoggedInUser.id!,
           rfpStatus,
+          rfpId,
           updatedAt: new Date(),
         })
         .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
