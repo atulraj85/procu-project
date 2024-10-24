@@ -9,6 +9,8 @@ export function isValidUUID(uuid: string) {
 }
 
 export async function generateRFPId() {
+  console.log("Starting RFP ID generation");
+
   const today = new Date();
   const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
   const prefix = `RFP-${dateString}-`;

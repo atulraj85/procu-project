@@ -133,28 +133,32 @@ const RFPForm: React.FC = () => {
     const fetchRfpId = async () => {
       try {
         setLoading(true);
-        console.log("Fetching RFPID");
+        console.log("Component: Fetching RFPID");
         const response = await fetch("/api/rfp/rfpid");
 
         if (!response.ok) {
-          throw new Error("Failed to fetch RFP ID");
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const data = await response.json();
-        console.log("Fetching RFPID: Data: ", data);
+        console.log("Component: Received RFP ID:", data);
+
+        if (!data) {
+          throw new Error("No RFP ID received from server");
+        }
 
         setRfpId(data);
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching RFP ID:", err);
+        console.error("Component: Error fetching RFP ID:", err);
+        // Optionally set an error state here
+        setError(err instanceof Error ? err.message : "Failed to fetch RFP ID");
+      } finally {
+        setLoading(false);
       }
     };
 
-    console.log("Fetching RFPID: RFPID: ", rfpId);
-
     fetchRfpId();
-    console.log("Fetching RFPID: RFPID after call: ", rfpId);
   }, []);
-
   const handleSearchChange = async (
     e: ChangeEvent<HTMLInputElement>,
     entity: string
