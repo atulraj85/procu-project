@@ -9,11 +9,12 @@ export function isValidUUID(uuid: string) {
 }
 
 export async function generateRFPId() {
-  console.log("Starting RFP ID generation");
-
+  console.log("=== Starting RFP ID Generation Process ===");
   const today = new Date();
+  console.log("1. Current date:", today);
   const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
   const prefix = `RFP-${dateString}-`;
+  console.log("2. Date components:", dateString);
 
   // Get the last RFP_ID for today
   const lastRFP = await db.query.RFPTable.findFirst({
@@ -30,7 +31,13 @@ export async function generateRFPId() {
 
   // Format the next number to be 4 digits
   const formattedNumber = String(nextNumber).padStart(4, "0");
-  return `${prefix}${formattedNumber}`;
+
+  const finalResult = `${prefix}${formattedNumber}`;
+
+  console.log("4. Generated RFP ID:", finalResult);
+  console.log("=== RFP ID Generation Process Complete ===");
+
+  return finalResult;
 }
 
 export async function generatePOId() {
