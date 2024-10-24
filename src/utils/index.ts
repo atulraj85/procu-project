@@ -28,7 +28,10 @@ export async function generateRFPId() {
     const lastId = lastRFP.rfpId;
     const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
     nextNumber = lastNumber + 1;
+    console.log("2. Last RFP components last number:", lastNumber);
   }
+
+  console.log("2. Last RFP components next number:", nextNumber);
 
   // Format the next number to be 4 digits
   const formattedNumber = String(nextNumber).padStart(4, "0");
