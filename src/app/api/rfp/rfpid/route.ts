@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   console.log("=== RFP ID Generation API Start ===");
+  console.log("=== /api/rfp/rfpid ===");
 
   try {
     console.log("1. Initiating RFP ID generation");
