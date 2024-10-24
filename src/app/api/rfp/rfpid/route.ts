@@ -8,9 +8,6 @@ export async function GET(request: NextRequest) {
   try {
     console.log("1. Initiating RFP ID generation");
 
-    // Generate RFP ID
-    const rfpid = await generateRFPId();
-
     const newRFPId = (rfpid: string) => {
       let nextNumber = 0;
 
@@ -22,11 +19,15 @@ export async function GET(request: NextRequest) {
 
       return `RFP-${dateString}-${formattedNumber}`;
     };
+    // Generate RFP ID
+    const rfpid = await generateRFPId().then((result) => {
+      return newRFPId(result);
+    });
 
-    console.log("2. Generated RFP ID:", newRFPId);
+    console.log("2. Generated RFP ID:", rfpid);
 
     // Create response
-    const response = NextResponse.json(newRFPId(rfpid));
+    const response = NextResponse.json(rfpid);
     console.log("3. Created response object");
 
     // Log the full response for debugging
