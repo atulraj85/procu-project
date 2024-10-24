@@ -1,5 +1,4 @@
 "use client";
-import { updateProduct } from "@/actions/product/createProduct";
 import CompanyAddresses from "@/components/rfpAddress/CompanyAddresses";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,9 +71,7 @@ const RFPForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [modifiedProducts, setModifiedProducts] = useState<Set<string>>(
-    new Set()
-  );
+
   const router = useRouter();
 
   const currentUser = useCurrentUser();
@@ -136,12 +133,15 @@ const RFPForm: React.FC = () => {
     const fetchRfpId = async () => {
       try {
         setLoading(true);
-
+        console.log("Fetching RFPID");
         const response = await fetch("/api/rfp/rfpid");
+
         if (!response.ok) {
           throw new Error("Failed to fetch RFP ID");
         }
         const data = await response.json();
+        console.log("Fetching RFPID: Data: ", data);
+
         setRfpId(data);
         setLoading(false);
       } catch (err) {
@@ -149,7 +149,10 @@ const RFPForm: React.FC = () => {
       }
     };
 
+    console.log("Fetching RFPID: RFPID: ", rfpId);
+
     fetchRfpId();
+    console.log("Fetching RFPID: RFPID after call: ", rfpId);
   }, []);
 
   const handleSearchChange = async (
@@ -203,36 +206,6 @@ const RFPForm: React.FC = () => {
     }));
   };
 
-  // Add function to handle form updates
-  // const handleProductChange = (
-  //   index: number,
-  //   field: keyof RFPProduct,
-  //   value: RFPProduct[keyof RFPProduct]
-  // ) => {
-  //   const updatedProducts = [...approvedProducts];
-  //   const product = updatedProducts[index];
-
-  //   if (field === "description") {
-  //     setModifiedProducts((prev) => new Set(prev).add(product.rfpProductId));
-  //   }
-
-  //   updatedProducts[index] = { ...product, [field]: value };
-  //   setApprovedProducts(updatedProducts);
-
-  //   setFormData((prevData) => ({
-  //     ...prevData,
-  //     rfpProducts: updatedProducts.map(
-  //       ({ rfpProductId, quantity, description, name, modelNo }) => ({
-  //         rfpProductId,
-  //         quantity,
-  //         description,
-  //         name,
-  //         modelNo,
-  //       })
-  //     ),
-  //   }));
-  // };
-
   const addApprover = (user: User) => {
     setApprovedUsers((prevUsers) => [...prevUsers, user]);
     setFormData((prevData) => ({
@@ -240,35 +213,6 @@ const RFPForm: React.FC = () => {
       approvers: [...prevData.approvers, { approverId: String(user.id) }],
     }));
   };
-  // const handleProductUpdate = async (
-  //   productId: string,
-  //   specification: string
-  // ) => {
-  //   try {
-  //     await updateProduct(productId, {
-  //       specification: specification,
-  //     });
-
-  //     // Remove product from modified set after successful update
-  //     setModifiedProducts((prev) => {
-  //       const newSet = new Set(prev);
-  //       newSet.delete(productId);
-  //       return newSet;
-  //     });
-
-  //     toast({
-  //       title: "Product Updated",
-  //       description: "Product specification has been successfully updated.",
-  //     });
-  //   } catch (error) {
-  //     console.error("Error updating product:", error);
-  //     toast({
-  //       title: "Update Failed",
-  //       description: "Failed to update product specification.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
 
   const removeApprover = (index: number) => {
     setApprovedUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
@@ -331,7 +275,7 @@ const RFPForm: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  console.log("Errors", errors, "Formdata", formData);
+  // console.log("Errors", errors, "Formdata", formData);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
