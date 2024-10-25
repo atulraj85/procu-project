@@ -1,9 +1,11 @@
 import { generateRFPId } from "@/utils";
 import { NextRequest, NextResponse } from "next/server";
 
-// Mark the config as dynamic
-export const dynamic = "force-dynamic";
-export const runtime = "edge"; // Optional: Use edge runtime for better performance
+// // Mark the config as dynamic
+// export const dynamic = "force-dynamic";
+// export const runtime = "edge"; // Optional: Use edge runtime for better performance
+export const revalidate = 0; // this is the new line added
+
 
 let nextNumber = 0;
 
