@@ -1,3 +1,5 @@
+"use server";
+
 import { generateRFPId } from "@/utils";
 import { NextRequest, NextResponse } from "next/server";
 
