@@ -134,7 +134,7 @@ const OtherChargesList = ({
       )}
       {fields.map((field, chargeIndex) => (
         <div key={field.id} className="flex space-x-4 items-start mt-2">
-          <div className="w-1/4">
+          <div className="w-1/2">
             <Input
               {...control.register(
                 `quotations.${index}.otherCharges.${chargeIndex}.name`
@@ -149,7 +149,6 @@ const OtherChargesList = ({
               </p>
             )}
           </div>
-          {/* <div className="w-1/4"></div> */}
           <div className="w-1/12"></div>
           <div className="w-1/12">
             <Controller
@@ -211,6 +210,7 @@ const OtherChargesList = ({
               readOnly
             />
           </div>
+          <div className="w-1/12"></div>
         </div>
       ))}
     </div>

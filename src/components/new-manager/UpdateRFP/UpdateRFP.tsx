@@ -32,128 +32,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import TotalComponent from "./TotalCharges";
+import QuotationUploader from "./UploadQuotation";
 
 const globalFormData = new FormData();
-
-interface TotalComponentProps {
-  control: Control<any>;
-  index: number;
-  setValue: UseFormSetValue<any>;
-}
-
-const TotalComponent: React.FC<TotalComponentProps> = ({
-  control,
-  index,
-  setValue,
-}) => {
-  const quotation = useWatch({
-    control,
-    name: `quotations.${index}`,
-  });
-
-  useEffect(() => {
-    if (!quotation) return;
-
-    const calculateTotals = () => {
-      // Calculate total without GST
-      const productsTotal =
-        quotation.products?.reduce((sum: number, product: any) => {
-          return sum + (Number(product.totalPriceWithoutGST) || 0);
-        }, 0) || 0;
-
-      const otherChargesTotal =
-        quotation.otherCharges?.reduce((sum: number, charge: any) => {
-          return sum + (Number(charge.unitPrice) || 0);
-        }, 0) || 0;
-
-      const totalWithoutGST = productsTotal + otherChargesTotal;
-
-      // Calculate total with GST
-      const productsTotalWithGST =
-        quotation.products?.reduce((sum: number, product: any) => {
-          const gstValue = product.gst === "NILL" ? 0 : parseFloat(product.gst);
-          const priceWithGST =
-            (Number(product.unitPrice) || 0) *
-            product.quantity *
-            (1 + gstValue / 100);
-          return sum + priceWithGST;
-        }, 0) || 0;
-
-      const otherChargesTotalWithGST =
-        quotation.otherCharges?.reduce((sum: number, charge: any) => {
-          const gstValue = charge.gst === "NILL" ? 0 : parseFloat(charge.gst);
-          const chargeWithGST =
-            (Number(charge.unitPrice) || 0) * (1 + gstValue / 100);
-          return sum + chargeWithGST;
-        }, 0) || 0;
-
-      const totalWithGST = productsTotalWithGST + otherChargesTotalWithGST;
-
-      return {
-        withoutGST: Number(totalWithoutGST),
-        withGST: Number(totalWithGST),
-      };
-    };
-
-    // Only update if the quotation has products or other charges
-    if (quotation.products?.length > 0 || quotation.otherCharges?.length > 0) {
-      const newTotal = calculateTotals();
-
-      // Only update if values have changed significantly (using small epsilon for float comparison)
-      const hasChanged =
-        !quotation.total ||
-        Math.abs(quotation.total.withoutGST - newTotal.withoutGST) > 0.01 ||
-        Math.abs(quotation.total.withGST - newTotal.withGST) > 0.01;
-
-      if (hasChanged) {
-        setValue(`quotations.${index}.total`, newTotal, { shouldDirty: false });
-
-        // Update globalFormData
-        try {
-          if (globalFormData.has("quotations")) {
-            const formDataValue = globalFormData.get("quotations");
-            if (formDataValue && typeof formDataValue === "string") {
-              const quotations = JSON.parse(formDataValue);
-              if (
-                quotations &&
-                Array.isArray(quotations) &&
-                quotations[index]
-              ) {
-                quotations[index].total = newTotal;
-                globalFormData.set("quotations", JSON.stringify(quotations));
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error updating globalFormData:", error);
-        }
-      }
-    }
-  }, [quotation, setValue, index]);
-
-  // Format numbers for display
-  const formatCurrency = (value: number | undefined): string => {
-    if (value === undefined) return "0.00";
-    return value.toFixed(2);
-  };
-
-  return (
-    <div className="grid grid-cols-2 gap-2 rounded text-sm ">
-      <div className="text-gray-400">
-        <Label className="font-bold">Taxable Amount (INR)</Label>
-        <div className="text-base font-medium">
-          {formatCurrency(quotation?.total?.withoutGST)}
-        </div>
-      </div>
-      <div className="text-gray-400">
-        <Label className="font-bold">Total (incl. GST) (INR)</Label>
-        <div className="text-base font-medium">
-          {formatCurrency(quotation?.total?.withGST)}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function RFPUpdateForm({
   rfpId,
@@ -427,6 +309,55 @@ export default function RFPUpdateForm({
     }
   };
 
+  const handleQuotationParsed = (quotationData: any, index: number) => {
+    // Update the form with parsed data
+    if (quotationData) {
+      setValue(`quotations.${index}.refNo`, quotationData.refNo || "");
+      setValue(`quotations.${index}.vendorId`, quotationData.vendorId || "");
+
+      // Parse total amounts by removing commas and converting to numbers
+      const totalAmount = parseFloat(
+        quotationData.totalAmount?.replace(/,/g, "") || "0"
+      );
+      const totalAmountWithoutGST = parseFloat(
+        quotationData.totalAmountWithoutGST?.replace(/,/g, "") || "0"
+      );
+
+      setValue(`quotations.${index}.totalAmount`, totalAmount);
+      setValue(
+        `quotations.${index}.totalAmountWithoutGST`,
+        totalAmountWithoutGST
+      );
+
+      // Update products if they exist
+      if (quotationData.products && quotationData.products.length > 0) {
+        const mappedProducts = quotationData.products.map((product: any) => {
+          // Parse the price by removing commas and converting to number
+          const unitPrice = parseFloat(product.price?.replace(/,/g, "") || "0");
+
+          return {
+            id: product.id || null,
+            quantity: product.quantity || 0,
+            unitPrice: unitPrice, // Use the parsed price
+            description: `${product.name} | ${product.description}` || "",
+            rfpProductId: product.rfpProductId || "",
+            gst: product.gst || "0",
+            totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
+            totalPriceWithGST: product.totalPriceWithGST || 0,
+          };
+        });
+        setValue(`quotations.${index}.products`, mappedProducts);
+      }
+
+      // Update other charges if they exist
+      if (quotationData.otherCharges && quotationData.otherCharges.length > 0) {
+        setValue(
+          `quotations.${index}.otherCharges`,
+          quotationData.otherCharges
+        );
+      }
+    }
+  };
   const renderQuotation = (field: any, index: number) => {
     const quotation = getValues(`quotations.${index}`);
     const isVisible = visibleQuotationIndex === index;
@@ -453,7 +384,12 @@ export default function RFPUpdateForm({
           </div>
 
           {/* Total amounts */}
-          <TotalComponent setValue={setValue} control={control} index={index} />
+          <TotalComponent
+            setValue={setValue}
+            control={control}
+            index={index}
+            globalFormData={globalFormData}
+          />
           {/* Preferred Quote checkbox */}
           <div>
             <div className="flex items-center gap-2">
@@ -492,6 +428,9 @@ export default function RFPUpdateForm({
 
         {isVisible && (
           <div>
+            <QuotationUploader
+              onQuotationParsed={(data) => handleQuotationParsed(data, index)}
+            />
             <SupportingDocumentsList
               errors={quotationDocNameError}
               handleError={setQuotationDocNameError}

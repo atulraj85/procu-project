@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -7,7 +8,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Controller, useFieldArray } from "react-hook-form";
 
@@ -23,8 +34,8 @@ type Product = {
   totalPriceWithoutGST?: number;
   totalPriceWithGST?: number;
 };
-const ProductList = ({
 
+const ProductList = ({
   products,
   control,
   index,
@@ -40,20 +51,57 @@ const ProductList = ({
   getValues: any;
   setValue: any;
   errors: any;
-    globalFormData: any;
-  handleError: any
+  globalFormData: any;
+  handleError: any;
 }) => {
-  const { fields, replace } = useFieldArray({
+  const { fields, replace, remove } = useFieldArray({
     control,
     name: `quotations.${index}.products`,
   });
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setIsLoading] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+
+  const handleDeleteClick = (productIndex: number) => {
+    setProductToDelete(productIndex);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (productToDelete === null) return;
+
+    // Remove the product from the fields array
+    remove(productToDelete);
+
+    // Remove the product from the form data
+    const currentProducts = getValues(`quotations.${index}.products`);
+    const updatedProducts = currentProducts.filter(
+      (_: any, i: number) => i !== productToDelete
+    );
+    setValue(`quotations.${index}.products`, updatedProducts);
+
+    // Update global form data
+    if (globalFormData.has("quotations")) {
+      const quotations = JSON.parse(globalFormData.get("quotations") as string);
+      quotations[index].products = updatedProducts;
+      globalFormData.set("quotations", JSON.stringify(quotations));
+    }
+
+    // Reset state
+    setDeleteDialogOpen(false);
+    setProductToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setProductToDelete(null);
+  };
 
   const updateProductTotals = useCallback(
     (productIndex: number) => {
-      handleError("")
+      handleError("");
       const unitPrice = getValues(
         `quotations.${index}.products.${productIndex}.unitPrice`
       );
@@ -61,8 +109,6 @@ const ProductList = ({
         `quotations.${index}.products.${productIndex}.quantity`
       );
       const gst = getValues(`quotations.${index}.products.${productIndex}.gst`);
-
-      // console.log("Calculating totals for:", { unitPrice, quantity, gst });
 
       const { totalWithoutGST, totalWithGST } = calculateTotals(
         unitPrice,
@@ -78,7 +124,6 @@ const ProductList = ({
         totalWithGST
       );
 
-      // Update global form data
       if (globalFormData.has("quotations")) {
         const quotations = JSON.parse(
           globalFormData.get("quotations") as string
@@ -108,17 +153,15 @@ const ProductList = ({
           modelNo: product.modelNo || "",
           quantity: product.quantity || 0,
           unitPrice: product.unitPrice || 0,
-          description: product.description || "",
+          description: `${product.name} | ${product.description}` || "",
           rfpProductId: product.rfpProductId || "",
           gst: product.gst || "0",
           totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
           totalPriceWithGST: product.totalPriceWithGST || 0,
         }));
 
-        // Use replace to set the products directly
         replace(mappedProducts);
 
-        // Update global form data
         if (globalFormData.has("quotations")) {
           const quotations = JSON.parse(
             globalFormData.get("quotations") as string
@@ -130,7 +173,6 @@ const ProductList = ({
           globalFormData.set("quotations", JSON.stringify(quotations));
         }
 
-        // Calculate totals for each product
         mappedProducts.forEach((_, productIndex) => {
           updateProductTotals(productIndex);
         });
@@ -159,10 +201,7 @@ const ProductList = ({
     <div>
       <div className="space-y-4">
         <div className="flex space-x-4">
-          {/* <div className="w-1/6">
-            <Label>Name</Label>
-          </div> */}
-          <div className="w-1/4">
+          <div className="w-1/2">
             <Label>Product Description</Label>
           </div>
           <div className="w-1/12 text-center">
@@ -180,32 +219,19 @@ const ProductList = ({
           <div className="w-1/12 text-right">
             <Label>Total (incl. GST) (INR)</Label>
           </div>
+          <div className="w-1/12">
+            <Label>Actions</Label>
+          </div>
         </div>
         {fields.map((field, productIndex) => (
           <div key={field.id} className="flex space-x-4 items-start">
-            {/* Name */}
-            {/* <div className="w-1/6">
-              <Input
-                {...control.register(
-                  `quotations.${index}.products.${productIndex}.name`
-                )}
-                readOnly
-              />
-              {errors?.quotations?.[index]?.products?.[productIndex]?.name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.quotations[index].products[productIndex].name.message}
-                </p>
-              )}
-            </div> */}
-            {/* Description */}
-            <div className="w-1/4">
+            <div className="w-1/2">
               <Input
                 {...control.register(
                   `quotations.${index}.products.${productIndex}.description`
                 )}
               />
             </div>
-            {/* Quantity */}
             <div className="w-1/12">
               <Input
                 type="number"
@@ -236,7 +262,6 @@ const ProductList = ({
                 </p>
               )}
             </div>
-            {/* unit price */}
             <div className="w-1/12">
               <Controller
                 name={`quotations.${index}.products.${productIndex}.unitPrice`}
@@ -256,7 +281,6 @@ const ProductList = ({
               />
               {errors && <p className="text-red-500 text-sm mt-1">{errors}</p>}
             </div>
-            {/* GST */}
             <div className="w-1/12">
               <Controller
                 name={`quotations.${index}.products.${productIndex}.gst`}
@@ -288,7 +312,6 @@ const ProductList = ({
                 </p>
               )}
             </div>
-            {/* Taxable amount */}
             <div className="w-1/12">
               <Input
                 className="text-right"
@@ -305,7 +328,6 @@ const ProductList = ({
                 ).toFixed(2)}
               />
             </div>
-            {/* Total amount */}
             <div className="w-1/12">
               <Input
                 className="text-right"
@@ -322,9 +344,43 @@ const ProductList = ({
                 ).toFixed(2)}
               />
             </div>
+            <div className="w-1/12">
+              <Button
+                type="button"
+                onClick={() => handleDeleteClick(productIndex)}
+                variant="outline"
+                size="icon"
+                className="text-red-500"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product? This action cannot
+              be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
