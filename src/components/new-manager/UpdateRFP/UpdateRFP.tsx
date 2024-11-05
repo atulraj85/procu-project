@@ -339,7 +339,7 @@ export default function RFPUpdateForm({
             id: product.id || null,
             quantity: product.quantity || 0,
             unitPrice: unitPrice, // Use the parsed price
-            description: `${product.name} | ${product.description}` || "",
+            description: `${product.name || ""} | ${product.description || ""}` || "",
             rfpProductId: product.rfpProductId || "",
             gst: product.gst || "0",
             totalPriceWithoutGST: product.totalPriceWithoutGST || 0,
