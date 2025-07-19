@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { FiLoader } from "react-icons/fi";
 import { z } from "zod";
+import { getErrorMessage, extractErrorInfo, logError } from "@/lib/errorCodes";
 import {
   CompanyData,
   companySchema,
@@ -137,16 +138,21 @@ const Company: React.FC = () => {
         });
       }
     } catch (error: unknown) {
-      const prismaError = error as { code?: string };
-      if (prismaError.code === "P2002") {
+      const errorInfo = extractErrorInfo(error);
+      
+      if (errorInfo.code === "P2002" || errorInfo.code === "UNIQUE_CONSTRAINT_VIOLATION") {
         toast({
-          title: "User already exists",
+          title: "Company already exists",
+          description: getErrorMessage("UNIQUE_CONSTRAINT_VIOLATION"),
         });
       } else {
         toast({
-          title: `An error occurred while submitting the form. ${error}`,
+          title: "Registration failed",
+          description: errorInfo.message || getErrorMessage("INTERNAL_SERVER_ERROR"),
         });
       }
+      
+      logError(error, "Company Registration");
     }
   };
 
