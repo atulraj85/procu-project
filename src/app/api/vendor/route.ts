@@ -1,5 +1,7 @@
 import { VendorTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
+import { standardized_error_response, database_error_response, success_response } from "@/lib/response";
+import { BUSINESS_ERROR_CODES, VALIDATION_ERROR_CODES } from "@/lib/errorCodes";
 import { VendorRequestBody } from "@/types";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -22,9 +24,10 @@ export async function GET(request: NextRequest) {
       (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
 
     if (!["asc", "desc"].includes(sortingOrder)) {
-      return NextResponse.json(
-        { error: "Invalid order value" },
-        { status: 400 }
+      return standardized_error_response(
+        VALIDATION_ERROR_CODES.INVALID_FORMAT,
+        { field: "order", validValues: ["asc", "desc"] },
+        "Invalid order value. Must be 'asc' or 'desc'"
       );
     }
 
@@ -51,12 +54,13 @@ export async function GET(request: NextRequest) {
           : [desc(VendorTable[sortBy])],
     });
 
-    return NextResponse.json(records);
+    return success_response(records, "Vendors retrieved successfully");
   } catch (error: unknown) {
     console.error("Detailed error:", error);
-    return NextResponse.json(
-      { error: "Error fetching records", details: (error as Error).message },
-      { status: 500 }
+    return standardized_error_response(
+      "INTERNAL_SERVER_ERROR",
+      { originalError: (error as Error).message },
+      "Error fetching vendor records"
     );
   }
 }
@@ -67,9 +71,18 @@ export async function POST(request: NextRequest) {
 
     // Validate that the body is an array
     if (!Array.isArray(vendorDataArray)) {
-      return NextResponse.json(
-        { error: "Request body must be an array of vendor data." },
-        { status: 400 }
+      return standardized_error_response(
+        VALIDATION_ERROR_CODES.INVALID_FORMAT,
+        { expectedType: "array", receivedType: typeof vendorDataArray },
+        "Request body must be an array of vendor data"
+      );
+    }
+
+    if (vendorDataArray.length === 0) {
+      return standardized_error_response(
+        VALIDATION_ERROR_CODES.INVALID_FORMAT,
+        { minimumItems: 1 },
+        "At least one vendor must be provided"
       );
     }
 
@@ -80,18 +93,22 @@ export async function POST(request: NextRequest) {
       "contactDisplayName",
     ];
 
-    const createdVendors = [];
-
-    for (const vendorData of vendorDataArray) {
+    for (let i = 0; i < vendorDataArray.length; i++) {
+      const vendorData = vendorDataArray[i];
       for (const field of requiredFields) {
         if (!vendorData[field]) {
-          return NextResponse.json(
-            { error: `Missing required field: ${field}` },
-            { status: 400 }
+          return standardized_error_response(
+            VALIDATION_ERROR_CODES.REQUIRED_FIELD,
+            { field, vendorIndex: i },
+            `Missing required field '${field}' for vendor at index ${i}`
           );
         }
       }
+    }
 
+    const createdVendors = [];
+
+    for (const vendorData of vendorDataArray) {
       // Create a new vendor
       const newVendor = await db.insert(VendorTable).values({
         ...vendorData,
@@ -101,20 +118,24 @@ export async function POST(request: NextRequest) {
       createdVendors.push(newVendor);
     }
 
-    return NextResponse.json({ data: createdVendors }, { status: 201 });
+    return success_response(
+      { vendors: createdVendors, count: createdVendors.length },
+      `Successfully created ${createdVendors.length} vendor(s)`,
+      201
+    );
   } catch (error: any) {
     console.error("Error creating vendors:", error);
 
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "A vendor with this unique field already exists." },
-        { status: 409 }
-      );
+    // Handle specific Prisma/Database errors
+    if (error.code) {
+      return database_error_response(error);
     }
 
-    return NextResponse.json(
-      { error: `Failed to create vendors: ${error.message}` },
-      { status: 500 }
+    // Handle other errors
+    return standardized_error_response(
+      "INTERNAL_SERVER_ERROR",
+      { originalError: error.message },
+      "Failed to create vendors"
     );
   }
 }
