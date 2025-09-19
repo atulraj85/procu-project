@@ -166,13 +166,13 @@ export const managerList = [
 export const UserList = [
   {
     value: "Users",
-    label: "Users",
+    label: "Create",
     imgUrl: "/svgs/dashboard.svg",
     route: "/dashboard/user/rfp/create",
   },
   {
     value: "Component 1",
-    label: "Component 1",
+    label: "List",
     imgUrl: "/svgs/dashboard.svg",
     route: "/dashboard/user/rfp/list",
   },
