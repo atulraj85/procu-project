@@ -90,7 +90,7 @@ export const vendorList = [
     value: "dashboard",
     label: "Dashboard",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/vendor/dashboard",
+    route: "/dashboard/vendor",
   },
   {
     value: "productForm",

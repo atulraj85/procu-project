@@ -57,6 +57,13 @@
       "when": 1758261621262,
       "tag": "0007_nosy_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1758281990678,
+      "tag": "0008_bright_wiccan",
+      "breakpoints": true
     }
   ]
 }

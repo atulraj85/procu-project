@@ -25,6 +25,7 @@ export const RFPStatus = pgEnum("rfp_status", [
   "INVOICE_RECEIVED",
   "GRN_RECEIVED",
   "PAYMENT_DONE",
+  "REJECTED",
 ]);
 
 export const UserRole = pgEnum("user_role", [
@@ -298,6 +299,7 @@ export const RFPTable = pgTable(
     overallReason: text("overall_reason"), 
     userId: uuid("user_id").notNull(),
     cutoffAt: timestamp("cutoff_at", { precision: 3, mode: "date" }).notNull(),
+    rejectionReason : text("rejection_reason"),
     rfpStatus: RFPStatus("rfp_status").default("DRAFT").notNull(),
     reason: text("reason"),
     preferredQuotationId: uuid("preferred_quotation_id"),
