@@ -8,39 +8,28 @@ export function isValidUUID(uuid: string) {
   return uuidRegex.test(uuid);
 }
 
-export async function generateRFPId() {
-  const today = new Date();
-  const dateString = today.toISOString().split("T")[0]; // YYYY-MM-DD
-  const prefix = `RFP-${dateString}-`;
+function makePrefix(d = new Date()) {
+  const dateString = d.toISOString().split("T")[0]; // YYYY-MM-DD
+  return `RFP-${dateString}-`;
+}
 
-  // Get the last RFP_ID for today
+export async function generateRFPId() {
+  const prefix = makePrefix();
+
+  // Get the latest RFP for today by rfpId
   const lastRFP = await db.query.RFPTable.findFirst({
-    // where: like(RFPTable.rfpId, `${prefix}%`),
+    where: like(RFPTable.rfpId, `${prefix}%`),
     orderBy: desc(RFPTable.rfpId),
   });
-  console.log("2. Last RFP components:", lastRFP!.rfpId);
 
-  return lastRFP!.rfpId;
+  let nextNumber = 0;
+  if (lastRFP?.rfpId) {
+    const lastNumber = parseInt(lastRFP.rfpId.split("-").pop() || "0", 10);
+    nextNumber = isNaN(lastNumber) ? 0 : lastNumber + 1;
+  }
 
-  // let nextNumber = 0;
-  // if (lastRFP && lastRFP.rfpId) {
-  //   const lastId = lastRFP.rfpId;
-  //   const lastNumber = parseInt(lastId.split("-").pop() || "0", 10); // Default to "0" if undefined
-  //   nextNumber = lastNumber + 1;
-  //   console.log("2. Last RFP components last number:", lastNumber);
-  // }
-
-  // console.log("2. Last RFP components next number:", nextNumber);
-
-  // // Format the next number to be 4 digits
-  // const formattedNumber = String(nextNumber).padStart(4, "0");
-
-  // const finalResult = `${prefix}${formattedNumber}`;
-
-  // console.log("4. Generated RFP ID:", finalResult);
-  // console.log("=== RFP ID Generation Process Complete ===");
-
-  // return finalResult;
+  const formatted = String(nextNumber).padStart(4, "0");
+  return `${prefix}${formatted}`;
 }
 
 export async function generatePOId() {

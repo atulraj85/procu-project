@@ -1,0 +1,56 @@
+INSERT INTO companies (id, name, email, phone, website, industry, status, gst, created_at, updated_at)
+VALUES (
+  gen_random_uuid(),
+  'Acme Industries',
+  'info@acme.example',
+  '+91-9999999999',
+  'https://acme.example',
+  'Manufacturing',
+  'ACTIVE',
+  '29ABCDE1234F1Z5',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+)
+RETURNING id;
+
+INSERT INTO addresses (id, address_name, street, city, state, postal_code, country, address_type, company_id)
+VALUES (
+  gen_random_uuid(),
+  'Acme HQ',
+  'Plot 21, Industrial Area',
+  'Bengaluru',
+  'Karnataka',
+  '560001',
+  'India',
+  'BUSINESS',
+  '<COMPANY_ID_FROM_PREV>'
+);
+
+INSERT INTO addresses (id, address_name, street, city, state, postal_code, country, address_type, company_id)
+VALUES (
+  gen_random_uuid(),
+  'Primary Warehouse',
+  'Sector 5, Warehouse Lane',
+  'Bengaluru',
+  'Karnataka',
+  '560048',
+  'India',
+  'SHIPPING',
+  '<COMPANY_ID_FROM_PREV>'
+);
+
+INSERT INTO auditable_events (id, name, priority, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'USER_REGISTERED', 10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'RFP_CREATED', 20, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'QUOTATION_SUBMITTED', 30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'PO_CREATED', 40, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'INVOICE_CREATED', 50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'PAYMENT_DONE', 60, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+INSERT INTO product_categories (id, name, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'Electrical', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  (gen_random_uuid(), 'Mechanical', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (name) DO NOTHING;
+

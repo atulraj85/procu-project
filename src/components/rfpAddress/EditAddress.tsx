@@ -128,7 +128,6 @@ const EditAddress: React.FC<AddressFormProps> = ({
         }));
 
         setCities(transformedCities);
-        setIsLoading(true);
         return transformedCities;
       } catch (error) {
         console.error("There was a problem fetching cities:", error);
@@ -174,7 +173,7 @@ const EditAddress: React.FC<AddressFormProps> = ({
     form.setValue("city", value);
   };
 
-  if (!isLoading) {
+  if (isLoading) {
     return <Loader />;
   }
 

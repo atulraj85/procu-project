@@ -176,25 +176,25 @@ const VendorDetails: React.FC = () => {
       isValid = false;
     }
 
-    // if (vendorData.company_name.trim() === "") {
-    //   newErrors.company = "Company name is required.";
-    //   isValid = false;
-    // }
+    if (vendorData.company_name.trim() === "") {
+      newErrors.company = "Company name is required.";
+      isValid = false;
+    }
 
-    // if (!validateIndianPhoneNumber(vendorData.contact_no).isValid) {
-    //   newErrors.contact = "Invalid contact number.";
-    //   isValid = false;
-    // }
+    if (!validateIndianPhoneNumber(vendorData.contact_no).isValid) {
+      newErrors.contact = "Invalid contact number.";
+      isValid = false;
+    }
 
-    // if (vendorData.state === "") {
-    //   newErrors.state = "State is required.";
-    //   isValid = false;
-    // }
+    if (vendorData.state === "") {
+      newErrors.state = "State is required.";
+      isValid = false;
+    }
 
-    // if (vendorData.person_name.trim() === "") {
-    //   newErrors.person = "Person name is required.";
-    //   isValid = false;
-    // }
+    if (vendorData.person_name.trim() === "") {
+      newErrors.person = "Person name is required.";
+      isValid = false;
+    }
 
     if (!validateEmail(vendorData.email).isValid) {
       newErrors.email = "Invalid email address.";
@@ -531,11 +531,11 @@ const VendorDetails: React.FC = () => {
                   <div className="flex flex-col gap-3 w-60 text-base">
                     <label className="font-bold">Company Name</label>
                     <Input
-                      disabled
+                      // disabled
                       type="text"
                       name="company_name"
                       value={vendorData.company_name}
-                      // onChange={handleChangeVendorDetails}
+                      onChange={handleChangeVendorDetails}
                       placeholder="Company Name"
                       className="p-2   "
                     />
@@ -548,11 +548,11 @@ const VendorDetails: React.FC = () => {
                   <div className="flex flex-col gap-3 w-60 text-base">
                     <label className="font-bold">PAN Card</label>
                     <Input
-                      disabled
+                      // disabled
                       type="text"
                       name="pan_card"
                       value={vendorData.pan_card}
-                      // onChange={handleChangeVendorDetails}
+                      onChange={handleChangeVendorDetails}
                       placeholder="PAN Card"
                       className="p-2   "
                     />
@@ -562,11 +562,11 @@ const VendorDetails: React.FC = () => {
                   <div className="flex flex-col gap-3 w-60 text-base">
                     <label className="font-bold">Address</label>
                     <Input
-                      disabled
+                      // disabled
                       type="text"
                       name="address"
                       value={vendorData.address}
-                      // onChange={handleChangeVendorDetails}
+                      onChange={handleChangeVendorDetails}
                       placeholder="Address"
                       className="p-2    "
                     />
@@ -578,11 +578,11 @@ const VendorDetails: React.FC = () => {
                   <div className="flex flex-col gap-3 w-60 text-base">
                     <label className="font-bold">Pin Code</label>
                     <Input
-                      disabled
+                      // disabled
                       type="text"
                       name="pin_code"
                       value={vendorData.pin_code}
-                      // onChange={handleChangeVendorDetails}
+                      onChange={handleChangeVendorDetails}
                       placeholder="Pin Code"
                       className="p-2   "
                     />

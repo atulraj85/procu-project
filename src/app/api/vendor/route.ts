@@ -101,6 +101,8 @@ export async function POST(request: NextRequest) {
       createdVendors.push(newVendor);
     }
 
+    
+
     return NextResponse.json({ data: createdVendors }, { status: 201 });
   } catch (error: any) {
     console.error("Error creating vendors:", error);

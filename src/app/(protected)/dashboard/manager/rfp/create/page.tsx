@@ -93,7 +93,7 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         const response = await fetch("/api/company");
         const data = await response.json();
 
@@ -120,12 +120,12 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     async function fetchUserInformation() {
       try {
-        setLoading(true);
+        // setLoading(true);
 
         const response = await fetch(`/api/users?id=${userId}`);
         const data = await response.json();
         setUserInfo(data[0]);
-        setLoading(false);
+        // setLoading(false);
       } catch (error) {}
     }
     fetchUserInformation();
@@ -134,7 +134,7 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     const fetchRfpId = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         console.log("Frontend: Starting RFP ID fetch");
 
         const response = await fetch("/api/rfp/rfpid");

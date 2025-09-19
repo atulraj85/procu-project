@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>RFP-PO-Invoice Flow</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#f7f7f7; margin:0; padding:20px; }
+  .flow { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+  .lane { background:#fff; padding:16px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.08); min-width:260px; flex:1; }
+  .lane h3 { margin:0 0 10px 0; font-size:16px; color:#333; }
+  .step { border-left:4px solid #4a90e2; padding:10px 10px 10px 12px; margin:10px 0; background:#fafcff; }
+  .arrow { text-align:center; color:#999; margin:8px 0; }
+  .note { font-size:12px; color:#666; }
+  .ok { color:#2a7; }
+  .warn { color:#c60; }
+</style>
+</head>
+<body>
+  <h2>Procurement Flow: RFP → Quotation → PO → Invoice → QA → Payment</h2>
+
+  <div class="flow">
+    <div class="lane">
+      <h3>Setup</h3>
+      <div class="step"><strong>Company</strong> → Create company + addresses</div>
+      <div class="step"><strong>Users</strong> → Register users linked to company with roles</div>
+      <div class="note">Prereqs for all later steps</div>
+    </div>
+
+    <div class="lane">
+      <h3>RFP</h3>
+      <div class="step">Create RFP with requirement type, delivery location/date</div>
+      <div class="step">Add RFP products (quantities, descriptions)</div>
+      <div class="step">Collaborate via queries and responses (threaded)</div>
+      <div class="step">Approvers list records approvals</div>
+    </div>
+
+    <div class="lane">
+      <h3>Quotation</h3>
+      <div class="step">Vendors submit quotations for the RFP</div>
+      <div class="step">Line pricing per RFP product + taxes</div>
+      <div class="step">Attach supporting documents; mark primary if preferred</div>
+    </div>
+
+    <div class="lane">
+      <h3>PO</h3>
+      <div class="step">Create PO selecting the chosen quotation</div>
+      <div class="step">PO references RFP, Quotation, Company, and User</div>
+      <div class="note ok">Locks commercial terms</div>
+    </div>
+
+    <div class="lane">
+      <h3>Invoice & QA</h3>
+      <div class="step">Vendor delivers; create Invoice(s) for the PO</div>
+      <div class="step">Goods status: delivery + QA checks (QA leader)</div>
+      <div class="note warn">Three-way match: PO ↔ GRN/Delivery ↔ Invoice</div>
+    </div>
+
+    <div class="lane">
+      <h3>Payment</h3>
+      <div class="step">Approve invoice; process payment</div>
+      <div class="note">Close loop and record audit trails</div>
+    </div>
+  </div>
+
+  <div class="arrow">→ Governance throughout: audit trails per event and user</div>
+</body>
+</html>
