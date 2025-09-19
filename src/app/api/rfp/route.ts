@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
       deliveryLocation,
       deliveryByDate,
       rfpProducts,
+      overallReason,
       approvers, // Optional - only for PR_MANAGER
       rfpStatus,
       rfpId,
@@ -236,6 +237,7 @@ export async function POST(request: NextRequest) {
           requirementType,
           dateOfOrdering: new Date(),
           deliveryLocation,
+          overallReason,
           deliveryByDate: new Date(deliveryByDate),
           userId: userId,
           rfpStatus,
@@ -243,7 +245,7 @@ export async function POST(request: NextRequest) {
           cutoffAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
           updatedAt: new Date(),
         })
-        .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
+        .returning();
 
       // Create RFP Products
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
