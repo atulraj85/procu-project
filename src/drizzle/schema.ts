@@ -295,7 +295,7 @@ export const RFPTable = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
-    overallReason: text("overall_reason"), // ADD THIS LINE
+    overallReason: text("overall_reason"), 
     userId: uuid("user_id").notNull(),
     cutoffAt: timestamp("cutoff_at", { precision: 3, mode: "date" }).notNull(),
     rfpStatus: RFPStatus("rfp_status").default("DRAFT").notNull(),

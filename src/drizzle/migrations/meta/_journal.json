@@ -50,6 +50,13 @@
       "when": 1758255829217,
       "tag": "0006_handy_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1758261621262,
+      "tag": "0007_nosy_silver_surfer",
+      "breakpoints": true
     }
   ]
 }
