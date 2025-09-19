@@ -93,12 +93,6 @@ export const vendorList = [
     route: "/dashboard/vendor/dashboard",
   },
   {
-    value: "registration",
-    label: "Registration",
-    imgUrl: "/svgs/registration.svg",
-    route: "/dashboard/vendor/registration",
-  },
-  {
     value: "productForm",
     label: "Product Form",
     imgUrl: "/svgs/productForm.svg",

@@ -17,7 +17,7 @@ const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
 // Update VendorRequestBody to include password and user details
 interface VendorRegistrationBody extends VendorRequestBody {
   password: string;
-  // These fields will be used for both User and Vendor creation
+  email: string; // Make email required
 }
 
 export async function POST(request: NextRequest) {
@@ -54,23 +54,37 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Check if email already exists
-      const existingUser = await db.select().from(UserTable).where(eq(UserTable.email,VendorTable.email))
+      // Additional email validation
+      if (!vendorData.email || typeof vendorData.email !== 'string' || vendorData.email.trim() === '') {
+        return NextResponse.json(
+          { error: "Valid email is required" },
+          { status: 400 }
+        );
+      }
 
-      if (existingUser) {
+      // FIX: Check if email already exists - with proper type checking
+      const existingUser = await db
+        .select({ id: UserTable.id })
+        .from(UserTable)
+        .where(eq(UserTable.email, vendorData.email.trim())) // Now TypeScript knows email is string
+        .limit(1);
+
+      if (existingUser.length > 0) {
         return NextResponse.json(
           { error: `Email ${vendorData.email} is already registered` },
           { status: 409 }
         );
       }
 
-      // Check if GSTIN already exists (if provided)
-      if (vendorData.gstin) {
-        const existingVendor = await db.query.VendorTable.findFirst({
-          where: eq(VendorTable.gstin, vendorData.gstin),
-        });
+      // FIX: Check if GSTIN already exists - with null check
+      if (vendorData.gstin && typeof vendorData.gstin === 'string' && vendorData.gstin.trim() !== '') {
+        const existingVendor = await db
+          .select({ id: VendorTable.id })
+          .from(VendorTable)
+          .where(eq(VendorTable.gstin, vendorData.gstin.trim()))
+          .limit(1);
 
-        if (existingVendor) {
+        if (existingVendor.length > 0) {
           return NextResponse.json(
             { error: `GSTIN ${vendorData.gstin} is already registered` },
             { status: 409 }
@@ -78,19 +92,19 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Use transaction to create both Company, User, and Vendor
+      // Use transaction to create Company, User, and Vendor
       const result = await db.transaction(async (tx) => {
         // Step 1: Create Company first (since User requires companyId)
         const [newCompany] = await tx
           .insert(CompanyTable)
           .values({
-            name: vendorData.companyName,
-            email: vendorData.email,
-            phone: vendorData.mobile || vendorData.workPhone,
-            website: vendorData.website,
-            gst: vendorData.gstin,
-            gstAddress: vendorData.address,
-            status: "ACTIVE", // Set company status
+            name: vendorData.companyName || '',
+            email: vendorData.email.trim(),
+            phone: vendorData.mobile || vendorData.workPhone || '',
+            website: vendorData.website || '',
+            gst: vendorData.gstin || '',
+            gstAddress: vendorData.address || '',
+            status: "ACTIVE",
             updatedAt: new Date(),
           })
           .returning({ id: CompanyTable.id });
@@ -102,12 +116,12 @@ export async function POST(request: NextRequest) {
         const [newUser] = await tx
           .insert(UserTable)
           .values({
-            name: vendorData.primaryName,
-            email: vendorData.email!,
+            name: vendorData.primaryName || '',
+            email: vendorData.email.trim(),
             password: hashedPassword,
-            mobile: vendorData.mobile,
-            role: "VENDOR", // Set role as VENDOR
-            companyId: newCompany.id, // Link to created company
+            mobile: vendorData.mobile || '',
+            role: "VENDOR",
+            companyId: newCompany.id,
             updatedAt: new Date(),
           })
           .returning({ id: UserTable.id, email: UserTable.email });
@@ -116,9 +130,25 @@ export async function POST(request: NextRequest) {
         const [newVendor] = await tx
           .insert(VendorTable)
           .values({
-            ...vendorData,
-            status: "PENDING_REVIEW", // Default status for new registrations
-            verifiedById: null, // Will be set when approved
+            customerCode: vendorData.customerCode || `VEND-${Date.now()}`,
+            primaryName: vendorData.primaryName || '',
+            companyName: vendorData.companyName || '',
+            contactDisplayName: vendorData.contactDisplayName || vendorData.primaryName || '',
+            email: vendorData.email.trim(),
+            workPhone: vendorData.workPhone || '',
+            mobile: vendorData.mobile || '',
+            website: vendorData.website || '',
+            gstin: vendorData.gstin || '',
+            msmeNo: vendorData.msmeNo || '',
+            address: vendorData.address || '',
+            customerState: vendorData.customerState || '',
+            customerCity: vendorData.customerCity || '',
+            country: vendorData.country || 'India',
+            zip: vendorData.zip || '',
+            remarks: vendorData.remarks || '',
+            pan: vendorData.pan || '',
+            status: "PENDING_REVIEW",
+            verifiedById: null,
             updatedAt: new Date(),
           })
           .returning({
@@ -161,6 +191,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;

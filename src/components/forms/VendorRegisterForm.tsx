@@ -220,6 +220,7 @@ function VendorRegistrationForm() {
           mobile: data.mobile,
           website: data.website,
           gstin: data.gstin,
+          password : data.password,
           msmeNo: data.msmeNo,
           address: data.address,
           customerState: data.customerState,
@@ -305,7 +306,7 @@ function VendorRegistrationForm() {
           </div>
 
           {/* Company Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="companyName"
@@ -344,7 +345,7 @@ function VendorRegistrationForm() {
           </div>
 
           {/* Contact Person Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="primaryName"
@@ -383,7 +384,7 @@ function VendorRegistrationForm() {
           </div>
 
           {/* Contact Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="email"
@@ -458,7 +459,7 @@ function VendorRegistrationForm() {
             )}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="customerState"
