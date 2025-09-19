@@ -41,6 +41,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         return financeList;
       case "VENDOR":
         return vendorList;
+      case "USER":
+        return UserList;
       default:
         return UserList;
     }

@@ -168,18 +168,18 @@ export const UserList = [
     value: "Users",
     label: "Users",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/user/users",
+    route: "/dashboard/user/rfp/create",
   },
   {
     value: "Component 1",
     label: "Component 1",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/user/component1",
+    route: "/dashboard/user/rfp/list",
   },
   {
     value: "Component 2",
     label: "Component 2",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/user/component2",
+    route: "/dashboard/user/rfp/status",
   },
 ];

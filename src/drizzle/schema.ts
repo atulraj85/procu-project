@@ -37,6 +37,11 @@ export const UserRole = pgEnum("user_role", [
   "VENDOR",
 ]);
 
+export const VendorStatus = pgEnum("vendor_status", ["PENDING_REVIEW", "APPROVED", "REJECTED", "SUSPENDED"]);
+export const QuotationStatus = pgEnum("quotation_status", ["OPEN", "SUBMITTED", "LOCKED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED"]);
+export const POStatus = pgEnum("po_status", ["DRAFT", "SENT", "ACKNOWLEDGED", "CONFIRMED", "RECEIVED", "CLOSED"]);
+export const ApprovalStage = pgEnum("approval_stage", ["PROCUREMENT", "FINANCE"]);
+
 export const UserTable = pgTable(
   "users",
   {
@@ -290,7 +295,9 @@ export const RFPTable = pgTable(
       precision: 3,
       mode: "date",
     }).notNull(),
+    overallReason: text("overall_reason"), // ADD THIS LINE
     userId: uuid("user_id").notNull(),
+    cutoffAt: timestamp("cutoff_at", { precision: 3, mode: "date" }).notNull(),
     rfpStatus: RFPStatus("rfp_status").default("DRAFT").notNull(),
     reason: text("reason"),
     preferredQuotationId: uuid("preferred_quotation_id"),
@@ -506,6 +513,7 @@ export const VendorTable = pgTable(
     zip: text("zip"),
     remarks: text("remarks"),
     pan: text("pan"),
+    status: VendorStatus("status").default("PENDING_REVIEW").notNull(),
     verifiedById: uuid("verified_by_id"),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
@@ -712,8 +720,10 @@ export const POTable = pgTable(
     remarks: text("remarks").notNull(),
     quotationId: uuid("quotation_id").notNull(),
     userId: uuid("user_id").notNull(),
+    status: POStatus("status").default("DRAFT").notNull(),
     companyId: uuid("company_id").notNull(),
     rfpId: uuid("rfp_id").notNull(),
+    entityId: uuid("entity_id"), // FK to POEntitiesTable
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -801,6 +811,9 @@ export const QuotationTable = pgTable(
       precision: 10,
       scale: 2,
     }).notNull(),
+    submittedAt: timestamp("submitted_at", { precision: 3, mode: "date" }),
+    lockedAt: timestamp("locked_at", { precision: 3, mode: "date" }),
+    status: QuotationStatus("status").default("OPEN").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -934,6 +947,8 @@ export const ApproversListTable = pgTable(
     userId: uuid("user_id").notNull(),
     approved: boolean("approved").default(false).notNull(),
     approvedAt: timestamp("approved_at", { precision: 3, mode: "date" }),
+    stage: ApprovalStage("stage").default("PROCUREMENT").notNull(),
+    sequence: integer("sequence").default(1).notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -966,6 +981,8 @@ export const ApproversListTable = pgTable(
     };
   }
 );
+
+
 
 export const ApproversListTableRelations = relations(
   ApproversListTable,
@@ -1174,3 +1191,24 @@ export const OtherChargeTableRelations = relations(
     }),
   })
 );
+
+export const VendorContactsTable = pgTable("vendor_contacts", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  vendorId: uuid("vendor_id").notNull(),
+  name: text("name").notNull(),
+  designation: text("designation"),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  isPrimary: boolean("is_primary").default(false).notNull(),
+  createdAt: timestamp("created_at", { precision: 3, mode: "date" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at", { precision: 3, mode: "date" }).notNull()
+});
+
+export const POEntitiesTable = pgTable("po_entities", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  name: text("name").notNull(), // MM, MH, Mavericks
+  legalName: text("legal_name").notNull(),
+  address: text("address").notNull(),
+  gst: text("gst"),
+  createdAt: timestamp("created_at", { precision: 3, mode: "date" }).default(sql`CURRENT_TIMESTAMP`).notNull()
+});

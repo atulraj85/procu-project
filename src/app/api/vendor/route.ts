@@ -38,6 +38,19 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Add to your existing GET function
+const status = searchParams.get("status");
+if (status) {
+  whereConditions.push(eq(VendorTable.status, status as any));
+}
+
+// Only return APPROVED vendors by default (unless admin)
+// if (!isAdmin && !status) {
+//   whereConditions.push(eq(VendorTable.status, "APPROVED"));
+// }
+
+
+    
     // Combine conditions using 'and'
     const whereClause =
       whereConditions.length > 0 ? and(...whereConditions) : undefined;
@@ -95,6 +108,7 @@ export async function POST(request: NextRequest) {
       // Create a new vendor
       const newVendor = await db.insert(VendorTable).values({
         ...vendorData,
+        status: "PENDING_REVIEW", 
         updatedAt: new Date(),
       });
 

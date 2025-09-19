@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
         dateOfOrdering: true,
         deliveryLocation: true,
         deliveryByDate: true,
+          overallReason: true, // ADD THIS LINE
         rfpStatus: true,
         preferredQuotationId: true,
         createdAt: true,
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
   if (
     !currentLoggedInUser ||
     !currentLoggedInUser.id ||
-    currentLoggedInUser.role !== "PR_MANAGER"
+    !["USER", "PR_MANAGER"].includes(currentLoggedInUser.role)
   ) {
     console.error("Invalid user!");
     return NextResponse.json({ error: "Invalid user!" }, { status: 404 });
@@ -185,6 +186,7 @@ export async function POST(request: NextRequest) {
       deliveryLocation,
       deliveryByDate,
       rfpProducts,
+      overallReason, // ADD THIS
       approvers,
       rfpStatus,
       rfpId,
@@ -220,6 +222,8 @@ export async function POST(request: NextRequest) {
           dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
+          overallReason, // ADD THIS
+          cutoffAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // ADD THIS - Default 7 days
           userId: currentLoggedInUser.id!,
           rfpStatus,
           rfpId,
@@ -352,11 +356,11 @@ function formatRFPData(rfps: any[]) {
         // Handle user info
         createdBy: rfp?.user
           ? {
-              name: rfp.user?.name,
-              email: rfp.user?.email,
-              mobile: rfp.user?.mobile,
-              role: rfp.user?.role,
-            }
+            name: rfp.user?.name,
+            email: rfp.user?.email,
+            mobile: rfp.user?.mobile,
+            role: rfp.user?.role,
+          }
           : null,
       };
     })

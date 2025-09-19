@@ -31,6 +31,8 @@ export default function Dashboard() {
       case "FINANCE_MANAGER":
         router.push("/dashboard/finance");
         break;
+      case "USER":
+        router.push("/dashboard/user")
       default:
         setIsRedirecting(false);
         break;

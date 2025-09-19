@@ -43,6 +43,13 @@
       "when": 1729656532181,
       "tag": "0005_yielding_richard_fisk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1758255829217,
+      "tag": "0006_handy_titanium_man",
+      "breakpoints": true
     }
   ]
 }

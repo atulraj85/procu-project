@@ -124,6 +124,9 @@ export interface RequestBody {
   deliveryLocation: string;
   deliveryByDate: string;
   lastDateToRespond: string;
+    overallReason: string; // ADD THIS
+    businessJustification: string; // ADD THIS
+
   userId: string;
   rfpStatus: RFPStatus;
   preferredVendorId: string;
