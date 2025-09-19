@@ -4,6 +4,7 @@ import {
   RFPProductTable,
   RFPTable,
   UserRole,
+  AddressTable,
   UserTable,
 } from "@/drizzle/schema";
 import { currentUser } from "@/lib/auth";
@@ -217,6 +218,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+
 
     // Validate each product
     for (const product of rfpProducts) {

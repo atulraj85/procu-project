@@ -1,4 +1,5 @@
 import RegisterForm from "@/components/forms/RegisterForm";
+import VendorRegistrationForm from "@/components/forms/VendorRegisterForm";
 import React from "react";
 
 function RegisterPage() {
@@ -19,7 +20,8 @@ function RegisterPage() {
         </div>
       </div>
       <div className="flex-grow">
-        <RegisterForm text="Register to get started" role={"USER"} />
+        {/* <RegisterForm text="Register to get started" role={"USER"} /> */}
+        <VendorRegistrationForm />
       </div>
     </div>
   );

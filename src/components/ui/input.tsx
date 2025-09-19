@@ -6,7 +6,7 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 interface ExtendedInputProps extends InputProps {
-  startIcon?: "email" | "padlock" | "user" | "phone";
+  startIcon?: "email" | "padlock" | "user" | "phone" | "building" | "card"| "globe" | "location";
 }
 
 const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
@@ -24,7 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
           {...props}
         />
         {startIcon && (
-          <div className="absolute top-[1.2rem] left-[1.62rem]">
+          <div className="absolute top-[1.4rem] left-[1.62rem]">
             <img
               src={
                 startIcon === "email"
@@ -35,8 +35,18 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
                   ? "/images/icons8-phone-16.png"
                   : startIcon === "padlock"
                   ? "/images/lock_icon.png"
+                  : startIcon === "building"
+                  ? "/images/building.png"
+                  : startIcon === "card"
+                  ? "/images/credit-card.png"
+                  : startIcon === "globe"
+                  ? "/images/globe.png"
+                  : startIcon === "location"
+                  ? "/images/location2.png"
                   : ""
               }
+              height={16}
+              width={16}
               alt={`${startIcon} icon`}
             />
           </div>
