@@ -24,7 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, ExtendedInputProps>(
           {...props}
         />
         {startIcon && (
-          <div className="absolute top-[1.4rem] left-[1.62rem]">
+          <div className={`absolute top-[1.4rem] left-[1.62rem]  ${startIcon === "building" ? "opacity-20" : ""} ${startIcon === "card" ? "opacity-20" : ""} ${startIcon === "globe" ? "opacity-20" : ""} ${startIcon === "location" ? "opacity-20" : ""}`}>
             <img
               src={
                 startIcon === "email"
