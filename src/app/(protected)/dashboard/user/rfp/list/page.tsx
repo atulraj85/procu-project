@@ -324,6 +324,7 @@ const RFPForm: React.FC = () => {
       ...formData,
       deliveryLocation: rfpAddress,
       rfpId: rfpId,
+      userId : currentUser?.id
     };
 
     setLoading(true);

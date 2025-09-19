@@ -3,12 +3,14 @@ import {
   ApproversListTable,
   RFPProductTable,
   RFPTable,
+  UserRole,
+  UserTable,
 } from "@/drizzle/schema";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
 import { generateRFPId } from "@/utils";
-import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
+import { and, asc, desc, eq, InferSelectModel, or, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 // Type Definitions
@@ -167,18 +169,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const currentLoggedInUser = await currentUser();
-  if (
-    !currentLoggedInUser ||
-    !currentLoggedInUser.id ||
-    !["USER", "PR_MANAGER"].includes(currentLoggedInUser.role)
-  ) {
-    console.error("Invalid user!");
-    return NextResponse.json({ error: "Invalid user!" }, { status: 404 });
-  }
-
-  // TODO: Add validation logic before creating RFP.
-
   try {
     const {
       requirementType,
@@ -186,13 +176,49 @@ export async function POST(request: NextRequest) {
       deliveryLocation,
       deliveryByDate,
       rfpProducts,
-      overallReason, // ADD THIS
-      approvers,
+      approvers, // Optional - only for PR_MANAGER
       rfpStatus,
       rfpId,
+      userId, // Accept userId from frontend
     }: RequestBody = await request.json();
 
-    console.log(dateOfOrdering);
+    // Validate required fields
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // FIX: Correct way to get user role
+    const userResult = await db.select({ role: UserTable.role }).from(UserTable).where(eq(UserTable.id, userId));
+    
+    if (!userResult.length) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    const userRole = userResult[0].role;
+    console.log("USER ROLE", userRole);
+    
+    if (!requirementType || !deliveryLocation || !deliveryByDate || !rfpProducts || rfpProducts.length === 0) {
+      return NextResponse.json(
+        { error: "Missing required fields: requirementType, deliveryLocation, deliveryByDate, and rfpProducts are required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate each product
+    for (const product of rfpProducts) {
+      if (!product.description || !product.quantity || product.quantity < 1) {
+        return NextResponse.json(
+          { error: "Each product must have a description and quantity >= 1" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Validate the status
     if (!Object.values(RFPStatus).includes(rfpStatus)) {
@@ -202,19 +228,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // // Generate RFP ID
-    // let rfpId: any;
-    // try {
-    //   rfpId = await generateRFPId();
-    // } catch (error: any) {
-    //   console.error("Error generating RFP id", error);
-    //   return NextResponse.json(
-    //     { error: `Failed to create RFP: ${error.message}` },
-    //     { status: 500 }
-    //   );
-    // }
-
     const newRFP = await db.transaction(async (tx) => {
+      // Create the RFP
       const [createdRFP] = await tx
         .insert(RFPTable)
         .values({
@@ -222,46 +237,73 @@ export async function POST(request: NextRequest) {
           dateOfOrdering: new Date(),
           deliveryLocation,
           deliveryByDate: new Date(deliveryByDate),
-          overallReason, // ADD THIS
-          cutoffAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // ADD THIS - Default 7 days
-          userId: currentLoggedInUser.id!,
+          userId: userId,
           rfpStatus,
           rfpId,
+          cutoffAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
           updatedAt: new Date(),
         })
         .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
 
+      // Create RFP Products
       const rfpProductValues = rfpProducts.map((rfpProduct) => ({
         rfpId: createdRFP.id,
         description: rfpProduct.description,
         quantity: rfpProduct.quantity,
         updatedAt: new Date(),
       }));
-      if (rfpProductValues && rfpProductValues.length > 0) {
+      
+      if (rfpProductValues.length > 0) {
         await tx.insert(RFPProductTable).values(rfpProductValues);
       }
 
-      const approverValues = approvers.map((approver) => ({
-        rfpId: createdRFP.id,
-        userId: approver.approverId,
-        approved: false,
-        updatedAt: new Date(),
-      }));
-      if (approverValues && approverValues.length > 0) {
+      // Handle Approvers based on user role
+      if (userRole === "USER") {
+        // FIX: Use simple select instead of query.findMany to avoid circular relations
+        const defaultApprovers = await tx
+          .select({ id: UserTable.id })
+          .from(UserTable)
+          .where(or(
+            eq(UserTable.role, "PR_MANAGER"),
+            eq(UserTable.role, "FINANCE_MANAGER")
+          ));
+
+        if (defaultApprovers.length > 0) {
+          const approverValues = defaultApprovers.map((approver) => ({
+            rfpId: createdRFP.id,
+            userId: approver.id,
+            approved: false,
+            updatedAt: new Date(),
+          }));
+          
+          await tx.insert(ApproversListTable).values(approverValues);
+        }
+      } else if (approvers && approvers.length > 0) {
+        // Use provided approvers (for PR_MANAGER or custom cases)
+        const approverValues = approvers.map((approver) => ({
+          rfpId: createdRFP.id,
+          userId: approver.approverId,
+          approved: false,
+          updatedAt: new Date(),
+        }));
+        
         await tx.insert(ApproversListTable).values(approverValues);
       }
 
       return createdRFP;
     });
 
-    // TODO: Decide what should be the 'rfpDescription'.
+    // Save audit trail
     if (newRFP) {
       try {
         await saveAuditTrail({
           eventName: "RFP_CREATED",
           details: {
             rfpId: newRFP.rfpId,
-            rfpDescription: "Description of RFP",
+            rfpDescription: `${requirementType} request with ${rfpProducts.length} items`,
+            requirementType,
+            productCount: rfpProducts.length,
+            createdBy: userRole,
           },
         });
       } catch (error) {
@@ -269,7 +311,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ data: newRFP }, { status: 201 });
+    return NextResponse.json({ 
+      data: newRFP, 
+      message: userRole === "USER" 
+        ? "RFP request submitted successfully and sent for approval" 
+        : "RFP created successfully"
+    }, { status: 201 });
+
   } catch (error: any) {
     console.error("Error creating RFP:", error);
     return NextResponse.json(
