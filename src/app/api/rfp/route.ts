@@ -20,7 +20,6 @@ type WhereField = keyof InferSelectModel<typeof RFPTable>;
 
 const DEFAULT_SORTING_FIELD: SortBy = "id";
 const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -41,8 +40,16 @@ export async function GET(request: NextRequest) {
 
     // Construct where conditions
     const whereConditions: SQL<unknown>[] = [];
+    
+    // Special handling for userId parameter
+    const userId = searchParams.get("userId");
+    if (userId) {
+      whereConditions.push(eq(RFPTable.userId, userId));
+    }
+
+    // Handle other parameters
     searchParams.forEach((value, key) => {
-      if (key !== "sortBy" && key !== "order") {
+      if (key !== "sortBy" && key !== "order" && key !== "userId") { // Exclude userId from generic handling
         if (key in RFPTable) {
           whereConditions.push(eq(RFPTable[key as WhereField], value));
         }
@@ -66,8 +73,9 @@ export async function GET(request: NextRequest) {
         dateOfOrdering: true,
         deliveryLocation: true,
         deliveryByDate: true,
-          overallReason: true, // ADD THIS LINE
+        overallReason: true,
         rfpStatus: true,
+        reason: true, // ADD THIS - the user's reason field
         preferredQuotationId: true,
         createdAt: true,
         updatedAt: true,
@@ -86,7 +94,11 @@ export async function GET(request: NextRequest) {
           },
         },
         rfpProducts: {
-          columns: { id: true, quantity: true, description: true },
+          columns: { 
+            id: true, 
+            quantity: true, 
+            description: true,
+          },
         },
         quotations: {
           columns: {
@@ -151,12 +163,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // console.log(`Found ${records.length} records`);
-
     const formattedData = formatRFPData(records);
-
-    // console.log("Formatted data:", JSON.stringify(formattedData, null, 2));
-    // console.log("records data:", JSON.stringify(records, null, 2));
 
     return NextResponse.json(serializePrismaModel(formattedData));
   } catch (error: unknown) {
