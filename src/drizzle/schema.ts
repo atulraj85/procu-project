@@ -52,6 +52,7 @@ export const UserTable = pgTable(
     emailVerified: timestamp("email_verified", { precision: 3, mode: "date" }),
     password: text("password").notNull(),
     mobile: text("mobile"),
+    vendorId : uuid("vendor_id"),
     role: UserRole("role").default("USER").notNull(),
     companyId: uuid("company_id").notNull(),
     createdAt: timestamp("created_at", { precision: 3, mode: "date" })

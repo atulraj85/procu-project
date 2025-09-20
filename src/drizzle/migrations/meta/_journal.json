@@ -64,6 +64,13 @@
       "when": 1758281990678,
       "tag": "0008_bright_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1758344511471,
+      "tag": "0009_nasty_mystique",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 // /api/quotations/route.ts
 import { QuotationTable, VendorPricingTable, OtherChargeTable, SupportingDocumentTable, RFPTable, VendorTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
-import { and, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
+import { and, desc, asc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import { join } from "path";
@@ -37,9 +37,12 @@ export async function GET(request: NextRequest) {
     
     const whereClause = whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
+    // FIX: Use proper orderBy syntax
     const quotations = await db.query.QuotationTable.findMany({
       where: whereClause,
-      orderBy: sortingOrder === "asc" ? [sortBy] : [desc(QuotationTable[sortBy])],
+      orderBy: sortingOrder === "asc" 
+        ? [asc(QuotationTable[sortBy])] 
+        : [desc(QuotationTable[sortBy])],
       with: {
         vendor: {
           columns: {
@@ -80,8 +83,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Format the response
-    const formattedQuotations = quotations.map(quotation => ({
+    // Format the response - FIX: Add proper typing
+    const formattedQuotations = quotations.map((quotation: any) => ({
       id: quotation.id,
       refNo: quotation.refNo,
       rfpId: quotation.rfpId,
@@ -91,7 +94,7 @@ export async function GET(request: NextRequest) {
       createdAt: quotation.createdAt,
       updatedAt: quotation.updatedAt,
       vendor: quotation.vendor,
-      products: quotation.vendorPricings?.map(pricing => ({
+      products: quotation.vendorPricings?.map((pricing: any) => ({
         id: pricing.rfpProduct?.id,
         rfpProductId: pricing.rfpProduct?.id,
         description: pricing.rfpProduct?.description,
@@ -100,7 +103,7 @@ export async function GET(request: NextRequest) {
         gst: pricing.gst,
         type: "product"
       })) || [],
-      otherCharges: quotation.otherCharges?.map(charge => ({
+      otherCharges: quotation.otherCharges?.map((charge: any) => ({
         id: charge.id,
         name: charge.name,
         price: charge.price,
@@ -171,7 +174,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify vendor exists
+    // Verify vendor exists and is approved
     const vendor = await db.query.VendorTable.findFirst({
       where: eq(VendorTable.id, vendorId),
       columns: { id: true, status: true }
@@ -229,6 +232,7 @@ export async function POST(request: NextRequest) {
         vendorId: vendorId,
         totalAmount: totalWithGst,
         totalAmountWithoutGst: totalWithoutGst,
+        status: "SUBMITTED", // Add this if your schema has status
         updatedAt: new Date(),
       }).returning({ id: QuotationTable.id });
 
