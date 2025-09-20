@@ -1,0 +1,497 @@
+Enum "approval_stage" {
+  "PROCUREMENT_MANAGER"
+  "FINANCE_MANAGER"
+  "FINANCE_EXECUTIVE"
+}
+
+Enum "message_type" {
+  "TEXT"
+  "ATTACHMENT"
+  "SYSTEM_MESSAGE"
+}
+
+Enum "po_status" {
+  "DRAFT"
+  "GENERATED"
+  "SENT_TO_VENDOR"
+  "ACKNOWLEDGED"
+  "IN_PROGRESS"
+  "DELIVERED"
+  "COMPLETED"
+  "CANCELLED"
+}
+
+Enum "quotation_status" {
+  "OPEN"
+  "SUBMITTED"
+  "LOCKED"
+  "UNDER_REVIEW"
+  "SHORTLISTED"
+  "SELECTED"
+  "REJECTED"
+}
+
+Enum "rfp_status" {
+  "DRAFT"
+  "PENDING_APPROVAL"
+  "APPROVED"
+  "REJECTED"
+  "SENT_TO_VENDORS"
+  "QUOTATION_RECEIVED"
+  "VENDOR_SELECTED"
+  "PO_GENERATED"
+  "DELIVERED"
+  "COMPLETED"
+  "CANCELLED"
+}
+
+Enum "user_role" {
+  "SYSTEM_ADMIN"
+  "PROCUREMENT_MANAGER"
+  "PROCUREMENT_LEAD"
+  "ADMIN_TEAM"
+  "FINANCE_TEAM"
+  "FINANCE_EXECUTIVE"
+  "USER"
+  "VENDOR"
+}
+
+Enum "vendor_status" {
+  "PENDING_REVIEW"
+  "APPROVED"
+  "REJECTED"
+  "SUSPENDED"
+  "BLACKLISTED"
+}
+
+Table "audit_events" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(255) [unique, not null]
+  "description" text
+  "priority" int4 [not null, default: 1]
+  "is_active" bool [not null, default: true]
+  "created_at" timestamp [not null, default: `now()`]
+}
+
+Table "audit_trails" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "event_id" uuid [not null]
+  "user_id" uuid [not null]
+  "entity_type" varchar(50) [not null]
+  "entity_id" uuid [not null]
+  "old_values" jsonb
+  "new_values" jsonb
+  "metadata" jsonb
+  "ip_address" varchar(45)
+  "user_agent" text
+  "created_at" timestamp [not null, default: `now()`]
+
+  Indexes {
+    created_at [type: btree, name: "audit_trails_created_at_idx"]
+    (entity_type, entity_id) [type: btree, name: "audit_trails_entity_idx"]
+    event_id [type: btree, name: "audit_trails_event_idx"]
+    user_id [type: btree, name: "audit_trails_user_idx"]
+  }
+}
+
+Table "conversation_messages" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "rfp_id" uuid [not null]
+  "thread_id" uuid [not null]
+  "sender_id" uuid [not null]
+  "sender_type" varchar(20) [not null]
+  "message_type" message_type [not null]
+  "content" text
+  "attachments" jsonb
+  "parent_message_id" uuid
+  "created_at" timestamp [not null, default: `now()`]
+
+  Indexes {
+    created_at [type: btree, name: "conversation_messages_created_at_idx"]
+    (rfp_id, thread_id) [type: btree, name: "conversation_messages_rfp_thread_idx"]
+  }
+}
+
+Table "email_verification_tokens" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "email" varchar(255) [not null]
+  "token" uuid [unique, not null, default: `gen_random_uuid()`]
+  "expires_at" timestamp [not null]
+  "created_at" timestamp [not null, default: `now()`]
+
+  Indexes {
+    (email, token) [type: btree, name: "email_verification_tokens_email_token_idx"]
+  }
+}
+
+Table "goods_receipts" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "po_id" uuid [not null]
+  "received_by" uuid [not null]
+  "received_at" timestamp [not null]
+  "received_items" jsonb [not null]
+  "partial_delivery" bool [not null, default: false]
+  "quality_check" bool [not null, default: false]
+  "quality_notes" text
+  "invoice_number" varchar(100)
+  "invoice_date" timestamp
+  "invoice_amount" numeric(15,2)
+  "supporting_documents" jsonb
+  "vendor_rating" int4
+  "feedback" text
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    po_id [type: btree, name: "goods_receipts_po_idx"]
+  }
+}
+
+Table "organizations" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(255) [not null]
+  "legal_name" varchar(255) [not null]
+  "gstin" varchar(15) [unique]
+  "pan" varchar(10) [unique]
+  "address" text [not null]
+  "city" varchar(100) [not null]
+  "state" varchar(100) [not null]
+  "pincode" varchar(10) [not null]
+  "country" varchar(100) [not null, default: 'India']
+  "phone" varchar(20)
+  "email" varchar(255)
+  "website" varchar(255)
+  "logo" text
+  "stamp" text
+  "is_active" bool [not null, default: true]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+}
+
+Table "po_entities" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(100) [unique, not null]
+  "legal_name" varchar(255) [not null]
+  "address" text [not null]
+  "gstin" varchar(15)
+  "organization_id" uuid [not null]
+  "is_active" bool [not null, default: true]
+  "created_at" timestamp [not null, default: `now()`]
+}
+
+Table "password_reset_tokens" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "email" varchar(255) [not null]
+  "token" uuid [unique, not null, default: `gen_random_uuid()`]
+  "expires_at" timestamp [not null]
+  "created_at" timestamp [not null, default: `now()`]
+
+  Indexes {
+    (email, token) [type: btree, name: "password_reset_tokens_email_token_idx"]
+  }
+}
+
+Table "product_categories" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(255) [unique, not null]
+  "description" text
+  "parent_id" uuid
+  "is_active" bool [not null, default: true]
+  "requires_approval" bool [not null, default: false]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+}
+
+Table "products" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(255) [not null]
+  "description" text
+  "category_id" uuid [not null]
+  "brand" varchar(100)
+  "model_number" varchar(100)
+  "specifications" jsonb
+  "keywords" "text[]"
+  "is_active" bool [not null, default: true]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    keywords [type: gin, name: "products_keywords_idx"]
+    name [type: btree, name: "products_name_idx"]
+  }
+}
+
+Table "purchase_orders" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "po_number" varchar(50) [unique, not null]
+  "rfp_id" uuid [not null]
+  "quotation_id" uuid [not null]
+  "vendor_id" uuid [not null]
+  "entity_id" uuid [not null]
+  "line_items" jsonb [not null]
+  "subtotal" numeric(15,2) [not null]
+  "gst_amount" numeric(15,2) [not null]
+  "total_amount" numeric(15,2) [not null]
+  "delivery_date" timestamp [not null]
+  "delivery_address" text [not null]
+  "payment_terms" text
+  "other_terms" text
+  "status" po_status [not null, default: 'DRAFT']
+  "generated_by" uuid [not null]
+  "acknowledged_at" timestamp
+  "penalty_clause" text
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    status [type: btree, name: "purchase_orders_status_idx"]
+  }
+}
+
+Table "question_templates" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "category_id" uuid
+  "questions" jsonb [not null]
+  "version" int4 [not null, default: 1]
+  "is_active" bool [not null, default: true]
+  "created_by" uuid [not null]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+}
+
+Table "quotations" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "rfp_id" uuid [not null]
+  "vendor_id" uuid [not null]
+  "quotation_number" varchar(50)
+  "line_item_quotes" jsonb [not null]
+  "subtotal" numeric(15,2) [not null]
+  "gst_amount" numeric(15,2) [not null]
+  "total_amount" numeric(15,2) [not null]
+  "other_charges" jsonb
+  "supporting_documents" jsonb
+  "valid_till" timestamp [not null]
+  "delivery_timeline" varchar(100)
+  "status" quotation_status [not null, default: 'OPEN']
+  "submitted_at" timestamp
+  "locked_at" timestamp
+  "evaluation_score" numeric(5,2)
+  "evaluation_notes" text
+  "is_shortlisted" bool [not null, default: false]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    (rfp_id, vendor_id) [type: btree, name: "quotations_rfp_vendor_idx"]
+    status [type: btree, name: "quotations_status_idx"]
+  }
+}
+
+Table "rfp_approvals" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "rfp_id" uuid [not null]
+  "approver_id" uuid [not null]
+  "stage" approval_stage [not null]
+  "sequence" int4 [not null]
+  "approved" bool
+  "approved_at" timestamp
+  "comments" text
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    (rfp_id, approver_id, stage) [type: btree, name: "rfp_approvals_rfp_approver_idx"]
+  }
+}
+
+Table "rfps" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "rfp_number" varchar(50) [unique, not null]
+  "title" varchar(255) [not null]
+  "description" text
+  "line_items" jsonb [not null]
+  "delivery_location" text [not null]
+  "delivery_states" "text[]"
+  "delivery_date" timestamp [not null]
+  "question_template_id" uuid
+  "question_answers" jsonb
+  "estimated_budget" numeric(15,2)
+  "currency" varchar(3) [default: 'INR']
+  "status" rfp_status [not null, default: 'DRAFT']
+  "created_by" uuid [not null]
+  "organization_id" uuid [not null]
+  "selection_criteria" jsonb
+  "quotation_cutoff_date" timestamp [not null]
+  "rejection_reason" text
+  "conversation_threads" jsonb [not null, default: `[]`]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    status [type: btree, name: "rfps_status_idx"]
+  }
+}
+
+Table "rfp_vendor_invitations" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "rfp_id" uuid [not null]
+  "vendor_id" uuid [not null]
+  "invited_at" timestamp [not null]
+  "invited_by" uuid [not null]
+  "access_token" uuid [unique, not null, default: `gen_random_uuid()`]
+  "viewed_at" timestamp
+  "created_at" timestamp [not null, default: `now()`]
+
+  Indexes {
+    (rfp_id, vendor_id) [type: btree, name: "rfp_vendor_invitations_rfp_vendor_idx"]
+  }
+}
+
+Table "users" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "name" varchar(255) [not null]
+  "email" varchar(255) [unique, not null]
+  "email_verified" timestamp
+  "password" varchar(255) [not null]
+  "mobile" varchar(20)
+  "role" user_role [not null, default: 'USER']
+  "organization_id" uuid [not null]
+  "vendor_id" uuid
+  "profile_pic" text
+  "is_active" bool [not null, default: true]
+  "last_login_at" timestamp
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    (name, email, mobile) [type: btree, name: "users_name_email_mobile_idx"]
+  }
+}
+
+Table "vendor_contacts" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "vendor_id" uuid [not null]
+  "name" varchar(255) [not null]
+  "designation" varchar(100)
+  "email" varchar(255) [not null]
+  "phone" varchar(20)
+  "is_primary" bool [not null, default: false]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+}
+
+Table "vendor_products" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "vendor_id" uuid [not null]
+  "product_id" uuid [not null]
+  "brand_offered" varchar(100)
+  "model_offered" varchar(100)
+  "specifications" jsonb
+  "base_price" numeric(12,2)
+  "currency" varchar(3) [default: 'INR']
+  "is_currently_offered" bool [not null, default: true]
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    (vendor_id, product_id) [type: btree, name: "vendor_products_vendor_product_idx"]
+  }
+}
+
+Table "vendors" {
+  "id" uuid [pk, not null, default: `gen_random_uuid()`]
+  "company_name" varchar(255) [not null]
+  "legal_name" varchar(255)
+  "gstin" varchar(15) [unique]
+  "pan" varchar(10)
+  "business_registration_year" int4
+  "employee_count" varchar(50)
+  "logo" text
+  "description" text
+  "address" text [not null]
+  "city" varchar(100) [not null]
+  "state" varchar(100) [not null]
+  "pincode" varchar(10) [not null]
+  "country" varchar(100) [not null, default: 'India']
+  "phone" varchar(20)
+  "email" varchar(255)
+  "website" varchar(255)
+  "specializations" "text[]"
+  "certifications" jsonb
+  "social_media_links" jsonb
+  "status" vendor_status [not null, default: 'PENDING_REVIEW']
+  "verified_by" uuid
+  "verified_at" timestamp
+  "dealing_keywords" "text[]"
+  "created_at" timestamp [not null, default: `now()`]
+  "updated_at" timestamp [not null]
+
+  Indexes {
+    company_name [type: btree, name: "vendors_company_name_idx"]
+    dealing_keywords [type: gin, name: "vendors_keywords_idx"]
+  }
+}
+
+Ref "audit_trails_event_id_fkey":"audit_events"."id" < "audit_trails"."event_id" [update: cascade, delete: restrict]
+
+Ref "audit_trails_user_id_fkey":"users"."id" < "audit_trails"."user_id" [update: cascade, delete: restrict]
+
+Ref "conversation_messages_parent_message_id_fkey":"conversation_messages"."id" < "conversation_messages"."parent_message_id" [update: cascade, delete: set null]
+
+Ref "conversation_messages_rfp_id_fkey":"rfps"."id" < "conversation_messages"."rfp_id" [update: cascade, delete: cascade]
+
+Ref "conversation_messages_sender_id_fkey":"users"."id" < "conversation_messages"."sender_id" [update: cascade, delete: restrict]
+
+Ref "goods_receipts_po_id_fkey":"purchase_orders"."id" < "goods_receipts"."po_id" [update: cascade, delete: restrict]
+
+Ref "goods_receipts_received_by_fkey":"users"."id" < "goods_receipts"."received_by" [update: cascade, delete: restrict]
+
+Ref "po_entities_organization_id_fkey":"organizations"."id" < "po_entities"."organization_id" [update: cascade, delete: restrict]
+
+Ref "product_categories_parent_id_fkey":"product_categories"."id" < "product_categories"."parent_id" [update: cascade, delete: set null]
+
+Ref "products_category_id_fkey":"product_categories"."id" < "products"."category_id" [update: cascade, delete: restrict]
+
+Ref "purchase_orders_entity_id_fkey":"po_entities"."id" < "purchase_orders"."entity_id" [update: cascade, delete: restrict]
+
+Ref "purchase_orders_generated_by_fkey":"users"."id" < "purchase_orders"."generated_by" [update: cascade, delete: restrict]
+
+Ref "purchase_orders_quotation_id_fkey":"quotations"."id" < "purchase_orders"."quotation_id" [update: cascade, delete: restrict]
+
+Ref "purchase_orders_rfp_id_fkey":"rfps"."id" < "purchase_orders"."rfp_id" [update: cascade, delete: restrict]
+
+Ref "purchase_orders_vendor_id_fkey":"vendors"."id" < "purchase_orders"."vendor_id" [update: cascade, delete: restrict]
+
+Ref "question_templates_category_id_fkey":"product_categories"."id" < "question_templates"."category_id" [update: cascade, delete: set null]
+
+Ref "question_templates_created_by_fkey":"users"."id" < "question_templates"."created_by" [update: cascade, delete: restrict]
+
+Ref "quotations_rfp_id_fkey":"rfps"."id" < "quotations"."rfp_id" [update: cascade, delete: cascade]
+
+Ref "quotations_vendor_id_fkey":"vendors"."id" < "quotations"."vendor_id" [update: cascade, delete: cascade]
+
+Ref "rfp_approvals_approver_id_fkey":"users"."id" < "rfp_approvals"."approver_id" [update: cascade, delete: restrict]
+
+Ref "rfp_approvals_rfp_id_fkey":"rfps"."id" < "rfp_approvals"."rfp_id" [update: cascade, delete: cascade]
+
+Ref "rfp_vendor_invitations_invited_by_fkey":"users"."id" < "rfp_vendor_invitations"."invited_by" [update: cascade, delete: restrict]
+
+Ref "rfp_vendor_invitations_rfp_id_fkey":"rfps"."id" < "rfp_vendor_invitations"."rfp_id" [update: cascade, delete: cascade]
+
+Ref "rfp_vendor_invitations_vendor_id_fkey":"vendors"."id" < "rfp_vendor_invitations"."vendor_id" [update: cascade, delete: cascade]
+
+Ref "rfps_created_by_fkey":"users"."id" < "rfps"."created_by" [update: cascade, delete: restrict]
+
+Ref "rfps_organization_id_fkey":"organizations"."id" < "rfps"."organization_id" [update: cascade, delete: restrict]
+
+Ref "rfps_question_template_id_fkey":"question_templates"."id" < "rfps"."question_template_id" [update: cascade, delete: set null]
+
+Ref "users_organization_id_fkey":"organizations"."id" < "users"."organization_id" [update: cascade, delete: restrict]
+
+Ref "vendor_contacts_vendor_id_fkey":"vendors"."id" < "vendor_contacts"."vendor_id" [update: cascade, delete: cascade]
+
+Ref "vendor_products_product_id_fkey":"products"."id" < "vendor_products"."product_id" [update: cascade, delete: cascade]
+
+Ref "vendor_products_vendor_id_fkey":"vendors"."id" < "vendor_products"."vendor_id" [update: cascade, delete: cascade]
+
+Ref "vendors_verified_by_fkey":"users"."id" < "vendors"."verified_by" [update: cascade, delete: set null]
