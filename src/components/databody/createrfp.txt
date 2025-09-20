@@ -1,48 +1,46 @@
-Create RFP
 {
-  "title": "IT Equipment Procurement for Development Team",
-  "description": "Procurement of laptops, monitors, and accessories for new development team expansion",
+  "title": "Hardware Request - Development Team Laptops",
+  "description": "Request for replacement laptops for development team due to performance issues",
   "lineItems": [
     {
       "productName": "Dell Laptop",
-      "description": "High-performance laptop for software development",
+      "description": "High-performance laptop for software development work",
       "specifications": {
         "processor": "Intel i7 12th Gen",
         "ram": "16GB",
         "storage": "512GB SSD",
         "display": "14 inch FHD"
       },
-      "quantity": 5,
+      "quantity": 3,
       "estimatedUnitPrice": 75000,
       "urgency": "High"
-    },
-    {
-      "productName": "External Monitor",
-      "description": "24-inch external monitor for dual display setup",
-      "specifications": {
-        "size": "24 inch",
-        "resolution": "1920x1080",
-        "connectivity": "HDMI, USB-C"
-      },
-      "quantity": 5,
-      "estimatedUnitPrice": 15000,
-      "urgency": "Medium"
     }
   ],
   "deliveryLocation": "TechCorp Solutions, Plot No. 45, Electronic City Phase 1, Bangalore, Karnataka, 560100",
   "deliveryStates": ["Karnataka"],
   "deliveryDate": "2025-11-15",
-  "estimatedBudget": 500000,
+  "estimatedBudget": 225000,
   "currency": "INR",
-  "createdBy": "user-uuid-here",
+  "createdBy": "4c01af3c-890c-45e6-a91d-d31dbdb8af91",
+  "organizationId": "59a631f9-7e82-453a-82b0-b849f8ab8352",
   "quotationCutoffDate": "2025-10-30",
-  "questionTemplateId": null,
-  "questionAnswers": null,
+  "questionTemplateId": "76b7abd2-b84e-4755-8403-29b2341714bc",
+  "questionAnswers": {
+    "request_reason": "Equipment Replacement",
+    "replacement_reason": "Current laptops are 4 years old and experiencing frequent crashes, slow performance affecting development work productivity. RAM is insufficient for modern development tools and applications.",
+    "request_type": "Laptop",
+    "specific_request": "Dell Latitude 5420 or equivalent - Intel i7 12th Gen processor, 16GB RAM, 512GB SSD, 14-inch FHD display, Windows 11 Pro, minimum 3-year warranty with onsite support",
+    "quantity_needed": 3,
+    "required_date": "2025-11-15",
+    "usage_type": "Permanent",
+    "client_related": "Yes",
+    "business_justification": "Our development team is working on a critical client project with tight deadlines. Current hardware limitations are causing significant delays in code compilation, testing, and deployment processes. The client has specific performance requirements that cannot be met with current equipment. New laptops will improve team productivity by 40% and ensure we meet project deliverables on time."
+  },
   "selectionCriteria": {
-    "technicalWeightage": 60,
-    "commercialWeightage": 40,
+    "technicalWeightage": 70,
+    "commercialWeightage": 30,
     "requiredCertifications": ["ISO 9001"],
-    "preferredBrands": ["Dell", "HP"],
-    "warrantyRequirement": "3 years minimum"
+    "preferredBrands": ["Dell", "HP", "Lenovo"],
+    "warrantyRequirement": "3 years minimum with onsite support"
   }
 }
