@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const result = await db
       .select()
       .from(OrganizationTable)
-      .where(eq(OrganizationTable.gst, gst));
+      .where(eq(OrganizationTable.gstin, gst));
 
     if (debug) {
       console.log("Company search result:", result);
@@ -88,7 +88,6 @@ export async function POST(request: Request) {
       .values({
         name: fields.company_name,
         gst: fields.company_gstn,
-        gstAddress: fields.address,
         email: fields.email,
         phone: fields.phone,
         updatedAt: new Date(),
@@ -152,10 +151,6 @@ export async function GET(request: NextRequest) {
         sortingOrder === "asc"
           ? [asc(OrganizationTable[sortBy])]
           : [desc(OrganizationTable[sortBy])],
-      // Include the addresses in the result
-      with: {
-        addresses: true,
-      },
     });
 
     console.log(`Found ${companies.length} records`);
