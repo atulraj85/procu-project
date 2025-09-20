@@ -122,7 +122,7 @@ export const UserTable = pgTable("users", {
   password: varchar("password", { length: 255 }).notNull(),
   mobile: varchar("mobile", { length: 20 }),
   role: UserRole("role").default("USER").notNull(),
-  organizationId: uuid("organization_id").notNull(),
+  organizationId: uuid("organization_id"),
   vendorId: uuid("vendor_id"), // Reference to VendorTable if user is vendor
   profilePic: text("profile_pic"),
   isActive: boolean("is_active").default(true).notNull(),

@@ -172,8 +172,8 @@ export const UserList = [
   },
   {
     value: "Component 2",
-    label: "Component 2",
+    label: "Register as vendor",
     imgUrl: "/svgs/dashboard.svg",
-    route: "/dashboard/user/rfp/status",
+    route: "/dashboard/user/vendorRegistration",
   },
 ];
