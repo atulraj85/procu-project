@@ -1,5 +1,5 @@
 import { deleteCompany } from "@/data/company";
-import { AddressTable, CompanyTable } from "@/drizzle/schema";
+import { AddressTable, OrganizationTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { AddressType } from "@/schemas";
 import { saveFile } from "@/utils/saveFiles";
@@ -13,8 +13,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const company = await db.query.CompanyTable.findFirst({
-      where: eq(CompanyTable.id, params.id),
+    const company = await db.query.OrganizationTable.findFirst({
+      where: eq(OrganizationTable.id, params.id),
       with: {
         addresses: true,
       },
@@ -39,9 +39,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const existingCompany = await db.query.CompanyTable.findFirst({
+    const existingCompany = await db.query.OrganizationTable.findFirst({
       columns: { id: true },
-      where: eq(CompanyTable.id, params.id),
+      where: eq(OrganizationTable.id, params.id),
     });
     if (!existingCompany) {
       return NextResponse.json({ error: "Invalid company" }, { status: 404 });
@@ -100,9 +100,9 @@ export async function PUT(
     // Update company.
     console.log("Updating company", updateData);
     await db
-      .update(CompanyTable)
+      .update(OrganizationTable)
       .set({ ...updateData, updatedAt: new Date() })
-      .where(eq(CompanyTable.id, existingCompany.id));
+      .where(eq(OrganizationTable.id, existingCompany.id));
 
     // If the address exists, update it, otherwise, create a new one
     const addressType =
@@ -163,8 +163,8 @@ export async function PUT(
       }
     }
 
-    const company = await db.query.CompanyTable.findFirst({
-      where: eq(CompanyTable.id, existingCompany.id),
+    const company = await db.query.OrganizationTable.findFirst({
+      where: eq(OrganizationTable.id, existingCompany.id),
       with: {
         addresses: true,
       },
@@ -185,9 +185,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const company = await db.query.CompanyTable.findFirst({
+    const company = await db.query.OrganizationTable.findFirst({
       columns: { id: true },
-      where: eq(CompanyTable.id, params.id),
+      where: eq(OrganizationTable.id, params.id),
     });
 
     if (!company) {
