@@ -3,11 +3,11 @@ import { findUserById } from "@/data/user";
 import { db } from "@/lib/db";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import NextAuth, { DefaultSession } from "next-auth";
-import { JWT } from "next-auth/jwt";
 import { Role } from "./schemas";
 
 export type ExtendedUser = DefaultSession["user"] & {
   role: Role;
+  organizationId : string;
 };
 
 declare module "next-auth" {
@@ -23,6 +23,7 @@ declare module "next-auth/jwt" {
   /** Returned by the `jwt` callback and `auth`, when using JWT sessions */
   interface JWT {
     role?: Role;
+    organizationId : string;
   }
 }
 
@@ -54,11 +55,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       token.role = existingUser.role;
 
+      token.organizationId = existingUser.organizationId;
+
       return token;
     },
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
+      }
+
+      if(token.organizationId && session.user) {
+        session.user.organizationId = token.organizationId;
       }
 
       if (token.role && session.user) {

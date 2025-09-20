@@ -351,7 +351,7 @@ const RFPForm: React.FC = () => {
               <div className="flex">
                 <h1 className="px-3">Name: {userInfo.name}</h1>
                 <h1 className="px-3">Role: {userInfo.role}</h1>
-                <h1 className="px-3">Current Date: {getTodayDate()}</h1>
+                <h1 className="px-3">Current Date: {getTodayDate()} {JSON.stringify(currentUser?.organizationId)}</h1>
               </div>
             )}
           </div>

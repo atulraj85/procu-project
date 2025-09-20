@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Database Schema Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #3498db, #8e44ad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .workflow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .table-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .table-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border-color: #3498db;
+        }
+        
+        .table-card.core {
+            border-left: 6px solid #e74c3c;
+        }
+        
+        .table-card.workflow {
+            border-left: 6px solid #2ecc71;
+        }
+        
+        .table-card.support {
+            border-left: 6px solid #f39c12;
+        }
+        
+        .table-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .table-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .core .table-icon { background: #e74c3c; }
+        .workflow .table-icon { background: #2ecc71; }
+        .support .table-icon { background: #f39c12; }
+        
+        .table-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+        
+        .fields-list {
+            margin-bottom: 15px;
+        }
+        
+        .field-category {
+            margin-bottom: 12px;
+        }
+        
+        .field-category-title {
+            font-weight: 600;
+            color: #34495e;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .field-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .field-tag {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .relationships {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 15px;
+        }
+        
+        .relationships-title {
+            font-weight: 600;
+            color: #8e44ad;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .relationship-item {
+            background: linear-gradient(45deg, #a29bfe, #6c5ce7);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .flow-diagram {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .flow-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .flow-step {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 25px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+            position: relative;
+        }
+        
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        
+        .flow-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .legend {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .legend-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .legend-items {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-steps {
+                flex-direction: column;
+            }
+            
+            .flow-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                bottom: -25px;
+                top: auto;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Procurement Database Schema Workflow</h1>
+            <p>Core tables and their relationships in the procurement management system</p>
+        </div>
+        
+        <div class="workflow-container">
+            <!-- Core Foundation Tables -->
+            <div class="table-card core">
+                <div class="table-title">
+                    <div class="table-icon">1</div>
+                    OrganizationTable
+                </div>
+                <div class="table-description">
+                    Multi-tenant foundation for the entire system. Each organization has its own procurement workflow.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">name</span>
+                            <span class="field-tag">gstin</span>
+                            <span class="field-tag">address</span>
+                            <span class="field-tag">isActive</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">→ Users (1:N)</span>
+                    <span class="relationship-item">→ RFPs (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card core">
+                <div class="table-title">
+                    <div class="table-icon">2</div>
+                    UserTable
+                </div>
+                <div class="table-description">
+                    Role-based users managing the procurement workflow with different permission levels.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">role</span>
+                            <span class="field-tag">organizationId</span>
+                            <span class="field-tag">vendorId</span>
+                            <span class="field-tag">isActive</span>
+                        </div>
+                    </div>
+                    <div class="field-category">
+                        <div class="field-category-title">User Roles</div>
+                        <div class="field-tags">
+                            <span class="field-tag">PROCUREMENT_MANAGER</span>
+                            <span class="field-tag">FINANCE_TEAM</span>
+                            <span class="field-tag">VENDOR</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← Organization (N:1)</span>
+                    <span class="relationship-item">← Vendor (N:1)</span>
+                    <span class="relationship-item">→ RFPs (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card core">
+                <div class="table-title">
+                    <div class="table-icon">3</div>
+                    VendorTable
+                </div>
+                <div class="table-description">
+                    Vendor profiles with GST details and dealing keywords for automatic RFP matching.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">companyName</span>
+                            <span class="field-tag">gstin</span>
+                            <span class="field-tag">dealingKeywords[]</span>
+                            <span class="field-tag">status</span>
+                        </div>
+                    </div>
+                    <div class="field-category">
+                        <div class="field-category-title">Status Values</div>
+                        <div class="field-tags">
+                            <span class="field-tag">PENDING_REVIEW</span>
+                            <span class="field-tag">APPROVED</span>
+                            <span class="field-tag">REJECTED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">→ Users (1:N)</span>
+                    <span class="relationship-item">→ Quotations (1:N)</span>
+                    <span class="relationship-item">→ POs (1:N)</span>
+                </div>
+            </div>
+            
+            <!-- Product Management -->
+            <div class="table-card support">
+                <div class="table-title">
+                    <div class="table-icon">4</div>
+                    ProductCategoryTable
+                </div>
+                <div class="table-description">
+                    Hierarchical categorization of products like Laptops, Desktops, Network Equipment.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">name</span>
+                            <span class="field-tag">description</span>
+                            <span class="field-tag">isActive</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">→ Products (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card support">
+                <div class="table-title">
+                    <div class="table-icon">5</div>
+                    ProductTable
+                </div>
+                <div class="table-description">
+                    Specific products with flexible JSONB specifications and searchable keywords.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">name</span>
+                            <span class="field-tag">categoryId</span>
+                            <span class="field-tag">specifications</span>
+                            <span class="field-tag">keywords[]</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← ProductCategory (N:1)</span>
+                </div>
+            </div>
+            
+            <!-- Main Workflow Tables -->
+            <div class="table-card workflow">
+                <div class="table-title">
+                    <div class="table-icon">6</div>
+                    RFPTable
+                </div>
+                <div class="table-description">
+                    Request for Proposals with line items, delivery requirements, and embedded conversation threads.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">rfpNumber</span>
+                            <span class="field-tag">lineItems</span>
+                            <span class="field-tag">status</span>
+                            <span class="field-tag">conversationThreads</span>
+                        </div>
+                    </div>
+                    <div class="field-category">
+                        <div class="field-category-title">Status Flow</div>
+                        <div class="field-tags">
+                            <span class="field-tag">DRAFT</span>
+                            <span class="field-tag">PENDING_APPROVAL</span>
+                            <span class="field-tag">SENT_TO_VENDORS</span>
+                            <span class="field-tag">COMPLETED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← User (N:1)</span>
+                    <span class="relationship-item">← Organization (N:1)</span>
+                    <span class="relationship-item">→ Quotations (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card workflow">
+                <div class="table-title">
+                    <div class="table-icon">7</div>
+                    QuotationTable
+                </div>
+                <div class="table-description">
+                    Vendor responses to RFPs with detailed pricing, line items, and supporting documents.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">lineItemQuotes</span>
+                            <span class="field-tag">totalAmount</span>
+                            <span class="field-tag">status</span>
+                            <span class="field-tag">isShortlisted</span>
+                        </div>
+                    </div>
+                    <div class="field-category">
+                        <div class="field-category-title">Status Flow</div>
+                        <div class="field-tags">
+                            <span class="field-tag">OPEN</span>
+                            <span class="field-tag">SUBMITTED</span>
+                            <span class="field-tag">SHORTLISTED</span>
+                            <span class="field-tag">SELECTED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← RFP (N:1)</span>
+                    <span class="relationship-item">← Vendor (N:1)</span>
+                    <span class="relationship-item">→ POs (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card workflow">
+                <div class="table-title">
+                    <div class="table-icon">8</div>
+                    PurchaseOrderTable
+                </div>
+                <div class="table-description">
+                    Generated purchase orders based on selected quotations with terms and delivery details.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">poNumber</span>
+                            <span class="field-tag">lineItems</span>
+                            <span class="field-tag">totalAmount</span>
+                            <span class="field-tag">status</span>
+                        </div>
+                    </div>
+                    <div class="field-category">
+                        <div class="field-category-title">Status Flow</div>
+                        <div class="field-tags">
+                            <span class="field-tag">DRAFT</span>
+                            <span class="field-tag">SENT_TO_VENDOR</span>
+                            <span class="field-tag">ACKNOWLEDGED</span>
+                            <span class="field-tag">COMPLETED</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← RFP (N:1)</span>
+                    <span class="relationship-item">← Quotation (N:1)</span>
+                    <span class="relationship-item">← Vendor (N:1)</span>
+                    <span class="relationship-item">→ GoodsReceipts (1:N)</span>
+                </div>
+            </div>
+            
+            <div class="table-card workflow">
+                <div class="table-title">
+                    <div class="table-icon">9</div>
+                    GoodsReceiptTable
+                </div>
+                <div class="table-description">
+                    Final step tracking delivery confirmation, quality checks, invoice details, and vendor feedback.
+                </div>
+                <div class="fields-list">
+                    <div class="field-category">
+                        <div class="field-category-title">Key Fields</div>
+                        <div class="field-tags">
+                            <span class="field-tag">receivedItems</span>
+                            <span class="field-tag">qualityCheck</span>
+                            <span class="field-tag">invoiceNumber</span>
+                            <span class="field-tag">vendorRating</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relationships">
+                    <div class="relationships-title">Relationships:</div>
+                    <span class="relationship-item">← PurchaseOrder (N:1)</span>
+                    <span class="relationship-item">← User (N:1)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-diagram">
+            <div class="flow-title">Database Schema Flow</div>
+            <div class="flow-steps">
+                <div class="flow-step">Organization & Users Setup</div>
+                <div class="flow-step">Vendor Registration</div>
+                <div class="flow-step">Product Catalog</div>
+                <div class="flow-step">RFP Creation</div>
+                <div class="flow-step">Quotation Submission</div>
+                <div class="flow-step">PO Generation</div>
+                <div class="flow-step">Goods Receipt</div>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-title">Table Categories</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Core Foundation Tables</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71;"></div>
+                    <span>Main Workflow Tables</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f39c12;"></div>
+                    <span>Support Tables</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import { AddressTable, CompanyTable } from "@/drizzle/schema";
+import { AddressTable, OrganizationTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { AddressSchema } from "@/schemas";
 import { eq } from "drizzle-orm";
@@ -10,9 +10,9 @@ export async function GET(
 ) {
   console.log(`Fetching addresses for company: ${params.id}`);
   try {
-    const company = await db.query.CompanyTable.findFirst({
+    const company = await db.query.OrganizationTable.findFirst({
       columns: { id: true },
-      where: eq(CompanyTable.id, params.id),
+      where: eq(OrganizationTable.id, params.id),
     });
 
     if (!company) {
@@ -47,9 +47,9 @@ export async function POST(
   }
 
   try {
-    const company = await db.query.CompanyTable.findFirst({
+    const company = await db.query.OrganizationTable.findFirst({
       columns: { id: true },
-      where: eq(CompanyTable.id, params.id),
+      where: eq(OrganizationTable.id, params.id),
     });
 
     if (!company) {

@@ -1,4 +1,4 @@
-import { POTable, RFPTable } from "@/drizzle/schema";
+import { PurchaseOrderTable, RFPTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { serializePrismaModel } from "@/types";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const updatedRFP = updatedRFPs[0];
 
     const insertedPOs = await db
-      .insert(POTable)
+      .insert(PurchaseOrderTable)
       .values({
         poId: body.poId,
         quotationId: body.quotationId,
@@ -48,9 +48,9 @@ export async function POST(request: Request) {
 }
 
 // Type Definitions
-type SortBy = keyof InferSelectModel<typeof POTable>;
+type SortBy = keyof InferSelectModel<typeof PurchaseOrderTable>;
 type SortDirection = "asc" | "desc";
-type WhereField = keyof InferSelectModel<typeof POTable>;
+type WhereField = keyof InferSelectModel<typeof PurchaseOrderTable>;
 
 const DEFAULT_SORTING_FIELD: SortBy = "id";
 const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
     const whereConditions: SQL<unknown>[] = [];
     searchParams.forEach((value, key) => {
       if (key !== "sortBy" && key !== "order") {
-        if (key in POTable) {
-          whereConditions.push(eq(POTable[key as WhereField], value));
+        if (key in PurchaseOrderTable) {
+          whereConditions.push(eq(PurchaseOrderTable[key as WhereField], value));
         }
       }
     });
@@ -85,12 +85,12 @@ export async function GET(request: NextRequest) {
     const whereClause =
       whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    let records = await db.query.POTable.findMany({
+    let records = await db.query.PurchaseOrderTable.findMany({
       where: whereClause,
       orderBy:
         sortingOrder === "asc"
-          ? [asc(POTable[sortBy])]
-          : [desc(POTable[sortBy])],
+          ? [asc(PurchaseOrderTable[sortBy])]
+          : [desc(PurchaseOrderTable[sortBy])],
       columns: {
         id: true,
         poId: true, // Added poId

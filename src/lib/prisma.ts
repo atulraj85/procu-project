@@ -2,7 +2,7 @@
 
 import {
   ApproversListTable,
-  CompanyTable,
+  OrganizationTable,
   GoodStatusTable,
   InvoiceTable,
   PaymentTable,
@@ -16,7 +16,7 @@ import {
 
 export const modelMap: Record<string, any> = {
   company: {
-    model: CompanyTable,
+    model: OrganizationTable,
     attributes: [
       "id",
       "name",

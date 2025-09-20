@@ -19,7 +19,7 @@ export async function createUser(data: UserData) {
         email: data.email,
         name: data.name,
         password: data.password,
-        companyId: data.companyId,
+        organizationId: data.companyId,
         mobile: data.mobile,
         role: data.role,
         updatedAt: new Date(),

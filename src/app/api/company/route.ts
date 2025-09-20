@@ -1,5 +1,5 @@
 import { deleteCompany } from "@/data/company";
-import { CompanyTable } from "@/drizzle/schema";
+import { OrganizationTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 
 import { companySchema } from "@/schemas/Comapny/InitialCompanySchema";
@@ -7,9 +7,9 @@ import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 // Type Definitions
-type SortBy = keyof InferSelectModel<typeof CompanyTable>;
+type SortBy = keyof InferSelectModel<typeof OrganizationTable>;
 type SortDirection = "asc" | "desc";
-type WhereField = keyof InferSelectModel<typeof CompanyTable>;
+type WhereField = keyof InferSelectModel<typeof OrganizationTable>;
 
 const DEFAULT_SORTING_FIELD: SortBy = "id";
 const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
 
     const result = await db
       .select()
-      .from(CompanyTable)
-      .where(eq(CompanyTable.gst, gst));
+      .from(OrganizationTable)
+      .where(eq(OrganizationTable.gstin, gst));
 
     if (debug) {
       console.log("Company search result:", result);
@@ -84,11 +84,10 @@ export async function POST(request: Request) {
     }
 
     const [insertedCompany] = await db
-      .insert(CompanyTable)
+      .insert(OrganizationTable)
       .values({
         name: fields.company_name,
         gst: fields.company_gstn,
-        gstAddress: fields.address,
         email: fields.email,
         phone: fields.phone,
         updatedAt: new Date(),
@@ -135,8 +134,8 @@ export async function GET(request: NextRequest) {
     const whereConditions: SQL<unknown>[] = [];
     searchParams.forEach((value, key) => {
       if (key !== "sortBy" && key !== "order") {
-        if (key in CompanyTable) {
-          whereConditions.push(eq(CompanyTable[key as WhereField], value));
+        if (key in OrganizationTable) {
+          whereConditions.push(eq(OrganizationTable[key as WhereField], value));
         }
       }
     });
@@ -146,16 +145,12 @@ export async function GET(request: NextRequest) {
       whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
     // Fetch filtered and sorted users
-    const companies = await db.query.CompanyTable.findMany({
+    const companies = await db.query.OrganizationTable.findMany({
       where: whereClause,
       orderBy:
         sortingOrder === "asc"
-          ? [asc(CompanyTable[sortBy])]
-          : [desc(CompanyTable[sortBy])],
-      // Include the addresses in the result
-      with: {
-        addresses: true,
-      },
+          ? [asc(OrganizationTable[sortBy])]
+          : [desc(OrganizationTable[sortBy])],
     });
 
     console.log(`Found ${companies.length} records`);

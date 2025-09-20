@@ -1,8 +1,7 @@
-import { AddressType, UserRole } from "@/drizzle/schema";
+import { UserRole } from "@/drizzle/schema";
 import { z } from "zod";
 
 export type Role = (typeof UserRole.enumValues)[number];
-export type AddressType = (typeof AddressType.enumValues)[number];
 
 const emailSchema = z
   .string({ required_error: "Email is required!" })
@@ -63,10 +62,6 @@ export const CreateProductCategorySchema = z.object({
     .min(1, { message: "Name is required!" }),
 });
 
-const AddressTypeEnum = z.enum(AddressType.enumValues, {
-  invalid_type_error: "Invalid address type!",
-});
-
 export const AddressSchema = z.object({
   addressName: z
     .string({ required_error: "Street is required!" })
@@ -87,5 +82,4 @@ export const AddressSchema = z.object({
   country: z
     .string({ required_error: "Country is required!" })
     .min(1, { message: "Country is required!" }),
-  addressType: AddressTypeEnum,
 });

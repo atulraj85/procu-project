@@ -1,5 +1,5 @@
 // /api/vendor/route.ts
-import { VendorTable, UserTable, CompanyTable } from "@/drizzle/schema";
+import { VendorTable, UserTable, OrganizationTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { VendorRequestBody } from "@/types";
 import { and, asc, desc, eq, InferSelectModel, SQL } from "drizzle-orm";
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       const result = await db.transaction(async (tx) => {
         // Step 1: Create Company first (since User requires companyId)
         const [newCompany] = await tx
-          .insert(CompanyTable)
+          .insert(OrganizationTable)
           .values({
             name: vendorData.companyName || '',
             email: vendorData.email.trim(),
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
             status: "ACTIVE",
             updatedAt: new Date(),
           })
-          .returning({ id: CompanyTable.id });
+          .returning({ id: OrganizationTable.id });
 
 
         // Step 2: Create Vendor profile

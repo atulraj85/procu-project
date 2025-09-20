@@ -1,428 +1,217 @@
-import { saveAuditTrail } from "@/actions/audit-trail";
-import {
-  ApproversListTable,
-  RFPProductTable,
-  RFPTable,
-  UserRole,
-  AddressTable,
-  UserTable,
-} from "@/drizzle/schema";
-import { currentUser } from "@/lib/auth";
-import { db } from "@/lib/db";
-import { RequestBody, RFPStatus, serializePrismaModel } from "@/types";
-import { generateRFPId } from "@/utils";
-import { and, asc, desc, eq, InferSelectModel, or, SQL } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+// src/app/api/rfps/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { and, eq, or, desc, asc } from 'drizzle-orm';
+import { RFPTable, UserTable, RFPApprovalTable } from '@/drizzle/schema';
+import { db } from '@/lib/db';
 
-// Type Definitions
-type SortBy = keyof InferSelectModel<typeof RFPTable>;
-type SortDirection = "asc" | "desc";
-type WhereField = keyof InferSelectModel<typeof RFPTable>;
-
-const DEFAULT_SORTING_FIELD: SortBy = "id";
-const DEFAULT_SORTING_DIRECTION: SortDirection = "desc";
+// GET all RFPs
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = request.nextUrl;
-
-    console.log("Received search params:", Object.fromEntries(searchParams));
-
-    const sortBy: SortBy =
-      (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
-    const sortingOrder: SortDirection =
-      (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
-
-    if (!["asc", "desc"].includes(sortingOrder)) {
-      return NextResponse.json(
-        { error: "Invalid order value" },
-        { status: 400 }
-      );
-    }
-
-    // Construct where conditions
-    const whereConditions: SQL<unknown>[] = [];
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const status = searchParams.get('status');
+    const organizationId = searchParams.get('organizationId');
     
-    // Special handling for userId parameter
-    const userId = searchParams.get("userId");
+    let query = db
+      .select({
+        id: RFPTable.id,
+        rfpNumber: RFPTable.rfpNumber,
+        title: RFPTable.title,
+        description: RFPTable.description,
+        lineItems: RFPTable.lineItems,
+        deliveryLocation: RFPTable.deliveryLocation,
+        deliveryDate: RFPTable.deliveryDate,
+        estimatedBudget: RFPTable.estimatedBudget,
+        status: RFPTable.status,
+        quotationCutoffDate: RFPTable.quotationCutoffDate,
+        createdAt: RFPTable.createdAt,
+        updatedAt: RFPTable.updatedAt,
+        createdBy: UserTable.name,
+        createdByEmail: UserTable.email
+      })
+      .from(RFPTable)
+      .leftJoin(UserTable, eq(RFPTable.createdBy, UserTable.id))
+      .orderBy(desc(RFPTable.createdAt));
+    
+    // Apply filters
+    const whereConditions = [];
     if (userId) {
-      whereConditions.push(eq(RFPTable.userId, userId));
+      whereConditions.push(eq(RFPTable.createdBy, userId));
     }
-
-    // Handle other parameters
-    searchParams.forEach((value, key) => {
-      if (key !== "sortBy" && key !== "order" && key !== "userId") { // Exclude userId from generic handling
-        if (key in RFPTable) {
-          whereConditions.push(eq(RFPTable[key as WhereField], value));
-        }
-      }
-    });
-
-    // Combine conditions using 'and'
-    const whereClause =
-      whereConditions.length > 0 ? and(...whereConditions) : undefined;
-
-    const records = await db.query.RFPTable.findMany({
-      where: whereClause,
-      orderBy:
-        sortingOrder === "asc"
-          ? [asc(RFPTable[sortBy])]
-          : [desc(RFPTable[sortBy])],
-      columns: {
-        id: true,
-        rfpId: true,
-        requirementType: true,
-        dateOfOrdering: true,
-        deliveryLocation: true,
-        deliveryByDate: true,
-        overallReason: true,
-        rfpStatus: true,
-        reason: true, // ADD THIS - the user's reason field
-        preferredQuotationId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      with: {
-        approversLists: {
-          with: {
-            user: {
-              columns: {
-                id: true,
-                name: true,
-                email: true,
-                mobile: true,
-              },
-            },
-          },
-        },
-        rfpProducts: {
-          columns: { 
-            id: true, 
-            quantity: true, 
-            description: true,
-          },
-        },
-        quotations: {
-          columns: {
-            id: true,
-            refNo: true,
-            totalAmount: true,
-            totalAmountWithoutGst: true,
-            createdAt: true,
-            updatedAt: true,
-          },
-          with: {
-            vendor: {
-              columns: {
-                id: true,
-                companyName: true,
-                email: true,
-                mobile: true,
-                address: true,
-                customerState: true,
-                customerCity: true,
-                country: true,
-                zip: true,
-                gstin: true,
-                pan: true,
-              },
-            },
-            vendorPricings: {
-              columns: { price: true, gst: true },
-              with: {
-                rfpProduct: {
-                  columns: {
-                    id: true,
-                    quantity: true,
-                    description: true,
-                  },
-                },
-              },
-            },
-            otherCharges: {
-              columns: {
-                name: true,
-                price: true,
-                gst: true,
-              },
-            },
-            supportingDocuments: {
-              columns: {
-                documentName: true,
-                location: true,
-              },
-            },
-          },
-        },
-        user: {
-          columns: {
-            name: true,
-            email: true,
-            mobile: true,
-            role: true,
-          },
-        },
-      },
-    });
-
-    const formattedData = formatRFPData(records);
-
-    return NextResponse.json(serializePrismaModel(formattedData));
-  } catch (error: unknown) {
-    console.error("Detailed error:", error);
+    if (status) {
+      whereConditions.push(eq(RFPTable.status, status));
+    }
+    if (organizationId) {
+      whereConditions.push(eq(RFPTable.organizationId, organizationId));
+    }
+    
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+    
+    const rfps = await query;
+    
+    return NextResponse.json(rfps);
+  } catch (error) {
+    console.error('Error fetching RFPs:', error);
     return NextResponse.json(
-      { error: "Error fetching records", details: (error as Error).message },
+      { message: 'Internal server error' }, 
       { status: 500 }
     );
   }
 }
 
+// POST create a new RFP
 export async function POST(request: NextRequest) {
   try {
-    const {
-      requirementType,
-      dateOfOrdering,
+    const body = await request.json();
+    const { 
+      title,
+      description,
+      lineItems,
       deliveryLocation,
-      deliveryByDate,
-      rfpProducts,
-      overallReason,
-      approvers, // Optional - only for PR_MANAGER
-      rfpStatus,
-      rfpId,
-      userId, // Accept userId from frontend
-    }: RequestBody = await request.json();
+      deliveryStates,
+      deliveryDate,
+      estimatedBudget,
+      currency,
+      createdBy,
+      organizationId,
+      quotationCutoffDate,
+      questionTemplateId,
+      questionAnswers,
+      selectionCriteria
+    } = body;
 
     // Validate required fields
-    if (!userId) {
+    if (!title || !lineItems || !deliveryLocation || !deliveryDate || !createdBy || !organizationId || !quotationCutoffDate) {
       return NextResponse.json(
-        { error: "User ID is required" },
+        { message: 'Title, line items, delivery location, delivery date, created by, organization ID, and quotation cutoff date are required' }, 
         { status: 400 }
       );
     }
 
-    // FIX: Correct way to get user role
-    const userResult = await db.select({ role: UserTable.role }).from(UserTable).where(eq(UserTable.id, userId));
-    
-    if (!userResult.length) {
+    // Validate line items structure
+    if (!Array.isArray(lineItems) || lineItems.length === 0) {
       return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-    }
-
-    const userRole = userResult[0].role;
-    console.log("USER ROLE", userRole);
-    
-    if (!requirementType || !deliveryLocation || !deliveryByDate || !rfpProducts || rfpProducts.length === 0) {
-      return NextResponse.json(
-        { error: "Missing required fields: requirementType, deliveryLocation, deliveryByDate, and rfpProducts are required" },
+        { message: 'Line items must be a non-empty array' }, 
         { status: 400 }
       );
     }
 
-
-
-    // Validate each product
-    for (const product of rfpProducts) {
-      if (!product.description || !product.quantity || product.quantity < 1) {
+    // Validate each line item
+    for (const item of lineItems) {
+      if (!item.productName || !item.quantity || item.quantity < 1) {
         return NextResponse.json(
-          { error: "Each product must have a description and quantity >= 1" },
+          { message: 'Each line item must have a product name and quantity >= 1' }, 
           { status: 400 }
         );
       }
     }
 
-    // Validate the status
-    if (!Object.values(RFPStatus).includes(rfpStatus)) {
+    // Verify user exists and get their role
+    const userCheck = await db
+      .select({ role: UserTable.role, organizationId: UserTable.organizationId })
+      .from(UserTable)
+      .where(eq(UserTable.id, createdBy))
+      .limit(1);
+
+    if (userCheck.length === 0) {
       return NextResponse.json(
-        { error: `Invalid status value: ${rfpStatus}` },
-        { status: 400 }
+        { message: 'User not found' }, 
+        { status: 404 }
       );
     }
 
-    const newRFP = await db.transaction(async (tx) => {
+    const userRole = userCheck[0].role;
+    const userOrgId = userCheck[0].organizationId;
+
+    // Verify organization access
+    if (userOrgId !== organizationId) {
+      return NextResponse.json(
+        { message: 'User does not belong to this organization' }, 
+        { status: 403 }
+      );
+    }
+
+    // Generate RFP number
+    const rfpCount = await db
+      .select({ count: RFPTable.id })
+      .from(RFPTable)
+      .where(eq(RFPTable.organizationId, organizationId));
+    
+    const rfpNumber = `RFP-${new Date().getFullYear()}-${String(rfpCount.length + 1).padStart(4, '0')}`;
+
+    // Create RFP in transaction
+    const result = await db.transaction(async (tx) => {
       // Create the RFP
-      const [createdRFP] = await tx
+      const [newRFP] = await tx
         .insert(RFPTable)
         .values({
-          requirementType,
-          dateOfOrdering: new Date(),
+          rfpNumber,
+          title,
+          description: description || null,
+          lineItems,
           deliveryLocation,
-          overallReason,
-          deliveryByDate: new Date(deliveryByDate),
-          userId: userId,
-          rfpStatus,
-          rfpId,
-          cutoffAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default 7 days from now
-          updatedAt: new Date(),
+          deliveryStates: deliveryStates || [],
+          deliveryDate: new Date(deliveryDate),
+          estimatedBudget: estimatedBudget || null,
+          currency: currency || 'INR',
+          status: userRole === 'USER' ? 'DRAFT' : 'PENDING_APPROVAL',
+          createdBy,
+          organizationId,
+          quotationCutoffDate: new Date(quotationCutoffDate),
+          questionTemplateId: questionTemplateId || null,
+          questionAnswers: questionAnswers || null,
+          selectionCriteria: selectionCriteria || null,
+          updatedAt: new Date()
         })
         .returning();
 
-      // Create RFP Products
-      const rfpProductValues = rfpProducts.map((rfpProduct) => ({
-        rfpId: createdRFP.id,
-        description: rfpProduct.description,
-        quantity: rfpProduct.quantity,
-        updatedAt: new Date(),
-      }));
-      
-      if (rfpProductValues.length > 0) {
-        await tx.insert(RFPProductTable).values(rfpProductValues);
-      }
-
-      // Handle Approvers based on user role
-      if (userRole === "USER") {
-        // FIX: Use simple select instead of query.findMany to avoid circular relations
-        const defaultApprovers = await tx
-          .select({ id: UserTable.id })
+      // If user is regular USER, create approval workflow
+      if (userRole === 'USER') {
+        // Get default approvers (PROCUREMENT_MANAGER and FINANCE_TEAM)
+        const approvers = await tx
+          .select({ id: UserTable.id, role: UserTable.role })
           .from(UserTable)
-          .where(or(
-            eq(UserTable.role, "PR_MANAGER"),
-            eq(UserTable.role, "FINANCE_MANAGER")
-          ));
+          .where(
+            and(
+              eq(UserTable.organizationId, organizationId),
+              or(
+                eq(UserTable.role, 'PROCUREMENT_MANAGER'),
+                eq(UserTable.role, 'FINANCE_TEAM')
+              )
+            )
+          );
 
-        if (defaultApprovers.length > 0) {
-          const approverValues = defaultApprovers.map((approver) => ({
-            rfpId: createdRFP.id,
-            userId: approver.id,
-            approved: false,
-            updatedAt: new Date(),
+        // Create approval records
+        if (approvers.length > 0) {
+          const approvalValues = approvers.map((approver, index) => ({
+            rfpId: newRFP.id,
+            approverId: approver.id,
+            stage: approver.role === 'PROCUREMENT_MANAGER' ? 'PROCUREMENT_MANAGER' : 'FINANCE_MANAGER',
+            sequence: index + 1,
+            updatedAt: new Date()
           }));
           
-          await tx.insert(ApproversListTable).values(approverValues);
+          await tx.insert(RFPApprovalTable).values(approvalValues);
         }
-      } else if (approvers && approvers.length > 0) {
-        // Use provided approvers (for PR_MANAGER or custom cases)
-        const approverValues = approvers.map((approver) => ({
-          rfpId: createdRFP.id,
-          userId: approver.approverId,
-          approved: false,
-          updatedAt: new Date(),
-        }));
-        
-        await tx.insert(ApproversListTable).values(approverValues);
       }
 
-      return createdRFP;
+      return newRFP;
     });
 
-    // Save audit trail
-    if (newRFP) {
-      try {
-        await saveAuditTrail({
-          eventName: "RFP_CREATED",
-          details: {
-            rfpId: newRFP.rfpId,
-            rfpDescription: `${requirementType} request with ${rfpProducts.length} items`,
-            requirementType,
-            productCount: rfpProducts.length,
-            createdBy: userRole,
-          },
-        });
-      } catch (error) {
-        console.error("Error saving rfp audit trails", error);
-      }
-    }
-
-    return NextResponse.json({ 
-      data: newRFP, 
-      message: userRole === "USER" 
-        ? "RFP request submitted successfully and sent for approval" 
-        : "RFP created successfully"
+    return NextResponse.json({
+      data: result,
+      message: userRole === 'USER' 
+        ? 'RFP request submitted successfully and sent for approval' 
+        : 'RFP created successfully'
     }, { status: 201 });
 
-  } catch (error: any) {
-    console.error("Error creating RFP:", error);
+  } catch (error) {
+    console.error('Error creating RFP:', error);
     return NextResponse.json(
-      { error: `Failed to create RFP: ${error.message}` },
+      { message: 'Internal server error' }, 
       { status: 500 }
     );
   }
-}
-
-function formatRFPData(rfps: any[]) {
-  if (!Array.isArray(rfps)) {
-    console.warn("Expected array input for formatRFPData");
-    return [];
-  }
-
-  return rfps
-    .map((rfp) => {
-      if (!rfp) return null;
-
-      return {
-        id: rfp?.id,
-        rfpId: rfp?.rfpId,
-        requirementType: rfp?.requirementType,
-        dateOfOrdering: rfp?.dateOfOrdering,
-        deliveryLocation: rfp?.deliveryLocation,
-        deliveryByDate: rfp?.deliveryByDate,
-        rfpStatus: rfp?.rfpStatus,
-        preferredQuotationId: rfp?.preferredQuotationId,
-        created_at: rfp?.createdAt,
-        updated_at: rfp?.updatedAt,
-
-        // Handle approvers list
-        approvers:
-          rfp?.approversLists?.map((approver: any) => ({
-            name: approver?.user?.name,
-            id: approver?.user?.id,
-            email: approver?.user?.email,
-            mobile: approver?.user?.mobile,
-          })) || [],
-
-        // Handle products
-        products:
-          rfp?.rfpProducts?.map((product: any) => ({
-            id: product?.id,
-            quantity: product?.quantity,
-            description: product?.description,
-          })) || [],
-
-        // Handle quotations
-        quotations:
-          rfp?.quotations?.map((quotation: any) => {
-            // Prepare vendor pricings
-            const vendorPricings =
-              quotation?.vendorPricings?.map((pricing: any) => ({
-                id: pricing?.rfpProduct?.id,
-                rfpProductId: pricing?.rfpProduct?.id,
-                quantity: pricing?.rfpProduct?.quantity,
-                price: pricing?.price,
-                description: pricing?.rfpProduct?.description,
-                gst: pricing?.gst,
-                type: "product",
-              })) || [];
-
-            // Prepare other charges
-            const otherCharges =
-              quotation?.otherCharges?.map((charge: any) => ({
-                ...charge,
-                type: "otherCharge",
-              })) || [];
-
-            return {
-              id: quotation?.id,
-              totalAmount: quotation?.totalAmount,
-              refNo: quotation?.refNo,
-              totalAmountWithoutGST: quotation?.totalAmountWithoutGst,
-              created_at: quotation?.createdAt,
-              updated_at: quotation?.updatedAt,
-              vendor: quotation?.vendor,
-              products: [...vendorPricings, ...otherCharges],
-              supportingDocuments: quotation?.supportingDocuments || [],
-            };
-          }) || [],
-
-        // Handle user info
-        createdBy: rfp?.user
-          ? {
-            name: rfp.user?.name,
-            email: rfp.user?.email,
-            mobile: rfp.user?.mobile,
-            role: rfp.user?.role,
-          }
-          : null,
-      };
-    })
-    .filter(Boolean); // Remove any null entries
 }
