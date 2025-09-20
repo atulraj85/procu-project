@@ -1,1 +1,0 @@
-ALTER TABLE "rfp_products" DROP COLUMN IF EXISTS "name";

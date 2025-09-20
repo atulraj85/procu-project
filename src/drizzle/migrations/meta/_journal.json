@@ -5,71 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1727497912312,
-      "tag": "0000_backend-0.3",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1728291502695,
-      "tag": "0001_glorious_pet_avengers",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1728291787247,
-      "tag": "0002_medical_george_stacy",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1729496823047,
-      "tag": "0003_dizzy_whiplash",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1729571260282,
-      "tag": "0004_clear_vindicator",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1729656532181,
-      "tag": "0005_yielding_richard_fisk",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1758255829217,
-      "tag": "0006_handy_titanium_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1758261621262,
-      "tag": "0007_nosy_silver_surfer",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1758281990678,
-      "tag": "0008_bright_wiccan",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1758344511471,
-      "tag": "0009_nasty_mystique",
+      "when": 1758351367634,
+      "tag": "0000_illegal_wolfsbane",
       "breakpoints": true
     }
   ]

@@ -1,1 +1,0 @@
-ALTER TABLE "addresses" ADD CONSTRAINT "addresses_address_name_unique" UNIQUE("address_name");

@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Business Process Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .workflow-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .step-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .step-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        }
+        
+        .step-card:hover::before {
+            top: -20%;
+            left: -20%;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            padding-right: 50px;
+        }
+        
+        .step-role {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .step-description {
+            margin-bottom: 15px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        .step-actions {
+            margin-bottom: 15px;
+        }
+        
+        .step-actions-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .action-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .action-list li {
+            background: rgba(255, 255, 255, 0.1);
+            margin-bottom: 5px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .action-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        .step-outputs {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 15px;
+        }
+        
+        .step-outputs-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .output-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .output-tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .process-arrow {
+            font-size: 2rem;
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .process-step {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+        
+        .process-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .roles-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .role-card {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        }
+        
+        .role-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .role-responsibilities {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .role-responsibilities li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9rem;
+        }
+        
+        .role-responsibilities li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .timeline {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 30px 0;
+        }
+        
+        .timeline-title {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        
+        .timeline-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .timeline-step {
+            text-align: center;
+            position: relative;
+        }
+        
+        .timeline-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .timeline-step-number {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .timeline-step-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-step-duration {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow-steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .process-flow {
+                flex-direction: column;
+            }
+            
+            .process-arrow {
+                transform: rotate(90deg);
+            }
+            
+            .timeline-steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .timeline-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                bottom: -30px;
+                top: auto;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Procurement Business Process Workflow</h1>
+            <p>Complete business process flow from RFP creation to goods delivery</p>
+        </div>
+        
+        <div class="workflow-section">
+            <div class="section-title">Complete Procurement Workflow</div>
+            
+            <div class="workflow-steps">
+                <!-- Step 1: RFP Creation -->
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-role">User / Procurement Lead</div>
+                    <div class="step-title">RFP Creation</div>
+                    <div class="step-description">
+                        User creates a Request for Proposal with detailed requirements, delivery location, and timeline.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Fill RFP details and line items</li>
+                            <li>Answer product-specific questions</li>
+                            <li>Set delivery location and dates</li>
+                            <li>Add estimated budget</li>
+                            <li>Submit for approval</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">RFP Draft</span>
+                            <span class="output-tag">Status: DRAFT</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Procurement Manager Approval -->
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-role">Procurement Manager</div>
+                    <div class="step-title">RFP Review & Approval</div>
+                    <div class="step-description">
+                        Procurement Manager reviews the RFP for completeness, budget alignment, and business requirements.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Review RFP details and requirements</li>
+                            <li>Validate budget and timeline</li>
+                            <li>Approve or reject with comments</li>
+                            <li>Add conversation notes if needed</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Approval Decision</span>
+                            <span class="output-tag">Status: APPROVED/REJECTED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Vendor Matching -->
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-role">System / Procurement Manager</div>
+                    <div class="step-title">Vendor Selection & Invitation</div>
+                    <div class="step-description">
+                        System matches vendors based on keywords and certifications. Manager selects and invites relevant vendors.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Auto-match vendors by keywords</li>
+                            <li>Filter by certifications/location</li>
+                            <li>Send RFP invitations to selected vendors</li>
+                            <li>Set quotation cutoff date</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Vendor Invitations</span>
+                            <span class="output-tag">Status: SENT_TO_VENDORS</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Vendor Quotation -->
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-role">Vendor</div>
+                    <div class="step-title">Quotation Submission</div>
+                    <div class="step-description">
+                        Vendors review RFP requirements and submit detailed quotations with pricing, specifications, and documents.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Review RFP line items</li>
+                            <li>Provide technical specifications</li>
+                            <li>Submit pricing (excl/incl GST)</li>
+                            <li>Upload supporting documents</li>
+                            <li>Lock quotation before cutoff</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Quotation</span>
+                            <span class="output-tag">Supporting Docs</span>
+                            <span class="output-tag">Status: SUBMITTED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Quotation Evaluation -->
+                <div class="step-card">
+                    <div class="step-number">5</div>
+                    <div class="step-role">Procurement Manager</div>
+                    <div class="step-title">Quotation Evaluation</div>
+                    <div class="step-description">
+                        Compare quotations based on price, quality, delivery timeline, and vendor credentials. Shortlist top 3 vendors.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Compare pricing and specifications</li>
+                            <li>Evaluate vendor credentials</li>
+                            <li>Check delivery timelines</li>
+                            <li>Shortlist top 3 vendors</li>
+                            <li>Select preferred vendor</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Evaluation Report</span>
+                            <span class="output-tag">Vendor Selection</span>
+                            <span class="output-tag">Status: VENDOR_SELECTED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 6: Finance Approval -->
+                <div class="step-card">
+                    <div class="step-number">6</div>
+                    <div class="step-role">Finance Manager</div>
+                    <div class="step-title">Financial Approval</div>
+                    <div class="step-description">
+                        Finance team reviews selected quotation for budget compliance and payment terms before PO generation.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Review selected quotation amount</li>
+                            <li>Verify budget availability</li>
+                            <li>Check payment terms</li>
+                            <li>Approve or reject selection</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Finance Approval</span>
+                            <span class="output-tag">Budget Allocation</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 7: PO Generation -->
+                <div class="step-card">
+                    <div class="step-number">7</div>
+                    <div class="step-role">Finance Executive</div>
+                    <div class="step-title">Purchase Order Generation</div>
+                    <div class="step-description">
+                        Generate formal Purchase Order with terms, conditions, and delivery requirements. Send to selected vendor.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Generate PO from quotation</li>
+                            <li>Add terms and conditions</li>
+                            <li>Set penalty clauses</li>
+                            <li>Send PO to vendor (Email + SMS)</li>
+                            <li>Wait for vendor acknowledgment (48hrs)</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Purchase Order</span>
+                            <span class="output-tag">PDF Document</span>
+                            <span class="output-tag">Status: SENT_TO_VENDOR</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 8: Vendor Delivery -->
+                <div class="step-card">
+                    <div class="step-number">8</div>
+                    <div class="step-role">Vendor</div>
+                    <div class="step-title">Goods Delivery</div>
+                    <div class="step-description">
+                        Vendor acknowledges PO, delivers goods as per timeline, and uploads invoice to the portal.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Acknowledge PO within 48 hours</li>
+                            <li>Procure and prepare goods</li>
+                            <li>Deliver to specified location</li>
+                            <li>Upload invoice to portal</li>
+                            <li>Provide delivery confirmation</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Delivered Goods</span>
+                            <span class="output-tag">Invoice</span>
+                            <span class="output-tag">Status: DELIVERED</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 9: Goods Receipt -->
+                <div class="step-card">
+                    <div class="step-number">9</div>
+                    <div class="step-role">Admin Team / User</div>
+                    <div class="step-title">Goods Receipt & Verification</div>
+                    <div class="step-description">
+                        Admin team receives goods, performs quality checks, and marks receipt in the system. User provides feedback.
+                    </div>
+                    <div class="step-actions">
+                        <div class="step-actions-title">Actions:</div>
+                        <ul class="action-list">
+                            <li>Inspect delivered goods</li>
+                            <li>Verify against PO specifications</li>
+                            <li>Perform quality checks</li>
+                            <li>Mark goods received in portal</li>
+                            <li>Provide vendor rating and feedback</li>
+                        </ul>
+                    </div>
+                    <div class="step-outputs">
+                        <div class="step-outputs-title">Outputs:</div>
+                        <div class="output-tags">
+                            <span class="output-tag">Goods Receipt Note</span>
+                            <span class="output-tag">Quality Report</span>
+                            <span class="output-tag">Vendor Rating</span>
+                            <span class="output-tag">Status: COMPLETED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="workflow-section">
+            <div class="section-title">Process Flow Summary</div>
+            <div class="process-flow">
+                <div class="process-step">RFP Creation</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Manager Approval</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Vendor Selection</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Quotation</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Evaluation</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Finance Approval</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">PO Generation</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Delivery</div>
+                <div class="process-arrow">→</div>
+                <div class="process-step">Receipt</div>
+            </div>
+        </div>
+        
+        <div class="workflow-section">
+            <div class="section-title">Role Responsibilities</div>
+            <div class="roles-section">
+                <div class="role-card">
+                    <div class="role-title">System Admin</div>
+                    <ul class="role-responsibilities">
+                        <li>Manage backend and frontend system</li>
+                        <li>Configure product categories</li>
+                        <li>Approve new vendor registrations</li>
+                        <li>Manage user roles and permissions</li>
+                    </ul>
+                </div>
+                
+                <div class="role-card">
+                    <div class="role-title">Procurement Manager</div>
+                    <ul class="role-responsibilities">
+                        <li>Review and approve/reject RFPs</li>
+                        <li>Evaluate submitted quotations</li>
+                        <li>Select vendors and shortlist top 3</li>
+                        <li>Make final procurement decisions</li>
+                    </ul>
+                </div>
+                
+                <div class="role-card">
+                    <div class="role-title">Procurement Lead</div>
+                    <ul class="role-responsibilities">
+                        <li>Create RFPs with requirements</li>
+                        <li>Send RFPs to selected vendors</li>
+                        <li>Manage vendor communications</li>
+                        <li>Monitor quotation submissions</li>
+                    </ul>
+                </div>
+                
+                <div class="role-card">
+                    <div class="role-title">Finance Team</div>
+                    <ul class="role-responsibilities">
+                        <li>Review financial approvals</li>
+                        <li>Generate Purchase Orders</li>
+                        <li>Process invoice payments</li>
+                        <li>Manage budget allocations</li>
+                    </ul>
+                </div>
+                
+                <div class="role-card">
+                    <div class="role-title">Admin Team</div>
+                    <ul class="role-responsibilities">
+                        <li>Mark goods received in portal</li>
+                        <li>Perform quality inspections</li>
+                        <li>Manage delivery confirmations</li>
+                        <li>Coordinate with vendors</li>
+                    </ul>
+                </div>
+                
+                <div class="role-card">
+                    <div class="role-title">Vendor</div>
+                    <ul class="role-responsibilities">
+                        <li>Register company and products</li>
+                        <li>Submit detailed quotations</li>
+                        <li>Deliver goods per PO terms</li>
+                        <li>Upload invoices and documents</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="timeline">
+            <div class="timeline-title">Typical Procurement Timeline</div>
+            <div class="timeline-steps">
+                <div class="timeline-step">
+                    <div class="timeline-step-number">1</div>
+                    <div class="timeline-step-title">RFP Creation</div>
+                    <div class="timeline-step-duration">1-2 Days</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-step-number">2</div>
+                    <div class="timeline-step-title">Approval Process</div>
+                    <div class="timeline-step-duration">2-3 Days</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-step-number">3</div>
+                    <div class="timeline-step-title">Vendor Quotations</div>
+                    <div class="timeline-step-duration">5-10 Days</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-step-number">4</div>
+                    <div class="timeline-step-title">Evaluation</div>
+                    <div class="timeline-step-duration">2-3 Days</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-step-number">5</div>
+                    <div class="timeline-step-title">PO Generation</div>
+                    <div class="timeline-step-duration">1-2 Days</div>
+                </div>
+                <div class="timeline-step">
+                    <div class="timeline-step-number">6</div>
+                    <div class="timeline-step-title">Delivery</div>
+                    <div class="timeline-step-duration">Per Terms</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

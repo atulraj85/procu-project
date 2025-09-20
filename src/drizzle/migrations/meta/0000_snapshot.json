@@ -1,11 +1,11 @@
 {
-  "id": "1fd0fe83-fddc-47b0-80be-798250702478",
+  "id": "299327fd-62b0-4f25-986c-242002ca4a66",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.addresses": {
-      "name": "addresses",
+    "public.audit_events": {
+      "name": "audit_events",
       "schema": "",
       "columns": {
         "id": {
@@ -15,131 +15,46 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "street": {
-          "name": "street",
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
           "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "city": {
-          "name": "city",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "state": {
-          "name": "state",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "postal_code": {
-          "name": "postal_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "country": {
-          "name": "country",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "address_type": {
-          "name": "address_type",
-          "type": "address_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "company_id": {
-          "name": "company_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "addresses_company_id_fkey": {
-          "name": "addresses_company_id_fkey",
-          "tableFrom": "addresses",
-          "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.approvers_list": {
-      "name": "approvers_list",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "rfp_id": {
-          "name": "rfp_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "approved": {
-          "name": "approved",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "approved_at": {
-          "name": "approved_at",
-          "type": "timestamp (3)",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "priority": {
+          "name": "priority",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": 1
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
-        "approvers_list_rfp_id_user_id_key": {
-          "name": "approvers_list_rfp_id_user_id_key",
+        "audit_events_name_idx": {
+          "name": "audit_events_name_idx",
           "columns": [
             {
-              "expression": "rfp_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "user_id",
+              "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -151,34 +66,7 @@
           "with": {}
         }
       },
-      "foreignKeys": {
-        "approvers_list_rfp_id_fkey": {
-          "name": "approvers_list_rfp_id_fkey",
-          "tableFrom": "approvers_list",
-          "tableTo": "rfps",
-          "columnsFrom": [
-            "rfp_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "approvers_list_user_id_fkey": {
-          "name": "approvers_list_user_id_fkey",
-          "tableFrom": "approvers_list",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -193,12 +81,6 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "details": {
-          "name": "details",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
         "event_id": {
           "name": "event_id",
           "type": "uuid",
@@ -211,17 +93,59 @@
           "primaryKey": false,
           "notNull": true
         },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "old_values": {
+          "name": "old_values",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_values": {
+          "name": "new_values",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         }
       },
       "indexes": {
-        "audit_trails_event_id_idx": {
-          "name": "audit_trails_event_id_idx",
+        "audit_trails_event_idx": {
+          "name": "audit_trails_event_idx",
           "columns": [
             {
               "expression": "event_id",
@@ -235,11 +159,47 @@
           "method": "btree",
           "with": {}
         },
-        "audit_trails_user_id_idx": {
-          "name": "audit_trails_user_id_idx",
+        "audit_trails_user_idx": {
+          "name": "audit_trails_user_idx",
           "columns": [
             {
               "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_trails_entity_idx": {
+          "name": "audit_trails_entity_idx",
+          "columns": [
+            {
+              "expression": "entity_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "entity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "audit_trails_created_at_idx": {
+          "name": "audit_trails_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -255,7 +215,7 @@
         "audit_trails_event_id_fkey": {
           "name": "audit_trails_event_id_fkey",
           "tableFrom": "audit_trails",
-          "tableTo": "auditable_events",
+          "tableTo": "audit_events",
           "columnsFrom": [
             "event_id"
           ],
@@ -282,8 +242,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.auditable_events": {
-      "name": "auditable_events",
+    "public.conversation_messages": {
+      "name": "conversation_messages",
       "schema": "",
       "columns": {
         "id": {
@@ -293,177 +253,142 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "priority": {
-          "name": "priority",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "auditable_events_name_key": {
-          "name": "auditable_events_name_key",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.companies": {
-      "name": "companies",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
+        "rfp_id": {
+          "name": "rfp_id",
           "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "email": {
-          "name": "email",
+        "thread_id": {
+          "name": "thread_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sender_type": {
+          "name": "sender_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message_type": {
+          "name": "message_type",
+          "type": "message_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "phone": {
-          "name": "phone",
-          "type": "text",
+        "attachments": {
+          "name": "attachments",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
-        "website": {
-          "name": "website",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "industry": {
-          "name": "industry",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "founded_date": {
-          "name": "founded_date",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "gst": {
-          "name": "gst",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "logo": {
-          "name": "logo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "stamp": {
-          "name": "stamp",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "gst_address": {
-          "name": "gst_address",
-          "type": "text",
+        "parent_message_id": {
+          "name": "parent_message_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
+          "default": "now()"
         }
       },
       "indexes": {
-        "companies_gst_key": {
-          "name": "companies_gst_key",
+        "conversation_messages_rfp_thread_idx": {
+          "name": "conversation_messages_rfp_thread_idx",
           "columns": [
             {
-              "expression": "gst",
+              "expression": "rfp_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "thread_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         },
-        "companies_email_key": {
-          "name": "companies_email_key",
+        "conversation_messages_created_at_idx": {
+          "name": "conversation_messages_created_at_idx",
           "columns": [
             {
-              "expression": "email",
+              "expression": "created_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "conversation_messages_rfp_id_fkey": {
+          "name": "conversation_messages_rfp_id_fkey",
+          "tableFrom": "conversation_messages",
+          "tableTo": "rfps",
+          "columnsFrom": [
+            "rfp_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "conversation_messages_sender_id_fkey": {
+          "name": "conversation_messages_sender_id_fkey",
+          "tableFrom": "conversation_messages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "sender_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "conversation_messages_parent_message_id_fkey": {
+          "name": "conversation_messages_parent_message_id_fkey",
+          "tableFrom": "conversation_messages",
+          "tableTo": "conversation_messages",
+          "columnsFrom": [
+            "parent_message_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -480,7 +405,7 @@
         },
         "email": {
           "name": "email",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -488,18 +413,26 @@
           "name": "token",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
-        "email_verification_tokens_email_token_key": {
-          "name": "email_verification_tokens_email_token_key",
+        "email_verification_tokens_email_token_idx": {
+          "name": "email_verification_tokens_email_token_idx",
           "columns": [
             {
               "expression": "email",
@@ -519,8 +452,8 @@
           "method": "btree",
           "with": {}
         },
-        "email_verification_tokens_token_key": {
-          "name": "email_verification_tokens_token_key",
+        "email_verification_tokens_token_idx": {
+          "name": "email_verification_tokens_token_idx",
           "columns": [
             {
               "expression": "token",
@@ -539,105 +472,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.good_statuses": {
-      "name": "good_statuses",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "invoice_id": {
-          "name": "invoice_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "delivery_status": {
-          "name": "delivery_status",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quality_assurance": {
-          "name": "quality_assurance",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quality_assurance_leader_id": {
-          "name": "quality_assurance_leader_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "good_statuses_invoice_id_key": {
-          "name": "good_statuses_invoice_id_key",
-          "columns": [
-            {
-              "expression": "invoice_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "good_statuses_invoice_id_fkey": {
-          "name": "good_statuses_invoice_id_fkey",
-          "tableFrom": "good_statuses",
-          "tableTo": "invoices",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "good_statuses_quality_assurance_leader_id_fkey": {
-          "name": "good_statuses_quality_assurance_leader_id_fkey",
-          "tableFrom": "good_statuses",
-          "tableTo": "quality_assurances",
-          "columnsFrom": [
-            "quality_assurance_leader_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.invoices": {
-      "name": "invoices",
+    "public.goods_receipts": {
+      "name": "goods_receipts",
       "schema": "",
       "columns": {
         "id": {
@@ -653,23 +489,97 @@
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "received_by": {
+          "name": "received_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_at": {
+          "name": "received_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "received_items": {
+          "name": "received_items",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partial_delivery": {
+          "name": "partial_delivery",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": false
+        },
+        "quality_check": {
+          "name": "quality_check",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "quality_notes": {
+          "name": "quality_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoice_number": {
+          "name": "invoice_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoice_date": {
+          "name": "invoice_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invoice_amount": {
+          "name": "invoice_amount",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supporting_documents": {
+          "name": "supporting_documents",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vendor_rating": {
+          "name": "vendor_rating",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "invoices_po_id_key": {
-          "name": "invoices_po_id_key",
+        "goods_receipts_po_idx": {
+          "name": "goods_receipts_po_idx",
           "columns": [
             {
               "expression": "po_id",
@@ -678,19 +588,32 @@
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
         }
       },
       "foreignKeys": {
-        "invoices_po_id_fkey": {
-          "name": "invoices_po_id_fkey",
-          "tableFrom": "invoices",
-          "tableTo": "pos",
+        "goods_receipts_po_id_fkey": {
+          "name": "goods_receipts_po_id_fkey",
+          "tableFrom": "goods_receipts",
+          "tableTo": "purchase_orders",
           "columnsFrom": [
             "po_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "goods_receipts_received_by_fkey": {
+          "name": "goods_receipts_received_by_fkey",
+          "tableFrom": "goods_receipts",
+          "tableTo": "users",
+          "columnsFrom": [
+            "received_by"
           ],
           "columnsTo": [
             "id"
@@ -702,8 +625,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.other_charges": {
-      "name": "other_charges",
+    "public.organizations": {
+      "name": "organizations",
       "schema": "",
       "columns": {
         "id": {
@@ -715,52 +638,206 @@
         },
         "name": {
           "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legal_name": {
+          "name": "legal_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gstin": {
+          "name": "gstin",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pan": {
+          "name": "pan",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "price": {
-          "name": "price",
-          "type": "numeric(10, 2)",
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
-        "gst": {
-          "name": "gst",
-          "type": "numeric(5, 2)",
+        "state": {
+          "name": "state",
+          "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true
         },
-        "quotation_id": {
-          "name": "quotation_id",
-          "type": "uuid",
+        "pincode": {
+          "name": "pincode",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": true
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'India'"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logo": {
+          "name": "logo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stamp": {
+          "name": "stamp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "other_charges_quotation_id_name_key": {
-          "name": "other_charges_quotation_id_name_key",
+        "organizations_gstin_idx": {
+          "name": "organizations_gstin_idx",
           "columns": [
             {
-              "expression": "quotation_id",
+              "expression": "gstin",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            },
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "organizations_pan_idx": {
+          "name": "organizations_pan_idx",
+          "columns": [
+            {
+              "expression": "pan",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.po_entities": {
+      "name": "po_entities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "legal_name": {
+          "name": "legal_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gstin": {
+          "name": "gstin",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "po_entities_name_idx": {
+          "name": "po_entities_name_idx",
+          "columns": [
             {
               "expression": "name",
               "isExpression": false,
@@ -775,177 +852,12 @@
         }
       },
       "foreignKeys": {
-        "other_charges_quotation_id_fkey": {
-          "name": "other_charges_quotation_id_fkey",
-          "tableFrom": "other_charges",
-          "tableTo": "quotations",
+        "po_entities_organization_id_fkey": {
+          "name": "po_entities_organization_id_fkey",
+          "tableFrom": "po_entities",
+          "tableTo": "organizations",
           "columnsFrom": [
-            "quotation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.pos": {
-      "name": "pos",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "po_id": {
-          "name": "po_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "remarks": {
-          "name": "remarks",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quotation_id": {
-          "name": "quotation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "company_id": {
-          "name": "company_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rfp_id": {
-          "name": "rfp_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "pos_po_id_key": {
-          "name": "pos_po_id_key",
-          "columns": [
-            {
-              "expression": "po_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "pos_quotation_id_key": {
-          "name": "pos_quotation_id_key",
-          "columns": [
-            {
-              "expression": "quotation_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "pos_rfp_id_key": {
-          "name": "pos_rfp_id_key",
-          "columns": [
-            {
-              "expression": "rfp_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "pos_quotation_id_fkey": {
-          "name": "pos_quotation_id_fkey",
-          "tableFrom": "pos",
-          "tableTo": "quotations",
-          "columnsFrom": [
-            "quotation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "pos_user_id_fkey": {
-          "name": "pos_user_id_fkey",
-          "tableFrom": "pos",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "pos_company_id_fkey": {
-          "name": "pos_company_id_fkey",
-          "tableFrom": "pos",
-          "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "pos_rfp_id_fkey": {
-          "name": "pos_rfp_id_fkey",
-          "tableFrom": "pos",
-          "tableTo": "rfps",
-          "columnsFrom": [
-            "rfp_id"
+            "organization_id"
           ],
           "columnsTo": [
             "id"
@@ -970,7 +882,7 @@
         },
         "email": {
           "name": "email",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -978,18 +890,26 @@
           "name": "token",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "gen_random_uuid()"
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {
-        "password_reset_tokens_email_token_key": {
-          "name": "password_reset_tokens_email_token_key",
+        "password_reset_tokens_email_token_idx": {
+          "name": "password_reset_tokens_email_token_idx",
           "columns": [
             {
               "expression": "email",
@@ -1009,8 +929,8 @@
           "method": "btree",
           "with": {}
         },
-        "password_reset_tokens_token_key": {
-          "name": "password_reset_tokens_token_key",
+        "password_reset_tokens_token_idx": {
+          "name": "password_reset_tokens_token_idx",
           "columns": [
             {
               "expression": "token",
@@ -1029,56 +949,6 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.payments": {
-      "name": "payments",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "invoice_id": {
-          "name": "invoice_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "payments_invoice_id_fkey": {
-          "name": "payments_invoice_id_fkey",
-          "tableFrom": "payments",
-          "tableTo": "invoices",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "public.product_categories": {
       "name": "product_categories",
       "schema": "",
@@ -1092,27 +962,53 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": true
+        },
+        "requires_approval": {
+          "name": "requires_approval",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "product_categories_name_key": {
-          "name": "product_categories_name_key",
+        "product_categories_name_idx": {
+          "name": "product_categories_name_idx",
           "columns": [
             {
               "expression": "name",
@@ -1127,7 +1023,21 @@
           "with": {}
         }
       },
-      "foreignKeys": {},
+      "foreignKeys": {
+        "product_categories_parent_id_fkey": {
+          "name": "product_categories_parent_id_fkey",
+          "tableFrom": "product_categories",
+          "tableTo": "product_categories",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -1144,60 +1054,267 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "model_no": {
-          "name": "model_no",
+        "description": {
+          "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "specification": {
-          "name": "specification",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "product_category_id": {
-          "name": "product_category_id",
+        "category_id": {
+          "name": "category_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "brand": {
+          "name": "brand",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model_number": {
+          "name": "model_number",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "specifications": {
+          "name": "specifications",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "keywords": {
+          "name": "keywords",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "products_name_model_no_specification_idx": {
-          "name": "products_name_model_no_specification_idx",
+        "products_name_idx": {
+          "name": "products_name_idx",
           "columns": [
             {
               "expression": "name",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            },
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "products_keywords_idx": {
+          "name": "products_keywords_idx",
+          "columns": [
             {
-              "expression": "model_no",
+              "expression": "keywords",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
-            },
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "products_category_id_fkey": {
+          "name": "products_category_id_fkey",
+          "tableFrom": "products",
+          "tableTo": "product_categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.purchase_orders": {
+      "name": "purchase_orders",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "po_number": {
+          "name": "po_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rfp_id": {
+          "name": "rfp_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quotation_id": {
+          "name": "quotation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vendor_id": {
+          "name": "vendor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entity_id": {
+          "name": "entity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "line_items": {
+          "name": "line_items",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subtotal": {
+          "name": "subtotal",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gst_amount": {
+          "name": "gst_amount",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_amount": {
+          "name": "total_amount",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_date": {
+          "name": "delivery_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_address": {
+          "name": "delivery_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_terms": {
+          "name": "payment_terms",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "other_terms": {
+          "name": "other_terms",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "po_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'DRAFT'"
+        },
+        "generated_by": {
+          "name": "generated_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "acknowledged_at": {
+          "name": "acknowledged_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "penalty_clause": {
+          "name": "penalty_clause",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "purchase_orders_po_number_idx": {
+          "name": "purchase_orders_po_number_idx",
+          "columns": [
             {
-              "expression": "specification",
+              "expression": "po_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "purchase_orders_status_idx": {
+          "name": "purchase_orders_status_idx",
+          "columns": [
+            {
+              "expression": "status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1210,12 +1327,64 @@
         }
       },
       "foreignKeys": {
-        "products_product_category_id_fkey": {
-          "name": "products_product_category_id_fkey",
-          "tableFrom": "products",
-          "tableTo": "product_categories",
+        "purchase_orders_rfp_id_fkey": {
+          "name": "purchase_orders_rfp_id_fkey",
+          "tableFrom": "purchase_orders",
+          "tableTo": "rfps",
           "columnsFrom": [
-            "product_category_id"
+            "rfp_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "purchase_orders_quotation_id_fkey": {
+          "name": "purchase_orders_quotation_id_fkey",
+          "tableFrom": "purchase_orders",
+          "tableTo": "quotations",
+          "columnsFrom": [
+            "quotation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "purchase_orders_vendor_id_fkey": {
+          "name": "purchase_orders_vendor_id_fkey",
+          "tableFrom": "purchase_orders",
+          "tableTo": "vendors",
+          "columnsFrom": [
+            "vendor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "purchase_orders_entity_id_fkey": {
+          "name": "purchase_orders_entity_id_fkey",
+          "tableFrom": "purchase_orders",
+          "tableTo": "po_entities",
+          "columnsFrom": [
+            "entity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "purchase_orders_generated_by_fkey": {
+          "name": "purchase_orders_generated_by_fkey",
+          "tableFrom": "purchase_orders",
+          "tableTo": "users",
+          "columnsFrom": [
+            "generated_by"
           ],
           "columnsTo": [
             "id"
@@ -1227,8 +1396,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.quality_assurances": {
-      "name": "quality_assurances",
+    "public.question_templates": {
+      "name": "question_templates",
       "schema": "",
       "columns": {
         "id": {
@@ -1238,51 +1407,73 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "user_id": {
-          "name": "user_id",
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "questions": {
+          "name": "questions",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_by": {
+          "name": "created_by",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "notNull": true
         }
       },
-      "indexes": {
-        "quality_assurances_user_id_key": {
-          "name": "quality_assurances_user_id_key",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
-        "quality_assurances_user_id_fkey": {
-          "name": "quality_assurances_user_id_fkey",
-          "tableFrom": "quality_assurances",
+        "question_templates_category_id_fkey": {
+          "name": "question_templates_category_id_fkey",
+          "tableFrom": "question_templates",
+          "tableTo": "product_categories",
+          "columnsFrom": [
+            "category_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        },
+        "question_templates_created_by_fkey": {
+          "name": "question_templates_created_by_fkey",
+          "tableFrom": "question_templates",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
+            "created_by"
           ],
           "columnsTo": [
             "id"
@@ -1317,46 +1508,151 @@
           "primaryKey": false,
           "notNull": true
         },
-        "is_primary": {
-          "name": "is_primary",
+        "quotation_number": {
+          "name": "quotation_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "line_item_quotes": {
+          "name": "line_item_quotes",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subtotal": {
+          "name": "subtotal",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gst_amount": {
+          "name": "gst_amount",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_amount": {
+          "name": "total_amount",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "other_charges": {
+          "name": "other_charges",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "supporting_documents": {
+          "name": "supporting_documents",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "valid_till": {
+          "name": "valid_till",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "delivery_timeline": {
+          "name": "delivery_timeline",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "quotation_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'OPEN'"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "locked_at": {
+          "name": "locked_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evaluation_score": {
+          "name": "evaluation_score",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evaluation_notes": {
+          "name": "evaluation_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_shortlisted": {
+          "name": "is_shortlisted",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "default": false
         },
-        "ref_no": {
-          "name": "ref_no",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "total_amount": {
-          "name": "total_amount",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "total_amount_without_gst": {
-          "name": "total_amount_without_gst",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "quotations_rfp_vendor_idx": {
+          "name": "quotations_rfp_vendor_idx",
+          "columns": [
+            {
+              "expression": "rfp_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vendor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "quotations_status_idx": {
+          "name": "quotations_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "quotations_rfp_id_fkey": {
           "name": "quotations_rfp_id_fkey",
@@ -1368,7 +1664,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         },
         "quotations_vendor_id_fkey": {
@@ -1381,15 +1677,15 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.rfp_products": {
-      "name": "rfp_products",
+    "public.rfp_approvals": {
+      "name": "rfp_approvals",
       "schema": "",
       "columns": {
         "id": {
@@ -1405,41 +1701,60 @@
           "primaryKey": false,
           "notNull": true
         },
-        "product_id": {
-          "name": "product_id",
+        "approver_id": {
+          "name": "approver_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "quantity": {
-          "name": "quantity",
+        "stage": {
+          "name": "stage",
+          "type": "approval_stage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sequence": {
+          "name": "sequence",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
-        "description": {
-          "name": "description",
+        "approved": {
+          "name": "approved",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comments": {
+          "name": "comments",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "rfp_products_rfp_id_product_id_key": {
-          "name": "rfp_products_rfp_id_product_id_key",
+        "rfp_approvals_rfp_approver_idx": {
+          "name": "rfp_approvals_rfp_approver_idx",
           "columns": [
             {
               "expression": "rfp_id",
@@ -1448,7 +1763,13 @@
               "nulls": "last"
             },
             {
-              "expression": "product_id",
+              "expression": "approver_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "stage",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1461,9 +1782,9 @@
         }
       },
       "foreignKeys": {
-        "rfp_products_rfp_id_fkey": {
-          "name": "rfp_products_rfp_id_fkey",
-          "tableFrom": "rfp_products",
+        "rfp_approvals_rfp_id_fkey": {
+          "name": "rfp_approvals_rfp_id_fkey",
+          "tableFrom": "rfp_approvals",
           "tableTo": "rfps",
           "columnsFrom": [
             "rfp_id"
@@ -1471,184 +1792,15 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "rfp_products_product_id_fkey": {
-          "name": "rfp_products_product_id_fkey",
-          "tableFrom": "rfp_products",
-          "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.rfp_query_responses": {
-      "name": "rfp_query_responses",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "content": {
-          "name": "content",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "query_id": {
-          "name": "query_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_query_response_id": {
-          "name": "parent_query_response_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "rfp_query_responses_query_id_fkey": {
-          "name": "rfp_query_responses_query_id_fkey",
-          "tableFrom": "rfp_query_responses",
-          "tableTo": "rfp_queries",
-          "columnsFrom": [
-            "query_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "rfp_query_responses_user_id_fkey": {
-          "name": "rfp_query_responses_user_id_fkey",
-          "tableFrom": "rfp_query_responses",
+        "rfp_approvals_approver_id_fkey": {
+          "name": "rfp_approvals_approver_id_fkey",
+          "tableFrom": "rfp_approvals",
           "tableTo": "users",
           "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "rfp_query_responses_parent_query_response_id_fkey": {
-          "name": "rfp_query_responses_parent_query_response_id_fkey",
-          "tableFrom": "rfp_query_responses",
-          "tableTo": "rfp_query_responses",
-          "columnsFrom": [
-            "parent_query_response_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.rfp_queries": {
-      "name": "rfp_queries",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "content": {
-          "name": "content",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rfp_id": {
-          "name": "rfp_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "rfp_queries_rfp_id_fkey": {
-          "name": "rfp_queries_rfp_id_fkey",
-          "tableFrom": "rfp_queries",
-          "tableTo": "rfps",
-          "columnsFrom": [
-            "rfp_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "cascade"
-        },
-        "rfp_queries_user_id_fkey": {
-          "name": "rfp_queries_user_id_fkey",
-          "tableFrom": "rfp_queries",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
+            "approver_id"
           ],
           "columnsTo": [
             "id"
@@ -1671,21 +1823,27 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "rfp_id": {
-          "name": "rfp_id",
+        "rfp_number": {
+          "name": "rfp_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "requirement_type": {
-          "name": "requirement_type",
+        "description": {
+          "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "date_of_ordering": {
-          "name": "date_of_ordering",
-          "type": "timestamp (3)",
+        "line_items": {
+          "name": "line_items",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true
         },
@@ -1695,52 +1853,123 @@
           "primaryKey": false,
           "notNull": true
         },
-        "delivery_by_date": {
-          "name": "delivery_by_date",
-          "type": "timestamp (3)",
+        "delivery_states": {
+          "name": "delivery_states",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "delivery_date": {
+          "name": "delivery_date",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         },
-        "user_id": {
-          "name": "user_id",
+        "question_template_id": {
+          "name": "question_template_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "rfp_status": {
-          "name": "rfp_status",
+        "question_answers": {
+          "name": "question_answers",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_budget": {
+          "name": "estimated_budget",
+          "type": "numeric(15, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'INR'"
+        },
+        "status": {
+          "name": "status",
           "type": "rfp_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'DRAFT'"
         },
-        "preferred_quotation_id": {
-          "name": "preferred_quotation_id",
+        "created_by": {
+          "name": "created_by",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organization_id": {
+          "name": "organization_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "selection_criteria": {
+          "name": "selection_criteria",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "quotation_cutoff_date": {
+          "name": "quotation_cutoff_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rejection_reason": {
+          "name": "rejection_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "conversation_threads": {
+          "name": "conversation_threads",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "'[]'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "rfps_rfp_id_idx": {
-          "name": "rfps_rfp_id_idx",
+        "rfps_rfp_number_idx": {
+          "name": "rfps_rfp_number_idx",
           "columns": [
             {
-              "expression": "rfp_id",
+              "expression": "rfp_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rfps_status_idx": {
+          "name": "rfps_status_idx",
+          "columns": [
+            {
+              "expression": "status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1750,12 +1979,135 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        }
+      },
+      "foreignKeys": {
+        "rfps_created_by_fkey": {
+          "name": "rfps_created_by_fkey",
+          "tableFrom": "rfps",
+          "tableTo": "users",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
         },
-        "rfps_rfp_id_key": {
-          "name": "rfps_rfp_id_key",
+        "rfps_organization_id_fkey": {
+          "name": "rfps_organization_id_fkey",
+          "tableFrom": "rfps",
+          "tableTo": "organizations",
+          "columnsFrom": [
+            "organization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        },
+        "rfps_question_template_id_fkey": {
+          "name": "rfps_question_template_id_fkey",
+          "tableFrom": "rfps",
+          "tableTo": "question_templates",
+          "columnsFrom": [
+            "question_template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.rfp_vendor_invitations": {
+      "name": "rfp_vendor_invitations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "rfp_id": {
+          "name": "rfp_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vendor_id": {
+          "name": "vendor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invited_at": {
+          "name": "invited_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "invited_by": {
+          "name": "invited_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "viewed_at": {
+          "name": "viewed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "rfp_vendor_invitations_rfp_vendor_idx": {
+          "name": "rfp_vendor_invitations_rfp_vendor_idx",
           "columns": [
             {
               "expression": "rfp_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "vendor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rfp_vendor_invitations_access_token_idx": {
+          "name": "rfp_vendor_invitations_access_token_idx",
+          "columns": [
+            {
+              "expression": "access_token",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1768,80 +2120,38 @@
         }
       },
       "foreignKeys": {
-        "rfps_user_id_fkey": {
-          "name": "rfps_user_id_fkey",
-          "tableFrom": "rfps",
-          "tableTo": "users",
+        "rfp_vendor_invitations_rfp_id_fkey": {
+          "name": "rfp_vendor_invitations_rfp_id_fkey",
+          "tableFrom": "rfp_vendor_invitations",
+          "tableTo": "rfps",
           "columnsFrom": [
-            "user_id"
+            "rfp_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "public.supporting_documents": {
-      "name": "supporting_documents",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
         },
-        "document_name": {
-          "name": "document_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "document_type": {
-          "name": "document_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location": {
-          "name": "location",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "quotation_id": {
-          "name": "quotation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "supporting_documents_quotation_id_fkey": {
-          "name": "supporting_documents_quotation_id_fkey",
-          "tableFrom": "supporting_documents",
-          "tableTo": "quotations",
+        "rfp_vendor_invitations_vendor_id_fkey": {
+          "name": "rfp_vendor_invitations_vendor_id_fkey",
+          "tableFrom": "rfp_vendor_invitations",
+          "tableTo": "vendors",
           "columnsFrom": [
-            "quotation_id"
+            "vendor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "rfp_vendor_invitations_invited_by_fkey": {
+          "name": "rfp_vendor_invitations_invited_by_fkey",
+          "tableFrom": "rfp_vendor_invitations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "invited_by"
           ],
           "columnsTo": [
             "id"
@@ -1866,31 +2176,31 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
         "email": {
           "name": "email",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
         "email_verified": {
           "name": "email_verified",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
         "password": {
           "name": "password",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
         "mobile": {
           "name": "mobile",
-          "type": "text",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false
         },
@@ -1902,29 +2212,54 @@
           "notNull": true,
           "default": "'USER'"
         },
-        "company_id": {
-          "name": "company_id",
+        "organization_id": {
+          "name": "organization_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp (3)",
+        "vendor_id": {
+          "name": "vendor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_pic": {
+          "name": "profile_pic",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": true
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "users_email_key": {
-          "name": "users_email_key",
+        "users_email_idx": {
+          "name": "users_email_idx",
           "columns": [
             {
               "expression": "email",
@@ -1967,12 +2302,12 @@
         }
       },
       "foreignKeys": {
-        "users_company_id_fkey": {
-          "name": "users_company_id_fkey",
+        "users_organization_id_fkey": {
+          "name": "users_organization_id_fkey",
           "tableFrom": "users",
-          "tableTo": "companies",
+          "tableTo": "organizations",
           "columnsFrom": [
-            "company_id"
+            "organization_id"
           ],
           "columnsTo": [
             "id"
@@ -1984,8 +2319,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.vendor_pricings": {
-      "name": "vendor_pricings",
+    "public.vendor_contacts": {
+      "name": "vendor_contacts",
       "schema": "",
       "columns": {
         "id": {
@@ -1995,56 +2330,163 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "price": {
-          "name": "price",
-          "type": "numeric(10, 2)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "gst": {
-          "name": "gst",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "rfp_product_id": {
-          "name": "rfp_product_id",
+        "vendor_id": {
+          "name": "vendor_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
-        "quotation_id": {
-          "name": "quotation_id",
-          "type": "uuid",
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
+        },
+        "designation": {
+          "name": "designation",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "vendor_contacts_vendor_id_fkey": {
+          "name": "vendor_contacts_vendor_id_fkey",
+          "tableFrom": "vendor_contacts",
+          "tableTo": "vendors",
+          "columnsFrom": [
+            "vendor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.vendor_products": {
+      "name": "vendor_products",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "vendor_id": {
+          "name": "vendor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "brand_offered": {
+          "name": "brand_offered",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model_offered": {
+          "name": "model_offered",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "specifications": {
+          "name": "specifications",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "base_price": {
+          "name": "base_price",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'INR'"
+        },
+        "is_currently_offered": {
+          "name": "is_currently_offered",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "vendor_pricings_quotation_id_rfp_product_id_key": {
-          "name": "vendor_pricings_quotation_id_rfp_product_id_key",
+        "vendor_products_vendor_product_idx": {
+          "name": "vendor_products_vendor_product_idx",
           "columns": [
             {
-              "expression": "quotation_id",
+              "expression": "vendor_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "rfp_product_id",
+              "expression": "product_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2057,30 +2499,30 @@
         }
       },
       "foreignKeys": {
-        "vendor_pricings_quotation_id_fkey": {
-          "name": "vendor_pricings_quotation_id_fkey",
-          "tableFrom": "vendor_pricings",
-          "tableTo": "quotations",
+        "vendor_products_vendor_id_fkey": {
+          "name": "vendor_products_vendor_id_fkey",
+          "tableFrom": "vendor_products",
+          "tableTo": "vendors",
           "columnsFrom": [
-            "quotation_id"
+            "vendor_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         },
-        "vendor_pricings_rfp_product_id_fkey": {
-          "name": "vendor_pricings_rfp_product_id_fkey",
-          "tableFrom": "vendor_pricings",
-          "tableTo": "rfp_products",
+        "vendor_products_product_id_fkey": {
+          "name": "vendor_products_product_id_fkey",
+          "tableFrom": "vendor_products",
+          "tableTo": "products",
           "columnsFrom": [
-            "rfp_product_id"
+            "product_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "restrict",
+          "onDelete": "cascade",
           "onUpdate": "cascade"
         }
       },
@@ -2098,62 +2540,50 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "customer_code": {
-          "name": "customer_code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "primary_name": {
-          "name": "primary_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "company_name": {
           "name": "company_name",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
-        "contact_display_name": {
-          "name": "contact_display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "work_phone": {
-          "name": "work_phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "mobile": {
-          "name": "mobile",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "website": {
-          "name": "website",
-          "type": "text",
+        "legal_name": {
+          "name": "legal_name",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
         "gstin": {
           "name": "gstin",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pan": {
+          "name": "pan",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "business_registration_year": {
+          "name": "business_registration_year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "employee_count": {
+          "name": "employee_count",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logo": {
+          "name": "logo",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "msme_no": {
-          "name": "msme_no",
+        "description": {
+          "name": "description",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2162,67 +2592,112 @@
           "name": "address",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "customer_state": {
-          "name": "customer_state",
-          "type": "text",
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
-        "customer_city": {
-          "name": "customer_city",
-          "type": "text",
+        "state": {
+          "name": "state",
+          "type": "varchar(100)",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
+        },
+        "pincode": {
+          "name": "pincode",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true
         },
         "country": {
           "name": "country",
-          "type": "text",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'India'"
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": false
         },
-        "zip": {
-          "name": "zip",
-          "type": "text",
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
-        "remarks": {
-          "name": "remarks",
-          "type": "text",
+        "website": {
+          "name": "website",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
-        "pan": {
-          "name": "pan",
-          "type": "text",
+        "specializations": {
+          "name": "specializations",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         },
-        "verified_by_id": {
-          "name": "verified_by_id",
+        "certifications": {
+          "name": "certifications",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "social_media_links": {
+          "name": "social_media_links",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "vendor_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING_REVIEW'"
+        },
+        "verified_by": {
+          "name": "verified_by",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "verified_at": {
+          "name": "verified_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dealing_keywords": {
+          "name": "dealing_keywords",
+          "type": "text[]",
           "primaryKey": false,
           "notNull": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "CURRENT_TIMESTAMP"
+          "default": "now()"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamp (3)",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": true
         }
       },
       "indexes": {
-        "vendors_gstin_key": {
-          "name": "vendors_gstin_key",
+        "vendors_gstin_idx": {
+          "name": "vendors_gstin_idx",
           "columns": [
             {
               "expression": "gstin",
@@ -2236,41 +2711,11 @@
           "method": "btree",
           "with": {}
         },
-        "vendors_primary_name_company_name_contact_display_name_email_mob_idx": {
-          "name": "vendors_primary_name_company_name_contact_display_name_email_mob_idx",
+        "vendors_company_name_idx": {
+          "name": "vendors_company_name_idx",
           "columns": [
             {
-              "expression": "primary_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
               "expression": "company_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "contact_display_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "email",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "mobile",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "gstin",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2280,15 +2725,30 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "vendors_keywords_idx": {
+          "name": "vendors_keywords_idx",
+          "columns": [
+            {
+              "expression": "dealing_keywords",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
+          "with": {}
         }
       },
       "foreignKeys": {
-        "vendors_verified_by_id_fkey": {
-          "name": "vendors_verified_by_id_fkey",
+        "vendors_verified_by_fkey": {
+          "name": "vendors_verified_by_fkey",
           "tableFrom": "vendors",
           "tableTo": "users",
           "columnsFrom": [
-            "verified_by_id"
+            "verified_by"
           ],
           "columnsTo": [
             "id"
@@ -2302,12 +2762,49 @@
     }
   },
   "enums": {
-    "public.address_type": {
-      "name": "address_type",
+    "public.approval_stage": {
+      "name": "approval_stage",
       "schema": "public",
       "values": [
-        "BUSINESS",
-        "SHIPPING"
+        "PROCUREMENT_MANAGER",
+        "FINANCE_MANAGER",
+        "FINANCE_EXECUTIVE"
+      ]
+    },
+    "public.message_type": {
+      "name": "message_type",
+      "schema": "public",
+      "values": [
+        "TEXT",
+        "ATTACHMENT",
+        "SYSTEM_MESSAGE"
+      ]
+    },
+    "public.po_status": {
+      "name": "po_status",
+      "schema": "public",
+      "values": [
+        "DRAFT",
+        "GENERATED",
+        "SENT_TO_VENDOR",
+        "ACKNOWLEDGED",
+        "IN_PROGRESS",
+        "DELIVERED",
+        "COMPLETED",
+        "CANCELLED"
+      ]
+    },
+    "public.quotation_status": {
+      "name": "quotation_status",
+      "schema": "public",
+      "values": [
+        "OPEN",
+        "SUBMITTED",
+        "LOCKED",
+        "UNDER_REVIEW",
+        "SHORTLISTED",
+        "SELECTED",
+        "REJECTED"
       ]
     },
     "public.rfp_status": {
@@ -2315,25 +2812,41 @@
       "schema": "public",
       "values": [
         "DRAFT",
-        "SUBMITTED",
-        "PO_CREATED",
-        "ADVANCE_PAID",
-        "INVOICE_RECEIVED",
-        "GRN_RECEIVED",
-        "PAYMENT_DONE"
+        "PENDING_APPROVAL",
+        "APPROVED",
+        "REJECTED",
+        "SENT_TO_VENDORS",
+        "QUOTATION_RECEIVED",
+        "VENDOR_SELECTED",
+        "PO_GENERATED",
+        "DELIVERED",
+        "COMPLETED",
+        "CANCELLED"
       ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
       "values": [
-        "ADMIN",
-        "PR_MANAGER",
-        "FINANCE_MANAGER",
-        "ACCOUNTANT",
-        "QUALITY_ASSURANCE",
+        "SYSTEM_ADMIN",
+        "PROCUREMENT_MANAGER",
+        "PROCUREMENT_LEAD",
+        "ADMIN_TEAM",
+        "FINANCE_TEAM",
+        "FINANCE_EXECUTIVE",
         "USER",
         "VENDOR"
+      ]
+    },
+    "public.vendor_status": {
+      "name": "vendor_status",
+      "schema": "public",
+      "values": [
+        "PENDING_REVIEW",
+        "APPROVED",
+        "REJECTED",
+        "SUSPENDED",
+        "BLACKLISTED"
       ]
     }
   },
