@@ -373,7 +373,7 @@ const RFPForm: React.FC = () => {
         <CardHeader>
           <div className=" flex justify-between">
             <div>
-              <CardTitle>Create RFP</CardTitle>
+              <CardTitle>Create RF1234</CardTitle>
             </div>
 
             {userInfo && (
