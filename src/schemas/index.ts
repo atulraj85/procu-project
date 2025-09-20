@@ -42,9 +42,10 @@ export const RegisterUserSchema = z.object({
   password: passwordSchema,
   name: nameSchema,
   company: z
-    .string({ required_error: "Company is required!" })
-    .min(1, { message: "Company is required!" })
-    .min(2, { message: "Company must be at least 2 characters." }),
+    .string()
+    .optional(),
+  //   .min(1, { message: "Company is required!" })
+  //   .min(2, { message: "Company must be at least 2 characters." }),
   mobile: z
     .string({ required_error: "Number is required!" })
     .min(1, { message: "Number is required!" })
