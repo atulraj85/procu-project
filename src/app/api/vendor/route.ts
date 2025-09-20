@@ -109,24 +109,8 @@ export async function POST(request: NextRequest) {
           })
           .returning({ id: CompanyTable.id });
 
-        // Step 2: Hash password
-        const hashedPassword = await bcrypt.hash(vendorData.password, 12);
 
-        // Step 3: Create User account with VENDOR role
-        const [newUser] = await tx
-          .insert(UserTable)
-          .values({
-            name: vendorData.primaryName || '',
-            email: vendorData.email.trim(),
-            password: hashedPassword,
-            mobile: vendorData.mobile || '',
-            role: "VENDOR",
-            companyId: newCompany.id,
-            updatedAt: new Date(),
-          })
-          .returning({ id: UserTable.id, email: UserTable.email });
-
-        // Step 4: Create Vendor profile
+        // Step 2: Create Vendor profile
         const [newVendor] = await tx
           .insert(VendorTable)
           .values({
@@ -158,6 +142,25 @@ export async function POST(request: NextRequest) {
             email: VendorTable.email,
             status: VendorTable.status,
           });
+
+        // Step 3: Hash password
+        const hashedPassword = await bcrypt.hash(vendorData.password, 12);
+
+        // Step 4: Create User account with VENDOR role
+        const [newUser] = await tx
+          .insert(UserTable)
+          .values({
+            name: vendorData.primaryName || '',
+            email: vendorData.email.trim(),
+            password: hashedPassword,
+            mobile: vendorData.mobile || '',
+            role: "VENDOR",
+            vendorId : newVendor.id,
+            companyId: newCompany.id,
+            updatedAt: new Date(),
+          })
+          .returning({ id: UserTable.id, email: UserTable.email });
+
 
         return {
           user: newUser,
@@ -224,12 +227,6 @@ const status = searchParams.get("status");
 if (status) {
   whereConditions.push(eq(VendorTable.status, status as any));
 }
-
-// Only return APPROVED vendors by default (unless admin)
-// if (!isAdmin && !status) {
-//   whereConditions.push(eq(VendorTable.status, "APPROVED"));
-// }
-
 
     
     // Combine conditions using 'and'

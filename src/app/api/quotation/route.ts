@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const sortBy: SortBy = (searchParams.get("sortBy") as SortBy) || DEFAULT_SORTING_FIELD;
     const sortingOrder: SortDirection = (searchParams.get("order") as SortDirection) || DEFAULT_SORTING_DIRECTION;
     const rfpId = searchParams.get("rfpId");
-    const vendorId = searchParams.get("vendorId");
+    const userId = searchParams.get("vendorId");
     
     // Construct where conditions
     const whereConditions: SQL<unknown>[] = [];
