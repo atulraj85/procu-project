@@ -54,11 +54,12 @@ function NavBar() {
             >
               Blog
             </p> */}
-            <p
+            <Link
+            href="/about-us"
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               About Us
-            </p>
+            </Link>
           </div>
           <div className="flex items-center gap-[40px] select-none">
             <div
