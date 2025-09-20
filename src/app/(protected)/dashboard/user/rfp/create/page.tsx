@@ -1,9 +1,11 @@
+
 "use client";
 import CompanyAddresses from "@/components/rfpAddress/CompanyAddresses";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { useCurrentUser } from "@/hooks/auth";
 import { getTodayDate } from "@/lib/getTodayDate";
@@ -44,6 +46,7 @@ interface FormData {
   rfpId: string;
   rfpProducts: RFPProduct[];
   approvers: Approver[];
+  reason?: string;
 }
 
 const RFPForm: React.FC = () => {
@@ -57,6 +60,7 @@ const RFPForm: React.FC = () => {
     rfpProducts: [],
     rfpId: "",
     approvers: [],
+    reason: "",
   });
   const [rfpId, setRfpId] = useState<string>("");
   const [searchApproverTerm, setSearchApproverTerm] = useState("");
@@ -65,23 +69,20 @@ const RFPForm: React.FC = () => {
   const [fetchedProducts, setFetchedProducts] = useState<RFPProduct[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
   const [userSelected, setUserSelected] = useState(false);
-  // const [product, setProduct] = useState<RFPProduct>();
   const [productSelected, setProductSelected] = useState(false);
   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-  // const [additionalInstructions, setAdditionalInstructions] =
-  // useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isReasonDialogOpen, setIsReasonDialogOpen] = useState(false);
+  const [reasonInput, setReasonInput] = useState("");
 
   const router = useRouter();
-
   const currentUser = useCurrentUser();
   const userId = currentUser?.id;
 
   const [userInfo, setUserInfo] = useState<User>();
   const [savedRFP, setSavedRFP] = useState(false);
-
   const [rfpAddress, setRfpAddress] = useState<string>("");
   const today = new Date().toISOString().split("T")[0];
   const newErrors: { [key: string]: string } = {};
@@ -93,7 +94,6 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     const fetchCompanyData = async () => {
       try {
-        // setLoading(true);
         const response = await fetch("/api/company");
         const data = await response.json();
 
@@ -104,11 +104,11 @@ const RFPForm: React.FC = () => {
           );
 
           if (shippingAddress) {
+            setRfpAddress(shippingAddress.address);
           } else {
             console.warn("No shipping address found for the company");
           }
         }
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching company data:", error);
       }
@@ -120,58 +120,46 @@ const RFPForm: React.FC = () => {
   useEffect(() => {
     async function fetchUserInformation() {
       try {
-        // setLoading(true);
-
         const response = await fetch(`/api/users?id=${userId}`);
         const data = await response.json();
         setUserInfo(data[0]);
-        // setLoading(false);
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error fetching user information:", error);
+      }
     }
     fetchUserInformation();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const fetchRfpId = async () => {
       try {
-        // setLoading(true);
-        console.log("Frontend: Starting RFP ID fetch");
-
         const response = await fetch("/api/rfp/rfpid");
-        console.log("Frontend: Received response:", {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries()),
-        });
-
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
         const data = await response.json();
-        console.log("Frontend: Parsed response data:", data);
-
         if (!data) {
           throw new Error("No RFP ID received from server");
         }
-
         setRfpId(data);
-
         setFormData((prevData) => ({
           ...prevData,
           rfpId: data,
         }));
-        console.log("Frontend: Successfully set RFP ID:", data);
       } catch (err) {
-        console.error("Frontend: Error fetching RFP ID:", err);
+        console.error("Error fetching RFP ID:", err);
         setError(err instanceof Error ? err.message : "Failed to fetch RFP ID");
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchRfpId();
   }, []);
+
+  useEffect(() => {
+    if (rfpAddress) {
+      setFormData((prev) => ({ ...prev, deliveryLocation: rfpAddress }));
+    }
+  }, [rfpAddress]);
 
   const handleSearchChange = async (
     e: ChangeEvent<HTMLInputElement>,
@@ -260,7 +248,6 @@ const RFPForm: React.FC = () => {
         rfpProducts: [...prev.rfpProducts, productToAdd],
       }));
 
-      // Reset the form
       setNewProduct({
         description: "",
         quantity: 1,
@@ -279,6 +266,7 @@ const RFPForm: React.FC = () => {
   };
 
   const validateForm = () => {
+    const newErrors: { [key: string]: string } = {};
     if (!formData.requirementType)
       newErrors.requirementType = "Requirement type is required";
     if (!formData.deliveryByDate)
@@ -288,80 +276,65 @@ const RFPForm: React.FC = () => {
     if (approvedProducts.length === 0)
       newErrors.products = "At least one product is required";
     if (!rfpAddress) newErrors.address = "Address is required";
+    if (!isReasonDialogOpen && !formData.reason)
+      newErrors.reason = "Reason for RFP is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // console.log("Errors", errors, "Formdata", formData);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSaveRFPClick = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // if (!validateForm()) {
+    //   toast({
+    //     title: "Error",
+    //     // description: "Please fill in all required fields",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+    setIsReasonDialogOpen(true);
+  };
 
-    if (!validateForm()) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+  const handleReasonSubmit = async () => {
+    if (!reasonInput.trim()) {
+      setErrors((prev) => ({ ...prev, reason: "Reason for RFP is required" }));
       return;
     }
 
-    console.log("##########Form data", JSON.stringify(formData));
-
-    const validation = FirstRFPSchema.safeParse(formData);
-
-    if (!validation.success) {
-      console.log("################ validation error", validation.error);
-
-      return { error: "Invalid fields!" } as const;
-    }
-
-    // const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-    // const formattedDate = formData.dateOfOrdering.split("/").reverse().join("-");
-    console.log(rfpAddress);
     const updatedFormData = {
       ...formData,
       deliveryLocation: rfpAddress,
       rfpId: rfpId,
-      userId : currentUser?.id
+      userId: currentUser?.id,
+      reason: reasonInput,
     };
 
+    setFormData(updatedFormData);
     setLoading(true);
     setError(null);
-
-    console.log(
-      "################# datav from create",
-      JSON.stringify(formData)
-    );
 
     try {
       const response = await fetch("/api/rfp", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedFormData),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to submit RFP");
-      }
-
+      if (!response.ok) throw new Error("Failed to submit RFP");
       const result = await response.json();
       if (result) {
         toast({
           title: "🎉 Draft Submitted!",
           description: "Your RFP draft has been successfully submitted.",
         });
-        // router.push("/dashboard/manager");
         setSavedRFP(true);
+        setIsReasonDialogOpen(false);
+        setReasonInput("");
       }
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : "Error submitting RFP. Please try again later."
+        err instanceof Error ? err.message : "Error submitting RFP. Please try again later."
       );
     } finally {
       setLoading(false);
@@ -372,23 +345,20 @@ const RFPForm: React.FC = () => {
     <div className="relative pb-10">
       <Card>
         <CardHeader>
-          <div className=" flex justify-between">
-            <div>
-              <CardTitle>Create RFP</CardTitle>
-            </div>
-
+          <div className="flex justify-between">
+            <CardTitle>Create RFP</CardTitle>
             {userInfo && (
-              <div className="flex ">
-                <h1 className="px-3">Name:- {userInfo.name}</h1>
-                <h1 className="px-3">Role:- {userInfo.role}</h1>
-                <h1 className="px-3">Current Date:- {getTodayDate()}</h1>
+              <div className="flex">
+                <h1 className="px-3">Name: {userInfo.name}</h1>
+                <h1 className="px-3">Role: {userInfo.role}</h1>
+                <h1 className="px-3">Current Date: {getTodayDate()}</h1>
               </div>
             )}
           </div>
         </CardHeader>
         <CardContent>
           <Card className="mb-4">
-            <form onSubmit={handleSubmit} className="space-y-2">
+            <form onSubmit={handleSaveRFPClick} className="space-y-2">
               <CardHeader>
                 {rfpId && (
                   <div className="flex justify-between">
@@ -400,11 +370,10 @@ const RFPForm: React.FC = () => {
                 )}
               </CardHeader>
               <CardContent className="space-x-6">
-                <div className="flex flex-row justify-between  gap-4">
-                  {/* Requirement Type Section */}
+                <div className="flex flex-row justify-between gap-4">
                   <div className="flex space-x-4">
                     <div>Requirement Type:</div>
-                    <div className="">
+                    <div>
                       <input
                         type="radio"
                         id="product"
@@ -423,7 +392,7 @@ const RFPForm: React.FC = () => {
                         Product
                       </Label>
                     </div>
-                    <div className="">
+                    <div>
                       <input
                         type="radio"
                         id="service"
@@ -444,7 +413,6 @@ const RFPForm: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Delivery Date Section */}
                   <div className="-mt-8">
                     <Label
                       htmlFor="deliveryByDate"
@@ -457,15 +425,9 @@ const RFPForm: React.FC = () => {
                       name="deliveryByDate"
                       type="date"
                       min={today}
-                      value={
-                        formData.deliveryByDate
-                        // ? formData.deliveryByDate
-                        // : getTodayDate()
-                      }
+                      value={formData.deliveryByDate}
                       onChange={handleInputChange}
-                      className={` ${
-                        errors.deliveryByDate ? "border-red-500" : ""
-                      }`}
+                      className={`${errors.deliveryByDate ? "border-red-500" : ""}`}
                     />
                     {errors.deliveryByDate && (
                       <p className="text-red-500 text-sm">
@@ -474,7 +436,6 @@ const RFPForm: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Approvers Section */}
                   <div className="space-y-4">
                     <div>
                       <Input
@@ -486,9 +447,8 @@ const RFPForm: React.FC = () => {
                       />
                     </div>
 
-                    {/* Fetched Users */}
                     {fetchedUsers.length > 0 && (
-                      <div className="border rounded-md p-2 mb-4  overflow-y-auto">
+                      <div className="border rounded-md p-2 mb-4 overflow-y-auto">
                         <h3 className="font-medium mb-2">Fetched Users:</h3>
                         <ul className="space-y-1">
                           {fetchedUsers.map((user) => (
@@ -510,7 +470,6 @@ const RFPForm: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Selected Approvers */}
                     <div className="space-y-2">
                       {approvedUsers.map((approver, index) => (
                         <div
@@ -518,11 +477,8 @@ const RFPForm: React.FC = () => {
                           className="flex items-center justify-between px-2 rounded-md"
                         >
                           <div className="flex">
-                            <h3 className="text-sm">{approver.name} </h3>
-                            <h3 className="text-sm">
-                              {" "}
-                              | Email:-{approver.email}
-                            </h3>
+                            <h3 className="text-sm">{approver.name}</h3>
+                            <h3 className="text-sm"> | Email: {approver.email}</h3>
                           </div>
                           <Button
                             type="button"
@@ -546,18 +502,7 @@ const RFPForm: React.FC = () => {
                   <CardTitle>Product Details</CardTitle>
                 </div>
                 <div className="space-y-4 mt-4">
-                  {/* Product Input Form */}
                   <div className="flex items-center space-x-2">
-                    {/*
-                      <Input
-                        placeholder="Product Name"
-                        value={newProduct.name}
-                        onChange={(e) =>
-                          handleProductInputChange("name", e.target.value)
-                        }
-                        className="flex-1"
-                      />
-                       */}
                     <Input
                       placeholder="Product Description"
                       value={newProduct.description}
@@ -588,14 +533,13 @@ const RFPForm: React.FC = () => {
                     </Button>
                   </div>
 
-                  {/* Display Added Products */}
                   <div className="space-y-2">
                     {approvedProducts.map((product, index) => (
                       <div
                         key={index}
                         className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
                       >
-                        <span className="">{product.description}</span>
+                        <span>{product.description}</span>
                         <span className="w-24 text-center">
                           {product.quantity}
                         </span>
@@ -622,7 +566,7 @@ const RFPForm: React.FC = () => {
                 <div className="flex absolute bottom-[-12px] gap-2">
                   <Button
                     type="submit"
-                    className=" px-4  rounded-lg bg-primary"
+                    className="px-4 rounded-lg bg-primary"
                     disabled={loading}
                   >
                     {loading ? "Submitting..." : "Save RFP"}
@@ -636,7 +580,7 @@ const RFPForm: React.FC = () => {
                         );
                       }
                     }}
-                    className="px-4 last:rounded-lg bg-primary"
+                    className="px-4 rounded-lg bg-primary"
                     disabled={!savedRFP}
                   >
                     Add Quotation
@@ -647,21 +591,58 @@ const RFPForm: React.FC = () => {
               {error && <div className="text-red-500">{error}</div>}
             </form>
 
-            <div className="">
+            <div>
               {userInfo && (
-                <div>
-                  <CompanyAddresses
-                    companyId={userInfo.companyId}
-                    setRfpAddress={setRfpAddress}
-                    errors={errors}
-                    setErrors={setErrors}
-                  />
-                </div>
+                <CompanyAddresses
+                  companyId={userInfo.companyId}
+                  setRfpAddress={setRfpAddress}
+                  errors={errors}
+                  setErrors={setErrors}
+                />
               )}
             </div>
           </Card>
         </CardContent>
       </Card>
+
+      <Dialog open={isReasonDialogOpen} onOpenChange={setIsReasonDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reason for Creating RFP</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Label htmlFor="reason" className="text-sm font-medium">
+              Please provide the reason for creating this RFP
+            </Label>
+            <Input
+              id="reason"
+              placeholder="Enter reason for RFP"
+              value={reasonInput}
+              onChange={(e) => setReasonInput(e.target.value)}
+              className={`${errors.reason ? "border-red-500" : ""}`}
+            />
+            {errors.reason && <p className="text-red-500 text-sm">{errors.reason}</p>}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsReasonDialogOpen(false);
+                setReasonInput("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleReasonSubmit}
+              disabled={loading}
+              className="bg-primary text-white"
+            >
+              {loading ? "Submitting..." : "Submit RFP"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
