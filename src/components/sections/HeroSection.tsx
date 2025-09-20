@@ -10,7 +10,7 @@ function HeroSection() {
     router.push("/auth/register");
   };
   return (
-    <div className="w-full">
+    <div className="mx-4 md:mx-[3.25rem] pt-32 lg:pt-16">
     <section className="flex flex-col gap-8 md:flex-row justify-between">
       <div className="z-10">
         <p className="mb-[1.87rem] text-3xl lg:text-[5rem] text-dark lg:leading-[5.625rem] font-[700]">

@@ -72,7 +72,7 @@ const AboutUs: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <div className="bg-primary py-16">
+      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-16 text-center">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h1 className="text-5xl font-bold text-white mb-6">
             About Our Procurement Management System

@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 
 function FooterSection() {
   return (
-    <section className="mt-16 md:mt-[14rem] flex flex-col gap-[5rem] md:gap-[10rem] md:flex-row justify-between w-full  bg-footerBackground px-[4rem] pt-[7.6rem] pb-[2.5rem]">
+    <section className="mt-6 md:mt-[4rem] flex flex-col gap-[5rem] md:gap-[10rem] md:flex-row justify-between w-full  bg-footerBackground px-[4rem] pt-[7.6rem] pb-[2.5rem]">
       <div>
         <img src="/images/procu_logo.png" alt="bicca logo" />
 

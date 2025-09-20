@@ -5,8 +5,11 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import MainButton from "./MainButton";
 import { useRouter } from "next/navigation";
+type NavBarProps = {
+  setCurrentTab: React.Dispatch<React.SetStateAction<"Home" | "AboutUs" | "Product" | "Faq">>
+}
 
-function NavBar() {
+function NavBar({setCurrentTab}:NavBarProps) {
   const [menu, setMenu] = useState(false);
   const router = useRouter();
 
@@ -18,6 +21,7 @@ function NavBar() {
     router.push("/auth/register");
   };
 
+  
   return (
     <div className="md:sticky md:top-0   md:shadow-none z-20 ">
       {/* DESKTOP */}
@@ -34,32 +38,42 @@ function NavBar() {
             /> */}
           </div>
           <div className="flex gap-[20px] xl:gap-[50px] text-[16px] items-center select-none">
-            <p
+            <button
+              onClick={()=>{setCurrentTab("Home")}}
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               Home
-            </p>
-            <p
+            </button>
+            <button
+              onClick={()=>{setCurrentTab("Product")}}
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               Product
-            </p>
-            <p
+            </button>
+           <button
+              onClick={()=>{setCurrentTab("Faq")}}
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
-              FAQ
-            </p>
+              Faq
+            </button>
+
+            <button
+              onClick={()=>{setCurrentTab("AboutUs")}}
+              className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
+            >
+              About Us
+            </button>
             {/* <p
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               Blog
             </p> */}
-            <Link
+            {/* <Link
             href="/about-us"
               className={`hover:text-black cursor-pointer flex items-center gap-2  font-[500] text-customGray`}
             >
               About Us
-            </Link>
+            </Link> */}
           </div>
           <div className="flex items-center gap-[40px] select-none">
             <div

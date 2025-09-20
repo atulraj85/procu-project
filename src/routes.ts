@@ -9,7 +9,9 @@ export const apiAuthPrefix: string = "/api/auth";
 export const publicRoutes: string[] = [
   "/", 
   "/auth/verify-email",
-  "/about-us"
+  "/about-us",
+  "/product",
+  "/faq"
   // Add dynamic route patterns here if needed
   // "^/products/[^/]+$", // Example: /products/123
 ];
