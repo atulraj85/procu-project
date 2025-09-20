@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { columns1 } from "@/components/Table/columns";
+import { columns3 } from "@/components/Table/columns";
 
 interface TableRow {
   rfpId: string;
@@ -92,7 +92,7 @@ const Dashboard = () => {
   };
 
   // Define columns with correct type
-  const columns: ColumnDef<TableRow>[] = columns1 as ColumnDef<TableRow>[];
+  const columns: ColumnDef<TableRow>[] = columns3 as ColumnDef<TableRow>[];
 
   return (
     <Card>

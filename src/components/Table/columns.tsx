@@ -139,6 +139,56 @@ export const columns2: ColumnDef<TableRow>[] = [
   },
 ];
 
+
+export const columns3: ColumnDef<TableRow>[] = [
+  { header: "RFP ID", accessorKey: "rfpId" },
+  { header: "Requirement Type", accessorKey: "requirementType" },
+  { header: "Date of Ordering", accessorKey: "dateOfOrdering" },
+  { header: "Delivery Location", accessorKey: "deliveryLocation" },
+  { header: "Delivery By Date", accessorKey: "deliveryByDate" },
+  { header: "RFP Status", accessorKey: "rfpStatus" },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const rowData = row.original;
+      const hasQuotations = rowData.quotations && rowData.quotations.length > 0;
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {/* Only show Add Quotations if there are no existing quotations */}
+              <Link
+                href={`/dashboard/vendor/rfp/quotation?rfp=${encodeURIComponent(
+                  rowData.rfpId
+                )}`}
+              >
+                <DropdownMenuItem>Add Quotations</DropdownMenuItem>
+              </Link>
+
+            <Link
+              href={`/dashboard/vendor/rfp/view?rfp=${encodeURIComponent(
+                rowData.rfpId
+              )}`}
+            >
+              <DropdownMenuItem>View</DropdownMenuItem>
+            </Link>
+
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
+];
+
 interface TableRow1 {
   id: string;
   poId: string;
