@@ -1,0 +1,48 @@
+Create RFP
+{
+  "title": "IT Equipment Procurement for Development Team",
+  "description": "Procurement of laptops, monitors, and accessories for new development team expansion",
+  "lineItems": [
+    {
+      "productName": "Dell Laptop",
+      "description": "High-performance laptop for software development",
+      "specifications": {
+        "processor": "Intel i7 12th Gen",
+        "ram": "16GB",
+        "storage": "512GB SSD",
+        "display": "14 inch FHD"
+      },
+      "quantity": 5,
+      "estimatedUnitPrice": 75000,
+      "urgency": "High"
+    },
+    {
+      "productName": "External Monitor",
+      "description": "24-inch external monitor for dual display setup",
+      "specifications": {
+        "size": "24 inch",
+        "resolution": "1920x1080",
+        "connectivity": "HDMI, USB-C"
+      },
+      "quantity": 5,
+      "estimatedUnitPrice": 15000,
+      "urgency": "Medium"
+    }
+  ],
+  "deliveryLocation": "TechCorp Solutions, Plot No. 45, Electronic City Phase 1, Bangalore, Karnataka, 560100",
+  "deliveryStates": ["Karnataka"],
+  "deliveryDate": "2025-11-15",
+  "estimatedBudget": 500000,
+  "currency": "INR",
+  "createdBy": "user-uuid-here",
+  "quotationCutoffDate": "2025-10-30",
+  "questionTemplateId": null,
+  "questionAnswers": null,
+  "selectionCriteria": {
+    "technicalWeightage": 60,
+    "commercialWeightage": 40,
+    "requiredCertifications": ["ISO 9001"],
+    "preferredBrands": ["Dell", "HP"],
+    "warrantyRequirement": "3 years minimum"
+  }
+}
