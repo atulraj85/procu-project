@@ -14,17 +14,6 @@ export default function Home() {
         <HeroSection />
         {/* <CollabSection /> */}
       </div>
-
-      
-
-      {/* <section>
-        <SupportOurPartnerSection />
-      </section>
-      <div className="mx-4 md:mx-[3.25rem]">
-        <OurFeatureSection />
-        <BenefitSection />
-      </div> */}
-
       {/* <FooterSection /> */}
       <div className=" mt-6 w-full  bg-primary h-32"></div>
     </main>
