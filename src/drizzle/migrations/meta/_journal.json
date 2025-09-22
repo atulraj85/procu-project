@@ -15,6 +15,27 @@
       "when": 1758366202407,
       "tag": "0001_living_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758535727560,
+      "tag": "0002_flowery_hitman",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758536031695,
+      "tag": "0003_old_luke_cage",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758536207570,
+      "tag": "0004_bouncy_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

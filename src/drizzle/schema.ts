@@ -23,7 +23,7 @@ export const UserRole = pgEnum("user_role", [
   "PROCUREMENT_MANAGER", 
   "PROCUREMENT_LEAD",
   "ADMIN_TEAM",
-  "FINANCE_TEAM",
+  // "FINANCE_MANAGER",
   "FINANCE_EXECUTIVE",
   "USER",
   "VENDOR"
@@ -75,7 +75,8 @@ export const VendorStatus = pgEnum("vendor_status", [
 export const ApprovalStage = pgEnum("approval_stage", [
   "PROCUREMENT_MANAGER",
   "FINANCE_MANAGER", 
-  "FINANCE_EXECUTIVE"
+  "FINANCE_EXECUTIVE",
+  "PROCUREMENT_LEAD"
 ]);
 
 export const MessageType = pgEnum("message_type", [
