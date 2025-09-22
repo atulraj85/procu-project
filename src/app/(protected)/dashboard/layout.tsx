@@ -7,6 +7,7 @@ import {
   AdminList,
   financeList,
   managerList,
+  procureManagerList,
   UserList,
   vendorList,
 } from "@/lib/sidebarLinks";
@@ -37,6 +38,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         return vendorList;
       case "USER":
         return UserList;
+      case "PROCUREMENT_LEAD":
+        return managerList;
+      case "PROCUREMENT_MANAGER":
+        return procureManagerList;
       default:
         return UserList;
     }

@@ -26,7 +26,14 @@ export default function Dashboard() {
         router.push("/dashboard/vendor");
         break;
       case "USER":
-        router.push("/dashboard/user/rfp/create")
+        router.push("/dashboard/user/rfp/create");
+        break;
+        case "PROCUREMENT_LEAD":
+        router.push("/dashboard/manager/rfp");
+        break;
+        case "PROCUREMENT_MANAGER":
+        router.push("/dashboard/procure_manager/rfp");
+        break;
       default:
         setIsRedirecting(false);
         break;

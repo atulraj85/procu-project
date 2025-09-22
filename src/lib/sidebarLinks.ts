@@ -157,6 +157,27 @@ export const managerList = [
   },
 ];
 
+export const procureManagerList = [
+  {
+    value: "dashboard",
+    label: "Dashboard",
+    imgUrl: "/svgs/dashboard.svg",
+    route: "/dashboard/procure_manager",
+  },
+  {
+    value: "createRFP",
+    label: "Create RFP",
+    imgUrl: "/svgs/product-form.svg",
+    route: "/dashboard/procure_manager/rfp/create",
+  },
+  {
+    value: "Addvendor",
+    label: "Vendor List",
+    imgUrl: "/svgs/productOrder.svg",
+    route: "/dashboard/procure_manager/vendor",
+  },
+];
+
 export const UserList = [
   {
     value: "Users",
