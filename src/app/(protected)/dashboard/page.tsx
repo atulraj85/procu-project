@@ -22,20 +22,11 @@ export default function Dashboard() {
 
     setIsRedirecting(true);
     switch (role) {
-      case "ADMIN":
-        router.push("/dashboard/admin");
-        break;
-      case "PR_MANAGER":
-        router.push("/dashboard/manager");
-        break;
-      case "FINANCE_MANAGER":
-        router.push("/dashboard/finance");
-        break;
       case "VENDOR":
         router.push("/dashboard/vendor");
         break;
       case "USER":
-        router.push("/dashboard/user")
+        router.push("/dashboard/user/rfp/create")
       default:
         setIsRedirecting(false);
         break;

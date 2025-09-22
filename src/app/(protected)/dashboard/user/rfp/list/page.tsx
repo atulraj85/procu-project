@@ -1,690 +1,41 @@
-// "use client";
-// import CompanyAddresses from "@/components/rfpAddress/CompanyAddresses";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { toast } from "@/components/ui/use-toast";
-// import { useCurrentUser } from "@/hooks/auth";
-// import { getTodayDate } from "@/lib/getTodayDate";
-// import { FirstRFPSchema } from "@/schemas/FirstRFPSchema";
-// import { X } from "lucide-react";
-// import { useRouter } from "next/navigation";
-// import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
-
-// interface RFPProduct {
-//   description?: string | number | readonly string[] | undefined;
-//   modelNo?: string;
-//   quantity: number;
-// }
-
-// interface Approver {
-//   approverId: string;
-//   name?: string;
-//   email?: string;
-// }
-
-// type User = {
-//   id: number;
-//   name: string;
-//   email: string;
-//   role: string;
-//   mobile: string;
-//   companyId: string;
-// };
-
-// interface FormData {
-//   requirementType: string;
-//   dateOfOrdering: string;
-//   deliveryLocation: string;
-//   deliveryByDate: string;
-//   lastDateToRespond: string;
-//   rfpStatus: string;
-//   userId?: string;
-//   rfpId: string;
-//   rfpProducts: RFPProduct[];
-//   approvers: Approver[];
-// }
-
-// const RFPForm: React.FC = () => {
-//   const [formData, setFormData] = useState<FormData>({
-//     requirementType: "Product",
-//     dateOfOrdering: getTodayDate(),
-//     deliveryLocation: "",
-//     deliveryByDate: "",
-//     lastDateToRespond: "",
-//     rfpStatus: "DRAFT",
-//     rfpProducts: [],
-//     rfpId: "",
-//     approvers: [],
-//   });
-//   const [rfpId, setRfpId] = useState<string>("");
-//   const [searchApproverTerm, setSearchApproverTerm] = useState("");
-//   const [searchProductTerm, setSearchProductTerm] = useState("");
-//   const [fetchedUsers, setFetchedUsers] = useState<User[]>([]);
-//   const [fetchedProducts, setFetchedProducts] = useState<RFPProduct[]>([]);
-//   const [approvedUsers, setApprovedUsers] = useState<User[]>([]);
-//   const [userSelected, setUserSelected] = useState(false);
-//   // const [product, setProduct] = useState<RFPProduct>();
-//   const [productSelected, setProductSelected] = useState(false);
-//   const [approvedProducts, setApprovedProducts] = useState<RFPProduct[]>([]);
-//   // const [additionalInstructions, setAdditionalInstructions] =
-//   // useState<string>("");
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-//   const router = useRouter();
-
-//   const currentUser = useCurrentUser();
-//   const userId = currentUser?.id;
-
-//   const [userInfo, setUserInfo] = useState<User>();
-//   const [savedRFP, setSavedRFP] = useState(false);
-
-//   const [rfpAddress, setRfpAddress] = useState<string>("");
-//   const today = new Date().toISOString().split("T")[0];
-//   const newErrors: { [key: string]: string } = {};
-//   const [newProduct, setNewProduct] = useState({
-//     description: "",
-//     quantity: 1,
-//   });
-
-//   useEffect(() => {
-//     const fetchCompanyData = async () => {
-//       try {
-//         // setLoading(true);
-//         const response = await fetch("/api/company");
-//         const data = await response.json();
-
-//         if (data.length > 0) {
-//           const company = data[0];
-//           const shippingAddress = company.addresses.find(
-//             (addr: any) => addr.addressType === "SHIPPING"
-//           );
-
-//           if (shippingAddress) {
-//           } else {
-//             console.warn("No shipping address found for the company");
-//           }
-//         }
-//         setLoading(false);
-//       } catch (error) {
-//         console.error("Error fetching company data:", error);
-//       }
-//     };
-
-//     fetchCompanyData();
-//   }, []);
-
-//   useEffect(() => {
-//     async function fetchUserInformation() {
-//       try {
-//         // setLoading(true);
-
-//         const response = await fetch(`/api/users?id=${userId}`);
-//         const data = await response.json();
-//         setUserInfo(data[0]);
-//         // setLoading(false);
-//       } catch (error) {}
-//     }
-//     fetchUserInformation();
-//   }, []);
-
-//   useEffect(() => {
-//     const fetchRfpId = async () => {
-//       try {
-//         // setLoading(true);
-//         console.log("Frontend: Starting RFP ID fetch");
-
-//         const response = await fetch("/api/rfp/rfpid");
-//         console.log("Frontend: Received response:", {
-//           status: response.status,
-//           statusText: response.statusText,
-//           headers: Object.fromEntries(response.headers.entries()),
-//         });
-
-//         if (!response.ok) {
-//           throw new Error(`HTTP error! status: ${response.status}`);
-//         }
-
-//         const data = await response.json();
-//         console.log("Frontend: Parsed response data:", data);
-
-//         if (!data) {
-//           throw new Error("No RFP ID received from server");
-//         }
-
-//         setRfpId(data);
-
-//         setFormData((prevData) => ({
-//           ...prevData,
-//           rfpId: data,
-//         }));
-//         console.log("Frontend: Successfully set RFP ID:", data);
-//       } catch (err) {
-//         console.error("Frontend: Error fetching RFP ID:", err);
-//         setError(err instanceof Error ? err.message : "Failed to fetch RFP ID");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchRfpId();
-//   }, []);
-
-//   const handleSearchChange = async (
-//     e: ChangeEvent<HTMLInputElement>,
-//     entity: string
-//   ) => {
-//     newErrors.approvers = "";
-//     setErrors(newErrors);
-//     const value = e.target.value;
-//     if (entity === "users") {
-//       setSearchApproverTerm(value);
-//     } else if (entity === "products") {
-//       setSearchProductTerm(value);
-//     }
-//     setUserSelected(false);
-
-//     if (value) {
-//       try {
-//         const response = await fetch(`/api/ajax/${entity}?q=${value}`);
-//         const data = await response.json();
-
-//         if (entity === "users") {
-//           setFetchedUsers(data);
-//         } else if (entity === "products") {
-//           const formattedProducts = data.map((product: any) => ({
-//             ...product,
-//             rfpProductId:
-//               product.rfpProductId || product.id || String(product._id),
-//           }));
-//           setFetchedProducts(formattedProducts);
-//         }
-//       } catch (error) {
-//         console.error(`Error fetching ${entity}:`, error);
-//       }
-//     } else {
-//       setFetchedUsers([]);
-//       setUserSelected(false);
-//       setFetchedProducts([]);
-//       setProductSelected(false);
-//     }
-//   };
-
-//   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-//     errors.deliveryByDate = "";
-//     setErrors(errors);
-//     const { name, value } = e.target;
-
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       [name]: value,
-//     }));
-//   };
-
-//   const addApprover = (user: User) => {
-//     setApprovedUsers((prevUsers) => [...prevUsers, user]);
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       approvers: [...prevData.approvers, { approverId: String(user.id) }],
-//     }));
-//   };
-
-//   const removeApprover = (index: number) => {
-//     setApprovedUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       approvers: prevData.approvers.filter((_, i) => i !== index),
-//     }));
-//   };
-
-//   const handleProductInputChange = (field: string, value: string | number) => {
-//     setNewProduct((prev) => ({
-//       ...prev,
-//       [field]: value,
-//     }));
-//   };
-
-//   const addProduct = () => {
-//     if (newProduct.description.trim()) {
-//       const productToAdd = {
-//         description: newProduct.description,
-//         quantity: newProduct.quantity,
-//       };
-
-//       setApprovedProducts((prev) => [...prev, productToAdd]);
-//       setFormData((prev) => ({
-//         ...prev,
-//         rfpProducts: [...prev.rfpProducts, productToAdd],
-//       }));
-
-//       // Reset the form
-//       setNewProduct({
-//         description: "",
-//         quantity: 1,
-//       });
-//     }
-//   };
-
-//   const removeProduct = (index: number) => {
-//     setApprovedProducts((prevProducts) =>
-//       prevProducts.filter((_, i) => i !== index)
-//     );
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       rfpProducts: prevData.rfpProducts.filter((_, i) => i !== index),
-//     }));
-//   };
-
-//   const validateForm = () => {
-//     if (!formData.requirementType)
-//       newErrors.requirementType = "Requirement type is required";
-//     if (!formData.deliveryByDate)
-//       newErrors.deliveryByDate = "Expected delivery date is required";
-//     if (approvedUsers.length === 0)
-//       newErrors.approvers = "At least one approver is required";
-//     if (approvedProducts.length === 0)
-//       newErrors.products = "At least one product is required";
-//     if (!rfpAddress) newErrors.address = "Address is required";
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   // console.log("Errors", errors, "Formdata", formData);
-
-//   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-
-//     if (!validateForm()) {
-//       toast({
-//         title: "Error",
-//         description: "Please fill in all required fields",
-//         variant: "destructive",
-//       });
-//       return;
-//     }
-
-//     console.log("##########Form data", JSON.stringify(formData));
-
-//     const validation = FirstRFPSchema.safeParse(formData);
-
-//     if (!validation.success) {
-//       console.log("################ validation error", validation.error);
-
-//       return { error: "Invalid fields!" } as const;
-//     }
-
-//     // const deliveryLocation = `${address}, ${city}, ${state}, ${country}, ${zipCode}`;
-//     // const formattedDate = formData.dateOfOrdering.split("/").reverse().join("-");
-//     console.log(rfpAddress);
-//     const updatedFormData = {
-//       ...formData,
-//       deliveryLocation: rfpAddress,
-//       rfpId: rfpId,
-//       userId : currentUser?.id
-//     };
-
-//     setLoading(true);
-//     setError(null);
-
-//     console.log(
-//       "################# datav from create",
-//       JSON.stringify(formData)
-//     );
-
-//     try {
-//       const response = await fetch("/api/rfp", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(updatedFormData),
-//       });
-
-//       if (!response.ok) {
-//         throw new Error("Failed to submit RFP");
-//       }
-
-//       const result = await response.json();
-//       if (result) {
-//         toast({
-//           title: "🎉 Draft Submitted!",
-//           description: "Your RFP draft has been successfully submitted.",
-//         });
-//         // router.push("/dashboard/manager");
-//         setSavedRFP(true);
-//       }
-//     } catch (err) {
-//       setError(
-//         err instanceof Error
-//           ? err.message
-//           : "Error submitting RFP. Please try again later."
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="relative pb-10">
-//       <Card>
-//         <CardHeader>
-//           <div className=" flex justify-between">
-//             <div>
-//               <CardTitle>Create RFP</CardTitle>
-//             </div>
-
-//             {userInfo && (
-//               <div className="flex ">
-//                 <h1 className="px-3">Name:- {userInfo.name}</h1>
-//                 <h1 className="px-3">Role:- {userInfo.role}</h1>
-//                 <h1 className="px-3">Current Date:- {getTodayDate()}</h1>
-//               </div>
-//             )}
-//           </div>
-//         </CardHeader>
-//         <CardContent>
-//           <Card className="mb-4">
-//             <form onSubmit={handleSubmit} className="space-y-2">
-//               <CardHeader>
-//                 {rfpId && (
-//                   <div className="flex justify-between">
-//                     <p className="text-md text-muted-foreground">
-//                       RFP ID: {rfpId}
-//                     </p>
-//                     <p>RFP Date: {getTodayDate()}</p>
-//                   </div>
-//                 )}
-//               </CardHeader>
-//               <CardContent className="space-x-6">
-//                 <div className="flex flex-row justify-between  gap-4">
-//                   {/* Requirement Type Section */}
-//                   <div className="flex space-x-4">
-//                     <div>Requirement Type:</div>
-//                     <div className="">
-//                       <input
-//                         type="radio"
-//                         id="product"
-//                         name="requirementType"
-//                         value="Product"
-//                         checked={formData.requirementType === "Product"}
-//                         onChange={(e) =>
-//                           setFormData({
-//                             ...formData,
-//                             requirementType: e.target.value,
-//                           })
-//                         }
-//                         className="text-primary focus:ring-primary"
-//                       />
-//                       <Label htmlFor="product" className="text-sm font-medium">
-//                         Product
-//                       </Label>
-//                     </div>
-//                     <div className="">
-//                       <input
-//                         type="radio"
-//                         id="service"
-//                         name="requirementType"
-//                         value="Service"
-//                         checked={formData.requirementType === "Service"}
-//                         onChange={(e) =>
-//                           setFormData({
-//                             ...formData,
-//                             requirementType: e.target.value,
-//                           })
-//                         }
-//                         className="text-primary focus:ring-primary"
-//                       />
-//                       <Label htmlFor="service" className="text-sm font-medium">
-//                         Service
-//                       </Label>
-//                     </div>
-//                   </div>
-
-//                   {/* Delivery Date Section */}
-//                   <div className="-mt-8">
-//                     <Label
-//                       htmlFor="deliveryByDate"
-//                       className="text-sm font-medium"
-//                     >
-//                       Expected Delivery Date
-//                     </Label>
-//                     <Input
-//                       id="deliveryByDate"
-//                       name="deliveryByDate"
-//                       type="date"
-//                       min={today}
-//                       value={
-//                         formData.deliveryByDate
-//                         // ? formData.deliveryByDate
-//                         // : getTodayDate()
-//                       }
-//                       onChange={handleInputChange}
-//                       className={` ${
-//                         errors.deliveryByDate ? "border-red-500" : ""
-//                       }`}
-//                     />
-//                     {errors.deliveryByDate && (
-//                       <p className="text-red-500 text-sm">
-//                         {errors.deliveryByDate}
-//                       </p>
-//                     )}
-//                   </div>
-
-//                   {/* Approvers Section */}
-//                   <div className="space-y-4">
-//                     <div>
-//                       <Input
-//                         type="text"
-//                         placeholder="Search Approvers..."
-//                         value={searchApproverTerm}
-//                         onChange={(e) => handleSearchChange(e, "users")}
-//                         className="w-full mb-2"
-//                       />
-//                     </div>
-
-//                     {/* Fetched Users */}
-//                     {fetchedUsers.length > 0 && (
-//                       <div className="border rounded-md p-2 mb-4  overflow-y-auto">
-//                         <h3 className="font-medium mb-2">Fetched Users:</h3>
-//                         <ul className="space-y-1">
-//                           {fetchedUsers.map((user) => (
-//                             <li
-//                               key={user.id}
-//                               className="py-1 px-2 cursor-pointer hover:bg-gray-100 rounded transition-colors"
-//                               onClick={() => {
-//                                 if (user) {
-//                                   addApprover(user);
-//                                   setSearchApproverTerm("");
-//                                   setFetchedUsers([]);
-//                                 }
-//                               }}
-//                             >
-//                               {user.name} | {user.email} | {user.mobile}
-//                             </li>
-//                           ))}
-//                         </ul>
-//                       </div>
-//                     )}
-
-//                     {/* Selected Approvers */}
-//                     <div className="space-y-2">
-//                       {approvedUsers.map((approver, index) => (
-//                         <div
-//                           key={index}
-//                           className="flex items-center justify-between px-2 rounded-md"
-//                         >
-//                           <div className="flex">
-//                             <h3 className="text-sm">{approver.name} </h3>
-//                             <h3 className="text-sm">
-//                               {" "}
-//                               | Email:-{approver.email}
-//                             </h3>
-//                           </div>
-//                           <Button
-//                             type="button"
-//                             onClick={() => removeApprover(index)}
-//                             variant="ghost"
-//                             size="sm"
-//                             className="text-red-500 hover:text-red-700 ml-2"
-//                           >
-//                             <X className="h-4 w-4" />
-//                           </Button>
-//                         </div>
-//                       ))}
-//                     </div>
-//                     {errors.approvers && (
-//                       <p className="text-red-500 text-sm">{errors.approvers}</p>
-//                     )}
-//                   </div>
-//                 </div>
-
-//                 <div>
-//                   <CardTitle>Product Details</CardTitle>
-//                 </div>
-//                 <div className="space-y-4 mt-4">
-//                   {/* Product Input Form */}
-//                   <div className="flex items-center space-x-2">
-//                     {/*
-//                       <Input
-//                         placeholder="Product Name"
-//                         value={newProduct.name}
-//                         onChange={(e) =>
-//                           handleProductInputChange("name", e.target.value)
-//                         }
-//                         className="flex-1"
-//                       />
-//                        */}
-//                     <Input
-//                       placeholder="Product Description"
-//                       value={newProduct.description}
-//                       onChange={(e) =>
-//                         handleProductInputChange("description", e.target.value)
-//                       }
-//                       className="flex-1"
-//                     />
-//                     <Input
-//                       type="number"
-//                       placeholder="Qty"
-//                       min="1"
-//                       value={newProduct.quantity}
-//                       onChange={(e) =>
-//                         handleProductInputChange(
-//                           "quantity",
-//                           parseInt(e.target.value, 10) || 1
-//                         )
-//                       }
-//                       className="w-24"
-//                     />
-//                     <Button
-//                       type="button"
-//                       onClick={addProduct}
-//                       className="bg-primary text-white"
-//                     >
-//                       Add Product
-//                     </Button>
-//                   </div>
-
-//                   {/* Display Added Products */}
-//                   <div className="space-y-2">
-//                     {approvedProducts.map((product, index) => (
-//                       <div
-//                         key={index}
-//                         className="flex items-center space-x-2 p-2 bg-gray-50 rounded-md"
-//                       >
-//                         <span className="">{product.description}</span>
-//                         <span className="w-24 text-center">
-//                           {product.quantity}
-//                         </span>
-//                         <Button
-//                           type="button"
-//                           onClick={() => removeProduct(index)}
-//                           variant="ghost"
-//                           size="sm"
-//                           className="text-red-500 hover:text-red-700"
-//                         >
-//                           <X className="h-4 w-4" />
-//                         </Button>
-//                       </div>
-//                     ))}
-//                   </div>
-
-//                   {errors.products && (
-//                     <p className="text-red-500 text-sm">{errors.products}</p>
-//                   )}
-//                 </div>
-//               </CardContent>
-
-//               <div className="flex justify-end space-x-4 mr-10">
-//                 <div className="flex absolute bottom-[-12px] gap-2">
-//                   <Button
-//                     type="submit"
-//                     className=" px-4  rounded-lg bg-primary"
-//                     disabled={loading}
-//                   >
-//                     {loading ? "Submitting..." : "Save RFP"}
-//                   </Button>
-//                   <Button
-//                     type="button"
-//                     onClick={() => {
-//                       if (savedRFP) {
-//                         router.push(
-//                           `/dashboard/manager/rfp/quotation?rfp=${rfpId}`
-//                         );
-//                       }
-//                     }}
-//                     className="px-4 last:rounded-lg bg-primary"
-//                     disabled={!savedRFP}
-//                   >
-//                     Add Quotation
-//                   </Button>
-//                 </div>
-//               </div>
-
-//               {error && <div className="text-red-500">{error}</div>}
-//             </form>
-
-//             <div className="">
-//               {userInfo && (
-//                 <div>
-//                   <CompanyAddresses
-//                     companyId={userInfo.companyId}
-//                     setRfpAddress={setRfpAddress}
-//                     errors={errors}
-//                     setErrors={setErrors}
-//                   />
-//                 </div>
-//               )}
-//             </div>
-//           </Card>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// };
-
-// export default RFPForm;
-
-
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
+import { useCurrentUser } from '@/hooks/auth';
 
+// Updated interface to match the new API response structure
 interface RFP {
   id: string;
-  rfpId: string;
-  requirementType: string;
-  status: string;
-  productCount: number;
-  quotationCount: number;
-  createdDate: string;
+  rfpNumber: string;      // Changed from rfpId to rfpNumber
+  title: string;          // Added title
+  description?: string;   // Added description
+  status: string;         // Changed from requirementType to status  
+  estimatedBudget?: number; // Added budget
   deliveryDate: string;
+  createdAt: string;      // Changed from createdDate to createdAt
+  createdBy: string;      // Added creator name
+  createdByEmail?: string; // Added creator email
+  quotationCount: number;
+  quotations: any[];      // Added quotations array
+  canAddQuotation: boolean;
+  canCreatePO: boolean;
+  canEdit: boolean;
+}
+
+// API Response interface to match the new structure
+interface APIResponse {
+  data: RFP[];
+  total: number;
+  filters: {
+    createdBy?: string;
+    userId?: string;
+  };
+  sorting: {
+    sortBy: string;
+    order: string;
+  };
 }
 
 const RfpListPage: React.FC = () => {
@@ -692,16 +43,45 @@ const RfpListPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const user = useCurrentUser();
 
   useEffect(() => {
     const fetchRfps = async () => {
       try {
-        const response = await axios.get<RFP[]>('/api/rfp/summary');
-        setRfps(response.data);
-        setLoading(false);
+        setLoading(true);
+        
+        // Get current user ID - replace with your actual auth logic
+        const userId = user?.id; // You'll need to implement this
+        // Updated API endpoint with new parameter structure
+        const response = await axios.get<APIResponse>(`/api/rfp/summary?createdBy=${userId}&sortBy=createdAt&order=desc`);
+        
+        // Handle the new response structure
+        if (response.data && response.data.data) {
+          setRfps(response.data.data);
+        } else {
+          // Fallback for direct array response
+          setRfps(Array.isArray(response.data) ? response.data : []);
+        }
+        
+        setError(null);
       } catch (err) {
-        const error = err as AxiosError;
-        setError(error.message || 'Failed to fetch RFP data');
+        const error = err as AxiosError<{ error: string; details?: string }>;
+        
+        // Enhanced error handling
+        let errorMessage = 'Failed to fetch RFP data';
+        
+        if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+          if (error.response.data.details) {
+            errorMessage += `: ${error.response.data.details}`;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setError(errorMessage);
+        console.error('RFP fetch error:', error);
+      } finally {
         setLoading(false);
       }
     };
@@ -709,9 +89,33 @@ const RfpListPage: React.FC = () => {
     fetchRfps();
   }, []);
 
+
   const handleRfpClick = (id: string) => {
-  router.push(`/dashboard/user/rfp/view/${id}`);
-};
+    router.push(`/dashboard/user/rfp/view/${id}`);
+  };
+
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return 'N/A';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(amount);
+  };
+
+  const getStatusColor = (status: string) => {
+    const statusColors: { [key: string]: string } = {
+      'DRAFT': 'text-gray-600 bg-gray-100',
+      'PENDING_APPROVAL': 'text-yellow-600 bg-yellow-100',
+      'APPROVED': 'text-blue-600 bg-blue-100',
+      'SENT_TO_VENDORS': 'text-purple-600 bg-purple-100',
+      'QUOTATION_RECEIVED': 'text-indigo-600 bg-indigo-100',
+      'VENDOR_SELECTED': 'text-green-600 bg-green-100',
+      'PO_GENERATED': 'text-teal-600 bg-teal-100',
+      'COMPLETED': 'text-green-700 bg-green-200',
+      'CANCELLED': 'text-red-600 bg-red-100',
+    };
+    return statusColors[status] || 'text-gray-600 bg-gray-100';
+  };
 
   if (loading) {
     return (
@@ -737,7 +141,7 @@ const RfpListPage: React.FC = () => {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-lg font-medium text-green-800">Loading...</p>
+          <p className="text-lg font-medium text-green-800">Loading RFPs...</p>
         </div>
       </div>
     );
@@ -746,61 +150,148 @@ const RfpListPage: React.FC = () => {
   if (error) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
-        <p className="text-lg font-medium text-red-600 bg-red-50 px-4 py-2 rounded-md">{error}</p>
+        <div className="text-center">
+          <div className="text-lg font-medium text-red-600 bg-red-50 px-6 py-4 rounded-lg border border-red-200 mb-4">
+            {error}
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-semibold text-green-800 mb-6">RFP Summary</h1>
-      <div className="shadow-lg rounded-lg overflow-hidden border border-green-200">
-        <table className="min-w-full bg-white">
-          <thead>
-            <tr className="bg-green-600 text-white">
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">RFP ID</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Requirement Type</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Status</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Product Count</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Quotation Count</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Created Date</th>
-              <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Delivery Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rfps.map((rfp) => (
-              <tr key={rfp.id} className="hover:bg-green-50 transition-colors">
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">
-                  <span
-  className="cursor-pointer hover:underline hover:text-green-700"
-  onClick={() => handleRfpClick(rfp.id)}
->
-  {rfp.rfpId}
-</span>
-                </td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">{rfp.requirementType}</td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">{rfp.status}</td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">{rfp.productCount}</td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">{rfp.quotationCount}</td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">
-                  {new Date(rfp.createdDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </td>
-                <td className="py-3 px-4 border-b border-green-100 text-green-900">
-                  {new Date(rfp.deliveryDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-semibold text-green-800">My RFPs</h1>
+        <div className="text-sm text-gray-600">
+          Total: {rfps.length} RFP{rfps.length !== 1 ? 's' : ''}
+        </div>
       </div>
+
+      {rfps.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M15,18V16H6V18H15M18,14V12H6V14H18Z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No RFPs found</h3>
+          <p className="text-gray-500 mb-4">You haven't created any RFPs yet.</p>
+          <button 
+            onClick={() => router.push('/dashboard/user/rfp/create')}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Create Your First RFP
+          </button>
+        </div>
+      ) : (
+        <div className="shadow-lg rounded-lg overflow-hidden border border-green-200">
+          <table className="min-w-full bg-white">
+            <thead>
+              <tr className="bg-green-600 text-white">
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">RFP Number</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Title</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Status</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Budget</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Quotations</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Created Date</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Delivery Date</th>
+                <th className="py-3 px-4 text-left font-medium text-sm uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rfps.map((rfp) => (
+                <tr key={rfp.id} className="hover:bg-green-50 transition-colors border-b border-green-100">
+                  <td className="py-3 px-4 text-green-900">
+                    <span
+                      className="cursor-pointer hover:underline hover:text-green-700 font-medium"
+                      onClick={() => handleRfpClick(rfp.id)}
+                    >
+                      {rfp.rfpNumber}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-green-900">
+                    <div>
+                      <div className="font-medium">{rfp.title}</div>
+                      {rfp.description && (
+                        <div className="text-sm text-gray-600 truncate max-w-xs">
+                          {rfp.description}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rfp.status)}`}>
+                      {rfp.status.replace(/_/g, ' ')}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-green-900">
+                    {formatCurrency(rfp.estimatedBudget)}
+                  </td>
+                  <td className="py-3 px-4 text-green-900">
+                    <div className="flex items-center space-x-2">
+                      <span>{rfp.quotationCount}</span>
+                      {rfp.quotationCount > 0 && (
+                        <span className="text-green-600">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9,22A1,1 0 0,1 8,21V18H4A2,2 0 0,1 2,16V4C2,2.89 2.9,2 4,2H20A2,2 0 0,1 22,4V16A2,2 0 0,1 20,18H13.9L10.2,21.71C10,21.9 9.75,22 9.5,22V22H9Z" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-green-900">
+                    {new Date(rfp.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </td>
+                  <td className="py-3 px-4 text-green-900">
+                    {new Date(rfp.deliveryDate).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleRfpClick(rfp.id)}
+                        className="text-green-600 hover:text-green-700 text-sm font-medium"
+                      >
+                        View
+                      </button>
+                      {rfp.canEdit && (
+                        <button
+                          onClick={() => router.push(`/dashboard/user/rfp/edit/${rfp.id}`)}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      {rfp.canCreatePO && (
+                        <button
+                          onClick={() => router.push(`/dashboard/user/rfp/create-po/${rfp.id}`)}
+                          className="text-purple-600 hover:text-purple-700 text-sm font-medium"
+                        >
+                          Create PO
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

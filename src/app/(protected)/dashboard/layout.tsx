@@ -33,12 +33,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   const getSidebarList = () => {
     switch (role) {
-      case "ADMIN":
-        return AdminList;
-      case "PR_MANAGER":
-        return managerList;
-      case "FINANCE_MANAGER":
-        return financeList;
       case "VENDOR":
         return vendorList;
       case "USER":
@@ -68,7 +62,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         <div className="shadow">
           <DashboardNavBar userProfile={userProfile} loading={false} />
         </div>
-        <div className="p-4">{children}</div>
+        <div className="">{children}</div>
       </div>
     </div>
   );

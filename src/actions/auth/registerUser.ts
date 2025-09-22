@@ -23,9 +23,9 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
 
   // Retrieve companyId from the company table using findFirst
   const companyRecord = await findCompanyByName(company!);
-  if (!companyRecord) {
-    return { error: "Company not found!" } as const;
-  }
+  // if (!companyRecord) {
+  //   return { error: "Company not found!" } as const;
+  // }
 
   const hashedPassword = await bcrypt.hash(password!, 10);
   await createUser({
@@ -34,7 +34,7 @@ export async function registerUser(values: z.infer<typeof RegisterUserSchema>) {
     password: hashedPassword,
     mobile,
     role: role || "USER",
-    companyId: companyRecord.id,
+    companyId: companyRecord ? companyRecord.id : null,
   });
 
   const verificationToken = await generateEmailVerificationToken(email);

@@ -6,7 +6,7 @@ interface UserData {
   email: string;
   name: string;
   password: string;
-  companyId: string;
+  companyId: string | null;
   mobile: string;
   role: (typeof UserRole.enumValues)[number];
 }

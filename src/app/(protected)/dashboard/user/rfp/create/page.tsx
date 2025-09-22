@@ -1,5 +1,6 @@
 'use client';
 
+import RFPConversation from '@/components/shared/RFPConversation';
 import { useState, useEffect } from 'react';
 
 export interface RFP {

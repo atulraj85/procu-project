@@ -1,15 +1,16 @@
 import { saveAuditTrail } from "@/actions/audit-trail";
 import {
-  ApproversListTable,
-  RFPProductTable,
+  RFPApprovalTable,
   RFPTable,
+  QuotationTable,
+  UserTable,
+  VendorTable
 } from "@/drizzle/schema";
 import { currentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { RequestBody, RFPStatus } from "@/types";
+import { RequestBody } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-
+import { eq, and } from "drizzle-orm";
 
 // /api/rfp/[id]/route.ts
 export async function GET(
@@ -23,43 +24,84 @@ export async function GET(
       where: eq(RFPTable.id, rfpId),
       columns: {
         id: true,
-        rfpId: true,
-        requirementType: true,
-        dateOfOrdering: true,
+        rfpNumber: true,        // Updated from rfpId
+        title: true,           // Added title
+        description: true,     // Added description
         deliveryLocation: true,
-        deliveryByDate: true,
-        rfpStatus: true,
-        reason: true,
-        preferredQuotationId: true,
+        deliveryStates: true,  // Added delivery states
+        deliveryDate: true,    // Updated from deliveryByDate
+        estimatedBudget: true, // Added budget
+        currency: true,        // Added currency
+        status: true,          // Updated from rfpStatus
+        lineItems: true,       // Updated from rfpProducts - now JSONB
+        questionAnswers: true, // Added question answers
+        selectionCriteria: true, // Added selection criteria
+        quotationCutoffDate: true, // Added cutoff date
+        rejectionReason: true, // Added rejection reason
+        createdBy: true,       // Updated field name
+        organizationId: true,  // Added organization
         createdAt: true,
         updatedAt: true,
       },
       with: {
-        approversLists: {
+        // Updated relations based on your schema
+        createdBy: {
+          columns: {
+            id: true,
+            name: true,
+            email: true,
+            mobile: true,
+            role: true,
+          },
+        },
+        organization: {
+          columns: {
+            id: true,
+            name: true,
+            legalName: true,
+            gstin: true,
+            address: true,
+          },
+        },
+        approvals: {
+          columns: {
+            id: true,
+            approverId: true,
+            stage: true,
+            sequence: true,
+            approved: true,
+            approvedAt: true,
+            comments: true,
+          },
           with: {
-            user: {
+            approver: {
               columns: {
                 id: true,
                 name: true,
                 email: true,
                 mobile: true,
+                role: true,
               },
             },
-          },
-        },
-        rfpProducts: {
-          columns: { 
-            id: true, 
-            quantity: true, 
-            description: true 
           },
         },
         quotations: {
           columns: {
             id: true,
-            refNo: true,
+            quotationNumber: true,
+            lineItemQuotes: true,
+            subtotal: true,
+            gstAmount: true,
             totalAmount: true,
-            totalAmountWithoutGst: true,
+            otherCharges: true,
+            supportingDocuments: true,
+            validTill: true,
+            deliveryTimeline: true,
+            status: true,
+            submittedAt: true,
+            evaluationScore: true,
+            evaluationNotes: true,
+            isShortlisted: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -68,46 +110,56 @@ export async function GET(
               columns: {
                 id: true,
                 companyName: true,
-                email: true,
-                mobile: true,
-                address: true,
+                legalName: true,
                 gstin: true,
                 pan: true,
-              },
-            },
-            vendorPricings: {
-              columns: { price: true, gst: true },
-              with: {
-                rfpProduct: {
-                  columns: {
-                    id: true,
-                    quantity: true,
-                    description: true,
-                  },
-                },
-              },
-            },
-            otherCharges: {
-              columns: {
-                name: true,
-                price: true,
-                gst: true,
-              },
-            },
-            supportingDocuments: {
-              columns: {
-                documentName: true,
-                location: true,
+                address: true,
+                city: true,
+                state: true,
+                pincode: true,
+                phone: true,
+                email: true,
+                website: true,
+                status: true,
               },
             },
           },
         },
-        user: {
+        vendorInvitations: {
           columns: {
-            name: true,
-            email: true,
-            mobile: true,
-            role: true,
+            id: true,
+            vendorId: true,
+            invitedAt: true,
+            invitedBy: true,
+            viewedAt: true,
+          },
+          with: {
+            vendor: {
+              columns: {
+                id: true,
+                companyName: true,
+                email: true,
+                phone: true,
+                status: true,
+              },
+            },
+            invitedBy: {
+              columns: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+        purchaseOrders: {
+          columns: {
+            id: true,
+            poNumber: true,
+            status: true,
+            totalAmount: true,
+            deliveryDate: true,
+            createdAt: true,
           },
         },
       },
@@ -117,10 +169,11 @@ export async function GET(
       return NextResponse.json({ error: "RFP not found" }, { status: 404 });
     }
 
-    const formattedData = formatRFPData([record])[0]; // Use existing formatter
+    const formattedData = formatRFPData([record])[0];
 
     return NextResponse.json(formattedData);
   } catch (error) {
+    console.error("Error fetching RFP details:", error);
     return NextResponse.json(
       { error: "Error fetching RFP details", details: (error as Error).message },
       { status: 500 }
@@ -133,87 +186,91 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   const currentLoggedInUser = await currentUser();
-  if (
-    !currentLoggedInUser ||
-    !currentLoggedInUser.id ||
-    currentLoggedInUser.role !== "PR_MANAGER"
-  ) {
+  if (!currentLoggedInUser || !currentLoggedInUser.id) {
     console.error("Invalid user!");
-    return NextResponse.json({ error: "Invalid user!" }, { status: 404 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const {
-      requirementType,
-      dateOfOrdering,
+      title,
+      description,
       deliveryLocation,
-      deliveryByDate,
-      rfpProducts,
-      approvers,
-      rfpStatus,
-    }: RequestBody = await request.json();
+      deliveryStates,
+      deliveryDate,
+      lineItems,
+      estimatedBudget,
+      currency,
+      questionAnswers,
+      selectionCriteria,
+      quotationCutoffDate,
+      status,
+    } = await request.json();
 
-    console.log("###### rfpProducts", rfpProducts);
+    // Validate the status against your RFP status enum
+    const validStatuses = [
+      "DRAFT",
+      "PENDING_APPROVAL", 
+      "APPROVED",
+      "REJECTED",
+      "SENT_TO_VENDORS",
+      "QUOTATION_RECEIVED",
+      "VENDOR_SELECTED",
+      "PO_GENERATED",
+      "DELIVERED",
+      "COMPLETED",
+      "CANCELLED"
+    ];
 
-    // Validate the status
-    if (!Object.values(RFPStatus).includes(rfpStatus)) {
+    if (status && !validStatuses.includes(status)) {
       return NextResponse.json(
-        { error: `Invalid status value: ${rfpStatus}` },
+        { error: `Invalid status value: ${status}` },
         { status: 400 }
       );
     }
 
     const updatedRFP = await db.transaction(async (tx) => {
+      // Check if RFP exists and user has permission to update
+      const existingRFP = await tx.query.RFPTable.findFirst({
+        where: eq(RFPTable.id, params.id),
+        columns: { id: true, createdBy: true, status: true },
+      });
+
+      if (!existingRFP) {
+        throw new Error("RFP not found");
+      }
+
+      // Check permissions - only creator or admin can update
+      if (existingRFP.createdBy !== currentLoggedInUser.id && 
+          !['SYSTEM_ADMIN', 'PROCUREMENT_MANAGER'].includes(currentLoggedInUser.role)) {
+        throw new Error("Permission denied");
+      }
+
       // Update the main RFP record
       const [updatedRFP] = await tx
         .update(RFPTable)
         .set({
-          requirementType,
-          dateOfOrdering: new Date(dateOfOrdering),
+          title,
+          description,
           deliveryLocation,
-          deliveryByDate: new Date(deliveryByDate),
-          rfpStatus,
+          deliveryStates,
+          deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
+          lineItems: lineItems || existingRFP.lineItems, // Keep existing if not provided
+          estimatedBudget,
+          currency: currency || 'INR',
+          questionAnswers,
+          selectionCriteria,
+          quotationCutoffDate: quotationCutoffDate ? new Date(quotationCutoffDate) : undefined,
+          status,
           updatedAt: new Date(),
         })
         .where(eq(RFPTable.id, params.id))
-        .returning({ id: RFPTable.id, rfpId: RFPTable.rfpId });
-
-      if (!updatedRFP) {
-        throw new Error("RFP not found");
-      }
-
-      // Delete existing products and approvers
-      await tx
-        .delete(RFPProductTable)
-        .where(eq(RFPProductTable.rfpId, updatedRFP.id));
-      await tx
-        .delete(ApproversListTable)
-        .where(eq(ApproversListTable.rfpId, updatedRFP.id));
-
-      console.log("########## rfpProducts", JSON.stringify(rfpProducts));
-
-      // Insert new products
-      if (rfpProducts && rfpProducts.length > 0) {
-        const rfpProductValues = rfpProducts.map((rfpProduct) => ({
-          rfpId: updatedRFP.id,
-          quantity: rfpProduct.quantity,
-          name: rfpProduct.name,
-          description: rfpProduct.description,
-          updatedAt: new Date(),
-        }));
-        await tx.insert(RFPProductTable).values(rfpProductValues);
-      }
-
-      // Insert new approvers
-      if (approvers && approvers.length > 0) {
-        const approverValues = approvers.map((approver) => ({
-          rfpId: updatedRFP.id,
-          userId: approver.approverId,
-          approved: false,
-          updatedAt: new Date(),
-        }));
-        await tx.insert(ApproversListTable).values(approverValues);
-      }
+        .returning({ 
+          id: RFPTable.id, 
+          rfpNumber: RFPTable.rfpNumber,
+          title: RFPTable.title,
+          status: RFPTable.status
+        });
 
       return updatedRFP;
     });
@@ -224,25 +281,43 @@ export async function PUT(
         await saveAuditTrail({
           eventName: "RFP_UPDATED",
           details: {
-            rfpId: updatedRFP.rfpId,
+            rfpId: updatedRFP.rfpNumber,
+            rfpTitle: updatedRFP.title,
             rfpDescription: "RFP has been updated",
+            updatedBy: currentLoggedInUser.name,
+            newStatus: updatedRFP.status,
           },
         });
       } catch (error) {
-        console.error("Error saving rfp audit trails", error);
+        console.error("Error saving RFP audit trail:", error);
       }
     }
 
-    return NextResponse.json({ data: updatedRFP }, { status: 200 });
+    return NextResponse.json({ 
+      data: updatedRFP,
+      message: "RFP updated successfully" 
+    }, { status: 200 });
+
   } catch (error: any) {
     console.error("Error updating RFP:", error);
+    
+    let statusCode = 500;
+    let errorMessage = `Failed to update RFP: ${error.message}`;
+    
+    if (error.message === "RFP not found") {
+      statusCode = 404;
+      errorMessage = "RFP not found";
+    } else if (error.message === "Permission denied") {
+      statusCode = 403;
+      errorMessage = "You don't have permission to update this RFP";
+    }
+
     return NextResponse.json(
-      { error: `Failed to update RFP: ${error.message}` },
-      { status: error.message === "RFP not found" ? 404 : 500 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 }
-
 
 function formatRFPData(rfps: any[]) {
   if (!Array.isArray(rfps)) {
@@ -256,78 +331,137 @@ function formatRFPData(rfps: any[]) {
 
       return {
         id: rfp?.id,
-        rfpId: rfp?.rfpId,
-        requirementType: rfp?.requirementType,
-        dateOfOrdering: rfp?.dateOfOrdering,
+        rfpNumber: rfp?.rfpNumber,
+        title: rfp?.title,
+        description: rfp?.description,
         deliveryLocation: rfp?.deliveryLocation,
-        deliveryByDate: rfp?.deliveryByDate,
-        rfpStatus: rfp?.rfpStatus,
-        preferredQuotationId: rfp?.preferredQuotationId,
-        created_at: rfp?.createdAt,
-        updated_at: rfp?.updatedAt,
+        deliveryStates: rfp?.deliveryStates || [],
+        deliveryDate: rfp?.deliveryDate,
+        estimatedBudget: rfp?.estimatedBudget,
+        currency: rfp?.currency,
+        status: rfp?.status,
+        quotationCutoffDate: rfp?.quotationCutoffDate,
+        rejectionReason: rfp?.rejectionReason,
+        createdAt: rfp?.createdAt,
+        updatedAt: rfp?.updatedAt,
 
-        // Handle approvers list
-        approvers:
-          rfp?.approversLists?.map((approver: any) => ({
-            name: approver?.user?.name,
-            id: approver?.user?.id,
-            email: approver?.user?.email,
-            mobile: approver?.user?.mobile,
-          })) || [],
+        // Line items (stored as JSONB in your schema)
+        lineItems: rfp?.lineItems || [],
 
-        // Handle products
-        products:
-          rfp?.rfpProducts?.map((product: any) => ({
-            id: product?.id,
-            quantity: product?.quantity,
-            description: product?.description,
-          })) || [],
+        // Question answers
+        questionAnswers: rfp?.questionAnswers || {},
 
-        // Handle quotations
-        quotations:
-          rfp?.quotations?.map((quotation: any) => {
-            // Prepare vendor pricings
-            const vendorPricings =
-              quotation?.vendorPricings?.map((pricing: any) => ({
-                id: pricing?.rfpProduct?.id,
-                rfpProductId: pricing?.rfpProduct?.id,
-                quantity: pricing?.rfpProduct?.quantity,
-                price: pricing?.price,
-                description: pricing?.rfpProduct?.description,
-                gst: pricing?.gst,
-                type: "product",
-              })) || [];
+        // Selection criteria
+        selectionCriteria: rfp?.selectionCriteria || {},
 
-            // Prepare other charges
-            const otherCharges =
-              quotation?.otherCharges?.map((charge: any) => ({
-                ...charge,
-                type: "otherCharge",
-              })) || [];
+        // Organization info
+        organization: rfp?.organization ? {
+          id: rfp.organization.id,
+          name: rfp.organization.name,
+          legalName: rfp.organization.legalName,
+          gstin: rfp.organization.gstin,
+          address: rfp.organization.address,
+        } : null,
 
-            return {
-              id: quotation?.id,
-              totalAmount: quotation?.totalAmount,
-              refNo: quotation?.refNo,
-              totalAmountWithoutGST: quotation?.totalAmountWithoutGst,
-              created_at: quotation?.createdAt,
-              updated_at: quotation?.updatedAt,
-              vendor: quotation?.vendor,
-              products: [...vendorPricings, ...otherCharges],
-              supportingDocuments: quotation?.supportingDocuments || [],
-            };
-          }) || [],
+        // Handle approvals
+        approvals: rfp?.approvals?.map((approval: any) => ({
+          id: approval?.id,
+          stage: approval?.stage,
+          sequence: approval?.sequence,
+          approved: approval?.approved,
+          approvedAt: approval?.approvedAt,
+          comments: approval?.comments,
+          approver: {
+            id: approval?.approver?.id,
+            name: approval?.approver?.name,
+            email: approval?.approver?.email,
+            mobile: approval?.approver?.mobile,
+            role: approval?.approver?.role,
+          },
+        })) || [],
 
-        // Handle user info
-        createdBy: rfp?.user
-          ? {
-            name: rfp.user?.name,
-            email: rfp.user?.email,
-            mobile: rfp.user?.mobile,
-            role: rfp.user?.role,
-          }
-          : null,
+        // Handle quotations with updated structure
+        quotations: rfp?.quotations?.map((quotation: any) => ({
+          id: quotation?.id,
+          quotationNumber: quotation?.quotationNumber,
+          subtotal: quotation?.subtotal,
+          gstAmount: quotation?.gstAmount,
+          totalAmount: quotation?.totalAmount,
+          otherCharges: quotation?.otherCharges || [],
+          lineItemQuotes: quotation?.lineItemQuotes || [],
+          supportingDocuments: quotation?.supportingDocuments || [],
+          validTill: quotation?.validTill,
+          deliveryTimeline: quotation?.deliveryTimeline,
+          status: quotation?.status,
+          submittedAt: quotation?.submittedAt,
+          evaluationScore: quotation?.evaluationScore,
+          evaluationNotes: quotation?.evaluationNotes,
+          isShortlisted: quotation?.isShortlisted,
+          createdAt: quotation?.createdAt,
+          updatedAt: quotation?.updatedAt,
+          vendor: quotation?.vendor ? {
+            id: quotation.vendor.id,
+            companyName: quotation.vendor.companyName,
+            legalName: quotation.vendor.legalName,
+            gstin: quotation.vendor.gstin,
+            pan: quotation.vendor.pan,
+            address: quotation.vendor.address,
+            city: quotation.vendor.city,
+            state: quotation.vendor.state,
+            pincode: quotation.vendor.pincode,
+            phone: quotation.vendor.phone,
+            email: quotation.vendor.email,
+            website: quotation.vendor.website,
+            status: quotation.vendor.status,
+          } : null,
+        })) || [],
+
+        // Handle vendor invitations
+        vendorInvitations: rfp?.vendorInvitations?.map((invitation: any) => ({
+          id: invitation?.id,
+          invitedAt: invitation?.invitedAt,
+          viewedAt: invitation?.viewedAt,
+          vendor: invitation?.vendor ? {
+            id: invitation.vendor.id,
+            companyName: invitation.vendor.companyName,
+            email: invitation.vendor.email,
+            phone: invitation.vendor.phone,
+            status: invitation.vendor.status,
+          } : null,
+          invitedBy: invitation?.invitedBy ? {
+            id: invitation.invitedBy.id,
+            name: invitation.invitedBy.name,
+            email: invitation.invitedBy.email,
+          } : null,
+        })) || [],
+
+        // Handle purchase orders
+        purchaseOrders: rfp?.purchaseOrders?.map((po: any) => ({
+          id: po?.id,
+          poNumber: po?.poNumber,
+          status: po?.status,
+          totalAmount: po?.totalAmount,
+          deliveryDate: po?.deliveryDate,
+          createdAt: po?.createdAt,
+        })) || [],
+
+        // Handle creator info
+        createdBy: rfp?.createdBy ? {
+          id: rfp.createdBy.id,
+          name: rfp.createdBy.name,
+          email: rfp.createdBy.email,
+          mobile: rfp.createdBy.mobile,
+          role: rfp.createdBy.role,
+        } : null,
+
+        // Additional computed fields
+        totalQuotations: rfp?.quotations?.length || 0,
+        shortlistedQuotations: rfp?.quotations?.filter((q: any) => q.isShortlisted)?.length || 0,
+        invitedVendors: rfp?.vendorInvitations?.length || 0,
+        hasActivePO: rfp?.purchaseOrders?.some((po: any) => 
+          ['GENERATED', 'SENT_TO_VENDOR', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(po.status)
+        ) || false,
       };
     })
-    .filter(Boolean); // Remove any null entries
+    .filter(Boolean);
 }
