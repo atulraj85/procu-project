@@ -123,7 +123,7 @@ export default function RFPForm() {
           setSelectedTemplate(templateToSelect);
           const initialAnswers: { [key: string]: string | number } = {};
           templateToSelect.questions.forEach(q => {
-            initialAnswers[q.id] = q.type === 'number' ? 0 : '';
+            initialAnswers[q.question] = q.type === 'number' ? 0 : '';
           });
           setFormData(prev => ({
             ...prev,
@@ -140,6 +140,7 @@ export default function RFPForm() {
     };
     fetchQuestionTemplates();
   }, []);
+
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -163,7 +164,7 @@ export default function RFPForm() {
         }
         return { ...prev, lineItems: newLineItems };
       } else if (section === 'questionAnswers') {
-        const selectedQuestion = selectedTemplate?.questions.find(q => q.id === name);
+        const selectedQuestion = selectedTemplate?.questions.find(q => q.question=== name);
         const processedValue = selectedQuestion?.type === 'number' ? Number(value) || 0 : value;
         return { ...prev, questionAnswers: { ...prev.questionAnswers, [name]: processedValue } };
       } else if (section === 'selectionCriteria') {
@@ -210,7 +211,7 @@ export default function RFPForm() {
     const initialAnswers: { [key: string]: string | number } = {};
     if (selectedTemplate) {
       selectedTemplate.questions.forEach(q => {
-        initialAnswers[q.id] = q.type === 'number' ? 0 : '';
+        initialAnswers[q.question] = q.type === 'number' ? 0 : '';
       });
     }
     setFormData({
@@ -263,7 +264,7 @@ export default function RFPForm() {
     if (selectedTemplate) {
       const requiredQuestions = selectedTemplate.questions.filter((q) => q.required);
       for (const q of requiredQuestions) {
-        const answer = formData.questionAnswers[q.id];
+        const answer = formData.questionAnswers[q.question];
         if (answer === undefined || answer === '' || (q.type === 'number' && answer === 0)) {
           return `${q.question} is required`;
         }
@@ -634,7 +635,7 @@ export default function RFPForm() {
                 {selectedTemplate.questions.map((question) => {
                   const fullSpan = question.type === 'textarea' || question.type === 'radio' || question.type === 'select';
                   const colClass = fullSpan ? 'md:col-span-2 lg:col-span-3' : '';
-                  const answer = formData.questionAnswers[question.id] ?? (question.type === 'number' ? 0 : '');
+                  const answer = formData.questionAnswers[question.question] ?? (question.type === 'number' ? 0 : '');
                   const placeholderText = question.placeholder || `Enter ${question.question.toLowerCase()}`;
                   
                                     return (
@@ -644,7 +645,7 @@ export default function RFPForm() {
                       </label>
                       {question.type === 'select' && (
                         <select
-                          name={question.id}
+                          name={question.question}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:opacity-50"
@@ -661,7 +662,7 @@ export default function RFPForm() {
                       )}
                       {question.type === 'textarea' && (
                         <textarea
-                          name={question.id}
+                          name={question.question}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           placeholder={placeholderText}
@@ -674,7 +675,7 @@ export default function RFPForm() {
                       {['text', 'number', 'date'].includes(question.type) && (
                         <input
                           type={question.type}
-                          name={question.id}
+                          name={question.question}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           placeholder={placeholderText}
@@ -690,7 +691,7 @@ export default function RFPForm() {
                             <label key={opt} className="flex items-center p-2 border border-gray-300 rounded cursor-pointer hover:bg-gray-50">
                               <input
                                 type="radio"
-                                name={question.id}
+                                name={question.question}
                                 value={opt}
                                 checked={answer === opt}
                                 onChange={(e) => handleInputChange(e, 'questionAnswers')}
