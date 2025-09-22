@@ -12,34 +12,7 @@ function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Toggle Buttons - Always Visible */}
-      <div className="w-full flex justify-center pt-6 pb-4">
-        <div className="bg-white rounded-lg p-1 shadow-md border">
-          <Button
-            variant={registrationType === "USER" ? "default" : "ghost"}
-            onClick={() => setRegistrationType("USER")}
-            className={`px-4 md:px-6 py-2 text-sm md:text-base rounded-md transition-all duration-200 ${
-              registrationType === "USER"
-                ? "bg-primary text-white shadow-sm"
-                : "text-gray-600 hover:text-primary"
-            }`}
-          >
-            User Registration
-          </Button>
-          <Button
-            variant={registrationType === "VENDOR" ? "default" : "ghost"}
-            onClick={() => setRegistrationType("VENDOR")}
-            className={`px-4 md:px-6 py-2 text-sm md:text-base rounded-md transition-all duration-200 ${
-              registrationType === "VENDOR"
-                ? "bg-primary text-white shadow-sm"
-                : "text-gray-600 hover:text-primary"
-            }`}
-          >
-            Vendor Registration
-          </Button>
-        </div>
-      </div>
-
+\
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row">
         {/* Left Side Image - Hidden on mobile and tablet */}
