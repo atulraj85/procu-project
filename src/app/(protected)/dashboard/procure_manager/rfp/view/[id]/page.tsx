@@ -1,459 +1,577 @@
-// "use client";
-// import React, { useEffect, useState } from "react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { Label } from "@/components/ui/label";
-// import { useSearchParams } from "next/navigation";
-// import { IoDocumentTextOutline } from "react-icons/io5";
-// import { Input } from "@/components/ui/input";
-// import Link from "next/link";
-// import { Button } from "@/components/ui/button";
-// import { X, Star, FileText, Image as ImageIcon } from "lucide-react";
-// import Loader from "@/components/shared/Loader";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import Image from "next/image";
-// import { Disclosure } from "@headlessui/react";
+"use client";
+import React, { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useParams, useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  X, 
+  Star, 
+  FileText, 
+  CheckCircle, 
+  XCircle, 
+  Clock,
+  MapPin,
+  Calendar,
+  User,
+  Building,
+  DollarSign,
+  Package,
+  MessageSquare,
+  MessageCircleMore
+} from "lucide-react";
+import Loader from "@/components/shared/Loader";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "@/components/ui/use-toast";
+import { FaRupeeSign } from "react-icons/fa";
+import RFPConversation from "@/components/shared/RFPConversation";
+import { useCurrentUser } from "@/hooks/auth";
 
-// // Define types for the RFP data structure
-// interface Vendor {
-//   price: string | number | readonly string[] | undefined;
-//   companyName: string;
-//   email: string;
-//   mobile: string;
-//   address: string;
-//   customerState: string;
-//   customerCity: string;
-//   country: string;
-//   zip: string;
-//   gstin: string;
-//   pan: string;
-// }
+// Updated interfaces to match new API structure
+interface LineItem {
+  productName: string;
+  description: string;
+  quantity: number;
+  specifications?: any;
+  estimatedUnitPrice?: number;
+  urgency?: string;
+}
 
-// interface Product {
-//   GST: string;
-//   price: string | number | readonly string[] | undefined;
-//   id: string;
-//   gst: string;
-//   name: string;
-//   modelNo: string;
-//   quantity: number;
-//   description?: string;
-//   type: "product" | "otherCharge";
-// }
+interface QuestionAnswers {
+  usage_type: string;
+  request_type: string;
+  required_date: string;
+  client_related: string;
+  request_reason: string;
+  quantity_needed: number;
+  specific_request: string;
+  replacement_reason?: string;
+  business_justification?: string;
+}
 
-// interface OtherCharge {
-//   name: string;
-//   GST: string;
-//   price: string | number;
-//   gst: string | number;
-//   description?: string;
-//   type: "otherCharge";
-// }
+interface Approval {
+  id: string;
+  stage: string;
+  sequence: number;
+  approved: boolean | null;
+  approvedAt?: string;
+  comments?: string;
+  approver: {
+    id: string;
+    name: string;
+    email: string;
+    mobile?: string;
+    role: string;
+  };
+}
 
-// interface SupportingDocument {
-//   documentName: string;
-//   location: string;
-// }
+interface RFPData {
+  id: string;
+  rfpNumber: string;
+  title: string;
+  description?: string;
+  deliveryLocation: string;
+  deliveryStates: string[];
+  deliveryDate: string;
+  estimatedBudget?: number;
+  currency: string;
+  status: string;
+  quotationCutoffDate: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: LineItem[];
+  questionAnswers: QuestionAnswers;
+  selectionCriteria: any;
+  organization: {
+    id: string;
+    name: string;
+    legalName: string;
+    gstin?: string;
+    address: string;
+  } | null;
+  approvals: Approval[];
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    mobile?: string;
+    role: string;
+  } | null;
+  quotations: any[];
+  totalQuotations: number;
+}
 
-// interface Quotation {
-//   otherCharges: OtherCharge[];
-//   refNo: string;
-//   id: string;
-//   totalAmount: string;
-//   totalAmountWithoutGST: string;
-//   vendor: Vendor;
-//   products: Product[];
-//   supportingDocuments: SupportingDocument[];
-// }
+const ViewRFPForApproval: React.FC = () => {
+  const params = useParams();
+  const router = useRouter();
+  const rfpId = params.id as string;
+  
+  const [rfpData, setRfpData] = useState<RFPData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [processing, setProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Approval/Rejection state
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [approvalComments, setApprovalComments] = useState("");
+  const [rejectionReason, setRejectionReason] = useState("");
 
-// interface Approver {
-//   name: string;
-//   email: string;
-//   mobile: string;
-// }
+  const user = useCurrentUser();
+  useEffect(() => {
+    const fetchRFP = async () => {
+      try {
+        const response = await fetch(`/api/rfp/${rfpId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch RFP data");
+        }
+        const data: RFPData = await response.json();
+        setRfpData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-// interface RFPData {
-//   products: any;
-//   rfpId: string;
-//   requirementType: string;
-//   dateOfOrdering: string;
-//   deliveryLocation: string;
-//   deliveryByDate: string;
-//   rfpStatus: string;
-//   preferredQuotationId: string;
-//   approvers: Approver[];
-//   quotations: Quotation[];
-// }
+    if (rfpId) {
+      fetchRFP();
+    }
+  }, [rfpId]);
 
-// const ViewRFP: React.FC = () => {
-//   const searchParams = useSearchParams();
-//   const rfp = searchParams.get("rfp");
-//   const [rfpData, setRfpData] = useState<RFPData | null>(null);
-//   const [loading, setLoading] = useState<boolean>(true);
-//   const [error, setError] = useState<string | null>(null);
+  const handleApprove = async () => {
+    setProcessing(true);
+    try {
+      const response = await fetch('/api/rfp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: rfpId,
+          updatedBy: user?.id, // Replace with actual current user ID
+          approvalAction: 'approve',
+          approvalComments: approvalComments || 'Approved for next stage',
+        })
+      });
 
-//   useEffect(() => {
-//     const fetchRFP = async () => {
-//       try {
-//         const response = await fetch(`/api/rfp?rfpId=${rfp}`);
-//         if (!response.ok) {
-//           throw new Error("Failed to fetch RFP data");
-//         }
-//         const data: RFPData[] = await response.json();
-//         setRfpData(data[0]); // Assuming the API returns an array
-//       } catch (err) {
-//         setError(err instanceof Error ? err.message : "An error occurred");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
+      const data = await response.json();
 
-//     fetchRFP();
-//   }, [rfp]);
+      if (response.ok) {
+        toast({
+          title: "RFP Approved",
+          description: data.message,
+        });
+        // Refresh data
+        window.location.reload();
+      } else {
+        throw new Error(data.message || 'Failed to approve RFP');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+      setShowApproveDialog(false);
+      setApprovalComments("");
+    }
+  };
 
-//   const calculateTaxableAmount = (item: Product | OtherCharge) => {
-//     const price =
-//       typeof item.price === "string"
-//         ? parseFloat(item.price)
-//         : Number(item.price);
-//     return (
-//       price *
-//       ("quantity" in item && item.type !== "otherCharge" ? item.quantity : 1)
-//     );
-//   };
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      toast({
+        title: "Rejection reason required",
+        description: "Please provide a reason for rejecting this RFP",
+        variant: "destructive",
+      });
+      return;
+    }
 
-//   const calculateTotalAmount = (item: Product | OtherCharge) => {
-//     const taxableAmount = calculateTaxableAmount(item);
-//     const gst =
-//       typeof item.GST === "string"
-//         ? parseFloat(item.GST)
-//         : Number(item.GST || item.gst || 0);
-//     return taxableAmount * (1 + gst / 100);
-//   };
+    setProcessing(true);
+    try {
+      const response = await fetch('/api/rfp', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: rfpId,
+          updatedBy: user?.id, // Replace with actual current user ID
+          approvalAction: 'reject',
+          rejectionReason: rejectionReason,
+        })
+      });
 
-//   if (loading)
-//     return (
-//       <div>
-//         <Loader />
-//       </div>
-//     );
-//   if (error) return <div className="text-red-500">{error}</div>;
-//   if (!rfpData) return <div>No RFP data found.</div>;
+      const data = await response.json();
 
-//   const isImageFile = (filename: string): boolean => {
-//     const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"];
-//     return imageExtensions.some((ext) => filename.toLowerCase().endsWith(ext));
-//   };
+      if (response.ok) {
+        toast({
+          title: "RFP Rejected",
+          description: data.message,
+        });
+        // Refresh data
+        window.location.reload();
+      } else {
+        throw new Error(data.message || 'Failed to reject RFP');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+      setShowRejectDialog(false);
+      setRejectionReason("");
+    }
+  };
 
-//   const DocumentPreview: React.FC<{ document: SupportingDocument }> = ({
-//     document,
-//   }) => {
-//     return (
-//       <Dialog>
-//         <DialogTrigger asChild>
-//           <Button variant="outline" size="sm">
-//             <IoDocumentTextOutline />
-//           </Button>
-//         </DialogTrigger>
-//         <DialogContent className="max-w-3xl">
-//           <DialogHeader>
-//             <DialogTitle>{document.documentName}</DialogTitle>
-//           </DialogHeader>
-//           {isImageFile(document.location) ? (
-//             <Image
-//               src={document.location}
-//               alt={document.documentName}
-//               width={800}
-//               height={600}
-//               style={{ objectFit: "contain" }}
-//             />
-//           ) : (
-//             <iframe
-//               src={document.location}
-//               title={document.documentName}
-//               width="100%"
-//               height="600px"
-//             />
-//           )}
-//         </DialogContent>
-//       </Dialog>
-//     );
-//   };
+  const getStatusColor = (status: string) => {
+    const statusColors: { [key: string]: string } = {
+      'DRAFT': 'bg-gray-500',
+      'PENDING_APPROVAL': 'bg-yellow-500',
+      'APPROVED': 'bg-green-500',
+      'REJECTED': 'bg-red-500',
+      'SENT_TO_VENDORS': 'bg-blue-500',
+    };
+    return statusColors[status] || 'bg-gray-500';
+  };
 
-//   return (
-//     <form className="space-y-2">
-//       <Card>
-//         <div className="flex justify-between mt-2 mb-3 px-6">
-//           <div className="flex flex-col">
-//             <div className="flex items-center mb-2">
-//               <Label className="font-bold text-md border border-black rounded-full mr-4 px-3 py-1">
-//                 {rfpData.requirementType === "Product" ? "P" : "S"}
-//               </Label>
-//               <Label>RFP ID: {rfpData.rfpId}</Label>
-//             </div>
+  const formatCurrency = (amount?: number) => {
+    if (!amount) return 'Not specified';
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+    }).format(amount);
+  };
 
-//             {/* Product Details */}
-//             <div className="ml-12">
-//               {rfpData.products.map((product: any, index: any) => (
-//                 <div key={index} className="flex flex-col mb-1">
-//                   <div className="flex items-center space-x-4">
-//                     <Label className="font-medium">Name: {product.name}</Label>
-//                     <Label className="font-medium">
-//                       Model: {product.modelNo}
-//                     </Label>
-//                     <Label className="font-medium">
-//                       Qty: {product.quantity}
-//                     </Label>
-//                   </div>
-//                   {product.description && (
-//                     <Label className="text-sm text-gray-600">
-//                       Description: {product.description}
-//                     </Label>
-//                   )}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
+  const canApproveOrReject =rfpData?.status === 'DRAFT';
 
-//           <div className="flex">
-//             <div className="">
-//               <Label>
-//                 RFP Date:{" "}
-//                 {new Date(rfpData.dateOfOrdering).toLocaleDateString()}
-//               </Label>
-//               <div className="space-y-2">
-//                 <Label>
-//                   Exp. Delivery Date:{" "}
-//                   {new Date(rfpData.deliveryByDate).toLocaleDateString()}
-//                 </Label>
-//               </div>
-//             </div>
-//             <div className="pl-3">
-//               <Link href="/dashboard/manager">
-//                 <Button
-//                   type="button"
-//                   variant="outline"
-//                   size="icon"
-//                   className="text-black-500 bg-red-400"
-//                 >
-//                   <X className="h-4 w-4" />
-//                 </Button>
-//               </Link>
-//             </div>
-//           </div>
-//         </div>
-//         <CardContent>
-//           <div>
-//             {rfpData.quotations.map((quotation, index) => (
-//               <Disclosure key={index} as="div" className="mb-4"></Disclosure>
-//             ))}
-//           </div>
-//         </CardContent>
+  if (loading) return <Loader />;
+  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
+  if (!rfpData) return <div className="p-4">No RFP data found.</div>;
 
-//         <CardContent>
-//           <Card className="mb-4">
-//             <CardContent>
-//               <div className="pt-2 pb-2">
-//                 <Label className="font-bold text-20">Quotations</Label>
-//               </div>
-//               <div>
-//                 {rfpData.quotations.map((quotation, index) => (
-//                   <Disclosure key={index} as="div" className="mb-4">
-//                     {({ open }) => (
-//                       <>
-//                         <Disclosure.Button
-//                           className={`flex justify-between w-full p-4 text-left text-sm font-medium ${
-//                             open ? "bg-gray-200" : "bg-blue-100"
-//                           }`}
-//                         >
-//                           <span className="flex">
-//                             <span className="font-bold">Quot. Ref No : </span>{" "}
-//                             {quotation.refNo}
-//                             {quotation.id === rfpData.preferredQuotationId && (
-//                               <span className="text-yellow-600 pl-4 font-semibold">
-//                                 <Star className="mr-2" />
-//                               </span>
-//                             )}
-//                           </span>
-//                           <div>
-//                             <span className="font-bold">
-//                               Total Amount (INR) :
-//                             </span>{" "}
-//                             {quotation.totalAmount}
-//                           </div>
-//                         </Disclosure.Button>
-//                         <Disclosure.Panel className="p-4">
-//                           <h4 className="font-semibold">Vendor Details</h4>
-//                           <div className="flex items-center space-x-2 mb-2">
-//                             <div className="flex flex-col">
-//                               <Label>
-//                                 {quotation.vendor.companyName} |{" "}
-//                                 {quotation.vendor.email} |{" "}
-//                                 {quotation.vendor.mobile}
-//                               </Label>
-//                             </div>
-//                           </div>
-//                           <h4 className="font-semibold mt-4">
-//                             Products and Other Charges
-//                           </h4>
-//                           <table className="min-w-full border-collapse border border-gray-300 mt-2">
-//                             <thead>
-//                               <tr className="bg-gray-100">
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Name
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Description
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Qty
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Unit Price
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   GST %
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Taxable Amt.
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   Total Amt.
-//                                 </th>
-//                               </tr>
-//                               <tr className="bg-gray-100">
-//                                 <th className="border border-gray-300 p-2 text-left"></th>
-//                                 <th className="border border-gray-300 p-2 text-left"></th>
-//                                 <th className="border border-gray-300 p-2 text-left"></th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   (INR)
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left"></th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   (INR)
-//                                 </th>
-//                                 <th className="border border-gray-300 p-2 text-left">
-//                                   (INR)
-//                                 </th>
-//                               </tr>
-//                             </thead>
-//                             <tbody>
-//                               {[
-//                                 ...quotation.products,
-//                                 ...(Array.isArray(quotation.otherCharges)
-//                                   ? quotation.otherCharges
-//                                   : []),
-//                               ].map((item, idx) => (
-//                                 <tr key={idx}>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {item.type === "otherCharge"
-//                                       ? "Other Charge"
-//                                       : item.name}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {item.type === "otherCharge"
-//                                       ? ""
-//                                       : item.description || "N/A"}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {item.type === "otherCharge"
-//                                       ? ""
-//                                       : item.quantity || ""}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {item.price}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {item.GST || item.gst || 0}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {calculateTaxableAmount(item).toFixed(2)}
-//                                   </td>
-//                                   <td className="border border-gray-300 p-2">
-//                                     {calculateTotalAmount(item).toFixed(2)}
-//                                   </td>
-//                                 </tr>
-//                               ))}
-//                             </tbody>
-//                             <tfoot>
-//                               <tr className="bg-gray-200">
-//                                 <td
-//                                   colSpan={5}
-//                                   className="border border-gray-300 p-2 font-bold text-right"
-//                                 >
-//                                   Total:
-//                                 </td>
-//                                 <td className="border border-gray-300 p-2 font-bold">
-//                                   {quotation.totalAmountWithoutGST}
-//                                 </td>
-//                                 <td className="border border-gray-300 p-2 font-bold">
-//                                   {quotation.totalAmount}
-//                                 </td>
-//                               </tr>
-//                             </tfoot>
-//                           </table>
-
-//                           <h4 className="font-semibold mt-4 mb-2">
-//                             Supporting Documents
-//                           </h4>
-//                           <div className="flex flex-wrap gap-4">
-//                             {quotation.supportingDocuments.map((doc, idx) => (
-//                               <div
-//                                 key={idx}
-//                                 className="flex items-center space-x-2"
-//                               >
-//                                 <span>{doc.documentName}</span>
-//                                 <DocumentPreview document={doc} />
-//                               </div>
-//                             ))}
-//                           </div>
-//                         </Disclosure.Panel>
-//                       </>
-//                     )}
-//                   </Disclosure>
-//                 ))}
-//               </div>
-//             </CardContent>
-//           </Card>
-//           <div className="flex">
-//             <Card className="mb-4 mr-2 w-[75%]">
-//               <CardHeader>
-//                 <Label className="font-bold text-20">Approver Details</Label>
-//               </CardHeader>
-//               <CardContent>
-//                 {rfpData.approvers.map((approver, index) => (
-//                   <div key={index} className="flex items-center space-x-2 mb-2">
-//                     <div>
-//                       <h1>
-//                         {approver.name} | {approver.email} | {approver.mobile}
-//                       </h1>
-//                     </div>
-//                   </div>
-//                 ))}
-//               </CardContent>
-//             </Card>
-//             <Card className="mb-4">
-//               <CardHeader>
-//                 <Label className="font-bold text-20">Delivery Location</Label>
-//               </CardHeader>
-//               <CardContent>
-//                 <div className="space-y-2">
-//                   <p>{rfpData.deliveryLocation}</p>
-//                 </div>
-//               </CardContent>
-//             </Card>
-//           </div>
-//         </CardContent>
-//       </Card>
-//     </form>
-//   );
-// };
-
-// export default ViewRFP;
+  return (
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl font-bold">{rfpData.title}</CardTitle>
+              <div className="flex items-center gap-4 mt-2">
+                <Badge variant="outline" className="font-mono">
+                  {rfpData.rfpNumber}
+                </Badge>
+                <Badge className={getStatusColor(rfpData.status)}>
+                  {rfpData.status.replace(/_/g, ' ')}
+                </Badge>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.back()}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          {rfpData.description && (
+            <p className="text-gray-600 mt-2">{rfpData.description}</p>
+          )}
+        </CardHeader>
+      </Card>
 
 
+      {/* Question Answers */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <MessageSquare className="w-5 h-5 mr-2" />
+            Request Details & Justification
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="font-medium">Usage Type:</Label>
+              <p className="text-sm">{rfpData.questionAnswers.usage_type}</p>
+            </div>
+            <div>
+              <Label className="font-medium">Request Type:</Label>
+              <p className="text-sm">{rfpData.questionAnswers.request_type}</p>
+            </div>
+            <div>
+              <Label className="font-medium">Required Date:</Label>
+              <p className="text-sm">{new Date(rfpData.questionAnswers.required_date).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <Label className="font-medium">Client Related:</Label>
+              <p className="text-sm">{rfpData.questionAnswers.client_related}</p>
+            </div>
+            <div>
+              <Label className="font-medium">Request Reason:</Label>
+              <p className="text-sm">{rfpData.questionAnswers.request_reason}</p>
+            </div>
+            <div>
+              <Label className="font-medium">Quantity Needed:</Label>
+              <p className="text-sm">{rfpData.questionAnswers.quantity_needed}</p>
+            </div>
+          </div>
+          
+          <Separator className="my-4" />
+          
+          <div className="space-y-3">
+            <div>
+              <Label className="font-medium">Specific Request:</Label>
+              <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
+                {rfpData.questionAnswers.specific_request}
+              </p>
+            </div>
+            
+            {rfpData.questionAnswers.replacement_reason && (
+              <div>
+                <Label className="font-medium">Replacement Reason:</Label>
+                <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
+                  {rfpData.questionAnswers.replacement_reason}
+                </p>
+              </div>
+            )}
+            
+            {rfpData.questionAnswers.business_justification && (
+              <div>
+                <Label className="font-medium">Business Justification:</Label>
+                <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
+                  {rfpData.questionAnswers.business_justification}
+                </p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
+      {/* Delivery Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <MapPin className="w-5 h-5 mr-2" />
+            Delivery Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label className="font-medium">Location:</Label>
+            <p className="text-sm mt-1">{rfpData.deliveryLocation}</p>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Rejection Reason (if rejected) */}
+      {rfpData.rejectionReason && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center">
+              <XCircle className="w-5 h-5 mr-2" />
+              Rejection Reason
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700">{rfpData.rejectionReason}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Action Buttons */}
+      {canApproveOrReject && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-blue-900">Approval Required</h3>
+                <p className="text-sm text-blue-700">This RFP is pending your approval</p>
+              </div>
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={processing}
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Reject
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => setShowApproveDialog(true)}
+                  disabled={processing}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Line Items */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Package className="w-5 h-5 mr-2" />
+            Line Items ({rfpData.lineItems.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {rfpData.lineItems.map((item, index) => (
+              <Card key={index} className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="font-medium">Product:</Label>
+                    <p className="text-sm">{item.productName}</p>
+                    {item.urgency && (
+                      <Badge variant={item.urgency === 'High' ? 'destructive' : 'secondary'} className="mt-1">
+                        {item.urgency}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="font-medium">Quantity:</Label>
+                    <p className="text-sm">{item.quantity}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium">Est. Unit Price:</Label>
+                    <p className="text-sm">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : 'Not specified'}</p>
+                  </div>
+                  {item.description && (
+                    <div className="md:col-span-3">
+                      <Label className="font-medium">Description:</Label>
+                      <p className="text-sm mt-1">{item.description}</p>
+                    </div>
+                  )}
+                  {item.specifications && (
+                    <div className="md:col-span-3">
+                      <Label className="font-medium">Specifications:</Label>
+                      <div className="text-sm mt-1 p-2 bg-gray-50 rounded">
+                        {Object.entries(item.specifications).map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span className="capitalize">{key.replace('_', ' ')}:</span>
+                            <span>{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+
+      {/* Approval Workflow */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <MessageCircleMore className="w-5 h-5 mr-2" />
+            Message {rfpData?.createdBy?.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+            <RFPConversation rfpId={rfpData.id} />
+        </CardContent>
+      </Card>
+
+
+      {/* Approve Dialog */}
+      <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Approve RFP</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to approve this RFP? This will move it to the next stage in the approval workflow.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="comments">Comments (Optional)</Label>
+            <Textarea
+              id="comments"
+              value={approvalComments}
+              onChange={(e) => setApprovalComments(e.target.value)}
+              placeholder="Add any comments about your approval..."
+              className="mt-2"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleApprove}
+              disabled={processing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {processing ? "Processing..." : "Approve RFP"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reject Dialog */}
+      <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject RFP</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please provide a reason for rejecting this RFP. This will stop the approval workflow.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="reason">Rejection Reason *</Label>
+            <Textarea
+              id="reason"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Please explain why you are rejecting this RFP..."
+              className="mt-2"
+              required
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleReject}
+              disabled={processing || !rejectionReason.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {processing ? "Processing..." : "Reject RFP"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default ViewRFPForApproval;

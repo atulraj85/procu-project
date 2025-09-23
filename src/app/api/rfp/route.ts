@@ -360,10 +360,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-
-// Add this PUT method to your existing route.ts file
-
 // PUT update an existing RFP
 export async function PUT(request: NextRequest) {
   try {
@@ -449,21 +445,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Check permissions based on role and current status
-    const canEdit = (
-      (user.role === 'USER' && rfp.createdBy === updatedBy && rfp.status === 'DRAFT') ||
-      (user.role === 'PROCUREMENT_LEAD' && ['DRAFT', 'PENDING_APPROVAL'].includes(rfp.status)) ||
-      (user.role === 'PROCUREMENT_MANAGER' && ['APPROVED', 'SENT_TO_VENDORS'].includes(rfp.status)) ||
-      (['FINANCE_EXECUTIVE', 'FINANCE_MANAGER'].includes(user.role) && ['VENDOR_SELECTED'].includes(rfp.status))
-    );
-
-    if (!canEdit) {
-      return NextResponse.json(
-        { message: 'You do not have permission to update this RFP in its current status' }, 
-        { status: 403 }
-      );
-    }
-
     // Handle approval/rejection actions
     if (approvalAction) {
       return await handleApprovalAction(
@@ -472,11 +453,12 @@ export async function PUT(request: NextRequest) {
         user.role, 
         approvalAction, 
         approvalComments, 
-        rejectionReason
+        rejectionReason,
+        rfp.status // Pass current status
       );
     }
 
-    // Prepare update data
+    // For general updates (non-approval actions)
     const updateData: any = {
       updatedAt: new Date()
     };
@@ -507,7 +489,6 @@ export async function PUT(request: NextRequest) {
       data: {
         ...updatedRFP,
         lineItemsCount: Array.isArray(updatedRFP.lineItems) ? updatedRFP.lineItems.length : 0,
-        canEdit: canEdit,
         updatedByName: user.name
       },
       message: 'RFP updated successfully'
@@ -525,17 +506,18 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// Helper function to handle approval actions
+// Updated helper function with sequential status progression
 async function handleApprovalAction(
   rfpId: string,
   approverId: string,
   approverRole: string,
   action: 'approve' | 'reject',
   comments?: string,
-  rejectionReason?: string
+  rejectionReason?: string,
+  currentStatus?: string
 ) {
   return await db.transaction(async (tx) => {
-    // Get current approval record
+    // Get current approval record (if exists)
     const currentApproval = await tx
       .select()
       .from(RFPApprovalTable)
@@ -547,23 +529,19 @@ async function handleApprovalAction(
       )
       .limit(1);
 
-    if (currentApproval.length === 0) {
-      throw new Error('Approval record not found for this user');
-    }
-
-    const approval = currentApproval[0];
-
     if (action === 'reject') {
-      // Update approval record as rejected
-      await tx
-        .update(RFPApprovalTable)
-        .set({
-          approved: false,
-          approvedAt: new Date(),
-          comments: comments || rejectionReason,
-          updatedAt: new Date()
-        })
-        .where(eq(RFPApprovalTable.id, approval.id));
+      // Update approval record if exists
+      if (currentApproval.length > 0) {
+        await tx
+          .update(RFPApprovalTable)
+          .set({
+            approved: false,
+            approvedAt: new Date(),
+            comments: comments || rejectionReason,
+            updatedAt: new Date()
+          })
+          .where(eq(RFPApprovalTable.id, currentApproval[0].id));
+      }
 
       // Update RFP status to rejected
       const [updatedRFP] = await tx
@@ -583,34 +561,80 @@ async function handleApprovalAction(
     }
 
     if (action === 'approve') {
-      // Update approval record as approved
-      await tx
-        .update(RFPApprovalTable)
-        .set({
-          approved: true,
-          approvedAt: new Date(),
-          comments: comments,
-          updatedAt: new Date()
-        })
-        .where(eq(RFPApprovalTable.id, approval.id));
+      // Update approval record if exists
+      if (currentApproval.length > 0) {
+        await tx
+          .update(RFPApprovalTable)
+          .set({
+            approved: true,
+            approvedAt: new Date(),
+            comments: comments,
+            updatedAt: new Date()
+          })
+          .where(eq(RFPApprovalTable.id, currentApproval[0].id));
+      }
 
-      // Check if this is the final approval
-      const allApprovals = await tx
-        .select()
-        .from(RFPApprovalTable)
-        .where(eq(RFPApprovalTable.rfpId, rfpId))
-        .orderBy(asc(RFPApprovalTable.sequence));
-
-      const currentSequence = approval.sequence;
-      const nextApproval = allApprovals.find(a => a.sequence === currentSequence + 1);
-
+      // Determine next status based on current status - SEQUENTIAL PROGRESSION
       let newStatus: RFPStatus;
-      if (!nextApproval) {
-        // This is the final approval
-        newStatus = "APPROVED";
-      } else {
-        // More approvals needed
-        newStatus = "PENDING_APPROVAL";
+      let message: string;
+
+      switch (currentStatus) {
+        case "DRAFT":
+          newStatus = "PENDING_APPROVAL";
+          message = "RFP approved by Procurement Lead and is sended to Procurement Manager for approval";
+          break;
+        
+        case "PENDING_APPROVAL":
+          // Check approver role to determine next step
+          if (approverRole === "PROCUREMENT_LEAD") {
+            newStatus = "PENDING_APPROVAL";
+            message = "RFP approved by Procurement Lead and is sended to Procurement Manager for approval";
+          } else if (approverRole === "PROCUREMENT_MANAGER") {
+            newStatus = "APPROVED";
+            message = "RFP approved by Procurement Manager and ready for vendor selection";
+          } else if (approverRole === "FINANCE_EXECUTIVE") {
+            newStatus = "APPROVED";
+            message = "RFP approved by Finance Executive and ready for vendor selection";
+          } else {
+            newStatus = "APPROVED";
+            message = "RFP approved and ready for vendor selection";
+          }
+          break;
+        
+        case "APPROVED":
+          newStatus = "SENT_TO_VENDORS";
+          message = "RFP approved and sent to vendors for quotations";
+          break;
+        
+        case "SENT_TO_VENDORS":
+          newStatus = "QUOTATION_RECEIVED";
+          message = "Quotations received from vendors";
+          break;
+        
+        case "QUOTATION_RECEIVED":
+          newStatus = "VENDOR_SELECTED";
+          message = "Vendor selected from quotations";
+          break;
+        
+        case "VENDOR_SELECTED":
+          newStatus = "PO_GENERATED";
+          message = "Purchase Order generated";
+          break;
+        
+        case "PO_GENERATED":
+          newStatus = "DELIVERED";
+          message = "Goods/Services delivered";
+          break;
+        
+        case "DELIVERED":
+          newStatus = "COMPLETED";
+          message = "RFP process completed successfully";
+          break;
+        
+        default:
+          // If already at final status or unknown status, keep current
+          newStatus = currentStatus as RFPStatus;
+          message = "RFP status updated";
       }
 
       // Update RFP status
@@ -625,11 +649,13 @@ async function handleApprovalAction(
 
       return NextResponse.json({
         data: updatedRFP,
-        message: nextApproval 
-          ? 'Approval recorded. RFP moved to next approval stage.'
-          : 'RFP fully approved and ready for vendor selection.'
+        message: message,
+        statusProgression: {
+          from: currentStatus,
+          to: newStatus,
+          approvedBy: approverRole
+        }
       });
     }
   });
 }
-

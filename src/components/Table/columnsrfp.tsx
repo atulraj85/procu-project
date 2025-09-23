@@ -110,7 +110,7 @@ export const columns1: ColumnDef<TableRow>[] = [
             <DropdownMenuSeparator />
 
             {/* View - Always available */}
-            <Link href={`/dashboard/manager/rfp/view/${rowData.id}`}>
+            <Link href={`/dashboard/precure_manager/rfp/view/${rowData.id}`}>
               <DropdownMenuItem>View Details</DropdownMenuItem>
             </Link>
 

@@ -45,6 +45,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { FaRupeeSign } from "react-icons/fa";
 import RFPConversation from "@/components/shared/RFPConversation";
+import { useCurrentUser } from "@/hooks/auth";
 
 // Updated interfaces to match new API structure
 interface LineItem {
@@ -137,6 +138,7 @@ const ViewRFPForApproval: React.FC = () => {
   const [approvalComments, setApprovalComments] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
+  const user = useCurrentUser();
   useEffect(() => {
     const fetchRFP = async () => {
       try {
@@ -166,7 +168,7 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: 'current-user-id', // Replace with actual current user ID
+          updatedBy: user?.id, // Replace with actual current user ID
           approvalAction: 'approve',
           approvalComments: approvalComments || 'Approved for next stage',
         })
@@ -214,7 +216,7 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: 'current-user-id', // Replace with actual current user ID
+          updatedBy: user?.id, // Replace with actual current user ID
           approvalAction: 'reject',
           rejectionReason: rejectionReason,
         })
@@ -264,7 +266,7 @@ const ViewRFPForApproval: React.FC = () => {
     }).format(amount);
   };
 
-  const canApproveOrReject = rfpData?.status === 'PENDING_APPROVAL' || rfpData?.status === 'DRAFT';
+  const canApproveOrReject =rfpData?.status === 'DRAFT';
 
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
