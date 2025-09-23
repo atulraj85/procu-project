@@ -701,43 +701,7 @@ const ViewRFPForApproval: React.FC = () => {
         </Card>
       )}
 
-      {/* Action Buttons - Updated condition for multiple vendors */}
-      {canApproveOrReject && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900">Approval Required</h3>
-                <p className="text-sm text-blue-700">
-                  {selectedVendors.length > 0 
-                    ? `This RFP is pending your approval with ${selectedVendors.length} vendor(s) selected`
-                    : "Please select at least one vendor before approving"
-                  }
-                </p>
-              </div>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-700 hover:bg-red-50"
-                  onClick={() => setShowRejectDialog(true)}
-                  disabled={processing}
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowApproveDialog(true)}
-                  disabled={processing || lineItems.length === 0 || selectedVendors.length === 0}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approve
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        
 
       {/* Line Items */}
       <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
@@ -961,6 +925,43 @@ const ViewRFPForApproval: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {canApproveOrReject && (
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-900">Approval Required</h3>
+                  <p className="text-sm text-blue-700">
+                    {selectedVendors.length > 0 
+                      ? `This RFP is pending your approval with ${selectedVendors.length} vendor(s) selected`
+                      : "Please select at least one vendor before approving"
+                    }
+                  </p>
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-50"
+                    onClick={() => setShowRejectDialog(true)}
+                    disabled={processing}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => setShowApproveDialog(true)}
+                    disabled={processing || lineItems.length === 0 || selectedVendors.length === 0}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Approval Workflow */}
       <Card>
