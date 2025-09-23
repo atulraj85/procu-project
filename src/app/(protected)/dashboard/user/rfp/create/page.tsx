@@ -1,5 +1,4 @@
 'use client';
-
 import RFPConversation from '@/components/shared/RFPConversation';
 import { useCurrentUser } from '@/hooks/auth';
 import { useState, useEffect } from 'react';
