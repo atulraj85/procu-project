@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { columns1 } from "@/components/Table/columnsrfp";
+import { columns1 } from "@/components/Table/columnsmanager";
 
 // Updated interface to match new API response
 interface TableRow {
