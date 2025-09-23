@@ -551,7 +551,7 @@ async function handleVendorInvitation(
       }
 
       // Check if RFP is in correct status for vendor invitation
-      if (!['APPROVED', 'SENT_TO_VENDORS'].includes(rfp.status)) {
+      if (!['APPROVED', 'SENT_TO_VENDORS' , 'PENDING_APPROVAL'].includes(rfp.status)) {
         throw new Error(`RFP must be APPROVED before sending to vendors. Current status: ${rfp.status}`);
       }
 
