@@ -64,6 +64,7 @@
     "react-select": "^5.8.0",
     "react-spinners": "^0.14.1",
     "react-toastify": "^10.0.5",
+    "select": "^1.1.2",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "uploadthing": "^7.0.2",
