@@ -32,7 +32,7 @@ const Dashboard = () => {
     setLoading(true);
     try {
       // Updated API endpoint - use the summary endpoint with user filter
-      const response = await fetch(`/api/rfp?sortBy=createdAt&order=desc`);
+      const response = await fetch(`/api/rfp/summary?sortBy=createdAt&order=desc`);
       const data = await response.json();
 
       // Handle both direct array and nested data structure
@@ -51,6 +51,7 @@ const Dashboard = () => {
         createdBy: item.createdBy,
         lineItemsCount: item.lineItems?.length || 0,
         estimatedBudget: item.estimatedBudget || 'N/A',
+        // Keep quotations for actions logic
         quotations: item.quotations || [],
         totalQuotations: item.totalQuotations || 0,
       }));

@@ -117,7 +117,7 @@ const RFPConversation: React.FC<RFPConversationProps> = ({
           rfpId,
           threadId: threadId || activeThreadId,
           senderId: user?.id,
-          senderType: 'USER',
+          senderType: user?.role,
           messageType: 'TEXT',
           content: content.trim(),
           isNewThread,
@@ -163,7 +163,7 @@ const RFPConversation: React.FC<RFPConversationProps> = ({
         body: JSON.stringify({
           rfpId,
           senderId: user?.id,
-          senderType: 'USER',
+          senderType: user?.role,
           messageType: 'TEXT',
           content: `Starting discussion: ${newThreadTitle.trim()}`,
           isNewThread: true,

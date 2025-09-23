@@ -39,9 +39,10 @@ export const authRoutes: string[] = [
 
 // Routes which are protected with different roles
 export const protectedRoutes: Record<string, Role[]> = {
-  "^/dashboard/admin(/.*)?$": ["ADMIN"],
-  "^/dashboard/finance(/.*)?$": ["FINANCE_MANAGER"],
-  "^/dashboard/manager(/.*)?$": ["PR_MANAGER"],
+  "^/dashboard/admin(/.*)?$": ["SYSTEM_ADMIN"],
+  "^/dashboard/finance(/.*)?$": ["PROCUREMENT_LEAD"],
+  "^/dashboard/manager(/.*)?$": ["PROCUREMENT_LEAD"],
+  "^/dashboard/procure_manager(/.*)?$": ["PROCUREMENT_MANAGER"],
 };
 
 // Helper function to check if a path matches any pattern in an array

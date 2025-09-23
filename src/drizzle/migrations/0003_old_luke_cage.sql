@@ -1,0 +1,1 @@
+ALTER TYPE "approval_stage" ADD VALUE 'FINANCE_MANAGER';

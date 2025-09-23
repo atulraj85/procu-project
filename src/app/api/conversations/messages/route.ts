@@ -130,7 +130,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate sender type
-    const validSenderTypes = ['USER', 'VENDOR'];
+    const validSenderTypes = ['USER', 'VENDOR', "SYSTEM_ADMIN",
+  "PROCUREMENT_MANAGER", 
+  "PROCUREMENT_LEAD",
+  "ADMIN_TEAM",
+  "FINANCE_MANAGER",
+  "FINANCE_EXECUTIVE"];
     if (!validSenderTypes.includes(senderType)) {
       return NextResponse.json(
         { message: `Invalid sender type. Valid types: ${validSenderTypes.join(', ')}` }, 
