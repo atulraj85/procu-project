@@ -23,7 +23,7 @@ export const UserRole = pgEnum("user_role", [
   "PROCUREMENT_MANAGER", 
   "PROCUREMENT_LEAD",
   "ADMIN_TEAM",
-  // "FINANCE_MANAGER",
+  "FINANCE_MANAGER",
   "FINANCE_EXECUTIVE",
   "USER",
   "VENDOR"

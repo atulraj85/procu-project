@@ -76,7 +76,7 @@ export const columns1: ColumnDef<TableRow>[] = [
     accessorKey: "deliveryLocation",
     cell: ({ getValue, row }) => (
       <div>
-        <div className="font-medium">{getValue() as string}</div>
+        <div className="font-medium">{(getValue() as string)}</div>
       </div>
     )
   },
@@ -110,28 +110,21 @@ export const columns1: ColumnDef<TableRow>[] = [
             <DropdownMenuSeparator />
 
             {/* View - Always available */}
-            <Link href={`/dashboard/user/rfp/view/${rowData.id}`}>
+            <Link href={`/dashboard/manager/rfp/view/${rowData.id}`}>
               <DropdownMenuItem>View Details</DropdownMenuItem>
             </Link>
 
-            {/* Approve/Reject - Only for Procurement Lead on DRAFT status */}
-            {canApprove && (
-              <Link href={`/dashboard/procurement-lead/rfp/review/${rowData.id}`}>
-                <DropdownMenuItem>Approve/Reject</DropdownMenuItem>
-              </Link>
-            )}
-
             {/* Edit - Only for DRAFT status */}
-            {canEdit && (
+            {/* {canEdit && (
               <Link href={`/dashboard/user/rfp/edit/${rowData.id}`}>
                 <DropdownMenuItem>Edit</DropdownMenuItem>
               </Link>
-            )}
+            )} */}
 
             {/* Conversations - Always available */}
-            <Link href={`/dashboard/user/rfp/${rowData.id}/conversations`}>
+            {/* <Link href={`/dashboard/user/rfp/${rowData.id}/conversations`}>
               <DropdownMenuItem>View Conversations</DropdownMenuItem>
-            </Link>
+            </Link> */}
 
             {/* Quotations - Show count if available */}
             {hasQuotations && (
