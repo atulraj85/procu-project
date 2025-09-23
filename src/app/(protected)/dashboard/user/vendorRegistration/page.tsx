@@ -226,8 +226,8 @@ const VendorRegistrationForm: React.FC = () => {
         variant: "default",
         duration: 3000,
       });
-
-      router.push(`/dashboard/vendorOnboarding/payment/${vendorId}`);
+      router.push('/dashboard');
+      // router.push(`/dashboard/vendorOnboarding/payment/${vendorId}`);
     } catch (error) {
       console.error("Final submission error:", error);
       toast({
