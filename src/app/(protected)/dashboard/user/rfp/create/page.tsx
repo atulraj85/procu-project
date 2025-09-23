@@ -1,11 +1,12 @@
 'use client';
+
 import RFPConversation from '@/components/shared/RFPConversation';
 import { useState, useEffect } from 'react';
 
 export interface RFP {
   title: string;
   deliveryLocation: string;
-  deliveryState: string;
+  deliveryStates: string[];
   deliveryDate: string;
   createdBy: string;
   organizationId: string;
@@ -39,7 +40,7 @@ export default function RFPForm() {
   const [formData, setFormData] = useState<RFP>({
     title: '',
     deliveryLocation: '',
-    deliveryState: '',
+    deliveryStates: [],
     deliveryDate: '',
     createdBy: '4c01af3c-890c-45e6-a91d-d31dbdb8af91',
     organizationId: '59a631f9-7e82-453a-82b0-b849f8ab8352',
@@ -53,6 +54,29 @@ export default function RFPForm() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+  // Helper function to initialize question answers with proper defaults
+  const initializeQuestionAnswers = (template: QuestionTemplate): { [key: string]: string | number } => {
+    const initialAnswers: { [key: string]: string | number } = {};
+    
+    template.questions.forEach(q => {
+      if (q.question === 'usage_type') {
+        // Always set a default value for usage_type
+        const defaultUsageType = q.options && q.options.length > 0 ? q.options[0] : 'Commercial';
+        initialAnswers[q.question] = defaultUsageType;
+      } else if (q.type === 'number') {
+        initialAnswers[q.question] = 0;
+      } else if (q.type === 'select' && q.options && q.options.length > 0) {
+        // For other select fields, use first option as default
+        initialAnswers[q.question] = q.options[0];
+      } else {
+        initialAnswers[q.question] = '';
+      }
+    });
+    
+    return initialAnswers;
+  };
+
+  // Fetch question templates
   useEffect(() => {
     const fetchQuestionTemplates = async () => {
       setLoading(true);
@@ -71,15 +95,16 @@ export default function RFPForm() {
           const preferredId = '76b7abd2-b84e-4755-8403-29b2341714bc';
           const templateToSelect = templates.find(t => t.id === preferredId) || templates[0];
           setSelectedTemplate(templateToSelect);
-          const initialAnswers: { [key: string]: string | number } = {};
-          templateToSelect.questions.forEach(q => {
-            initialAnswers[q.question] = q.type === 'number' ? 0 : '';
-          });
+          
+          const initialAnswers = initializeQuestionAnswers(templateToSelect);
+          
           setFormData(prev => ({
             ...prev,
             questionAnswers: initialAnswers,
             questionTemplateId: templateToSelect.id,
           }));
+          // console.log('Selected Template:', JSON.stringify(templateToSelect, null, 2));
+          // console.log('Initial Answers:', JSON.stringify(initialAnswers, null, 2));
         }
       } catch (err) {
         console.error('Error fetching question templates:', err);
@@ -100,24 +125,34 @@ export default function RFPForm() {
     setFormData(prev => {
       if (section === 'questionAnswers') {
         const selectedQuestion = selectedTemplate?.questions.find(q => q.question === name);
+        
+        // Special handling for usage_type - never allow empty value
+        if (name === 'usage_type') {
+          if (value === '') {
+            // If somehow an empty value is selected, use the first available option
+            const usageTypeQuestion = selectedTemplate?.questions.find(q => q.question === 'usage_type');
+            const defaultValue = usageTypeQuestion?.options?.[0] || 'Commercial';
+            return { ...prev, questionAnswers: { ...prev.questionAnswers, [name]: defaultValue } };
+          }
+        }
+        
         const processedValue = selectedQuestion?.type === 'number' ? Number(value) || 0 : value;
         return { ...prev, questionAnswers: { ...prev.questionAnswers, [name]: processedValue } };
+      }
+      if (name === 'deliveryStates') {
+        return { ...prev, deliveryStates: value ? [value] : [] };
       }
       return { ...prev, [name]: value };
     });
   };
 
   const resetForm = () => {
-    const initialAnswers: { [key: string]: string | number } = {};
-    if (selectedTemplate) {
-      selectedTemplate.questions.forEach(q => {
-        initialAnswers[q.question] = q.type === 'number' ? 0 : '';
-      });
-    }
+    const initialAnswers = selectedTemplate ? initializeQuestionAnswers(selectedTemplate) : {};
+    
     setFormData({
       title: '',
       deliveryLocation: '',
-      deliveryState: '',
+      deliveryStates: [],
       deliveryDate: '',
       createdBy: '4c01af3c-890c-45e6-a91d-d31dbdb8af91',
       organizationId: '59a631f9-7e82-453a-82b0-b849f8ab8352',
@@ -128,23 +163,49 @@ export default function RFPForm() {
   };
 
   const validateForm = () => {
-    if (!formData.title.trim()) return 'RFP title is required';
     if (!formData.deliveryLocation.trim()) return 'Delivery location is required';
-    if (!formData.deliveryState.trim()) return 'Delivery state is required';
     if (!formData.deliveryDate) return 'Delivery date is required';
+    if (!formData.createdBy) return 'User ID is required';
+    if (!formData.organizationId) return 'Organization ID is required';
+
+    // Validate questionAnswers
+    const requiredQuestionFields = [
+      'usage_type',
+      'request_type',
+      'required_date',
+      'client_related',
+      'request_reason',
+      'quantity_needed',
+      'specific_request',
+    ];
+    
+    // Special validation for usage_type
+    const usageTypeValue = formData.questionAnswers['usage_type'];
+    if (!usageTypeValue || usageTypeValue === '' || usageTypeValue === null || usageTypeValue === undefined) {
+      return 'Usage type is required and must have a valid value';
+    }
 
     if (selectedTemplate) {
       const requiredQuestions = selectedTemplate.questions.filter(q => q.required);
       for (const q of requiredQuestions) {
         const answer = formData.questionAnswers[q.question];
-        if (answer === undefined || answer === '' || (q.type === 'number' && answer === 0)) {
-          return `${q.question} is required`;
+        if (answer === undefined || answer === null || answer === '' || (q.type === 'number' && answer === 0)) {
+          return `${q.question.replace(/_/g, ' ')} is required`;
         }
         if (q.type === 'number' && Number(answer) <= 0) {
-          return `${q.question} must be a positive number`;
+          return `${q.question.replace(/_/g, ' ')} must be a positive number`;
+        }
+      }
+      
+      // Explicitly check required question fields
+      for (const field of requiredQuestionFields) {
+        const answer = formData.questionAnswers[field];
+        if (answer === undefined || answer === null || answer === '' || (answer === 0 && selectedTemplate.questions.find(q => q.question === field)?.type === 'number')) {
+          return `${field.replace(/_/g, ' ')} is required and must have a valid value`;
         }
       }
     }
+
     return null;
   };
 
@@ -152,6 +213,8 @@ export default function RFPForm() {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
+
+    console.log('Form Data before submission:', JSON.stringify(formData, null, 2));
 
     const validationError = validateForm();
     if (validationError) {
@@ -162,17 +225,17 @@ export default function RFPForm() {
 
     try {
       const submitData = {
-        questionAnswers: formData.questionAnswers,
-        questionTemplateId: formData.questionTemplateId,
-        title: formData.title.trim(),
-        deliveryLocation: formData.deliveryLocation,
-        deliveryState: formData.deliveryState.trim(),
+        title: formData.title.trim() || undefined,
+        deliveryLocation: formData.deliveryLocation.trim(),
+        deliveryStates: formData.deliveryStates.length ? formData.deliveryStates : undefined,
         deliveryDate: formData.deliveryDate,
         createdBy: formData.createdBy,
         organizationId: formData.organizationId,
+        questionTemplateId: formData.questionTemplateId || undefined,
+        questionAnswers: formData.questionAnswers,
       };
 
-      console.log('Submitting data:', JSON.stringify(submitData, null, 2));
+      console.log('Submitting data to /api/rfp:', JSON.stringify(submitData, null, 2));
 
       const response = await fetch('/api/rfp', {
         method: 'POST',
@@ -181,13 +244,13 @@ export default function RFPForm() {
       });
 
       const responseData = await response.json();
-      console.log('API Response:', responseData);
+      console.log('API Response:', JSON.stringify(responseData, null, 2));
 
       if (response.ok) {
-        alert('RFP submitted successfully!');
+        alert(responseData.message || 'RFP submitted successfully!');
         resetForm();
       } else {
-        setError(responseData.message || responseData.error || 'Failed to submit RFP.');
+        setError(responseData.message || 'Failed to submit RFP.');
         console.error('API Error:', responseData);
       }
     } catch (error) {
@@ -255,7 +318,7 @@ export default function RFPForm() {
             <h2 className="text-2xl font-semibold text-green-800 mb-6">RFP Overview</h2>
             <div className="flex flex-col sm:flex-row sm:space-x-6">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">RFP Title *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">RFP Title</label>
                 <input
                   type="text"
                   name="title"
@@ -263,7 +326,6 @@ export default function RFPForm() {
                   onChange={handleInputChange}
                   placeholder="Enter RFP title"
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors bg-gray-50 text-gray-800 placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  required
                   disabled={isSubmitting}
                 />
               </div>
@@ -279,12 +341,12 @@ export default function RFPForm() {
                   const fullSpan = question.type === 'textarea' || question.type === 'radio' || question.type === 'select';
                   const colClass = fullSpan ? 'sm:col-span-2 lg:col-span-3' : '';
                   const answer = formData.questionAnswers[question.question] ?? (question.type === 'number' ? 0 : '');
-                  const placeholderText = question.placeholder || `Enter ${question.question.toLowerCase()}`;
+                  const placeholderText = question.placeholder || `Enter ${question.question.replace(/_/g, ' ').toLowerCase()}`;
 
                   return (
                     <div key={question.id} className={colClass}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {question.question} {question.required && <span className="text-red-500">*</span>}
+                        {question.question.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} {question.required && <span className="text-red-500">*</span>}
                       </label>
                       {question.type === 'select' && (
                         <select
@@ -295,7 +357,8 @@ export default function RFPForm() {
                           required={question.required}
                           disabled={isSubmitting}
                         >
-                          <option value="">Select an option</option>
+                          {/* For usage_type, don't show empty option */}
+                          {question.question !== 'usage_type' && <option value="">Select an option</option>}
                           {question.options?.map((opt) => (
                             <option key={opt} value={opt}>
                               {opt}
@@ -325,7 +388,7 @@ export default function RFPForm() {
                           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors bg-gray-50 text-gray-800 placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           required={question.required}
                           disabled={isSubmitting}
-                          min={question.type === 'date' ? currentDate : undefined}
+                          min={question.type === 'date' ? currentDate : question.type === 'number' ? 1 : undefined}
                         />
                       )}
                       {question.type === 'radio' && (
@@ -375,15 +438,14 @@ export default function RFPForm() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Delivery State *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Delivery State</label>
                 <input
                   type="text"
-                  name="deliveryState"
-                  value={formData.deliveryState}
+                  name="deliveryStates"
+                  value={formData.deliveryStates[0] || ''}
                   onChange={handleInputChange}
                   placeholder="e.g., Karnataka"
                   className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors bg-gray-50 text-gray-800 placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  required
                   disabled={isSubmitting}
                 />
               </div>
