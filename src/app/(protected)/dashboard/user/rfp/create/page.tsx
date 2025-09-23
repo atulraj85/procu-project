@@ -1,6 +1,7 @@
 'use client';
 
 import RFPConversation from '@/components/shared/RFPConversation';
+import { useCurrentUser } from '@/hooks/auth';
 import { useState, useEffect } from 'react';
 
 export interface RFP {
@@ -44,8 +45,8 @@ export default function RFPForm() {
     deliveryLocation: '',
     deliveryStates: [],
     deliveryDate: '',
-    createdBy: '4c01af3c-890c-45e6-a91d-d31dbdb8af91',
-    organizationId: '59a631f9-7e82-453a-82b0-b849f8ab8352',
+    createdBy: '',
+    organizationId: '',
     questionAnswers: {},
     questionTemplateId: '',
   });
@@ -55,7 +56,7 @@ export default function RFPForm() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
+  const user = useCurrentUser();
   // Helper function to initialize question answers with proper defaults
   const initializeQuestionAnswers = (template: QuestionTemplate): { [key: string]: string | number } => {
     const initialAnswers: { [key: string]: string | number } = {};
@@ -104,6 +105,8 @@ export default function RFPForm() {
             ...prev,
             questionAnswers: initialAnswers,
             questionTemplateId: templateToSelect.id,
+            createdBy : user?.id? user?.id: "",
+            organizationId : user?.organizationId? user?.organizationId: "" 
           }));
           console.log('Selected Template:', JSON.stringify(templateToSelect, null, 2));
           console.log('Initial Answers:', JSON.stringify(initialAnswers, null, 2));
