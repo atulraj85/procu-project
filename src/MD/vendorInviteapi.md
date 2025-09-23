@@ -130,7 +130,7 @@ Required: User must be authenticated and belong to the same organization as the 
   "message": "RFP approved by Procurement Manager and ready for vendor selection",
   "statusProgression": {
     "from": "PENDING_APPROVAL",
-    "to": "APPROVED", 
+    "to": "APPROVED",   
     "approvedBy": "PROCUREMENT_MANAGER"
   }
 }

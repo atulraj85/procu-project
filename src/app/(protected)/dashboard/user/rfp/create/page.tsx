@@ -1,5 +1,4 @@
 'use client';
-
 import RFPConversation from '@/components/shared/RFPConversation';
 import { useCurrentUser } from '@/hooks/auth';
 import { useState, useEffect } from 'react';
@@ -339,7 +338,7 @@ export default function RFPForm() {
                   const placeholderText = question.placeholder || `Enter ${question.question.toLowerCase()}`;
 
                   return (
-                    <div key={question.id} className={colClass}>
+                    <div key={question.question} className={colClass}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {question.question} {question.required && <span className="text-red-500">*</span>}
                       </label>

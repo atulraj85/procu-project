@@ -92,6 +92,7 @@ interface Approval {
 interface Vendor {
   id: string;
   name: string;
+  vendorName?: string; // Added for backward compatibility
 }
 
 interface RFPData {
@@ -165,10 +166,11 @@ const ViewRFPForApproval: React.FC = () => {
   const [showLineItemForm, setShowLineItemForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Vendor Search State
+  // Updated Vendor Search State - Multiple selection
   const [vendorSearchQuery, setVendorSearchQuery] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [vendorSearchResults, setVendorSearchResults] = useState<Vendor[]>([]);
-  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [selectedVendors, setSelectedVendors] = useState<Vendor[]>([]); // Changed to array
   const [vendorSearchLoading, setVendorSearchLoading] = useState(false);
   const [vendorSearchError, setVendorSearchError] = useState<string | null>(null);
 
@@ -188,8 +190,12 @@ const ViewRFPForApproval: React.FC = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch vendors");
         }
-        const data: Vendor[] = await response.json();
-        setVendorSearchResults(data);
+        const data = await response.json();
+        // Filter out already selected vendors
+        const availableVendors = (data.results || []).filter(
+          (vendor: Vendor) => !selectedVendors.some((sv) => sv.id === vendor.id)
+        );
+        setVendorSearchResults(availableVendors);
       } catch (err) {
         setVendorSearchError(err instanceof Error ? err.message : "An error occurred while searching vendors");
         setVendorSearchResults([]);
@@ -197,7 +203,7 @@ const ViewRFPForApproval: React.FC = () => {
         setVendorSearchLoading(false);
       }
     }, 300),
-    []
+    [selectedVendors]
   );
 
   useEffect(() => {
@@ -222,8 +228,32 @@ const ViewRFPForApproval: React.FC = () => {
   }, [rfpId]);
 
   useEffect(() => {
-    debouncedSearchVendors(vendorSearchQuery);
-  }, [vendorSearchQuery, debouncedSearchVendors]);
+    if (keywords.length > 0) {
+      debouncedSearchVendors(keywords.join(' '));
+    } else {
+      setVendorSearchResults([]);
+    }
+  }, [keywords, debouncedSearchVendors]);
+
+  // Updated vendor selection handlers
+  const handleSelectVendor = (vendor: Vendor) => {
+    if (!selectedVendors.some((sv) => sv.id === vendor.id)) {
+      setSelectedVendors([...selectedVendors, vendor]);
+      toast({
+        title: "Vendor Selected",
+        description: `${vendor.name || vendor.vendorName} has been added to the selection.`,
+      });
+    }
+  };
+
+  const handleDeselectVendor = (vendorId: string) => {
+    const updatedVendors = selectedVendors.filter((vendor) => vendor.id !== vendorId);
+    setSelectedVendors(updatedVendors);
+    toast({
+      title: "Vendor Removed",
+      description: "Vendor has been removed from selection.",
+    });
+  };
 
   const handleAddLineItem = () => {
     if (!newLineItem.productName || newLineItem.quantity <= 0) {
@@ -315,7 +345,8 @@ const ViewRFPForApproval: React.FC = () => {
           approvalAction: 'approve',
           approvalComments: approvalComments || 'Approved for next stage',
           lineItems,
-          selectedVendorId: selectedVendor?.id,
+          selectedVendors: selectedVendors.map(v => v.id), // Updated to send array of IDs
+          sendToVendors : selectedVendors.length > 0,
         })
       });
 
@@ -447,55 +478,125 @@ const ViewRFPForApproval: React.FC = () => {
         </CardHeader>
       </Card>
 
-      {/* Vendor Search */}
+      {/* Updated Vendor Search - Multiple Selection */}
       <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
         <CardHeader className="bg-green-50 rounded-t-xl px-6 py-4">
           <CardTitle className="flex items-center text-green-800">
             <Building className="w-6 h-6 mr-3 text-green-600" />
-            <span className="text-lg font-semibold">Select Vendor</span>
+            <span className="text-lg font-semibold">Select Vendors ({selectedVendors.length})</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <Label htmlFor="vendorSearch" className="text-green-800 font-medium">Search Vendors</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-600 w-5 h-5" />
+              <Label htmlFor="vendorKeyword" className="text-green-800 font-medium">
+                Add Vendor Search Keywords
+              </Label>
+              <div className="flex items-center gap-2">
                 <Input
-                  id="vendorSearch"
+                  id="vendorKeyword"
                   value={vendorSearchQuery}
                   onChange={(e) => setVendorSearchQuery(e.target.value)}
-                  placeholder="Enter keywords to search vendors"
-                  className="pl-10 border-green-300 focus:ring-green-500 focus:border-green-500"
+                  placeholder="Enter a keyword (e.g., laptop)"
+                  className="border-green-300 focus:ring-green-500 focus:border-green-500"
                 />
+                <Button
+                  onClick={() => {
+                    if (vendorSearchQuery.trim()) {
+                      setKeywords([...keywords, vendorSearchQuery.trim()]);
+                      setVendorSearchQuery('');
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Add
+                </Button>
               </div>
             </div>
+            
+            {keywords.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {keywords.map((keyword, index) => (
+                  <Badge key={index} variant="secondary" className="text-sm">
+                    {keyword}
+                    <X
+                      className="ml-2 h-3 w-3 cursor-pointer"
+                      onClick={() => {
+                        const newKeywords = keywords.filter((_, i) => i !== index);
+                        setKeywords(newKeywords);
+                      }}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+            
             {vendorSearchLoading && <p className="text-sm text-green-600">Searching vendors...</p>}
             {vendorSearchError && <p className="text-sm text-red-600">{vendorSearchError}</p>}
+            
             {vendorSearchResults.length > 0 && (
               <div>
-                <Label className="text-green-800 font-medium">Search Results</Label>
+                <Label className="text-green-800 font-medium">Available Vendors</Label>
                 <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-green-100 rounded-lg p-2 bg-green-50">
                   {vendorSearchResults.map((vendor) => (
                     <div
                       key={vendor.id}
-                      className={`p-2 rounded cursor-pointer transition-colors duration-200 ${
-                        selectedVendor?.id === vendor.id
-                          ? "bg-green-200 text-green-800"
-                          : "hover:bg-green-100"
-                      }`}
-                      onClick={() => setSelectedVendor(vendor)}
+                      className="p-3 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-green-100 border border-green-200"
+                      onClick={() => handleSelectVendor(vendor)}
                     >
-                      {vendor.name}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium text-green-800">{vendor.name || vendor.vendorName}</div>
+                          <div className="text-xs text-green-600">Click to select</div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectVendor(vendor);
+                          }}
+                          className="border-green-500 text-green-700 hover:bg-green-100"
+                        >
+                          Select
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            {selectedVendor && (
+
+            {/* Selected Vendors Section */}
+            {selectedVendors.length > 0 && (
               <div>
-                <Label className="text-green-800 font-medium">Selected Vendor</Label>
-                <p className="text-sm text-gray-700 mt-1">{selectedVendor.name}</p>
+                <Label className="text-green-800 font-medium">Selected Vendors ({selectedVendors.length})</Label>
+                <div className="mt-3 space-y-2">
+                  {selectedVendors.map((vendor) => (
+                    <div
+                      key={vendor.id}
+                      className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
+                          <Building className="w-4 h-4 text-green-600" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-green-800">{vendor.name || vendor.vendorName}</div>
+                          <div className="text-xs text-gray-500">ID: {vendor.id}</div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeselectVendor(vendor.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -600,38 +701,7 @@ const ViewRFPForApproval: React.FC = () => {
         </Card>
       )}
 
-      {/* Action Buttons */}
-      {canApproveOrReject && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900">Approval Required</h3>
-                <p className="text-sm text-blue-700">This RFP is pending your approval</p>
-              </div>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-700 hover:bg-red-50"
-                  onClick={() => setShowRejectDialog(true)}
-                  disabled={processing}
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowApproveDialog(true)}
-                  disabled={processing || lineItems.length === 0 || !selectedVendor}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approve
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        
 
       {/* Line Items */}
       <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
@@ -856,6 +926,43 @@ const ViewRFPForApproval: React.FC = () => {
         </CardContent>
       </Card>
 
+      {canApproveOrReject && (
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-blue-900">Approval Required</h3>
+                  <p className="text-sm text-blue-700">
+                    {selectedVendors.length > 0 
+                      ? `This RFP is pending your approval with ${selectedVendors.length} vendor(s) selected`
+                      : "Please select at least one vendor before approving"
+                    }
+                  </p>
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-50"
+                    onClick={() => setShowRejectDialog(true)}
+                    disabled={processing}
+                  >
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => setShowApproveDialog(true)}
+                    disabled={processing || lineItems.length === 0 || selectedVendors.length === 0}
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
       {/* Approval Workflow */}
       <Card>
         <CardHeader>
@@ -875,7 +982,7 @@ const ViewRFPForApproval: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Approve RFP</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to approve this RFP? This will move it to the next stage in the approval workflow.
+              Are you sure you want to approve this RFP? This will send it to {selectedVendors.length} vendor(s) and move it to the next stage in the approval workflow.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
@@ -895,7 +1002,7 @@ const ViewRFPForApproval: React.FC = () => {
               disabled={processing}
               className="bg-green-600 hover:bg-green-700"
             >
-              {processing ? "Processing..." : "Approve RFP"}
+              {processing ? "Processing..." : `Approve RFP (${selectedVendors.length} vendors)`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

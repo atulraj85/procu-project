@@ -107,7 +107,7 @@ const Dashboard = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>RFP Dashboard - Procurement Lead</CardTitle>
+        <CardTitle>RFP Dashboard - Procurement Manager</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full">
