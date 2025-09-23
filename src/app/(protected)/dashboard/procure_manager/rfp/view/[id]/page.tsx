@@ -266,7 +266,7 @@ const ViewRFPForApproval: React.FC = () => {
     }).format(amount);
   };
 
-  const canApproveOrReject =rfpData?.status === 'DRAFT';
+  const canApproveOrReject =rfpData?.status === 'DRAFT' || rfpData?.status === 'PENDING_APPROVAL';
 
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
