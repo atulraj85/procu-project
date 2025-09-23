@@ -344,7 +344,7 @@ export default function RFPForm() {
                   const placeholderText = question.placeholder || `Enter ${question.question.replace(/_/g, ' ').toLowerCase()}`;
 
                   return (
-                    <div key={question.id} className={colClass}>
+                    <div key={question.question} className={colClass}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {question.question.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} {question.required && <span className="text-red-500">*</span>}
                       </label>
