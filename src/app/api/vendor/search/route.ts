@@ -1,5 +1,5 @@
 // /api/vendor/search/route.ts
-import { VendorTable } from "@/drizzle/schema";
+import { UserTable, VendorTable } from "@/drizzle/schema";
 import { db } from "@/lib/db";
 import { and, ilike, or, sql, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const query = searchParams.get("q");
-    const status = searchParams.get("status") || "VERIFIED"; // Default to verified vendors
+    const status = searchParams.get("status") || "APPROVED";
     const limit = parseInt(searchParams.get("limit") || "10");
     const includeInactive = searchParams.get("includeInactive") === "true";
 
@@ -28,123 +28,157 @@ export async function GET(request: NextRequest) {
     const searchTerm = query.trim();
     console.log('Searching vendors for:', searchTerm);
 
-    // Build search conditions
-    const searchConditions = [
-      // Search in company name
-      ilike(VendorTable.companyName, `%${searchTerm}%`),
-      
-      // Search in dealing keywords array using PostgreSQL array contains
-      sql`${VendorTable.dealingKeywords} && ARRAY[${searchTerm}]::text[]`,
-      
-      // Search in specializations array
-      sql`${VendorTable.specializations} && ARRAY[${searchTerm}]::text[]`,
-      
-      // Partial match in dealing keywords (case-insensitive)
-      sql`EXISTS (
-        SELECT 1 FROM unnest(${VendorTable.dealingKeywords}) AS keyword 
-        WHERE keyword ILIKE '%' || ${searchTerm} || '%'
-      )`,
-      
-      // Partial match in specializations (case-insensitive)
-      sql`EXISTS (
-        SELECT 1 FROM unnest(${VendorTable.specializations}) AS spec 
-        WHERE spec ILIKE '%' || ${searchTerm} || '%'
-      )`,
-      
-      // Search in description
-      ilike(VendorTable.description, `%${searchTerm}%`),
-    ];
+    // Split search term by spaces or commas to handle multiple skills
+    const searchTerms = searchTerm.split(/[\s,]+/).filter(term => term.length > 1);
+    console.log('Split search terms:', searchTerms);
 
-    // Build where conditions
-    const whereConditions = [or(...searchConditions)];
+    // Build search conditions - EACH term must match (AND logic)
+    const termConditions = searchTerms.map(term => {
+      return or(
+        // Search in company name
+        ilike(VendorTable.companyName, `%${term}%`),
+        
+        // Search in dealing keywords array using PostgreSQL array contains
+        sql`${VendorTable.dealingKeywords} && ARRAY[${term}]::text[]`,
+        
+        // Search in specializations array
+        sql`${VendorTable.specializations} && ARRAY[${term}]::text[]`,
+        
+        // Partial match in dealing keywords (case-insensitive)
+        sql`EXISTS (
+          SELECT 1 FROM unnest(${VendorTable.dealingKeywords}) AS keyword 
+          WHERE keyword ILIKE '%' || ${term} || '%'
+        )`,
+        
+        // Partial match in specializations (case-insensitive)
+        sql`EXISTS (
+          SELECT 1 FROM unnest(${VendorTable.specializations}) AS spec 
+          WHERE spec ILIKE '%' || ${term} || '%'
+        )`
+      );
+    });
+
+    // Build where conditions - ALL terms must match (AND logic)
+    const whereConditions = [
+      and(...termConditions) // This ensures ALL terms must match
+    ];
     
     // Add status filter
     if (!includeInactive) {
-      whereConditions.push(
-        or(
-          eq(VendorTable.status, "APPROVED"),
-        )
-      );
+      whereConditions.push(eq(VendorTable.status, "APPROVED"));
     }
 
     // Execute search query
     const vendors = await db
       .select({
         id: VendorTable.id,
-        companyName: VendorTable.companyName,
+        companyName: UserTable.name,
         legalName: VendorTable.legalName,
-        city: VendorTable.city,
-        state: VendorTable.state,
+        location: sql`CONCAT(${VendorTable.city}, ', ', ${VendorTable.state})`.as('location'),
         phone: VendorTable.phone,
         email: VendorTable.email,
         website: VendorTable.website,
         specializations: VendorTable.specializations,
         dealingKeywords: VendorTable.dealingKeywords,
         status: VendorTable.status,
-        logo: VendorTable.logo,
-        description: VendorTable.description,
       })
       .from(VendorTable)
+      .leftJoin(UserTable, eq(VendorTable.id, UserTable.vendorId))
       .where(and(...whereConditions))
-      .limit(limit)
-      .orderBy(sql`
-        CASE 
-          WHEN ${VendorTable.companyName} ILIKE ${`%${searchTerm}%`} THEN 1
-          WHEN array_to_string(${VendorTable.dealingKeywords}, ',') ILIKE ${`%${searchTerm}%`} THEN 2
-          WHEN array_to_string(${VendorTable.specializations}, ',') ILIKE ${`%${searchTerm}%`} THEN 3
-          ELSE 4
-        END
-      `);
+      .limit(limit);
 
     // Process results to highlight matching terms
     const processedResults = vendors.map(vendor => {
-      // Find matching keywords and specializations
-      const matchingKeywords = vendor.dealingKeywords?.filter(keyword =>
-        keyword.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
+      // Find matching keywords and specializations for all search terms
+      const allMatchingKeywords: string[] = [];
+      const allMatchingSpecializations: string[] = [];
+      const matchedTerms: string[] = [];
       
-      const matchingSpecializations = vendor.specializations?.filter(spec =>
-        spec.toLowerCase().includes(searchTerm.toLowerCase())
-      ) || [];
+      searchTerms.forEach(term => {
+        let termMatched = false;
+        
+        // Check if company name matches this term
+        if (vendor.companyName?.toLowerCase().includes(term.toLowerCase())) {
+          termMatched = true;
+        }
+        
+        // Check matching keywords for this term
+        const matchingKeywords = vendor.dealingKeywords?.filter(keyword =>
+          keyword.toLowerCase().includes(term.toLowerCase())
+        ) || [];
+        
+        if (matchingKeywords.length > 0) {
+          allMatchingKeywords.push(...matchingKeywords);
+          termMatched = true;
+        }
+        
+        // Check matching specializations for this term
+        const matchingSpecializations = vendor.specializations?.filter(spec =>
+          spec.toLowerCase().includes(term.toLowerCase())
+        ) || [];
 
-      // Calculate relevance score
+        if (matchingSpecializations.length > 0) {
+          allMatchingSpecializations.push(...matchingSpecializations);
+          termMatched = true;
+        }
+        
+        if (termMatched) {
+          matchedTerms.push(term);
+        }
+      });
+
+      // Remove duplicates
+      const uniqueMatchingKeywords = [...new Set(allMatchingKeywords)];
+      const uniqueMatchingSpecializations = [...new Set(allMatchingSpecializations)];
+
+      // Calculate relevance score based on multiple terms
       let relevanceScore = 0;
-      if (vendor.companyName.toLowerCase().includes(searchTerm.toLowerCase())) relevanceScore += 10;
-      relevanceScore += matchingKeywords.length * 5;
-      relevanceScore += matchingSpecializations.length * 3;
+      
+      // Company name matches
+      matchedTerms.forEach(term => {
+        if (vendor.companyName?.toLowerCase().includes(term.toLowerCase())) {
+          relevanceScore += 10;
+        }
+      });
+      
+      relevanceScore += uniqueMatchingKeywords.length * 5;
+      relevanceScore += uniqueMatchingSpecializations.length * 3;
+      
+      // Bonus points for matching ALL search terms
+      if (matchedTerms.length === searchTerms.length) {
+        relevanceScore += 20;
+      }
 
       return {
-        ...vendor,
-        matchingKeywords,
-        matchingSpecializations,
+        id: vendor.id,
+        vendorName: vendor.companyName,
+        legalName: vendor.legalName,
+        location: vendor.location,
+        phone: vendor.phone,
+        email: vendor.email,
+        website: vendor.website,
+        specializations: vendor.specializations,
+        dealingKeywords: vendor.dealingKeywords,
+        status: vendor.status,
         relevanceScore,
-        // Formatted display name
-        displayName: `${vendor.companyName}${vendor.legalName && vendor.legalName !== vendor.companyName ? ` (${vendor.legalName})` : ''}`,
-        // Location string
-        location: `${vendor.city}, ${vendor.state}`,
-        // Match summary
-        matchSummary: [
-          ...matchingKeywords.map(k => `Keyword: ${k}`),
-          ...matchingSpecializations.map(s => `Specialization: ${s}`)
-        ].slice(0, 3), // Limit to top 3 matches
       };
     });
 
     // Sort by relevance score
     processedResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
 
-    // Get total count for pagination (optional)
+    // Get total count for pagination
     const totalCount = await db
       .select({ count: sql`count(*)` })
       .from(VendorTable)
+      .leftJoin(UserTable, eq(VendorTable.id, UserTable.vendorId))
       .where(and(...whereConditions));
 
     return NextResponse.json({
-      query: searchTerm,
       results: processedResults,
       total: parseInt(totalCount[0].count as string),
       limit,
-      hasMore: processedResults.length === limit
+      hasMore: processedResults.length === limit,
     });
 
   } catch (error: any) {
@@ -161,10 +195,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Batch search for multiple terms
+// POST - Batch search with ALL terms required
 export async function POST(request: NextRequest) {
   try {
-    const { searchTerms, status = "VERIFIED", limit = 5 } = await request.json();
+    const { searchTerms, status = "APPROVED", limit = 5, matchAll = true } = await request.json();
 
     if (!Array.isArray(searchTerms) || searchTerms.length === 0) {
       return NextResponse.json(
@@ -173,43 +207,91 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results = await Promise.all(
-      searchTerms.map(async (term: string) => {
-        if (!term || term.trim().length < 2) return { term, vendors: [] };
-
-        const searchConditions = [
+    if (matchAll) {
+      // Search for vendors that match ALL terms
+      const termConditions = searchTerms.map((term: string) => {
+        if (!term || term.trim().length < 2) return null;
+        
+        return or(
           ilike(VendorTable.companyName, `%${term}%`),
           sql`${VendorTable.dealingKeywords} && ARRAY[${term}]::text[]`,
           sql`${VendorTable.specializations} && ARRAY[${term}]::text[]`,
           sql`EXISTS (
             SELECT 1 FROM unnest(${VendorTable.dealingKeywords}) AS keyword 
             WHERE keyword ILIKE '%' || ${term} || '%'
-          )`,
-        ];
+          )`
+        );
+      }).filter(condition => condition !== null);
 
-        const vendors = await db
-          .select({
-            id: VendorTable.id,
-            companyName: VendorTable.companyName,
-            city: VendorTable.city,
-            state: VendorTable.state,
-            specializations: VendorTable.specializations,
-            dealingKeywords: VendorTable.dealingKeywords,
-          })
-          .from(VendorTable)
-          .where(
-            and(
-              or(...searchConditions),
-              eq(VendorTable.status, status as any)
-            )
+      if (termConditions.length === 0) {
+        return NextResponse.json({ results: [] });
+      }
+
+      const vendors = await db
+        .select({
+          id: VendorTable.id,
+          vendorName: VendorTable.companyName,
+          location: sql`CONCAT(${VendorTable.city}, ', ', ${VendorTable.state})`.as('location'),
+          specializations: VendorTable.specializations,
+          dealingKeywords: VendorTable.dealingKeywords,
+          status: VendorTable.status,
+        })
+        .from(VendorTable)
+        .where(
+          and(
+            and(...termConditions), // ALL terms must match
+            eq(VendorTable.status, status as any)
           )
-          .limit(limit);
+        )
+        .limit(limit);
 
-        return { term, vendors };
-      })
-    );
+      return NextResponse.json({ 
+        searchTerms,
+        vendors,
+      });
+    } else {
+      // Original behavior - match ANY term
+      const results = await Promise.all(
+        searchTerms.map(async (term: string) => {
+          if (!term || term.trim().length < 2) return { term, vendors: [] };
 
-    return NextResponse.json({ results });
+          const searchConditions = [
+            ilike(VendorTable.companyName, `%${term}%`),
+            sql`${VendorTable.dealingKeywords} && ARRAY[${term}]::text[]`,
+            sql`${VendorTable.specializations} && ARRAY[${term}]::text[]`,
+            sql`EXISTS (
+              SELECT 1 FROM unnest(${VendorTable.dealingKeywords}) AS keyword 
+              WHERE keyword ILIKE '%' || ${term} || '%'
+            )`,
+          ];
+
+          const vendors = await db
+            .select({
+              id: VendorTable.id,
+              vendorName: VendorTable.companyName,
+              location: sql`CONCAT(${VendorTable.city}, ', ', ${VendorTable.state})`.as('location'),
+              specializations: VendorTable.specializations,
+              dealingKeywords: VendorTable.dealingKeywords,
+              status: VendorTable.status,
+            })
+            .from(VendorTable)
+            .where(
+              and(
+                or(...searchConditions),
+                eq(VendorTable.status, status as any)
+              )
+            )
+            .limit(limit);
+
+          return { term, vendors };
+        })
+      );
+
+      return NextResponse.json({ 
+        results,
+        matchingStrategy: "ANY_TERM_MATCHES"
+      });
+    }
 
   } catch (error: any) {
     console.error("Error in batch vendor search:", error);
