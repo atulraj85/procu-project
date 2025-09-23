@@ -268,14 +268,14 @@ const RfpListPage: React.FC = () => {
                       >
                         View
                       </button>
-                      {rfp.canEdit && (
+                      {/* {rfp.canEdit && (
                         <button
                           onClick={() => router.push(`/dashboard/user/rfp/edit/${rfp.id}`)}
                           className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                         >
                           Edit
                         </button>
-                      )}
+                      )} */}
                       {rfp.canCreatePO && (
                         <button
                           onClick={() => router.push(`/dashboard/user/rfp/create-po/${rfp.id}`)}
