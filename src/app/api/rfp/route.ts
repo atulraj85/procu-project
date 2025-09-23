@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
     let initialStatus: RFPStatus = "DRAFT";
     if (user.role === 'USER') {
       // If user provides basic info, it goes to pending approval
-      initialStatus = questionAnswers ? "PENDING_APPROVAL" : "DRAFT";
+      initialStatus = "DRAFT";
     } else if (['PROCUREMENT_LEAD', 'PROCUREMENT_MANAGER'].includes(user.role)) {
       // Managers can create more complete RFPs
       initialStatus = "DRAFT";
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest) {
         .returning();
 
       // Create approval workflow for USER role
-      if (user.role === 'USER' && initialStatus === "PENDING_APPROVAL") {
+      if (user.role === 'USER' && initialStatus === "DRAFT") {
         // Get approvers from the organization
         const approvers = await tx
           .select({ id: UserTable.id, role: UserTable.role })
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success response
-    const responseMessage = user.role === 'USER' && initialStatus === "PENDING_APPROVAL"
+    const responseMessage = user.role === 'USER' && initialStatus === "DRAFT"
       ? 'RFP request submitted successfully and sent for approval'
       : 'RFP created successfully';
 
