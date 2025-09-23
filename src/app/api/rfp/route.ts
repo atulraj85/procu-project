@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
         estimatedBudget: RFPTable.estimatedBudget,
         status: RFPTable.status,
         quotationCutoffDate: RFPTable.quotationCutoffDate,
+        questionAnswers: RFPTable.questionAnswers,
         createdAt: RFPTable.createdAt,
         updatedAt: RFPTable.updatedAt,
         createdBy: UserTable.name,
