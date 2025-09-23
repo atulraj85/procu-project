@@ -1,7 +1,7 @@
 // src/app/api/rfp/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, or, desc, asc } from 'drizzle-orm';
-import { RFPTable, UserTable, RFPApprovalTable } from '@/drizzle/schema';
+import { and, eq, or, desc, asc, inArray } from 'drizzle-orm';
+import { RFPTable, UserTable, RFPApprovalTable , RFPVendorInvitationTable , VendorTable } from '@/drizzle/schema';
 import { db } from '@/lib/db';
 
 // Define the exact enum types to match your schema
@@ -381,7 +381,9 @@ export async function PUT(request: NextRequest) {
       rejectionReason,
       updatedBy, // Who is making the update
       approvalAction, // 'approve', 'reject', or null for general updates
-      approvalComments
+      approvalComments,
+      selectedVendors, // Array of vendor IDs to send RFP to
+      sendToVendors, // Boolean flag to trigger vendor invitation
     } = body;
 
     console.log('Updating RFP with data:', body);
@@ -401,7 +403,8 @@ export async function PUT(request: NextRequest) {
         status: RFPTable.status,
         createdBy: RFPTable.createdBy,
         organizationId: RFPTable.organizationId,
-        rfpNumber: RFPTable.rfpNumber
+        rfpNumber: RFPTable.rfpNumber,
+        title: RFPTable.title,
       })
       .from(RFPTable)
       .where(eq(RFPTable.id, id))
@@ -445,6 +448,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Handle vendor selection and invitation
+    if (sendToVendors && selectedVendors && Array.isArray(selectedVendors)) {
+      return await handleVendorInvitation(
+        id,
+        selectedVendors,
+        updatedBy,
+        user,
+        rfp
+      );
+    }
+
     // Handle approval/rejection actions
     if (approvalAction) {
       return await handleApprovalAction(
@@ -454,7 +468,7 @@ export async function PUT(request: NextRequest) {
         approvalAction, 
         approvalComments, 
         rejectionReason,
-        rfp.status // Pass current status
+        rfp.status
       );
     }
 
@@ -501,6 +515,109 @@ export async function PUT(request: NextRequest) {
         message: 'Internal server error',
         details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
       }, 
+      { status: 500 }
+    );
+  }
+}
+
+// New function to handle vendor invitation
+async function handleVendorInvitation(
+  rfpId: string,
+  selectedVendors: string[],
+  updatedBy: string,
+  user: any,
+  rfp: any
+) {
+  try {
+    return await db.transaction(async (tx) => {
+      // Validate vendor IDs exist and are approved
+      const validVendors = await tx
+        .select({
+          id: VendorTable.id,
+          companyName: VendorTable.companyName,
+          email: VendorTable.email,
+          status: VendorTable.status,
+        })
+        .from(VendorTable)
+        .where(
+          and(
+            inArray(VendorTable.id, selectedVendors),
+            eq(VendorTable.status, "APPROVED")
+          )
+        );
+
+      if (validVendors.length === 0) {
+        throw new Error('No valid approved vendors found in the selection');
+      }
+
+      // Check if RFP is in correct status for vendor invitation
+      if (!['APPROVED', 'SENT_TO_VENDORS'].includes(rfp.status)) {
+        throw new Error(`RFP must be APPROVED before sending to vendors. Current status: ${rfp.status}`);
+      }
+
+      // Remove any existing invitations for this RFP (in case of re-sending)
+      await tx
+        .delete(RFPVendorInvitationTable)
+        .where(eq(RFPVendorInvitationTable.rfpId, rfpId));
+
+      // Create vendor invitations
+      const invitationData = validVendors.map(vendor => ({
+        rfpId: rfpId,
+        vendorId: vendor.id,
+        invitedBy: updatedBy,
+        invitedAt: new Date(),
+        status: 'SENT' as const,
+        updatedAt: new Date(),
+      }));
+
+      const invitations = await tx
+        .insert(RFPVendorInvitationTable)
+        .values(invitationData)
+        .returning();
+
+      // Update RFP status to SENT_TO_VENDORS
+      const [updatedRFP] = await tx
+        .update(RFPTable)
+        .set({
+          status: "SENT_TO_VENDORS" as RFPStatus,
+          updatedAt: new Date()
+        })
+        .where(eq(RFPTable.id, rfpId))
+        .returning();
+
+      // TODO: Send email notifications to vendors here
+      // await sendEmailNotifications(validVendors, rfp, user);
+
+      return NextResponse.json({
+        data: {
+          ...updatedRFP,
+          invitations: invitations,
+          invitedVendors: validVendors.map(v => ({
+            id: v.id,
+            companyName: v.companyName,
+            email: v.email
+          }))
+        },
+        message: `RFP successfully sent to ${validVendors.length} vendor(s)`,
+        summary: {
+          rfpId: rfpId,
+          rfpNumber: rfp.rfpNumber,
+          rfpTitle: rfp.title,
+          totalVendorsInvited: validVendors.length,
+          invitedBy: user.name,
+          invitedAt: new Date().toISOString(),
+          status: "SENT_TO_VENDORS"
+        }
+      });
+    });
+
+  } catch (error: any) {
+    console.error('Error inviting vendors:', error);
+    return NextResponse.json(
+      { 
+        message: `Failed to send RFP to vendors: ${error.message}`,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
