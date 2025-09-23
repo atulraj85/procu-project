@@ -30,7 +30,7 @@ export async function PATCH(
       .update(VendorTable)
       .set({
         status,
-        verifiedById:approvedById,
+        verifiedBy:approvedById,
         updatedAt: new Date(),
       })
       .where(eq(VendorTable.id, params.id))

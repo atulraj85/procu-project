@@ -1,17 +1,24 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useParams, useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  X, 
-  Star, 
-  FileText, 
-  CheckCircle, 
-  XCircle, 
+import {
+  X,
+  Star,
+  FileText,
+  CheckCircle,
+  XCircle,
   Clock,
   MapPin,
   Calendar,
@@ -20,16 +27,12 @@ import {
   DollarSign,
   Package,
   MessageSquare,
-  MessageCircleMore
+  MessageCircleMore,
+  PlusCircle,
+  Trash2,
+  Search,
 } from "lucide-react";
 import Loader from "@/components/shared/Loader";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,13 +49,14 @@ import { toast } from "@/components/ui/use-toast";
 import { FaRupeeSign } from "react-icons/fa";
 import RFPConversation from "@/components/shared/RFPConversation";
 import { useCurrentUser } from "@/hooks/auth";
+import { debounce } from "lodash";
 
-// Updated interfaces to match new API structure
+// Updated interfaces
 interface LineItem {
   productName: string;
   description: string;
   quantity: number;
-  specifications?: any;
+  specifications?: Record<string, string>;
   estimatedUnitPrice?: number;
   urgency?: string;
 }
@@ -85,6 +89,11 @@ interface Approval {
   };
 }
 
+interface Vendor {
+  id: string;
+  name: string;
+}
+
 interface RFPData {
   id: string;
   rfpNumber: string;
@@ -100,7 +109,6 @@ interface RFPData {
   rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
-  lineItems: LineItem[];
   questionAnswers: QuestionAnswers;
   selectionCriteria: any;
   organization: {
@@ -122,23 +130,76 @@ interface RFPData {
   totalQuotations: number;
 }
 
+interface Specification {
+  key: string;
+  value: string;
+}
+
 const ViewRFPForApproval: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const rfpId = params.id as string;
-  
+
   const [rfpData, setRfpData] = useState<RFPData | null>(null);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Approval/Rejection state
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [approvalComments, setApprovalComments] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // Line Item Form State
+  const [newLineItem, setNewLineItem] = useState<LineItem>({
+    productName: "",
+    description: "",
+    quantity: 0,
+    estimatedUnitPrice: undefined,
+    urgency: "",
+    specifications: {},
+  });
+  const [specifications, setSpecifications] = useState<Specification[]>([]);
+  const [showLineItemForm, setShowLineItemForm] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  // Vendor Search State
+  const [vendorSearchQuery, setVendorSearchQuery] = useState("");
+  const [vendorSearchResults, setVendorSearchResults] = useState<Vendor[]>([]);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [vendorSearchLoading, setVendorSearchLoading] = useState(false);
+  const [vendorSearchError, setVendorSearchError] = useState<string | null>(null);
+
   const user = useCurrentUser();
+
+  // Debounced vendor search
+  const debouncedSearchVendors = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setVendorSearchResults([]);
+        return;
+      }
+      setVendorSearchLoading(true);
+      setVendorSearchError(null);
+      try {
+        const response = await fetch(`/api/vendor/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch vendors");
+        }
+        const data: Vendor[] = await response.json();
+        setVendorSearchResults(data);
+      } catch (err) {
+        setVendorSearchError(err instanceof Error ? err.message : "An error occurred while searching vendors");
+        setVendorSearchResults([]);
+      } finally {
+        setVendorSearchLoading(false);
+      }
+    }, 300),
+    []
+  );
+
   useEffect(() => {
     const fetchRFP = async () => {
       try {
@@ -147,7 +208,7 @@ const ViewRFPForApproval: React.FC = () => {
           throw new Error("Failed to fetch RFP data");
         }
         const data: RFPData = await response.json();
-        setRfpData(data);
+        setRfpData({ ...data, lineItems: [] });
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -160,6 +221,88 @@ const ViewRFPForApproval: React.FC = () => {
     }
   }, [rfpId]);
 
+  useEffect(() => {
+    debouncedSearchVendors(vendorSearchQuery);
+  }, [vendorSearchQuery, debouncedSearchVendors]);
+
+  const handleAddLineItem = () => {
+    if (!newLineItem.productName || newLineItem.quantity <= 0) {
+      toast({
+        title: "Invalid Input",
+        description: "Product name and quantity are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const specs: Record<string, string> = {};
+    specifications.forEach(({ key, value }) => {
+      if (key && value) {
+        specs[key] = value;
+      }
+    });
+
+    const updatedLineItem = { ...newLineItem, specifications: Object.keys(specs).length > 0 ? specs : undefined };
+
+    if (editingIndex !== null) {
+      const updatedLineItems = [...lineItems];
+      updatedLineItems[editingIndex] = updatedLineItem;
+      setLineItems(updatedLineItems);
+      setEditingIndex(null);
+    } else {
+      setLineItems([...lineItems, updatedLineItem]);
+    }
+
+    setNewLineItem({
+      productName: "",
+      description: "",
+      quantity: 0,
+      estimatedUnitPrice: undefined,
+      urgency: "",
+      specifications: {},
+    });
+    setSpecifications([]);
+    setShowLineItemForm(false);
+    toast({
+      title: "Line Item Added",
+      description: "Line item has been successfully added/updated.",
+    });
+  };
+
+  const handleEditLineItem = (index: number) => {
+    const item = lineItems[index];
+    setNewLineItem(item);
+    setEditingIndex(index);
+    setSpecifications(
+      item.specifications
+        ? Object.entries(item.specifications).map(([key, value]) => ({ key, value }))
+        : []
+    );
+    setShowLineItemForm(true);
+  };
+
+  const handleDeleteLineItem = (index: number) => {
+    setLineItems(lineItems.filter((_, i) => i !== index));
+    toast({
+      title: "Line Item Removed",
+      description: "Line item has been successfully removed.",
+    });
+  };
+
+  const handleAddSpecification = () => {
+    setSpecifications([...specifications, { key: "", value: "" }]);
+  };
+
+  const handleSpecificationChange = (index: number, field: "key" | "value", value: string) => {
+    const updatedSpecs = [...specifications];
+    updatedSpecs[index] = { ...updatedSpecs[index], [field]: value };
+    setSpecifications(updatedSpecs);
+  };
+
+  const handleDeleteSpecification = (index: number) => {
+    setSpecifications(specifications.filter((_, i) => i !== index));
+  };
+
   const handleApprove = async () => {
     setProcessing(true);
     try {
@@ -168,9 +311,11 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: user?.id, // Replace with actual current user ID
+          updatedBy: user?.id,
           approvalAction: 'approve',
           approvalComments: approvalComments || 'Approved for next stage',
+          lineItems,
+          selectedVendorId: selectedVendor?.id,
         })
       });
 
@@ -181,7 +326,6 @@ const ViewRFPForApproval: React.FC = () => {
           title: "RFP Approved",
           description: data.message,
         });
-        // Refresh data
         window.location.reload();
       } else {
         throw new Error(data.message || 'Failed to approve RFP');
@@ -216,9 +360,10 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: user?.id, // Replace with actual current user ID
+          updatedBy: user?.id,
           approvalAction: 'reject',
           rejectionReason: rejectionReason,
+          lineItems,
         })
       });
 
@@ -229,7 +374,6 @@ const ViewRFPForApproval: React.FC = () => {
           title: "RFP Rejected",
           description: data.message,
         });
-        // Refresh data
         window.location.reload();
       } else {
         throw new Error(data.message || 'Failed to reject RFP');
@@ -266,7 +410,7 @@ const ViewRFPForApproval: React.FC = () => {
     }).format(amount);
   };
 
-  const canApproveOrReject =rfpData?.status === 'DRAFT' || rfpData?.status === 'PENDING_APPROVAL';
+  const canApproveOrReject = rfpData?.status === 'DRAFT' || rfpData?.status === 'PENDING_APPROVAL';
 
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
@@ -303,6 +447,60 @@ const ViewRFPForApproval: React.FC = () => {
         </CardHeader>
       </Card>
 
+      {/* Vendor Search */}
+      <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
+        <CardHeader className="bg-green-50 rounded-t-xl px-6 py-4">
+          <CardTitle className="flex items-center text-green-800">
+            <Building className="w-6 h-6 mr-3 text-green-600" />
+            <span className="text-lg font-semibold">Select Vendor</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="vendorSearch" className="text-green-800 font-medium">Search Vendors</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-600 w-5 h-5" />
+                <Input
+                  id="vendorSearch"
+                  value={vendorSearchQuery}
+                  onChange={(e) => setVendorSearchQuery(e.target.value)}
+                  placeholder="Enter keywords to search vendors"
+                  className="pl-10 border-green-300 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+            </div>
+            {vendorSearchLoading && <p className="text-sm text-green-600">Searching vendors...</p>}
+            {vendorSearchError && <p className="text-sm text-red-600">{vendorSearchError}</p>}
+            {vendorSearchResults.length > 0 && (
+              <div>
+                <Label className="text-green-800 font-medium">Search Results</Label>
+                <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-green-100 rounded-lg p-2 bg-green-50">
+                  {vendorSearchResults.map((vendor) => (
+                    <div
+                      key={vendor.id}
+                      className={`p-2 rounded cursor-pointer transition-colors duration-200 ${
+                        selectedVendor?.id === vendor.id
+                          ? "bg-green-200 text-green-800"
+                          : "hover:bg-green-100"
+                      }`}
+                      onClick={() => setSelectedVendor(vendor)}
+                    >
+                      {vendor.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {selectedVendor && (
+              <div>
+                <Label className="text-green-800 font-medium">Selected Vendor</Label>
+                <p className="text-sm text-gray-700 mt-1">{selectedVendor.name}</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Question Answers */}
       <Card>
@@ -371,7 +569,6 @@ const ViewRFPForApproval: React.FC = () => {
         </CardContent>
       </Card>
 
-
       {/* Delivery Information */}
       <Card>
         <CardHeader>
@@ -387,6 +584,7 @@ const ViewRFPForApproval: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
       {/* Rejection Reason (if rejected) */}
       {rfpData.rejectionReason && (
         <Card className="border-red-200 bg-red-50">
@@ -424,7 +622,7 @@ const ViewRFPForApproval: React.FC = () => {
                 <Button
                   className="bg-green-600 hover:bg-green-700"
                   onClick={() => setShowApproveDialog(true)}
-                  disabled={processing}
+                  disabled={processing || lineItems.length === 0 || !selectedVendor}
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Approve
@@ -436,61 +634,227 @@ const ViewRFPForApproval: React.FC = () => {
       )}
 
       {/* Line Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Package className="w-5 h-5 mr-2" />
-            Line Items ({rfpData.lineItems.length})
+      <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
+        <CardHeader className="bg-green-50 rounded-t-xl px-6 py-4">
+          <CardTitle className="flex items-center justify-between text-green-800">
+            <div className="flex items-center">
+              <Package className="w-6 h-6 mr-3 text-green-600" />
+              <span className="text-lg font-semibold">Line Items ({lineItems.length})</span>
+            </div>
+            <Button
+              variant="outline"
+              className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+              onClick={() => {
+                setShowLineItemForm(true);
+                setEditingIndex(null);
+                setNewLineItem({
+                  productName: "",
+                  description: "",
+                  quantity: 0,
+                  estimatedUnitPrice: undefined,
+                  urgency: "",
+                  specifications: {},
+                });
+                setSpecifications([]);
+              }}
+            >
+              <PlusCircle className="w-4 h-4 mr-2 text-green-600" />
+              Add Line Item
+            </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
+          {showLineItemForm && (
+            <Card className="p-4 mb-6 border border-green-100 shadow-sm rounded-lg bg-green-50">
+              <CardHeader>
+                <CardTitle className="text-green-800 text-lg font-semibold">
+                  {editingIndex !== null ? "Edit Line Item" : "Add New Line Item"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="productName" className="text-green-800 font-medium">Product Name *</Label>
+                    <Input
+                      id="productName"
+                      value={newLineItem.productName}
+                      onChange={(e) => setNewLineItem({ ...newLineItem, productName: e.target.value })}
+                      placeholder="Enter product name"
+                      className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="quantity" className="text-green-800 font-medium">Quantity *</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={newLineItem.quantity}
+                      onChange={(e) => setNewLineItem({ ...newLineItem, quantity: parseInt(e.target.value) || 0 })}
+                      placeholder="Enter quantity"
+                      className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="estimatedUnitPrice" className="text-green-800 font-medium">Estimated Unit Price</Label>
+                    <Input
+                      id="estimatedUnitPrice"
+                      type="number"
+                      value={newLineItem.estimatedUnitPrice || ""}
+                      onChange={(e) => setNewLineItem({ ...newLineItem, estimatedUnitPrice: parseFloat(e.target.value) || undefined })}
+                      placeholder="Enter estimated unit price"
+                      className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="urgency" className="text-green-800 font-medium">Urgency</Label>
+                    <Select
+                      value={newLineItem.urgency}
+                      onValueChange={(value) => setNewLineItem({ ...newLineItem, urgency: value })}
+                    >
+                      <SelectTrigger id="urgency" className="border-green-300 focus:ring-green-500">
+                        <SelectValue placeholder="Select urgency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="High">High</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="Low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="description" className="text-green-800 font-medium">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={newLineItem.description}
+                      onChange={(e) => setNewLineItem({ ...newLineItem, description: e.target.value })}
+                      placeholder="Enter description"
+                      className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-green-800 font-medium">Specifications</Label>
+                    <div className="space-y-3 mt-3">
+                      {specifications.map((spec, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <Input
+                            placeholder="Enter specification key (e.g., Color)"
+                            value={spec.key}
+                            onChange={(e) => handleSpecificationChange(index, "key", e.target.value)}
+                            className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                          />
+                          <Input
+                            placeholder="Enter specification value (e.g., Blue)"
+                            value={spec.value}
+                            onChange={(e) => handleSpecificationChange(index, "value", e.target.value)}
+                            className="border-green-300 focus:ring-green-500 focus:border-green-500"
+                          />
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteSpecification(index)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddSpecification}
+                        className="mt-3 border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                      >
+                        <PlusCircle className="w-4 h-4 mr-2 text-green-600" />
+                        Add Specification
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowLineItemForm(false)}
+                    className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddLineItem}
+                    className="bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                  >
+                    {editingIndex !== null ? "Update" : "Add"} Line Item
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
-            {rfpData.lineItems.map((item, index) => (
-              <Card key={index} className="p-4">
+            {lineItems.map((item, index) => (
+              <Card key={index} className="p-4 border border-green-100 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label className="font-medium">Product:</Label>
-                    <p className="text-sm">{item.productName}</p>
+                    <Label className="font-medium text-green-800">Product:</Label>
+                    <p className="text-sm text-gray-700">{item.productName}</p>
                     {item.urgency && (
-                      <Badge variant={item.urgency === 'High' ? 'destructive' : 'secondary'} className="mt-1">
+                      <Badge
+                        variant={item.urgency === "High" ? "destructive" : "secondary"}
+                        className={`mt-1 ${item.urgency === "High" ? "bg-red-500" : "bg-green-200 text-green-800"}`}
+                      >
                         {item.urgency}
                       </Badge>
                     )}
                   </div>
                   <div>
-                    <Label className="font-medium">Quantity:</Label>
-                    <p className="text-sm">{item.quantity}</p>
+                    <Label className="font-medium text-green-800">Quantity:</Label>
+                    <p className="text-sm text-gray-700">{item.quantity}</p>
                   </div>
                   <div>
-                    <Label className="font-medium">Est. Unit Price:</Label>
-                    <p className="text-sm">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : 'Not specified'}</p>
+                    <Label className="font-medium text-green-800">Est. Unit Price:</Label>
+                    <p className="text-sm text-gray-700">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : "Not specified"}</p>
                   </div>
                   {item.description && (
                     <div className="md:col-span-3">
-                      <Label className="font-medium">Description:</Label>
-                      <p className="text-sm mt-1">{item.description}</p>
+                      <Label className="font-medium text-green-800">Description:</Label>
+                      <p className="text-sm text-gray-700 mt-1">{item.description}</p>
                     </div>
                   )}
-                  {item.specifications && (
+                  {item.specifications && Object.keys(item.specifications).length > 0 && (
                     <div className="md:col-span-3">
-                      <Label className="font-medium">Specifications:</Label>
-                      <div className="text-sm mt-1 p-2 bg-gray-50 rounded">
+                      <Label className="font-medium text-green-800">Specifications:</Label>
+                      <div className="text-sm mt-1 p-3 bg-green-50 rounded-lg">
                         {Object.entries(item.specifications).map(([key, value]) => (
                           <div key={key} className="flex justify-between">
-                            <span className="capitalize">{key.replace('_', ' ')}:</span>
-                            <span>{String(value)}</span>
+                            <span className="capitalize text-green-800">{key.replace("_", " ")}:</span>
+                            <span className="text-gray-700">{String(value)}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
+                <div className="flex justify-end space-x-3 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditLineItem(index)}
+                    className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteLineItem(index)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
         </CardContent>
       </Card>
-
 
       {/* Approval Workflow */}
       <Card>
@@ -501,10 +865,9 @@ const ViewRFPForApproval: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-            <RFPConversation rfpId={rfpData.id} />
+          <RFPConversation rfpId={rfpData.id} />
         </CardContent>
       </Card>
-
 
       {/* Approve Dialog */}
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
@@ -527,7 +890,7 @@ const ViewRFPForApproval: React.FC = () => {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleApprove}
               disabled={processing}
               className="bg-green-600 hover:bg-green-700"
@@ -560,7 +923,7 @@ const ViewRFPForApproval: React.FC = () => {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleReject}
               disabled={processing || !rejectionReason.trim()}
               className="bg-red-600 hover:bg-red-700"
