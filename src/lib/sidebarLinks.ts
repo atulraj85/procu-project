@@ -142,19 +142,7 @@ export const managerList = [
     label: "Dashboard",
     imgUrl: "/svgs/dashboard.svg",
     route: "/dashboard/manager",
-  },
-  {
-    value: "createRFP",
-    label: "Create RFP",
-    imgUrl: "/svgs/product-form.svg",
-    route: "/dashboard/manager/rfp/create",
-  },
-  {
-    value: "Addvendor",
-    label: "Vendor List",
-    imgUrl: "/svgs/productOrder.svg",
-    route: "/dashboard/manager/vendor",
-  },
+  }
 ];
 
 export const procureManagerList = [
