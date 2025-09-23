@@ -218,7 +218,7 @@ Creates a new Request for Proposal.
         "updatedAt": "2025-09-20T09:08:06.285Z"
     },
     "message": "RFP request submitted successfully and sent for approval"
-}
+}   
 ```
 
 **Response Fields:**
