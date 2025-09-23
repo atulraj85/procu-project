@@ -4,64 +4,73 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { columns1 } from "@/components/Table/columns";
+import { columns1 } from "@/components/Table/columnsrfp";
 
+// Updated interface to match new API response
 interface TableRow {
-  rfpId: string;
-  requirementType: string;
-  dateOfOrdering: string;
+  id: string;
+  rfpNumber: string;          // Changed from rfpId
+  title: string;             // Added title
+  description: string;       // Added description
   deliveryLocation: string;
-  deliveryByDate: string;
-  lastDateToRespond: string;
-  rfpStatus: string;
+  deliveryDate: string;      // Changed from deliveryByDate
+  quotationCutoffDate: string; // Added cutoff date
+  status: string;            // Changed from rfpStatus
+  createdAt: string;         // Added created date
+  createdBy: string;         // Added creator
+  lineItemsCount: number;    // Count of line items
+  estimatedBudget: string;   // Added budget
 }
 
 const Dashboard = () => {
-  const [status, setStatus] = useState<"OPEN" | "COMPLETED" | "DRAFT">("DRAFT");
+  const [status, setStatus] = useState<"DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "COMPLETED">("DRAFT");
   const [content, setContent] = useState<TableRow[]>([]);
-  const [title, setTitle] = useState("OPEN RFPs");
+  const [title, setTitle] = useState("DRAFT RFPs");
   const [loading, setLoading] = useState(true);
-
-  const headers = [
-    { key: "rfpId", header: "RFP ID" },
-    { key: "requirementType", header: "Requirement Type" },
-    { key: "dateOfOrdering", header: "Date of Ordering" },
-    { key: "deliveryLocation", header: "Delivery Location" },
-    { key: "deliveryByDate", header: "Delivery By Date" },
-    { key: "lastDateToRespond", header: "Last Date to Respond" },
-    { key: "rfpStatus", header: "RFP Status" },
-  ];
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/rfp?sortBy=createdAt&order=desc");
+      // Updated API endpoint - use the summary endpoint with user filter
+      const response = await fetch(`/api/rfp/summary?sortBy=createdAt&order=desc`);
       const data = await response.json();
 
-      const formattedData = data.map((item: any) => ({
-        rfpId: item.rfpId,
-        requirementType: item.requirementType,
-        dateOfOrdering: new Date(item.dateOfOrdering).toLocaleDateString(),
+      // Handle both direct array and nested data structure
+      const rfpData = data.data || data;
+
+      const formattedData = rfpData.map((item: any) => ({
+        id: item.id,
+        rfpNumber: item.rfpNumber,
+        title: item.title,
+        description: item.description,
         deliveryLocation: item.deliveryLocation,
-        deliveryByDate: new Date(item.deliveryByDate).toLocaleDateString(),
-        lastDateToRespond: new Date(
-          item.lastDateToRespond
-        ).toLocaleDateString(),
-        rfpStatus: item.rfpStatus,
-        quotations: item.quotations,
+        deliveryDate: new Date(item.deliveryDate).toLocaleDateString(),
+        quotationCutoffDate: new Date(item.quotationCutoffDate).toLocaleDateString(),
+        status: item.status,
+        createdAt: new Date(item.createdAt).toLocaleDateString(),
+        createdBy: item.createdBy,
+        lineItemsCount: item.lineItems?.length || 0,
+        estimatedBudget: item.estimatedBudget || 'N/A',
+        // Keep quotations for actions logic
+        quotations: item.quotations || [],
+        totalQuotations: item.totalQuotations || 0,
       }));
 
-      const filteredData = formattedData.filter(
-        (item: { rfpStatus: string }) => {
-          return (
-            (status === "OPEN" &&
-              (item.rfpStatus === "SUBMITTED" ||
-                item.rfpStatus === "PO_CREATED")) ||
-            (status === "COMPLETED" && item.rfpStatus === "PAYMENT_DONE") ||
-            (status === "DRAFT" && item.rfpStatus === "DRAFT")
-          );
+      // Updated status filtering to match new enum values
+      const filteredData = formattedData.filter((item: { status: string }) => {
+        switch (status) {
+          case "DRAFT":
+            return item.status === "DRAFT";
+          case "PENDING_APPROVAL":
+            return item.status === "PENDING_APPROVAL";
+          case "APPROVED":
+            return ["APPROVED", "SENT_TO_VENDORS", "QUOTATION_RECEIVED"].includes(item.status);
+          case "COMPLETED":
+            return ["COMPLETED", "DELIVERED"].includes(item.status);
+          default:
+            return false;
         }
-      );
+      });
 
       setContent(filteredData);
       setLoading(false);
@@ -79,25 +88,27 @@ const Dashboard = () => {
     fetchData();
 
     switch (status) {
-      case "OPEN":
-        setTitle("OPEN RFPs");
+      case "DRAFT":
+        setTitle("DRAFT RFPs");
+        break;
+      case "PENDING_APPROVAL":
+        setTitle("PENDING APPROVAL RFPs");
+        break;
+      case "APPROVED":
+        setTitle("APPROVED RFPs");
         break;
       case "COMPLETED":
         setTitle("COMPLETED RFPs");
         break;
-      case "DRAFT":
-        setTitle("DRAFT RFPs");
-        break;
     }
   };
 
-  // Define columns with correct type
   const columns: ColumnDef<TableRow>[] = columns1 as ColumnDef<TableRow>[];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dashboard</CardTitle>
+        <CardTitle>RFP Dashboard - Procurement Lead</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full">
@@ -111,12 +122,20 @@ const Dashboard = () => {
               Draft RFPs
             </div>
             <div
-              onClick={() => setStatus("OPEN")}
-              className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
-                status === "OPEN" && "bg-blue-800 text-white"
+              onClick={() => setStatus("PENDING_APPROVAL")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-yellow-400 hover:text-white cursor-pointer ${
+                status === "PENDING_APPROVAL" && "bg-yellow-600 text-white"
               }`}
             >
-              Open RFPs
+              Pending Approval
+            </div>
+            <div
+              onClick={() => setStatus("APPROVED")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
+                status === "APPROVED" && "bg-blue-800 text-white"
+              }`}
+            >
+              Approved RFPs
             </div>
             <div
               onClick={() => setStatus("COMPLETED")}
@@ -131,7 +150,10 @@ const Dashboard = () => {
 
           <div className="w-full">
             {loading ? (
-              <Loader />
+              <div className="flex justify-center items-center p-8">
+                <Loader className="animate-spin" />
+                <span className="ml-2">Loading RFPs...</span>
+              </div>
             ) : (
               <DataTable columns={columns} data={content} />
             )}
