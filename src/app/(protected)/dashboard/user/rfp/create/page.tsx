@@ -21,6 +21,8 @@ interface Question {
   question: string;
   required: boolean;
   placeholder?: string;
+  min?: number;
+  max?: number;
 }
 
 interface QuestionTemplate {
@@ -59,17 +61,17 @@ export default function RFPForm() {
     const initialAnswers: { [key: string]: string | number } = {};
     
     template.questions.forEach(q => {
-      if (q.question === 'usage_type') {
+      if (q.id === 'usage_type') {
         // Always set a default value for usage_type
-        const defaultUsageType = q.options && q.options.length > 0 ? q.options[0] : 'Commercial';
-        initialAnswers[q.question] = defaultUsageType;
+        const defaultUsageType = q.options && q.options.length > 0 ? q.options[0] : 'Temporary';
+        initialAnswers[q.id] = defaultUsageType;
       } else if (q.type === 'number') {
-        initialAnswers[q.question] = 0;
+        initialAnswers[q.id] = 0;
       } else if (q.type === 'select' && q.options && q.options.length > 0) {
         // For other select fields, use first option as default
-        initialAnswers[q.question] = q.options[0];
+        initialAnswers[q.id] = q.options[0];
       } else {
-        initialAnswers[q.question] = '';
+        initialAnswers[q.id] = '';
       }
     });
     
@@ -103,8 +105,8 @@ export default function RFPForm() {
             questionAnswers: initialAnswers,
             questionTemplateId: templateToSelect.id,
           }));
-          // console.log('Selected Template:', JSON.stringify(templateToSelect, null, 2));
-          // console.log('Initial Answers:', JSON.stringify(initialAnswers, null, 2));
+          console.log('Selected Template:', JSON.stringify(templateToSelect, null, 2));
+          console.log('Initial Answers:', JSON.stringify(initialAnswers, null, 2));
         }
       } catch (err) {
         console.error('Error fetching question templates:', err);
@@ -122,21 +124,23 @@ export default function RFPForm() {
   ) => {
     const { name, value } = e.target;
 
+    console.log(name, " -> ", value);
+    
     setFormData(prev => {
       if (section === 'questionAnswers') {
-        const selectedQuestion = selectedTemplate?.questions.find(q => q.question === name);
+        const selectedQuestion = selectedTemplate?.questions.find(q => q.id === name);
         
         // Special handling for usage_type - never allow empty value
         if (name === 'usage_type') {
           if (value === '') {
             // If somehow an empty value is selected, use the first available option
-            const usageTypeQuestion = selectedTemplate?.questions.find(q => q.question === 'usage_type');
-            const defaultValue = usageTypeQuestion?.options?.[0] || 'Commercial';
+            const usageTypeQuestion = selectedTemplate?.questions.find(q => q.id === 'usage_type');
+            const defaultValue = usageTypeQuestion?.options?.[0] || 'Temporary';
             return { ...prev, questionAnswers: { ...prev.questionAnswers, [name]: defaultValue } };
           }
         }
         
-        const processedValue = selectedQuestion?.type === 'number' ? Number(value) || 0 : value;
+        const processedValue = selectedQuestion?.type === 'number' ? Number(value) || (0) : value;
         return { ...prev, questionAnswers: { ...prev.questionAnswers, [name]: processedValue } };
       }
       if (name === 'deliveryStates') {
@@ -168,42 +172,30 @@ export default function RFPForm() {
     if (!formData.createdBy) return 'User ID is required';
     if (!formData.organizationId) return 'Organization ID is required';
 
-    // Validate questionAnswers
-    const requiredQuestionFields = [
-      'usage_type',
-      'request_type',
-      'required_date',
-      'client_related',
-      'request_reason',
-      'quantity_needed',
-      'specific_request',
-    ];
-    
+    // Validate questionAnswers based on template requirements
+    if (selectedTemplate) {
+      const requiredQuestions = selectedTemplate.questions.filter(q => q.required);
+      for (const q of requiredQuestions) {
+        const answer = formData.questionAnswers[q.id];
+        if (answer === undefined || answer === null || answer === '' || (q.type === 'number' && answer === 0)) {
+          return `${q.question} is required`;
+        }
+        if (q.type === 'number') {
+          const numValue = Number(answer);
+          if (q.min && numValue < q.min) {
+            return `${q.question} must be at least ${q.min}`;
+          }
+          if (q.max && numValue > q.max) {
+            return `${q.question} must not exceed ${q.max}`;
+          }
+        }
+      }
+    }
+
     // Special validation for usage_type
     const usageTypeValue = formData.questionAnswers['usage_type'];
     if (!usageTypeValue || usageTypeValue === '' || usageTypeValue === null || usageTypeValue === undefined) {
       return 'Usage type is required and must have a valid value';
-    }
-
-    if (selectedTemplate) {
-      const requiredQuestions = selectedTemplate.questions.filter(q => q.required);
-      for (const q of requiredQuestions) {
-        const answer = formData.questionAnswers[q.question];
-        if (answer === undefined || answer === null || answer === '' || (q.type === 'number' && answer === 0)) {
-          return `${q.question.replace(/_/g, ' ')} is required`;
-        }
-        if (q.type === 'number' && Number(answer) <= 0) {
-          return `${q.question.replace(/_/g, ' ')} must be a positive number`;
-        }
-      }
-      
-      // Explicitly check required question fields
-      for (const field of requiredQuestionFields) {
-        const answer = formData.questionAnswers[field];
-        if (answer === undefined || answer === null || answer === '' || (answer === 0 && selectedTemplate.questions.find(q => q.question === field)?.type === 'number')) {
-          return `${field.replace(/_/g, ' ')} is required and must have a valid value`;
-        }
-      }
     }
 
     return null;
@@ -340,25 +332,25 @@ export default function RFPForm() {
                 {selectedTemplate.questions.map((question) => {
                   const fullSpan = question.type === 'textarea' || question.type === 'radio' || question.type === 'select';
                   const colClass = fullSpan ? 'sm:col-span-2 lg:col-span-3' : '';
-                  const answer = formData.questionAnswers[question.question] ?? (question.type === 'number' ? 0 : '');
-                  const placeholderText = question.placeholder || `Enter ${question.question.replace(/_/g, ' ').toLowerCase()}`;
+                  const answer = formData.questionAnswers[question.id] ?? (question.type === 'number' ? (question.min || 0) : '');
+                  const placeholderText = question.placeholder || `Enter ${question.question.toLowerCase()}`;
 
                   return (
                     <div key={question.id} className={colClass}>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {question.question.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} {question.required && <span className="text-red-500">*</span>}
+                        {question.question} {question.required && <span className="text-red-500">*</span>}
                       </label>
                       {question.type === 'select' && (
                         <select
-                          name={question.question}
+                          name={question.id}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors bg-gray-50 text-gray-800 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           required={question.required}
                           disabled={isSubmitting}
                         >
-                          {/* For usage_type, don't show empty option */}
-                          {question.question !== 'usage_type' && <option value="">Select an option</option>}
+                          {/* For usage_type and other required selects, don't show empty option */}
+                          {!question.required && <option value="">Select an option</option>}
                           {question.options?.map((opt) => (
                             <option key={opt} value={opt}>
                               {opt}
@@ -368,7 +360,7 @@ export default function RFPForm() {
                       )}
                       {question.type === 'textarea' && (
                         <textarea
-                          name={question.question}
+                          name={question.id}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           placeholder={placeholderText}
@@ -381,14 +373,15 @@ export default function RFPForm() {
                       {['text', 'number', 'date'].includes(question.type) && (
                         <input
                           type={question.type}
-                          name={question.question}
+                          name={question.id}
                           value={answer.toString()}
                           onChange={(e) => handleInputChange(e, 'questionAnswers')}
                           placeholder={placeholderText}
                           className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-600 focus:border-green-600 transition-colors bg-gray-50 text-gray-800 placeholder-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                           required={question.required}
                           disabled={isSubmitting}
-                          min={question.type === 'date' ? currentDate : question.type === 'number' ? 1 : undefined}
+                          min={question.type === 'date' ? currentDate : question.type === 'number' ? (0) : undefined}
+                          max={question.type === 'number' ? question.max : undefined}
                         />
                       )}
                       {question.type === 'radio' && (
@@ -400,7 +393,7 @@ export default function RFPForm() {
                             >
                               <input
                                 type="radio"
-                                name={question.question}
+                                name={question.id}
                                 value={opt}
                                 checked={answer === opt}
                                 onChange={(e) => handleInputChange(e, 'questionAnswers')}
