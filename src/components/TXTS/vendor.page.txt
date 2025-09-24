@@ -79,16 +79,72 @@ const Dashboard = () => {
     }
   };
 
+  useEffect(() => {
+    setData();
+  }, [status]);
+
+  const setData = () => {
+    fetchData();
+
+    switch (status) {
+      case "DRAFT":
+        setTitle("DRAFT RFPs");
+        break;
+      case "PENDING_APPROVAL":
+        setTitle("PENDING APPROVAL RFPs");
+        break;
+      case "APPROVED":
+        setTitle("APPROVED RFPs");
+        break;
+      case "COMPLETED":
+        setTitle("COMPLETED RFPs");
+        break;
+    }
+  };
 
   const columns: ColumnDef<TableRow>[] = columns1 as ColumnDef<TableRow>[];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>RFP Dashboard - Vendor Quotation Request</CardTitle>
+        <CardTitle>RFP Dashboard - Procurement Manager</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col w-full">
+          {/* <div className="flex py-5 gap-4">
+            <div
+              onClick={() => setStatus("DRAFT")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
+                status === "DRAFT" && "bg-blue-800 text-white"
+              }`}
+            >
+              Draft RFPs
+            </div>
+            <div
+              onClick={() => setStatus("PENDING_APPROVAL")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-yellow-400 hover:text-white cursor-pointer ${
+                status === "PENDING_APPROVAL" && "bg-yellow-600 text-white"
+              }`}
+            >
+              Pending Approval
+            </div>
+            <div
+              onClick={() => setStatus("APPROVED")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-blue-400 hover:text-white cursor-pointer ${
+                status === "APPROVED" && "bg-blue-800 text-white"
+              }`}
+            >
+              Approved RFPs
+            </div>
+            <div
+              onClick={() => setStatus("COMPLETED")}
+              className={`px-3 py-2 border-2 rounded-lg hover:bg-green-600 hover:text-white cursor-pointer ${
+                status === "COMPLETED" && "bg-green-700 text-white"
+              }`}
+            >
+              Completed RFPs
+            </div>
+          </div> */}
           <hr />
 
           <div className="w-full">
