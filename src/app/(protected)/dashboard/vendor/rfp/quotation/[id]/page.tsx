@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useCurrentUser } from "@/hooks/auth";
 
 interface LineItem {
   id: string;
@@ -64,7 +65,7 @@ const VendorQuotationForm = () => {
   const params = useParams();
   const router = useRouter();
   const rfpId = params.rfpId as string;
-
+  const user = useCurrentUser();
   const [rfpDetails, setRfpDetails] = useState<RFPDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -86,7 +87,7 @@ const VendorQuotationForm = () => {
   const fetchRFPDetails = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/rfp/${rfpId}`);
+      const response = await fetch(`/api/rfp/958de10f-b1e8-4d52-af8e-8e5418c6a6ac`);
       const data = await response.json();
       
       setRfpDetails(data);
@@ -229,7 +230,7 @@ const VendorQuotationForm = () => {
         formData.append(`file_${index}`, file);
       });
 
-      const response = await fetch('/api/vendor/quotation', {
+      const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
         method: 'POST',
         body: formData
       });

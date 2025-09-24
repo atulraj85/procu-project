@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
+import { useCurrentUser } from "@/hooks/auth";
 
 interface VendorRFP {
   id: string;
@@ -37,7 +38,7 @@ interface VendorRFP {
 const VendorRFPDashboard = () => {
   const [rfps, setRfps] = useState<VendorRFP[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const user = useCurrentUser();
   useEffect(() => {
     fetchVendorRFPs();
   }, []);
@@ -45,7 +46,7 @@ const VendorRFPDashboard = () => {
   const fetchVendorRFPs = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/vendor/rfp?status=SENT_TO_VENDORS');
+      const response = await fetch(`/api/vendor/rfp?status=SENT_TO_VENDORS&vendorId=${user?.vendorId}`);
       const data = await response.json();
       setRfps(data.rfps || []);
     } catch (error) {
