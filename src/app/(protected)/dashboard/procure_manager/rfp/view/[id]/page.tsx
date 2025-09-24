@@ -31,6 +31,7 @@ import {
   PlusCircle,
   Trash2,
   Search,
+  Mail,
 } from "lucide-react";
 import Loader from "@/components/shared/Loader";
 import {
@@ -92,7 +93,9 @@ interface Approval {
 interface Vendor {
   id: string;
   name: string;
-  vendorName?: string; // Added for backward compatibility
+  vendorName?: string; // For backward compatibility
+  email?: string;
+  specifications?: Record<string, string>;
 }
 
 interface RFPData {
@@ -146,6 +149,8 @@ const ViewRFPForApproval: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [showLineItemForm, setShowLineItemForm] = useState<boolean>(true); // Form visible by default
+  const [quotationCutoffDate, setQuotationCutoffDate] = useState<string>(""); // New state for quotationCutoffDate
 
   // Approval/Rejection state
   const [showApproveDialog, setShowApproveDialog] = useState(false);
@@ -163,14 +168,13 @@ const ViewRFPForApproval: React.FC = () => {
     specifications: {},
   });
   const [specifications, setSpecifications] = useState<Specification[]>([]);
-  const [showLineItemForm, setShowLineItemForm] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  // Updated Vendor Search State - Multiple selection
+  // Vendor Search State
   const [vendorSearchQuery, setVendorSearchQuery] = useState("");
   const [keywords, setKeywords] = useState<string[]>([]);
   const [vendorSearchResults, setVendorSearchResults] = useState<Vendor[]>([]);
-  const [selectedVendors, setSelectedVendors] = useState<Vendor[]>([]); // Changed to array
+  const [selectedVendors, setSelectedVendors] = useState<Vendor[]>([]);
   const [vendorSearchLoading, setVendorSearchLoading] = useState(false);
   const [vendorSearchError, setVendorSearchError] = useState<string | null>(null);
 
@@ -215,6 +219,7 @@ const ViewRFPForApproval: React.FC = () => {
         }
         const data: RFPData = await response.json();
         setRfpData({ ...data, lineItems: [] });
+        setQuotationCutoffDate(data.quotationCutoffDate || ""); // Initialize with fetched value
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -235,7 +240,7 @@ const ViewRFPForApproval: React.FC = () => {
     }
   }, [keywords, debouncedSearchVendors]);
 
-  // Updated vendor selection handlers
+  // Vendor selection handlers
   const handleSelectVendor = (vendor: Vendor) => {
     if (!selectedVendors.some((sv) => sv.id === vendor.id)) {
       setSelectedVendors([...selectedVendors, vendor]);
@@ -283,6 +288,7 @@ const ViewRFPForApproval: React.FC = () => {
       setLineItems([...lineItems, updatedLineItem]);
     }
 
+    // Reset form and hide it
     setNewLineItem({
       productName: "",
       description: "",
@@ -294,7 +300,7 @@ const ViewRFPForApproval: React.FC = () => {
     setSpecifications([]);
     setShowLineItemForm(false);
     toast({
-      title: "Line Item Added",
+      title: editingIndex !== null ? "Line Item Updated" : "Line Item Added",
       description: "Line item has been successfully added/updated.",
     });
   };
@@ -308,7 +314,7 @@ const ViewRFPForApproval: React.FC = () => {
         ? Object.entries(item.specifications).map(([key, value]) => ({ key, value }))
         : []
     );
-    setShowLineItemForm(true);
+    setShowLineItemForm(true); // Show form for editing
   };
 
   const handleDeleteLineItem = (index: number) => {
@@ -333,9 +339,53 @@ const ViewRFPForApproval: React.FC = () => {
     setSpecifications(specifications.filter((_, i) => i !== index));
   };
 
+  const handleResetForm = () => {
+    setNewLineItem({
+      productName: "",
+      description: "",
+      quantity: 0,
+      estimatedUnitPrice: undefined,
+      urgency: "",
+      specifications: {},
+    });
+    setSpecifications([]);
+    setEditingIndex(null);
+    setShowLineItemForm(true); // Show form when adding new line item
+  };
+
+  console.log("Data sent to backend for approval:", {
+    id: rfpId,
+    updatedBy: user?.id,
+    approvalAction: 'approve',
+    approvalComments: approvalComments || 'Approved for next stage',
+    lineItems,
+    selectedVendorIds: selectedVendors.map(v => v.id),
+    sendToVendors: selectedVendors.length > 0,
+    quotationCutoffDate,
+  });
+
   const handleApprove = async () => {
+    if (!quotationCutoffDate) {
+      toast({
+        title: "Invalid Input",
+        description: "Quotation cutoff date is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setProcessing(true);
     try {
+      console.log("Data sent to backend for approval:", {
+        id: rfpId,
+        updatedBy: user?.id,
+        approvalAction: 'approve',
+        approvalComments: approvalComments || 'Approved for next stage',
+        lineItems,
+        selectedVendorIds: selectedVendors.map(v => v.id),
+        sendToVendors: selectedVendors.length > 0,
+        quotationCutoffDate,
+      });
       const response = await fetch('/api/rfp', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -345,8 +395,9 @@ const ViewRFPForApproval: React.FC = () => {
           approvalAction: 'approve',
           approvalComments: approvalComments || 'Approved for next stage',
           lineItems,
-          selectedVendors: selectedVendors.map(v => v.id), // Updated to send array of IDs
-          sendToVendors : selectedVendors.length > 0,
+          selectedVendorIds: selectedVendors.map(v => v.id),
+          sendToVendors: selectedVendors.length > 0,
+          quotationCutoffDate,
         })
       });
 
@@ -386,6 +437,13 @@ const ViewRFPForApproval: React.FC = () => {
 
     setProcessing(true);
     try {
+      console.log("Data sent to backend for rejection:", {
+        id: rfpId,
+        updatedBy: user?.id,
+        approvalAction: 'reject',
+        rejectionReason: rejectionReason,
+        lineItems,
+      });
       const response = await fetch('/api/rfp', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -478,7 +536,7 @@ const ViewRFPForApproval: React.FC = () => {
         </CardHeader>
       </Card>
 
-      {/* Updated Vendor Search - Multiple Selection */}
+      {/* Vendor Search - Multiple Selection */}
       <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
         <CardHeader className="bg-green-50 rounded-t-xl px-6 py-4">
           <CardTitle className="flex items-center text-green-800">
@@ -487,7 +545,7 @@ const ViewRFPForApproval: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-6">
             <div>
               <Label htmlFor="vendorKeyword" className="text-green-800 font-medium">
                 Add Vendor Search Keywords
@@ -513,7 +571,7 @@ const ViewRFPForApproval: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             {keywords.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {keywords.map((keyword, index) => (
@@ -530,71 +588,119 @@ const ViewRFPForApproval: React.FC = () => {
                 ))}
               </div>
             )}
-            
+
             {vendorSearchLoading && <p className="text-sm text-green-600">Searching vendors...</p>}
             {vendorSearchError && <p className="text-sm text-red-600">{vendorSearchError}</p>}
-            
+
+            {/* Available Vendors as Cards */}
             {vendorSearchResults.length > 0 && (
               <div>
                 <Label className="text-green-800 font-medium">Available Vendors</Label>
-                <div className="mt-2 space-y-2 max-h-40 overflow-y-auto border border-green-100 rounded-lg p-2 bg-green-50">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                   {vendorSearchResults.map((vendor) => (
-                    <div
+                    <Card
                       key={vendor.id}
-                      className="p-3 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-green-100 border border-green-200"
-                      onClick={() => handleSelectVendor(vendor)}
+                      className="border border-green-200 bg-green-50 hover:bg-green-100 transition-colors duration-200 shadow-sm"
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-green-800">{vendor.name || vendor.vendorName}</div>
-                          <div className="text-xs text-green-600">Click to select</div>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <Building className="w-5 h-5 text-green-600" />
+                            <h4 className="font-medium text-green-800">
+                              {vendor.name || vendor.vendorName || "Unknown Vendor"}
+                            </h4>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSelectVendor(vendor)}
+                            className="border-green-500 text-green-700 hover:bg-green-200"
+                          >
+                            Select
+                          </Button>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectVendor(vendor);
-                          }}
-                          className="border-green-500 text-green-700 hover:bg-green-100"
-                        >
-                          Select
-                        </Button>
-                      </div>
-                    </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-green-600" />
+                            <span className="text-gray-700">
+                              {vendor.email || "No email provided"}
+                            </span>
+                          </div>
+                          {vendor.specifications && Object.keys(vendor.specifications).length > 0 && (
+                            <div>
+                              <div className="font-medium text-green-800">Specifications:</div>
+                              <div className="mt-1 space-y-1">
+                                {Object.entries(vendor.specifications).map(([key, value]) => (
+                                  <div key={key} className="flex justify-between">
+                                    <span className="capitalize text-green-700">{key.replace("_", " ")}:</span>
+                                    <span className="text-gray-600">{String(value)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Selected Vendors Section */}
+            {/* Selected Vendors as Cards */}
             {selectedVendors.length > 0 && (
               <div>
                 <Label className="text-green-800 font-medium">Selected Vendors ({selectedVendors.length})</Label>
-                <div className="mt-3 space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                   {selectedVendors.map((vendor) => (
-                    <div
+                    <Card
                       key={vendor.id}
-                      className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200"
+                      className="border border-green-300 bg-green-100 shadow-md"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-green-200 rounded-full flex items-center justify-center">
-                          <Building className="w-4 h-4 text-green-600" />
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-2">
+                            <Building className="w-5 h-5 text-green-600" />
+                            <h4 className="font-medium text-green-800">
+                              {vendor.name || vendor.vendorName || "Unknown Vendor"}
+                            </h4>
+                          </div>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeselectVendor(vendor.id)}
+                            className="bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
                         </div>
-                        <div>
-                          <div className="font-medium text-green-800">{vendor.name || vendor.vendorName}</div>
-                          <div className="text-xs text-gray-500">ID: {vendor.id}</div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-green-600" />
+                            <span className="text-gray-700">
+                              {vendor.email || "No email provided"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-green-600" />
+                            <span className="text-gray-700">ID: {vendor.id}</span>
+                          </div>
+                          {vendor.specifications && Object.keys(vendor.specifications).length > 0 && (
+                            <div>
+                              <div className="font-medium text-green-800">Specifications:</div>
+                              <div className="mt-1 space-y-1">
+                                {Object.entries(vendor.specifications).map(([key, value]) => (
+                                  <div key={key} className="flex justify-between">
+                                    <span className="capitalize text-green-700">{key.replace("_", " ")}:</span>
+                                    <span className="text-gray-600">{String(value)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeselectVendor(vendor.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               </div>
@@ -686,56 +792,123 @@ const ViewRFPForApproval: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Rejection Reason (if rejected) */}
-      {rfpData.rejectionReason && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800 flex items-center">
-              <XCircle className="w-5 h-5 mr-2" />
-              Rejection Reason
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-700">{rfpData.rejectionReason}</p>
-          </CardContent>
-        </Card>
-      )}
-
-        
+      {/* Quotation Cutoff Date */}
+      <Card className="border border-green-200 rounded-lg bg-white">
+        <CardHeader className="bg-green-50 rounded-t-lg px-4 py-2">
+          <CardTitle className="flex items-center text-green-800 text-base">
+            <Calendar className="w-5 h-5 mr-2 text-green-600" />
+            Quotation Cutoff Date
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <Label htmlFor="quotationCutoffDate" className="text-green-800 font-medium text-sm">
+                Quotation Cutoff Date *
+              </Label>
+              <Input
+                id="quotationCutoffDate"
+                type="date"
+                value={quotationCutoffDate}
+                onChange={(e) => setQuotationCutoffDate(e.target.value)}
+                className="border-green-300 focus:ring-green-500 focus:border-green-500 mt-1"
+                required
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Line Items */}
       <Card className="border border-green-200 shadow-lg rounded-xl bg-white">
         <CardHeader className="bg-green-50 rounded-t-xl px-6 py-4">
-          <CardTitle className="flex items-center justify-between text-green-800">
-            <div className="flex items-center">
-              <Package className="w-6 h-6 mr-3 text-green-600" />
-              <span className="text-lg font-semibold">Line Items ({lineItems.length})</span>
-            </div>
-            <Button
-              variant="outline"
-              className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
-              onClick={() => {
-                setShowLineItemForm(true);
-                setEditingIndex(null);
-                setNewLineItem({
-                  productName: "",
-                  description: "",
-                  quantity: 0,
-                  estimatedUnitPrice: undefined,
-                  urgency: "",
-                  specifications: {},
-                });
-                setSpecifications([]);
-              }}
-            >
-              <PlusCircle className="w-4 h-4 mr-2 text-green-600" />
-              Add Line Item
-            </Button>
+          <CardTitle className="flex items-center text-green-800">
+            <Package className="w-6 h-6 mr-3 text-green-600" />
+            <span className="text-lg font-semibold">Line Items ({lineItems.length})</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
+          <div className="space-y-4">
+            {lineItems.map((item, index) => (
+              <Card key={index} className="p-4 border border-green-100 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="font-medium text-green-800">Product:</Label>
+                    <p className="text-sm text-gray-700">{item.productName}</p>
+                    {item.urgency && (
+                      <Badge
+                        variant={item.urgency === "High" ? "destructive" : "secondary"}
+                        className={`mt-1 ${item.urgency === "High" ? "bg-red-500" : "bg-green-200 text-green-800"}`}
+                      >
+                        {item.urgency}
+                      </Badge>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="font-medium text-green-800">Quantity:</Label>
+                    <p className="text-sm text-gray-700">{item.quantity}</p>
+                  </div>
+                  <div>
+                    <Label className="font-medium text-green-800">Est. Unit Price:</Label>
+                    <p className="text-sm text-gray-700">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : "Not specified"}</p>
+                  </div>
+                  {item.description && (
+                    <div className="md:col-span-3">
+                      <Label className="font-medium text-green-800">Description:</Label>
+                      <p className="text-sm text-gray-700 mt-1">{item.description}</p>
+                    </div>
+                  )}
+                  {item.specifications && Object.keys(item.specifications).length > 0 && (
+                    <div className="md:col-span-3">
+                      <Label className="font-medium text-green-800">Specifications:</Label>
+                      <div className="text-sm mt-1 p-3 bg-green-50 rounded-lg">
+                        {Object.entries(item.specifications).map(([key, value]) => (
+                          <div key={key} className="flex justify-between">
+                            <span className="capitalize text-green-800">{key.replace("_", " ")}:</span>
+                            <span className="text-gray-700">{String(value)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditLineItem(index)}
+                    className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDeleteLineItem(index)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {lineItems.length > 0 && !showLineItemForm && (
+            <div className="mt-6 flex justify-end">
+              <Button
+                variant="outline"
+                className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                onClick={handleResetForm}
+              >
+                <PlusCircle className="w-4 h-4 mr-2 text-green-600" />
+                Add New Line Item
+              </Button>
+            </div>
+          )}
+
           {showLineItemForm && (
-            <Card className="p-4 mb-6 border border-green-100 shadow-sm rounded-lg bg-green-50">
+            <Card className="p-4 mt-6 border border-green-100 shadow-sm rounded-lg bg-green-50">
               <CardHeader>
                 <CardTitle className="text-green-800 text-lg font-semibold">
                   {editingIndex !== null ? "Edit Line Item" : "Add New Line Item"}
@@ -841,127 +1014,80 @@ const ViewRFPForApproval: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex justify-end space-x-3 mt-6">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowLineItemForm(false)}
-                    className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
-                  >
-                    Cancel
-                  </Button>
+                  {editingIndex !== null && (
+                    <Button
+                      variant="outline"
+                      onClick={handleResetForm}
+                      className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
+                    >
+                      Cancel Edit
+                    </Button>
+                  )}
                   <Button
                     onClick={handleAddLineItem}
                     className="bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
                   >
-                    {editingIndex !== null ? "Update" : "Add"} Line Item
+                    {editingIndex !== null ? "Update Line Item" : "Add Line Item"}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
-          <div className="space-y-4">
-            {lineItems.map((item, index) => (
-              <Card key={index} className="p-4 border border-green-100 shadow-sm rounded-lg bg-white hover:shadow-md transition-shadow duration-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="font-medium text-green-800">Product:</Label>
-                    <p className="text-sm text-gray-700">{item.productName}</p>
-                    {item.urgency && (
-                      <Badge
-                        variant={item.urgency === "High" ? "destructive" : "secondary"}
-                        className={`mt-1 ${item.urgency === "High" ? "bg-red-500" : "bg-green-200 text-green-800"}`}
-                      >
-                        {item.urgency}
-                      </Badge>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="font-medium text-green-800">Quantity:</Label>
-                    <p className="text-sm text-gray-700">{item.quantity}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium text-green-800">Est. Unit Price:</Label>
-                    <p className="text-sm text-gray-700">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : "Not specified"}</p>
-                  </div>
-                  {item.description && (
-                    <div className="md:col-span-3">
-                      <Label className="font-medium text-green-800">Description:</Label>
-                      <p className="text-sm text-gray-700 mt-1">{item.description}</p>
-                    </div>
-                  )}
-                  {item.specifications && Object.keys(item.specifications).length > 0 && (
-                    <div className="md:col-span-3">
-                      <Label className="font-medium text-green-800">Specifications:</Label>
-                      <div className="text-sm mt-1 p-3 bg-green-50 rounded-lg">
-                        {Object.entries(item.specifications).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="capitalize text-green-800">{key.replace("_", " ")}:</span>
-                            <span className="text-gray-700">{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-3 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditLineItem(index)}
-                    className="border-green-500 text-green-700 hover:bg-green-100 transition-colors duration-200"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteLineItem(index)}
-                    className="bg-red-500 hover:bg-red-600"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
         </CardContent>
       </Card>
 
+      {/* Rejection Reason (if rejected) */}
+      {rfpData.rejectionReason && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader>
+            <CardTitle className="text-red-800 flex items-center">
+              <XCircle className="w-5 h-5 mr-2" />
+              Rejection Reason
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-red-700">{rfpData.rejectionReason}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Action Buttons */}
       {canApproveOrReject && (
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-blue-900">Approval Required</h3>
-                  <p className="text-sm text-blue-700">
-                    {selectedVendors.length > 0 
-                      ? `This RFP is pending your approval with ${selectedVendors.length} vendor(s) selected`
-                      : "Please select at least one vendor before approving"
-                    }
-                  </p>
-                </div>
-                <div className="flex space-x-3">
-                  <Button
-                    variant="outline"
-                    className="border-red-300 text-red-700 hover:bg-red-50"
-                    onClick={() => setShowRejectDialog(true)}
-                    disabled={processing}
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Reject
-                  </Button>
-                  <Button
-                    className="bg-green-600 hover:bg-green-700"
-                    onClick={() => setShowApproveDialog(true)}
-                    disabled={processing || lineItems.length === 0 || selectedVendors.length === 0}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Approve
-                  </Button>
-                </div>
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-blue-900">Approval Required</h3>
+                <p className="text-sm text-blue-700">
+                  {selectedVendors.length > 0 
+                    ? `This RFP is pending your approval with ${selectedVendors.length} vendor(s) selected`
+                    : "Please select at least one vendor before approving"
+                  }
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => setShowRejectDialog(true)}
+                  disabled={processing}
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Reject
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => setShowApproveDialog(true)}
+                  disabled={processing || lineItems.length === 0 || selectedVendors.length === 0 || !quotationCutoffDate}
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Approve
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Approval Workflow */}
       <Card>
