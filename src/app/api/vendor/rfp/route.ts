@@ -7,15 +7,8 @@ import { currentUser } from '@/lib/auth';
 // GET RFPs that are sent to specific vendor
 export async function GET(request: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user?.vendorId) {
-      return NextResponse.json(
-        { error: "User not associated with any vendor" },
-        { status: 403 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
+    const vendorId = searchParams.get('vendorId');
     const status = searchParams.get('status') || 'SENT_TO_VENDORS';
 
 
@@ -54,7 +47,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(UserTable, eq(RFPTable.createdBy, UserTable.id))
       .where(
         and(
-          eq(RFPVendorInvitationTable.vendorId, user.vendorId),
+          eq(RFPVendorInvitationTable.vendorId, vendorId!),
           eq(RFPTable.status, status as any),
           gte(RFPTable.quotationCutoffDate, new Date()) // Only active RFPs
         )
@@ -111,7 +104,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       rfps: formattedRfps,
       total: formattedRfps.length,
-      vendorId: user.vendorId
+      vendorId: vendorId
     });
 
   } catch (error) {

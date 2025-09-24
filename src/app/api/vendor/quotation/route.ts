@@ -2,21 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, desc } from 'drizzle-orm';
 import { QuotationTable, RFPTable, RFPVendorInvitationTable, VendorTable } from '@/drizzle/schema';
 import { db } from '@/lib/db';
-import { currentUser } from '@/lib/auth';
-import { uploadToS3 } from '@/lib/s3'; // Assuming you have S3 upload utility
 
 // GET vendor's quotations for an RFP
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest
+) {
   try {
-    const user = await currentUser();
-    if (!user?.vendorId) {
+    const { searchParams } = new URL(request.url);
+    const vendorId = searchParams.get('vendorId');
+    if (!vendorId) {
       return NextResponse.json(
-        { error: "User not associated with any vendor" },
-        { status: 403 }
+        { error: "Vendor ID is required" },
+        { status: 400 }
       );
     }
 
-    const { searchParams } = new URL(request.url);
     const rfpId = searchParams.get('rfpId');
 
     if (!rfpId) {
@@ -26,13 +26,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all quotations for this RFP from this vendor (including previous versions)
-    const quotations = await db.query.QuotationTable.findMany({
+    // Verify vendor exists
+    const vendor = await db.query.VendorTable.findFirst({
+      where: eq(VendorTable.id, vendorId),
+      columns: { id: true, status: true }
+    });
+
+    if (!vendor) {
+      return NextResponse.json(
+        { error: "Vendor not found" },
+        { status: 404 }
+      );
+    }
+
+    // Get quotation for this RFP from this vendor (should be only one)
+    const quotation = await db.query.QuotationTable.findFirst({
       where: and(
         eq(QuotationTable.rfpId, rfpId),
-        eq(QuotationTable.vendorId, user.vendorId)
+        eq(QuotationTable.vendorId, vendorId)
       ),
-      orderBy: [desc(QuotationTable.createdAt)],
     });
 
     // Get RFP details to check cutoff date
@@ -44,15 +56,15 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const canEdit = rfp && new Date() < new Date(rfp.quotationCutoffDate);
-    const latestQuotation = quotations[0]; // Most recent quotation
+    const canEdit = rfp && new Date() < new Date(rfp.quotationCutoffDate) && rfp.status === 'SENT_TO_VENDORS';
 
     return NextResponse.json({
-      quotations,
-      latestQuotation,
+      quotation,
       canEdit,
       rfpId,
-      vendorId: user.vendorId
+      vendorId,
+      rfpStatus: rfp?.status,
+      quotationCutoffDate: rfp?.quotationCutoffDate
     });
 
   } catch (error) {
@@ -63,20 +75,22 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 // POST/PUT create or update quotation (UPSERT)
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user?.vendorId) {
+const { searchParams } = new URL(request.url);
+    const vendorId = searchParams.get('vendorId');
+    if (!vendorId) {
       return NextResponse.json(
-        { error: "User not associated with any vendor" },
-        { status: 403 }
+        { error: "Vendor ID is required" },
+        { status: 400 }
       );
     }
 
-    const formData = await request.formData();
-    const quotationData = JSON.parse(formData.get('quotationData') as string);
-
+    const requestBody = await request.json();
+    
     const {
       rfpId,
       quotationNumber,
@@ -85,16 +99,59 @@ export async function POST(request: NextRequest) {
       validTill,
       deliveryTimeline,
       notes,
-      termsConditions
-    } = quotationData;
+      termsConditions,
+      supportingDocuments // Direct file URLs array
+    } = requestBody;
 
-    // Validate RFP and invitation (same as before)
+    // Validate required fields
+    if (!rfpId) {
+      return NextResponse.json(
+        { error: "RFP ID is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!lineItemQuotes || !Array.isArray(lineItemQuotes) || lineItemQuotes.length === 0) {
+      return NextResponse.json(
+        { error: "Line item quotes are required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify vendor exists and is active
+    const vendor = await db.query.VendorTable.findFirst({
+      where: eq(VendorTable.id, vendorId),
+      columns: { id: true, status: true }
+    });
+
+    if (!vendor) {
+      return NextResponse.json(
+        { error: "Vendor not found" },
+        { status: 404 }
+      );
+    }
+
+    if (vendor.status !== 'APPROVED') {
+      return NextResponse.json(
+        { error: "Vendor is not approved to submit quotations" },
+        { status: 403 }
+      );
+    }
+
+    // Validate RFP exists and is accepting quotations
     const rfp = await db.query.RFPTable.findFirst({
       where: eq(RFPTable.id, rfpId),
     });
 
     if (!rfp) {
       return NextResponse.json({ error: "RFP not found" }, { status: 404 });
+    }
+
+    if (rfp.status !== 'SENT_TO_VENDORS') {
+      return NextResponse.json(
+        { error: "RFP is not currently accepting quotations" },
+        { status: 400 }
+      );
     }
 
     if (new Date() >= new Date(rfp.quotationCutoffDate)) {
@@ -104,58 +161,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify vendor is invited to this RFP
     const invitation = await db.query.RFPVendorInvitationTable.findFirst({
       where: and(
         eq(RFPVendorInvitationTable.rfpId, rfpId),
-        eq(RFPVendorInvitationTable.vendorId, user.vendorId)
+        eq(RFPVendorInvitationTable.vendorId, vendorId)
       )
     });
 
     if (!invitation) {
       return NextResponse.json(
-        { error: "You are not invited to submit quotation for this RFP" },
+        { error: "Vendor is not invited to submit quotation for this RFP" },
         { status: 403 }
       );
     }
 
-    // Handle file uploads (same as before)
-    const supportingDocuments = [];
-    const fileEntries = Array.from(formData.entries()).filter(([key]) => key.startsWith('file_'));
-    
-    for (const [key, file] of fileEntries) {
-      if (file instanceof File) {
-        const uploadResult = await uploadToS3(file);
-        supportingDocuments.push({
-          fileName: file.name,
-          fileUrl: uploadResult.url,
-          fileSize: file.size,
-          mimeType: file.type,
-        });
+    // Validate line item quotes
+    for (const item of lineItemQuotes) {
+      if (!item.lineItemId || !item.unitPrice || item.unitPrice <= 0) {
+        return NextResponse.json(
+          { error: "All line items must have valid unit prices" },
+          { status: 400 }
+        );
       }
     }
 
-    // Calculate totals (same as before)
+    // Calculate totals
     const subtotal = lineItemQuotes.reduce((sum: number, item: any) => 
-      sum + (item.unitPrice * item.quantity), 0
+      sum + (parseFloat(item.unitPrice) * parseInt(item.quantity)), 0
     ) + (otherCharges?.reduce((sum: number, charge: any) => 
-      sum + charge.amount, 0) || 0);
+      sum + parseFloat(charge.amount), 0) || 0);
 
     const gstAmount = lineItemQuotes.reduce((sum: number, item: any) => 
-      sum + ((item.unitPrice * item.quantity) * (item.gstPercentage / 100)), 0
+      sum + ((parseFloat(item.unitPrice) * parseInt(item.quantity)) * (parseFloat(item.gstPercentage) / 100)), 0
     ) + (otherCharges?.reduce((sum: number, charge: any) => 
-      sum + (charge.amount * (charge.gstPercentage / 100)), 0) || 0);
+      sum + (parseFloat(charge.amount) * (parseFloat(charge.gstPercentage || 0) / 100)), 0) || 0);
 
     const totalAmount = subtotal + gstAmount;
+
+    // Process supporting documents (expecting direct URLs)
+    const processedDocuments = (supportingDocuments || []).map((doc: any) => ({
+      fileName: doc.fileName || doc.name,
+      fileUrl: doc.fileUrl || doc.url,
+      fileSize: doc.fileSize || 0,
+      mimeType: doc.mimeType || doc.type || 'application/octet-stream',
+      uploadedAt: new Date().toISOString()
+    }));
 
     // UPSERT: Check if quotation exists, then update or insert
     const existingQuotation = await db.query.QuotationTable.findFirst({
       where: and(
         eq(QuotationTable.rfpId, rfpId),
-        eq(QuotationTable.vendorId, user.vendorId)
+        eq(QuotationTable.vendorId, vendorId)
       )
     });
 
     let quotation;
+    const currentTimestamp = new Date();
 
     if (existingQuotation) {
       // UPDATE existing quotation
@@ -168,14 +230,14 @@ export async function POST(request: NextRequest) {
           subtotal,
           gstAmount,
           totalAmount,
-          supportingDocuments,
+          supportingDocuments: processedDocuments,
           validTill: validTill ? new Date(validTill) : existingQuotation.validTill,
-          deliveryTimeline,
-          notes,
-          termsConditions,
+          deliveryTimeline: deliveryTimeline || existingQuotation.deliveryTimeline,
+          notes: notes || existingQuotation.notes,
+          termsConditions: termsConditions || existingQuotation.termsConditions,
           status: 'SUBMITTED',
-          submittedAt: new Date(),
-          updatedAt: new Date(),
+          submittedAt: currentTimestamp,
+          updatedAt: currentTimestamp,
         })
         .where(eq(QuotationTable.id, existingQuotation.id))
         .returning();
@@ -185,13 +247,14 @@ export async function POST(request: NextRequest) {
         .update(RFPVendorInvitationTable)
         .set({ 
           status: 'QUOTED',
-          updatedAt: new Date()
+          updatedAt: currentTimestamp
         })
         .where(eq(RFPVendorInvitationTable.id, invitation.id));
 
       return NextResponse.json({
         quotation,
-        message: 'Quotation updated successfully'
+        message: 'Quotation updated successfully',
+        action: 'updated'
       });
 
     } else {
@@ -200,21 +263,21 @@ export async function POST(request: NextRequest) {
         .insert(QuotationTable)
         .values({
           rfpId,
-          vendorId: user.vendorId,
-          quotationNumber: quotationNumber || `QUO-${Date.now()}`,
+          vendorId,
+          quotationNumber: quotationNumber || `QUO-${vendorId.slice(-6)}-${Date.now()}`,
           lineItemQuotes,
           otherCharges: otherCharges || [],
           subtotal,
           gstAmount,
           totalAmount,
-          supportingDocuments,
+          supportingDocuments: processedDocuments,
           validTill: validTill ? new Date(validTill) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           deliveryTimeline,
           notes,
           termsConditions,
           status: 'SUBMITTED',
-          submittedAt: new Date(),
-          updatedAt: new Date(),
+          submittedAt: currentTimestamp,
+          updatedAt: currentTimestamp,
         })
         .returning();
 
@@ -223,20 +286,24 @@ export async function POST(request: NextRequest) {
         .update(RFPVendorInvitationTable)
         .set({ 
           status: 'QUOTED',
-          updatedAt: new Date()
+          updatedAt: currentTimestamp
         })
         .where(eq(RFPVendorInvitationTable.id, invitation.id));
 
       return NextResponse.json({
         quotation,
-        message: 'Quotation submitted successfully'
+        message: 'Quotation submitted successfully',
+        action: 'created'
       }, { status: 201 });
     }
 
   } catch (error) {
     console.error('Error creating/updating quotation:', error);
     return NextResponse.json(
-      { error: 'Failed to process quotation' },
+      { 
+        error: 'Failed to process quotation',
+        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      },
       { status: 500 }
     );
   }
