@@ -3,33 +3,18 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useParams, useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   X, 
-  Star, 
-  FileText, 
   CheckCircle, 
   XCircle, 
-  Clock,
   MapPin,
-  Calendar,
-  User,
-  Building,
-  DollarSign,
   Package,
   MessageSquare,
   MessageCircleMore
 } from "lucide-react";
 import Loader from "@/components/shared/Loader";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,11 +28,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
-import { FaRupeeSign } from "react-icons/fa";
 import RFPConversation from "@/components/shared/RFPConversation";
 import { useCurrentUser } from "@/hooks/auth";
 
-// Updated interfaces to match new API structure
+// Interfaces remain the same
 interface LineItem {
   productName: string;
   description: string;
@@ -132,13 +116,13 @@ const ViewRFPForApproval: React.FC = () => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Approval/Rejection state
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [approvalComments, setApprovalComments] = useState("");
   const [rejectionReason, setRejectionReason] = useState("");
 
   const user = useCurrentUser();
+
   useEffect(() => {
     const fetchRFP = async () => {
       try {
@@ -168,7 +152,7 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: user?.id, // Replace with actual current user ID
+          updatedBy: user?.id,
           approvalAction: 'approve',
           approvalComments: approvalComments || 'Approved for next stage',
         })
@@ -181,7 +165,6 @@ const ViewRFPForApproval: React.FC = () => {
           title: "RFP Approved",
           description: data.message,
         });
-        // Refresh data
         window.location.reload();
       } else {
         throw new Error(data.message || 'Failed to approve RFP');
@@ -216,7 +199,7 @@ const ViewRFPForApproval: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: rfpId,
-          updatedBy: user?.id, // Replace with actual current user ID
+          updatedBy: user?.id,
           approvalAction: 'reject',
           rejectionReason: rejectionReason,
         })
@@ -229,7 +212,6 @@ const ViewRFPForApproval: React.FC = () => {
           title: "RFP Rejected",
           description: data.message,
         });
-        // Refresh data
         window.location.reload();
       } else {
         throw new Error(data.message || 'Failed to reject RFP');
@@ -249,13 +231,13 @@ const ViewRFPForApproval: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     const statusColors: { [key: string]: string } = {
-      'DRAFT': 'bg-gray-500',
-      'PENDING_APPROVAL': 'bg-yellow-500',
-      'APPROVED': 'bg-green-500',
-      'REJECTED': 'bg-red-500',
-      'SENT_TO_VENDORS': 'bg-blue-500',
+      'DRAFT': 'bg-gray-200 text-gray-800',
+      'PENDING_APPROVAL': 'bg-yellow-200 text-yellow-800',
+      'APPROVED': 'bg-green-200 text-green-800',
+      'REJECTED': 'bg-red-200 text-red-800',
+      'SENT_TO_VENDORS': 'bg-blue-200 text-blue-800',
     };
-    return statusColors[status] || 'bg-gray-500';
+    return statusColors[status] || 'bg-gray-200 text-gray-800';
   };
 
   const formatCurrency = (amount?: number) => {
@@ -266,251 +248,214 @@ const ViewRFPForApproval: React.FC = () => {
     }).format(amount);
   };
 
-  const canApproveOrReject =rfpData?.status === 'DRAFT';
+  const canApproveOrReject = rfpData?.status === 'DRAFT';
 
   if (loading) return <Loader />;
-  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
-  if (!rfpData) return <div className="p-4">No RFP data found.</div>;
+  if (error) return <div className="text-red-600 p-6 text-center font-medium">Error: {error}</div>;
+  if (!rfpData) return <div className="p-6 text-center font-medium text-gray-600">No RFP data found.</div>;
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl font-bold">{rfpData.title}</CardTitle>
-              <div className="flex items-center gap-4 mt-2">
-                <Badge variant="outline" className="font-mono">
-                  {rfpData.rfpNumber}
-                </Badge>
-                <Badge className={getStatusColor(rfpData.status)}>
-                  {rfpData.status.replace(/_/g, ' ')}
-                </Badge>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => router.back()}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          {rfpData.description && (
-            <p className="text-gray-600 mt-2">{rfpData.description}</p>
-          )}
-        </CardHeader>
-      </Card>
-
-
-      {/* Question Answers */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <MessageSquare className="w-5 h-5 mr-2" />
-            Request Details & Justification
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label className="font-medium">Usage Type:</Label>
-              <p className="text-sm">{rfpData.questionAnswers.usage_type}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Request Type:</Label>
-              <p className="text-sm">{rfpData.questionAnswers.request_type}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Required Date:</Label>
-              <p className="text-sm">{new Date(rfpData.questionAnswers.required_date).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Client Related:</Label>
-              <p className="text-sm">{rfpData.questionAnswers.client_related}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Request Reason:</Label>
-              <p className="text-sm">{rfpData.questionAnswers.request_reason}</p>
-            </div>
-            <div>
-              <Label className="font-medium">Quantity Needed:</Label>
-              <p className="text-sm">{rfpData.questionAnswers.quantity_needed}</p>
-            </div>
-          </div>
-          
-          <Separator className="my-4" />
-          
-          <div className="space-y-3">
-            <div>
-              <Label className="font-medium">Specific Request:</Label>
-              <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
-                {rfpData.questionAnswers.specific_request}
-              </p>
-            </div>
-            
-            {rfpData.questionAnswers.replacement_reason && (
-              <div>
-                <Label className="font-medium">Replacement Reason:</Label>
-                <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
-                  {rfpData.questionAnswers.replacement_reason}
-                </p>
-              </div>
-            )}
-            
-            {rfpData.questionAnswers.business_justification && (
-              <div>
-                <Label className="font-medium">Business Justification:</Label>
-                <p className="text-sm mt-1 p-3 bg-gray-50 rounded">
-                  {rfpData.questionAnswers.business_justification}
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-
-      {/* Delivery Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <MapPin className="w-5 h-5 mr-2" />
-            Delivery Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div>
-            <Label className="font-medium">Location:</Label>
-            <p className="text-sm mt-1">{rfpData.deliveryLocation}</p>
-          </div>
-        </CardContent>
-      </Card>
-      {/* Rejection Reason (if rejected) */}
-      {rfpData.rejectionReason && (
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader>
-            <CardTitle className="text-red-800 flex items-center">
-              <XCircle className="w-5 h-5 mr-2" />
-              Rejection Reason
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-700">{rfpData.rejectionReason}</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Action Buttons */}
-      {canApproveOrReject && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900">Approval Required</h3>
-                <p className="text-sm text-blue-700">This RFP is pending your approval</p>
-              </div>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-700 hover:bg-red-50"
-                  onClick={() => setShowRejectDialog(true)}
-                  disabled={processing}
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700"
-                  onClick={() => setShowApproveDialog(true)}
-                  disabled={processing}
-                >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approve
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Line Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Package className="w-5 h-5 mr-2" />
-            Line Items ({rfpData.lineItems.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {rfpData.lineItems.map((item, index) => (
-              <Card key={index} className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="font-medium">Product:</Label>
-                    <p className="text-sm">{item.productName}</p>
-                    {item.urgency && (
-                      <Badge variant={item.urgency === 'High' ? 'destructive' : 'secondary'} className="mt-1">
-                        {item.urgency}
-                      </Badge>
-                    )}
+    <div className="min-h-screen bg-gray-50">
+      <main className="p-4 lg:p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <Card className="shadow-lg border border-gray-200">
+            <CardHeader className="bg-green-50 border-b border-gray-200">
+              <div className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-2xl font-semibold text-green-900">{rfpData.title}</CardTitle>
+                  <div className="flex gap-3 mt-3">
+                    <Badge variant="outline" className="border-green-300 text-green-700 font-medium">
+                      {rfpData.rfpNumber}
+                    </Badge>
+                    <Badge className={`${getStatusColor(rfpData.status)} font-medium`}>
+                      {rfpData.status.replace(/_/g, ' ')}
+                    </Badge>
                   </div>
-                  <div>
-                    <Label className="font-medium">Quantity:</Label>
-                    <p className="text-sm">{item.quantity}</p>
-                  </div>
-                  <div>
-                    <Label className="font-medium">Est. Unit Price:</Label>
-                    <p className="text-sm">{item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : 'Not specified'}</p>
-                  </div>
-                  {item.description && (
-                    <div className="md:col-span-3">
-                      <Label className="font-medium">Description:</Label>
-                      <p className="text-sm mt-1">{item.description}</p>
-                    </div>
-                  )}
-                  {item.specifications && (
-                    <div className="md:col-span-3">
-                      <Label className="font-medium">Specifications:</Label>
-                      <div className="text-sm mt-1 p-2 bg-gray-50 rounded">
-                        {Object.entries(item.specifications).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="capitalize">{key.replace('_', ' ')}:</span>
-                            <span>{String(value)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                <Button variant="ghost" onClick={() => router.back()}>
+                  <X className="h-5 w-5 text-gray-600" />
+                </Button>
+              </div>
+            </CardHeader>
+            {rfpData.description && (
+              <CardContent className="pt-6 px-6">
+                <p className="text-gray-700 leading-relaxed">{rfpData.description}</p>
+              </CardContent>
+            )}
+          </Card>
 
+          {rfpData.rejectionReason && (
+            <Card className="shadow-lg border border-red-100 bg-red-50">
+              <CardHeader className="bg-red-100 border-b border-red-200">
+                <CardTitle className="text-red-900 font-semibold flex items-center">
+                  <XCircle className="mr-2 h-5 w-5" /> Rejection Reason
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 px-6">
+                <p className="text-red-700 leading-relaxed">{rfpData.rejectionReason}</p>
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Approval Workflow */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <MessageCircleMore className="w-5 h-5 mr-2" />
-            Message {rfpData?.createdBy?.name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <RFPConversation rfpId={rfpData.id} />
-        </CardContent>
-      </Card>
+          <Card id="request-details" className="shadow-lg border border-gray-200">
+            <CardHeader className="bg-green-50 border-b border-gray-200">
+              <CardTitle className="text-green-900 font-semibold flex items-center">
+                <MessageSquare className="mr-2 h-5 w-5 text-green-600" /> Request Details & Justification
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 px-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { label: "Usage Type", value: rfpData.questionAnswers.usage_type },
+                  { label: "Request Type", value: rfpData.questionAnswers.request_type },
+                  { label: "Required Date", value: new Date(rfpData.questionAnswers.required_date).toLocaleDateString() },
+                  { label: "Client Related", value: rfpData.questionAnswers.client_related },
+                  { label: "Request Reason", value: rfpData.questionAnswers.request_reason },
+                  { label: "Quantity Needed", value: rfpData.questionAnswers.quantity_needed },
+                ].map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label className="text-base text-gray-700 font-bold">{item.label}</Label>
+                    <p className="text-gray-900  bg-gray-50 p-0 rounded-md">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+              <Separator className="my-6 bg-gray-200" />
+              <div className="space-y-6">
+                {[
+                  { label: "Specific Request", value: rfpData.questionAnswers.specific_request },
+                  ...(rfpData.questionAnswers.replacement_reason
+                    ? [{ label: "Replacement Reason", value: rfpData.questionAnswers.replacement_reason }]
+                    : []),
+                  ...(rfpData.questionAnswers.business_justification
+                    ? [{ label: "Business Justification", value: rfpData.questionAnswers.business_justification }]
+                    : []),
+                ].map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <Label className="text-base text-gray-700 font-bold">{item.label}</Label>
+                    <p className="text-gray-900 bg-gray-50 p-2 rounded-md border border-gray-200 leading-relaxed">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
+          <Card id="delivery-info" className="shadow-lg border border-gray-200">
+            <CardHeader className="bg-green-50 border-b border-gray-200">
+              <CardTitle className="text-green-900 font-semibold flex items-center">
+                <MapPin className="mr-2 h-5 w-5 text-green-600" /> Delivery Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 px-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Location</Label>
+                <p className="text-gray-900 font-medium bg-gray-50 p-3 rounded-md">{rfpData.deliveryLocation}</p>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Approve Dialog */}
+          <Card id="line-items" className="shadow-lg border border-gray-200">
+            <CardHeader className="bg-green-50 border-b border-gray-200">
+              <CardTitle className="text-green-900 font-semibold flex items-center">
+                <Package className="mr-2 h-5 w-5 text-green-600" /> Line Items ({rfpData.lineItems.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 px-6">
+              <div className="space-y-6">
+                {rfpData.lineItems.map((item, index) => (
+                  <Card key={index} className="p-5 bg-white border border-gray-200 shadow-sm rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-base font-bold text-gray-700">Product</Label>
+                        <div className="flex items-center gap-2">
+                          <p className="text-gray-900 font-medium">{item.productName}</p>
+                          {item.urgency && (
+                            <Badge
+                              className={`${
+                                item.urgency === 'High' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                              } font-medium`}
+                            >
+                              {item.urgency}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-base font-bold text-gray-700">Quantity</Label>
+                        <p className="text-gray-900 font-medium">{item.quantity}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-base font-bold text-gray-700">Est. Unit Price</Label>
+                        <p className="text-gray-900 font-medium">
+                          {item.estimatedUnitPrice ? formatCurrency(item.estimatedUnitPrice) : 'Not specified'}
+                        </p>
+                      </div>
+                      {item.description && (
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-base font-bold text-gray-700">Description</Label>
+                          <p className="text-gray-900 bg-gray-50 p-3 rounded-md border border-gray-200 leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      )}
+                      {item.specifications && (
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-base font-bold text-gray-700">Specifications</Label>
+                          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {Object.entries(item.specifications).map(([key, value]) => (
+                                <div key={key} className="flex justify-start gap-2  ">
+                                  <span className="text-gray-600 capitalize font-medium">
+                                    {key.replace('_', ' ')}:
+                                  </span>
+                                  <span className="text-gray-900">{String(value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card id="conversation" className="shadow-lg border border-gray-200">
+            <CardHeader className="bg-green-50 border-b border-gray-200">
+              <CardTitle className="text-green-900 font-semibold flex items-center">
+                <MessageCircleMore className="mr-2 h-5 w-5 text-green-600" /> Message {rfpData?.createdBy?.name}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6 px-6">
+              <RFPConversation rfpId={rfpData.id} />
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      {canApproveOrReject && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg border-t border-gray-200 flex gap-4">
+          <Button className="flex-1 bg-green-600 hover:bg-green-700" onClick={() => setShowApproveDialog(true)} disabled={processing}>
+            <CheckCircle className="mr-2 h-4 w-4" /> Approve
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 border-red-500 text-red-500 hover:bg-red-50"
+            onClick={() => setShowRejectDialog(true)}
+            disabled={processing}
+          >
+            <XCircle className="mr-2 h-4 w-4" /> Reject
+          </Button>
+        </div>
+      )}
+
       <AlertDialog open={showApproveDialog} onOpenChange={setShowApproveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Approve RFP</AlertDialogTitle>
+            <AlertDialogTitle className="text-green-900">Approve RFP</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to approve this RFP? This will move it to the next stage in the approval workflow.
             </AlertDialogDescription>
@@ -527,22 +472,17 @@ const ViewRFPForApproval: React.FC = () => {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleApprove}
-              disabled={processing}
-              className="bg-green-600 hover:bg-green-700"
-            >
+            <AlertDialogAction onClick={handleApprove} disabled={processing} className="bg-green-600 hover:bg-green-700">
               {processing ? "Processing..." : "Approve RFP"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reject Dialog */}
       <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject RFP</AlertDialogTitle>
+            <AlertDialogTitle className="text-red-900">Reject RFP</AlertDialogTitle>
             <AlertDialogDescription>
               Please provide a reason for rejecting this RFP. This will stop the approval workflow.
             </AlertDialogDescription>
@@ -554,13 +494,13 @@ const ViewRFPForApproval: React.FC = () => {
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Please explain why you are rejecting this RFP..."
-              className="mt-2"
               required
+              className="mt-2"
             />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={processing}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleReject}
               disabled={processing || !rejectionReason.trim()}
               className="bg-red-600 hover:bg-red-700"

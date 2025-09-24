@@ -260,320 +260,412 @@ const VendorQuotationForm = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="animate-spin" />
-        <span className="ml-2">Loading RFP details...</span>
+      <div className="flex justify-center items-center p-8 bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+        <div className="flex items-center bg-white rounded-lg shadow-lg px-6 py-4 border border-emerald-200">
+          <Loader2 className="animate-spin text-emerald-600 h-6 w-6" />
+          <span className="ml-3 text-gray-700 font-medium">Loading RFP details...</span>
+        </div>
       </div>
     );
   }
 
   if (!rfpDetails) {
-    return <div className="text-center py-8">RFP not found</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+        <Card className="shadow-xl border-0 bg-white">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">RFP Not Found</h2>
+            <Button 
+              onClick={() => router.back()} 
+              className="bg-green-600 text-white"
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!rfpDetails.canSubmitQuotation) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <h2 className="text-xl font-semibold mb-4">Quotation Period Ended</h2>
-          <p className="text-gray-600 mb-4">
-            The quotation cutoff date for this RFP has passed.
-          </p>
-          <Button onClick={() => router.back()}>Go Back</Button>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+        <Card className="shadow-xl border-0 bg-white">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Quotation Period Ended</h2>
+            <p className="text-gray-600 mb-6">
+              The quotation cutoff date for this RFP has passed.
+            </p>
+            <Button 
+              onClick={() => router.back()} 
+              className="bg-green-500 text-white"
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   const totals = calculateTotals();
 
   return (
-    <div className="space-y-6">
-      {/* RFP Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Submit Quotation - {rfpDetails.rfpNumber}</span>
-            <Badge variant="outline">
-              Cutoff: {new Date(rfpDetails.quotationCutoffDate).toLocaleDateString()}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label className="font-semibold">Title:</Label>
-              <p>{rfpDetails.title}</p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* RFP Header */}
+        <Card className="shadow-xl border-0 bg-white overflow-hidden">
+          <CardHeader className="bg-green-600">
+            <CardTitle className="flex items-center justify-between">
+              <span className="text-xl font-bold text-white">Submit Quotation - {rfpDetails.rfpNumber}</span>
+              <Badge className="bg-emerald-50 text-emerald-800 border-0 font-semibold">
+                Cutoff: {new Date(rfpDetails.quotationCutoffDate).toLocaleDateString()}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 bg-white border border-emerald-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label className="font-semibold text-emerald-700 text-sm">Title</Label>
+                <p className="text-gray-800 font-medium">{rfpDetails.title}</p>
+              </div>
+              <div>
+                <Label className="font-semibold text-emerald-700 text-sm">Delivery Location</Label>
+                <p className="text-gray-800">{rfpDetails.deliveryLocation}</p>
+              </div>
+              <div>
+                <Label className="font-semibold text-emerald-700 text-sm">Delivery Date</Label>
+                <p className="text-gray-800">{new Date(rfpDetails.deliveryDate).toLocaleDateString()}</p>
+              </div>
             </div>
-            <div>
-              <Label className="font-semibold">Delivery Location:</Label>
-              <p>{rfpDetails.deliveryLocation}</p>
-            </div>
-            <div>
-              <Label className="font-semibold">Delivery Date:</Label>
-              <p>{new Date(rfpDetails.deliveryDate).toLocaleDateString()}</p>
-            </div>
-          </div>
-          {rfpDetails.description && (
-            <div className="mt-4">
-              <Label className="font-semibold">Description:</Label>
-              <p className="text-sm text-gray-600">{rfpDetails.description}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {rfpDetails.description && (
+              <div className="mt-4 pt-4 border-t border-emerald-200">
+                <Label className="font-semibold text-emerald-700 text-sm">Description</Label>
+                <p className="text-gray-700 text-sm mt-1">{rfpDetails.description}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Quotation Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quotation Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="quotationNumber">Quotation Number *</Label>
-              <Input
-                id="quotationNumber"
-                value={quotationNumber}
-                onChange={(e) => setQuotationNumber(e.target.value)}
-                placeholder="Enter quotation number"
-              />
+        {/* Quotation Form */}
+        <Card className="shadow-xl border-0 bg-white overflow-hidden">
+          <CardHeader className="bg-green-600">
+            <CardTitle className="text-xl font-bold text-white">Quotation Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 p-4 bg-white border border-emerald-200">
+            {/* Basic Info - 2 fields per row */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <h4 className="font-semibold text-emerald-800 mb-3">Basic Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="quotationNumber" className="text-emerald-700 font-medium text-sm">Quotation Number *</Label>
+                  <Input
+                    id="quotationNumber"
+                    value={quotationNumber}
+                    onChange={(e) => setQuotationNumber(e.target.value)}
+                    placeholder="Enter quotation number"
+                    className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="validTill" className="text-emerald-700 font-medium text-sm">Valid Till *</Label>
+                  <Input
+                    id="validTill"
+                    type="date"
+                    value={validTill}
+                    onChange={(e) => setValidTill(e.target.value)}
+                    className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="validTill">Valid Till *</Label>
-              <Input
-                id="validTill"
-                type="date"
-                value={validTill}
-                onChange={(e) => setValidTill(e.target.value)}
-              />
-            </div>
-          </div>
 
-          {/* Line Items */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Line Items</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Qty</TableHead>
-                  <TableHead>Unit Price (₹)</TableHead>
-                  <TableHead>GST %</TableHead>
-                  <TableHead>Total (₹)</TableHead>
-                  <TableHead>Brand/Model</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lineItemQuotes.map((item, index) => (
-                  <TableRow key={item.lineItemId}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{item.productName}</div>
-                        <div className="text-xs text-gray-500">{item.description}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.unitPrice}
-                        onChange={(e) => updateLineItemQuote(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                        className="w-24"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={item.gstPercentage}
-                        onChange={(e) => updateLineItemQuote(index, 'gstPercentage', parseFloat(e.target.value) || 0)}
-                        className="w-20"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {(item.unitPrice * item.quantity * (1 + item.gstPercentage / 100)).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        placeholder="Brand/Model"
-                        value={item.brand || ''}
-                        onChange={(e) => updateLineItemQuote(index, 'brand', e.target.value)}
-                        className="w-32"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Other Charges */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Other Charges</h3>
-              <Button type="button" variant="outline" size="sm" onClick={addOtherCharge}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Charge
-              </Button>
+            {/* Line Items */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <h3 className="text-lg font-semibold mb-4 text-emerald-800">Line Items</h3>
+              <div className="border border-emerald-200 rounded-lg overflow-hidden bg-white">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-green-600 border-b border-emerald-200 hover:bg-green-600">
+                      <TableHead className="text-white font-semibold">Product</TableHead>
+                      <TableHead className="text-white font-semibold">Qty</TableHead>
+                      <TableHead className="text-white font-semibold">Unit Price (₹)</TableHead>
+                      <TableHead className="text-white font-semibold">GST %</TableHead>
+                      <TableHead className="text-white font-semibold">Total (₹)</TableHead>
+                      <TableHead className="text-white font-semibold">Brand/Model</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {lineItemQuotes.map((item, index) => (
+                      <TableRow key={item.lineItemId} className="border-b border-emerald-100">
+                        <TableCell className="p-3">
+                          <div>
+                            <div className="font-medium text-gray-800">{item.productName}</div>
+                            <div className="text-xs text-gray-500">{item.description}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-gray-600 font-medium">{item.quantity}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.unitPrice}
+                            onChange={(e) => updateLineItemQuote(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="w-24 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.gstPercentage}
+                            onChange={(e) => updateLineItemQuote(index, 'gstPercentage', parseFloat(e.target.value) || 0)}
+                            className="w-20 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                        <TableCell className="text-gray-800 font-semibold">
+                          ₹{(item.unitPrice * item.quantity * (1 + item.gstPercentage / 100)).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            placeholder="Brand/Model"
+                            value={item.brand || ''}
+                            onChange={(e) => updateLineItemQuote(index, 'brand', e.target.value)}
+                            className="w-32 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
-            {otherCharges.length > 0 && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Amount (₹)</TableHead>
-                    <TableHead>GST %</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {otherCharges.map((charge, index) => (
-                    <TableRow key={charge.id}>
-                      <TableCell>
-                        <Input
-                          value={charge.name}
-                          onChange={(e) => updateOtherCharge(index, 'name', e.target.value)}
-                          placeholder="Charge description"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={charge.amount}
-                          onChange={(e) => updateOtherCharge(index, 'amount', parseFloat(e.target.value) || 0)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={charge.gstPercentage}
-                          onChange={(e) => updateOtherCharge(index, 'gstPercentage', parseFloat(e.target.value) || 0)}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
+
+            {/* Other Charges */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-emerald-800">Additional Charges</h3>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={addOtherCharge}
+                  className="border-emerald-300 text-emerald-700 bg-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Charge
+                </Button>
+              </div>
+              <div className="border border-emerald-200 rounded-lg overflow-hidden bg-white">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-green-600 border-b border-emerald-200 hover:bg-green-600">
+                      <TableHead className="text-white font-semibold">Description</TableHead>
+                      <TableHead className="text-white font-semibold">Amount (₹)</TableHead>
+                      <TableHead className="text-white font-semibold">GST %</TableHead>
+                      <TableHead className="text-white font-semibold">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {otherCharges.map((charge, index) => (
+                      <TableRow key={charge.id} className="border-b border-emerald-100">
+                        <TableCell>
+                          <Input
+                            value={charge.name}
+                            onChange={(e) => updateOtherCharge(index, 'name', e.target.value)}
+                            placeholder="Charge description"
+                            className="border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={charge.amount}
+                            onChange={(e) => updateOtherCharge(index, 'amount', parseFloat(e.target.value) || 0)}
+                            className="border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={charge.gstPercentage}
+                            onChange={(e) => updateOtherCharge(index, 'gstPercentage', parseFloat(e.target.value) || 0)}
+                            className="w-20 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeOtherCharge(index)}
+                            className="bg-red-50 text-red-700 border border-red-200"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {otherCharges.length === 0 && (
+                      <TableRow className="border-b border-emerald-100">
+                        <TableCell colSpan={4} className="text-center text-gray-500 py-4">
+                          No additional charges added
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            {/* Additional Details - 3 fields in 2 rows */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <h4 className="font-semibold text-emerald-800 mb-3">Additional Information</h4>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="deliveryTimeline" className="text-emerald-700 font-medium text-sm">Delivery Timeline</Label>
+                    <Input
+                      id="deliveryTimeline"
+                      value={deliveryTimeline}
+                      onChange={(e) => setDeliveryTimeline(e.target.value)}
+                      placeholder="e.g., 15-20 working days"
+                      className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="notes" className="text-emerald-700 font-medium text-sm">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Additional notes or comments"
+                      rows={3}
+                      className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="termsConditions" className="text-emerald-700 font-medium text-sm">Terms & Conditions</Label>
+                    <Textarea
+                      id="termsConditions"
+                      value={termsConditions}
+                      onChange={(e) => setTermsConditions(e.target.value)}
+                      placeholder="Terms and conditions"
+                      rows={3}
+                      className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* File Upload */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <Label className="text-emerald-800 font-semibold">Supporting Documents</Label>
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-emerald-300 text-emerald-700 bg-white flex items-center"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Files
+                  </Button>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    onChange={handleFileUpload}
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                    className="hidden"
+                  />
+                  <span className="text-sm text-gray-500">
+                    {files.length > 0 ? `${files.length} file(s) selected` : "No files selected"}
+                  </span>
+                </div>
+                {files.length > 0 && (
+                  <div className="space-y-2">
+                    {files.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between bg-white p-3 rounded border border-emerald-200">
+                        <span className="text-sm text-gray-700 font-medium">{file.name}</span>
                         <Button
                           type="button"
-                          variant="destructive"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => removeOtherCharge(index)}
+                          onClick={() => removeFile(index)}
+                          className="text-red-600"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quotation Summary */}
+            <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
+              <h4 className="font-medium text-emerald-800 mb-3 text-base">Quotation Summary</h4>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-green-600 border-b border-emerald-200 hover:bg-green-600">
+                    <TableHead className="text-white font-semibold text-sm">Description</TableHead>
+                    <TableHead className="text-white font-semibold text-sm text-right">Amount (₹)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="text-gray-700 font-medium">Subtotal</TableCell>
+                    <TableCell className="text-gray-800 font-semibold text-right">₹{totals.subtotal.toFixed(2)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="text-gray-700 font-medium">GST Amount</TableCell>
+                    <TableCell className="text-gray-800 font-semibold text-right">₹{totals.gstAmount.toFixed(2)}</TableCell>
+                  </TableRow>
+                  <TableRow className="bg-green-500 text-white hover:bg-green-600">
+                    <TableCell className="font-semibold">Total Amount</TableCell>
+                    <TableCell className="font-semibold text-right">₹{totals.total.toFixed(2)}</TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
-            )}
-          </div>
-
-          {/* Additional Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="deliveryTimeline">Delivery Timeline</Label>
-              <Input
-                id="deliveryTimeline"
-                value={deliveryTimeline}
-                onChange={(e) => setDeliveryTimeline(e.target.value)}
-                placeholder="e.g., 15-20 working days"
-              />
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes or comments"
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="termsConditions">Terms & Conditions</Label>
-            <Textarea
-              id="termsConditions"
-              value={termsConditions}
-              onChange={(e) => setTermsConditions(e.target.value)}
-              placeholder="Terms and conditions"
-              rows={4}
-            />
-          </div>
-
-          {/* File Upload */}
-          <div>
-            <Label>Supporting Documents</Label>
-            <div className="mt-2">
-              <Input
-                type="file"
-                multiple
-                onChange={handleFileUpload}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-              />
-              {files.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {files.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                      <span className="text-sm">{file.name}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFile(index)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()}
+                className="border-emerald-300 text-emerald-700 bg-white"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={submitting}
+                className="bg-green-600 text-white shadow-lg px-8 hover:bg-green-800"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Quotation'
+                )}
+              </Button>
             </div>
-          </div>
-
-          {/* Totals */}
-          <div className="border-t pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-right">
-              <div>
-                <Label className="font-semibold">Subtotal:</Label>
-                <p className="text-lg">₹{totals.subtotal.toFixed(2)}</p>
-              </div>
-              <div>
-                <Label className="font-semibold">GST Amount:</Label>
-                <p className="text-lg">₹{totals.gstAmount.toFixed(2)}</p>
-              </div>
-              <div>
-                <Label className="font-semibold text-lg">Total Amount:</Label>
-                <p className="text-xl font-bold text-green-600">₹{totals.total.toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmit} disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                'Submit Quotation'
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
