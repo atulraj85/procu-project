@@ -15,75 +15,15 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-// =====================
-// Enums
-// =====================
-export const UserRole = pgEnum("user_role", [
-  "SYSTEM_ADMIN",
-  "PROCUREMENT_MANAGER", 
-  "PROCUREMENT_LEAD",
-  "ADMIN_TEAM",
-  "FINANCE_MANAGER",
-  "FINANCE_EXECUTIVE",
-  "USER",
-  "VENDOR"
-]);
 
-export const RFPStatus = pgEnum("rfp_status", [
-  "DRAFT",
-  "PENDING_APPROVAL",
-  "APPROVED",
-  "REJECTED",
-  "SENT_TO_VENDORS",
-  "QUOTATION_RECEIVED",
-  "VENDOR_SELECTED",
-  "PO_GENERATED",
-  "DELIVERED",
-  "COMPLETED",
-  "CANCELLED"
-]);
-
-export const QuotationStatus = pgEnum("quotation_status", [
-  "OPEN",
-  "SUBMITTED", 
-  "LOCKED",
-  "UNDER_REVIEW",
-  "SHORTLISTED",
-  "SELECTED",
-  "REJECTED"
-]);
-
-export const POStatus = pgEnum("po_status", [
-  "DRAFT",
-  "GENERATED",
-  "SENT_TO_VENDOR",
-  "ACKNOWLEDGED",
-  "IN_PROGRESS",
-  "DELIVERED",
-  "COMPLETED",
-  "CANCELLED"
-]);
-
-export const VendorStatus = pgEnum("vendor_status", [
-  "PENDING_REVIEW",
-  "APPROVED", 
-  "REJECTED",
-  "SUSPENDED",
-  "BLACKLISTED"
-]);
-
-export const ApprovalStage = pgEnum("approval_stage", [
-  "PROCUREMENT_MANAGER",
-  "FINANCE_MANAGER", 
-  "FINANCE_EXECUTIVE",
-  "PROCUREMENT_LEAD"
-]);
-
-export const MessageType = pgEnum("message_type", [
-  "TEXT",
-  "ATTACHMENT",
-  "SYSTEM_MESSAGE"
-]);
+export const ApprovalStage = pgEnum("approval_stage", ['PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'FINANCE_EXECUTIVE', 'PROCUREMENT_LEAD'])
+export const InvitationStatus = pgEnum("invitation_status", ['SENT', 'VIEWED', 'QUOTED', 'DECLINED'])
+export const MessageType = pgEnum("message_type", ['TEXT', 'ATTACHMENT', 'SYSTEM_MESSAGE'])
+export const POStatus = pgEnum("po_status", ['DRAFT', 'GENERATED', 'SENT_TO_VENDOR', 'ACKNOWLEDGED', 'IN_PROGRESS', 'DELIVERED', 'COMPLETED', 'CANCELLED'])
+export const QuotationStatus = pgEnum("quotation_status", ['OPEN', 'SUBMITTED', 'LOCKED', 'UNDER_REVIEW', 'SHORTLISTED', 'SELECTED', 'REJECTED'])
+export const RFPStatus = pgEnum("rfp_status", ['DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED', 'SENT_TO_VENDORS', 'QUOTATION_RECEIVED', 'VENDOR_SELECTED', 'PO_GENERATED', 'DELIVERED', 'COMPLETED', 'CANCELLED'])
+export const UserRole = pgEnum("user_role", ['SYSTEM_ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_LEAD', 'ADMIN_TEAM', 'FINANCE_TEAM', 'FINANCE_EXECUTIVE', 'USER', 'VENDOR', 'FINANCE_MANAGER'])
+export const VendorStatus = pgEnum("vendor_status", ['PENDING_REVIEW', 'APPROVED', 'REJECTED', 'SUSPENDED', 'BLACKLISTED'])
 
 // =====================
 // Core Tables
@@ -400,9 +340,11 @@ export const RFPVendorInvitationTable = pgTable("rfp_vendor_invitations", {
   vendorId: uuid("vendor_id").notNull(),
   invitedAt: timestamp("invited_at", { mode: "date" }).notNull(),
   invitedBy: uuid("invited_by").notNull(),
-  accessToken: uuid("access_token").defaultRandom().notNull(), // For vendor access
+  accessToken: uuid("access_token").defaultRandom().notNull(), 
+  status: InvitationStatus("status").default("SENT").notNull(),
   viewedAt: timestamp("viewed_at", { mode: "date" }),
-  createdAt: timestamp("created_at").defaultNow().notNull()
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
 }, (table) => ({
   rfpVendorIdx: uniqueIndex("rfp_vendor_invitations_rfp_vendor_idx").on(
     table.rfpId, table.vendorId
@@ -456,6 +398,9 @@ export const QuotationTable = pgTable("quotations", {
   status: QuotationStatus("status").default("OPEN").notNull(),
   submittedAt: timestamp("submitted_at", { mode: "date" }),
   lockedAt: timestamp("locked_at", { mode: "date" }),
+  
+  notes: text("notes"),
+  termsConditions: text("terms_conditions"),
   
   // Evaluation
   evaluationScore: numeric("evaluation_score", { precision: 5, scale: 2 }),

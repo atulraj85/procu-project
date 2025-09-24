@@ -461,6 +461,8 @@ function formatRFPData(rfps: any[]) {
         hasActivePO: rfp?.purchaseOrders?.some((po: any) => 
           ['GENERATED', 'SENT_TO_VENDOR', 'ACKNOWLEDGED', 'IN_PROGRESS'].includes(po.status)
         ) || false,
+        canSubmitQuotation: new Date() < new Date(rfp?.quotationCutoffDate) && rfp?.status === 'SENT_TO_VENDORS',
+        daysRemaining: Math.ceil((new Date(rfp?.quotationCutoffDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
       };
     })
     .filter(Boolean);

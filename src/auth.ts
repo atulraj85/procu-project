@@ -8,6 +8,7 @@ import { Role } from "./schemas";
 export type ExtendedUser = DefaultSession["user"] & {
   role: Role;
   organizationId : string;
+  vendorId : string;
 };
 
 declare module "next-auth" {
@@ -24,6 +25,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: Role;
     organizationId : string;
+    vendorId : string;
   }
 }
 
@@ -55,7 +57,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       token.role = existingUser.role;
 
-      token.organizationId = existingUser.organizationId;
+      token.organizationId = existingUser.organizationId!;
+
+      token.vendorId = existingUser.vendorId!;
 
       return token;
     },
@@ -66,6 +70,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       if(token.organizationId && session.user) {
         session.user.organizationId = token.organizationId;
+      }
+
+      if(token.vendorId && session.user) {
+        session.user.vendorId = token.vendorId;
       }
 
       if (token.role && session.user) {
