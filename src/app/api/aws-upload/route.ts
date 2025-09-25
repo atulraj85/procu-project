@@ -383,7 +383,7 @@ export async function POST(request: NextRequest) {
     const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-]/g, '');
     const fileName = `${Date.now()}-${baseName}${compressed.extension}`;
     // const key = `GDM/${organizationName.name}/images/${fileName}`;
-        const key = `GDM/${OrgData}/images/${fileName}`;
+        const key = `PROCURE/${OrgData}/images/${fileName}`;
 console.log("Upload Url" ,key);
 
     const uploadStart = Date.now();

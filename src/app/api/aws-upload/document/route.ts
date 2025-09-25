@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 8);
     const finalFileName = `${timestamp}_${randomString}_${processedFile.fileName}`;
-    const key = `GDM/${orgNameSanitized}/documents/${category}/${finalFileName}`;
+    const key = `PROCURE/${orgNameSanitized}/documents/${category}/${finalFileName}`;
     
     // Upload to S3
     const command = new PutObjectCommand({

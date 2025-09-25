@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Plus, Trash2, Upload, X, FileText, Image } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   Table,
@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCurrentUser } from "@/hooks/auth";
+import uploadFile, { formatFileSize, getFileCategory } from "@/utils/uploadHelper"; // Import the helper
 
 interface LineItem {
   id: string; 
@@ -32,7 +33,7 @@ interface LineItemQuote {
   productName: string;
   description: string;
   quantity: number;
-  unitPrice: string; // Changed to string to allow empty input
+  unitPrice: string;
   gstPercentage: number;
   totalPrice: number;
   brand?: string;
@@ -43,7 +44,7 @@ interface LineItemQuote {
 interface OtherCharge {
   id: string;
   name: string;
-  amount: string; // Changed to string to allow empty input
+  amount: string;
   gstPercentage: number;
   description?: string;
 }
@@ -61,14 +62,29 @@ interface RFPDetails {
   canSubmitQuotation: boolean;
 }
 
+// Interface for uploaded files
+interface UploadedFile {
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  fileType: 'image' | 'document';
+  compressed?: boolean;
+  compressionRatio?: string;
+}
+
 const VendorQuotationForm = () => {
   const params = useParams();
   const router = useRouter();
-  const rfpId = params.rfpId as string;
+  const rfpId = params.id as string;
   const user = useCurrentUser();
   const [rfpDetails, setRfpDetails] = useState<RFPDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  
+  // File upload states
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<string[]>([]); // Track which files are uploading
 
   // Form data
   const [quotationNumber, setQuotationNumber] = useState("");
@@ -78,7 +94,6 @@ const VendorQuotationForm = () => {
   const [deliveryTimeline, setDeliveryTimeline] = useState("");
   const [notes, setNotes] = useState("");
   const [termsConditions, setTermsConditions] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
     fetchRFPDetails();
@@ -87,7 +102,7 @@ const VendorQuotationForm = () => {
   const fetchRFPDetails = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/rfp/958de10f-b1e8-4d52-af8e-8e5418c6a6ac`);
+      const response = await fetch(`/api/rfp/${rfpId}`);
       const data = await response.json();
       
       setRfpDetails(data);
@@ -98,7 +113,7 @@ const VendorQuotationForm = () => {
         productName: item.productName,
         description: item.description,
         quantity: item.quantity,
-        unitPrice: "", // Initialize as empty string
+        unitPrice: "",
         gstPercentage: 18,
         totalPrice: 0,
         brand: "",
@@ -157,7 +172,7 @@ const VendorQuotationForm = () => {
     setOtherCharges([...otherCharges, {
       id: `charge_${Date.now()}`,
       name: "",
-      amount: "", // Initialize as empty string
+      amount: "",
       gstPercentage: 18,
       description: ""
     }]);
@@ -173,14 +188,63 @@ const VendorQuotationForm = () => {
     setOtherCharges(updated);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      setFiles([...files, ...Array.from(event.target.files)]);
+  // Modified file upload handler using the helper function
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return;
+
+    const files = Array.from(event.target.files);
+    
+    for (const file of files) {
+      const fileId = `${file.name}-${Date.now()}`;
+      
+      try {
+        // Add to uploading state
+        setUploadingFiles(prev => [...prev, fileId]);
+        
+        console.log(`📁 Uploading: ${file.name} (${formatFileSize(file.size)}, ${getFileCategory(file)})`);
+        
+        // Upload using the helper function
+        const uploadResult = await uploadFile(file, "gennext", { compress: true });
+        
+        // Create uploaded file object
+        const uploadedFile: UploadedFile = {
+          fileName: uploadResult.fileName,
+          fileUrl: uploadResult.url,
+          fileSize: uploadResult.size,
+          mimeType: file.type,
+          fileType: uploadResult.fileType,
+          compressed: uploadResult.compressed,
+          compressionRatio: uploadResult.compressionRatio,
+        };
+        
+        // Add to uploaded files
+        setUploadedFiles(prev => [...prev, uploadedFile]);
+        
+        toast({
+          title: "File Uploaded",
+          description: `${file.name} uploaded successfully ${uploadResult.compressed ? '(compressed)' : ''}`,
+        });
+        
+      } catch (error) {
+        console.error(`Failed to upload ${file.name}:`, error);
+        toast({
+          title: "Upload Failed",
+          description: `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          variant: "destructive"
+        });
+      } finally {
+        // Remove from uploading state
+        setUploadingFiles(prev => prev.filter(id => id !== fileId));
+      }
     }
+    
+    // Clear the input
+    event.target.value = '';
   };
 
-  const removeFile = (index: number) => {
-    setFiles(files.filter((_, i) => i !== index));
+  // Remove uploaded file
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const calculateTotals = () => {
@@ -209,151 +273,91 @@ const VendorQuotationForm = () => {
     return { subtotal, gstAmount, total };
   };
 
-  // const handleSubmit = async () => {
-  //   // Validation
-  //   if (!quotationNumber.trim()) {
-  //     toast({
-  //       title: "Validation Error",
-  //       description: "Quotation number is required",
-  //       variant: "destructive"
-  //     });
-  //     return;
-  //   }
-
-  //   const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
-  //   if (hasInvalidLineItems) {
-  //     toast({
-  //       title: "Validation Error", 
-  //       description: "All line items must have valid unit prices",
-  //       variant: "destructive"
-  //     });
-  //     return;
-  //   }
-
-  //   setSubmitting(true);
-
-  //   try {
-  //     const formData = new FormData();
-      
-  //     const quotationData = {
-  //       rfpId,
-  //       quotationNumber,
-  //       lineItemQuotes,
-  //       otherCharges,
-  //       validTill,
-  //       deliveryTimeline,
-  //       notes,
-  //       termsConditions
-  //     };
-
-  //     formData.append('quotationData', JSON.stringify(quotationData));
-
-  //     // Append files
-  //     files.forEach((file, index) => {
-  //       formData.append(`file_${index}`, file);
-  //     });
-
-  //     const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
-  //       method: 'POST',
-  //       body: formData
-  //     });
-
-  //     if (response.ok) {
-  //       toast({
-  //         title: "Success",
-  //         description: "Quotation submitted successfully"
-  //       });
-  //       router.push('/dashboard/vendor/rfp');
-  //     } else {
-  //       const error = await response.json();
-  //       throw new Error(error.error);
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error submitting quotation:", error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to submit quotation",
-  //       variant: "destructive"
-  //     });
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
-
   const handleSubmit = async () => {
-  // Validation (keep as is)
-  if (!quotationNumber.trim()) {
-    toast({
-      title: "Validation Error",
-      description: "Quotation number is required",
-      variant: "destructive"
-    });
-    return;
-  }
-
-  const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
-  if (hasInvalidLineItems) {
-    toast({
-      title: "Validation Error", 
-      description: "All line items must have valid unit prices",
-      variant: "destructive"
-    });
-    return;
-  }
-
-  setSubmitting(true);
-
-  try {
-    // Prepare JSON payload (no FormData)
-    const quotationData = {
-      rfpId,
-      quotationNumber,
-      lineItemQuotes,
-      otherCharges,
-      validTill,
-      deliveryTimeline,
-      notes,
-      termsConditions,
-      supportingDocuments: files.map(file => ({
-        fileName: file.name,
-        fileUrl: file.url, // Assume you have pre-generated URLs (e.g., from S3 presigned URLs)
-        fileSize: file.size,
-        mimeType: file.type
-      })) // If no files, this will be empty array
-    };
-
-    // Send as JSON
-    const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json' // Crucial for server to parse as JSON
-      },
-      body: JSON.stringify(quotationData) // Stringify the object
-    });
-
-    if (response.ok) {
+    // Validation
+    if (!quotationNumber.trim()) {
       toast({
-        title: "Success",
-        description: "Quotation submitted successfully"
+        title: "Validation Error",
+        description: "Quotation number is required",
+        variant: "destructive"
       });
-      router.push('/dashboard/vendor/rfp');
-    } else {
-      const error = await response.json();
-      throw new Error(error.error);
+      return;
     }
 
-  } catch (error) {
-    console.error("Error submitting quotation:", error);
-    toast({
-      title: "Error",
-      description: "Failed to submit quotation",
-      variant: "destructive"
-    });
-  } finally {
-    setSubmitting(false);
-  }
-};
+    const hasInvalidLineItems = lineItemQuotes.some(item => Number(item.unitPrice) <= 0);
+    if (hasInvalidLineItems) {
+      toast({
+        title: "Validation Error", 
+        description: "All line items must have valid unit prices",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if any files are still uploading
+    if (uploadingFiles.length > 0) {
+      toast({
+        title: "Upload in Progress",
+        description: "Please wait for all files to finish uploading",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Prepare JSON payload with uploaded files
+      const quotationData = {
+        rfpId,
+        quotationNumber,
+        lineItemQuotes,
+        otherCharges,
+        validTill,
+        deliveryTimeline,
+        notes,
+        termsConditions,
+        supportingDocuments: uploadedFiles.map(file => ({
+          fileName: file.fileName,
+          fileUrl: file.fileUrl,
+          fileSize: file.fileSize,
+          mimeType: file.mimeType
+        }))
+      };
+
+      console.log('📤 Submitting quotation with', uploadedFiles.length, 'files');
+
+      // Send as JSON
+      const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(quotationData)
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Quotation submitted successfully"
+        });
+        router.push('/dashboard/vendor');
+      } else {
+        const error = await response.json();
+        throw new Error(error.error);
+      }
+
+    } catch (error) {
+      console.error("Error submitting quotation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit quotation",
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -410,7 +414,7 @@ const VendorQuotationForm = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* RFP Header */}
+        {/* RFP Header - Keep existing */}
         <Card className="shadow-xl border-0 bg-white overflow-hidden">
           <CardHeader className="bg-green-600">
             <CardTitle className="flex items-center justify-between">
@@ -450,7 +454,8 @@ const VendorQuotationForm = () => {
             <CardTitle className="text-xl font-bold text-white">Quotation Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 p-4 bg-white border border-emerald-200">
-            {/* Basic Info - 2 fields per row */}
+            {/* Keep all existing sections: Basic Info, Line Items, Other Charges, Additional Details */}
+            {/* Basic Info */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <h4 className="font-semibold text-emerald-800 mb-3">Basic Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -476,7 +481,7 @@ const VendorQuotationForm = () => {
               </div>
             </div>
 
-            {/* Line Items */}
+            {/* Line Items - Keep existing table */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <h3 className="text-lg font-semibold mb-4 text-emerald-800">Line Items</h3>
               <div className="border border-emerald-200 rounded-lg overflow-hidden bg-white">
@@ -539,7 +544,7 @@ const VendorQuotationForm = () => {
               </div>
             </div>
 
-            {/* Other Charges */}
+            {/* Other Charges - Keep existing table */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-emerald-800">Additional Charges</h3>
@@ -620,7 +625,7 @@ const VendorQuotationForm = () => {
               </div>
             </div>
 
-            {/* Additional Details - 3 fields in 2 rows */}
+            {/* Additional Details - Keep existing */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <h4 className="font-semibold text-emerald-800 mb-3">Additional Information</h4>
               <div className="space-y-4">
@@ -664,7 +669,7 @@ const VendorQuotationForm = () => {
               </div>
             </div>
 
-            {/* File Upload */}
+            {/* Modified File Upload Section */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <Label className="text-emerald-800 font-semibold">Supporting Documents</Label>
               <div className="mt-3 space-y-3">
@@ -674,6 +679,7 @@ const VendorQuotationForm = () => {
                     variant="outline"
                     className="border-emerald-300 text-emerald-700 bg-white flex items-center"
                     onClick={() => document.getElementById('file-upload')?.click()}
+                    disabled={uploadingFiles.length > 0}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Choose Files
@@ -683,35 +689,89 @@ const VendorQuotationForm = () => {
                     type="file"
                     multiple
                     onChange={handleFileUpload}
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp"
                     className="hidden"
                   />
                   <span className="text-sm text-gray-500">
-                    {files.length > 0 ? `${files.length} file(s) selected` : "No files selected"}
+                    {uploadedFiles.length > 0 
+                      ? `${uploadedFiles.length} file(s) uploaded` 
+                      : "No files uploaded"
+                    }
+                    {uploadingFiles.length > 0 && (
+                      <span className="text-blue-600 ml-2">
+                        ({uploadingFiles.length} uploading...)
+                      </span>
+                    )}
                   </span>
                 </div>
-                {files.length > 0 && (
-                  <div className="space-y-2">
-                    {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between bg-white p-3 rounded border border-emerald-200">
-                        <span className="text-sm text-gray-700 font-medium">{file.name}</span>
+
+                {/* Uploading files */}
+                {uploadingFiles.map((fileId) => (
+                  <div key={fileId} className="flex items-center justify-between bg-blue-50 p-3 rounded border border-blue-200">
+                    <div className="flex items-center">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600 mr-2" />
+                      <span className="text-sm text-blue-700">Uploading...</span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Uploaded files */}
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className={`flex items-center justify-between p-3 rounded border ${
+                        file.fileType === 'image' 
+                          ? 'bg-purple-50 border-purple-200' 
+                          : 'bg-blue-50 border-blue-200'
+                      }`}>
+                        <div className="flex items-center space-x-3">
+                          {file.fileType === 'image' ? (
+                            <Image className="w-5 h-5 text-purple-600" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          )}
+                          <div>
+                            <span className={`text-sm font-medium ${
+                              file.fileType === 'image' ? 'text-purple-700' : 'text-blue-700'
+                            }`}>
+                              {file.fileName}
+                            </span>
+                            <div className="text-xs text-gray-500 flex items-center space-x-2">
+                              <span>{formatFileSize(file.fileSize)}</span>
+                              <span>•</span>
+                              <span className="capitalize">{file.fileType}</span>
+                              {file.compressed && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-green-600">Compressed ({file.compressionRatio})</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeFile(index)}
-                          className="text-red-600"
+                          onClick={() => removeUploadedFile(index)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </Button>
                       </div>
                     ))}
                   </div>
                 )}
+                
+                <p className="text-xs text-gray-500">
+                  Supported: Images (JPG, PNG, GIF, WebP), Documents (PDF, Word, Excel, PowerPoint)
+                  <br />
+                  Images will be automatically compressed. Documents can be compressed optionally.
+                </p>
               </div>
             </div>
 
-            {/* Quotation Summary */}
+            {/* Quotation Summary - Keep existing */}
             <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50">
               <h4 className="font-medium text-emerald-800 mb-3 text-base">Quotation Summary</h4>
               <Table>
@@ -750,13 +810,18 @@ const VendorQuotationForm = () => {
               </Button>
               <Button 
                 onClick={handleSubmit} 
-                disabled={submitting}
+                disabled={submitting || uploadingFiles.length > 0}
                 className="bg-green-600 text-white shadow-lg px-8 hover:bg-green-700"
               >
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Submitting...
+                  </>
+                ) : uploadingFiles.length > 0 ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading Files...
                   </>
                 ) : (
                   'Submit Quotation'

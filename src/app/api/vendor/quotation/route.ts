@@ -80,7 +80,7 @@ export async function GET(
 export async function POST(
   request: NextRequest) {
   try {
-const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(request.url);
     const vendorId = searchParams.get('vendorId');
     if (!vendorId) {
       return NextResponse.json(
@@ -90,6 +90,7 @@ const { searchParams } = new URL(request.url);
     }
 
     const requestBody = await request.json();
+    console.log('Received quotation data:', JSON.stringify(requestBody, null, 2)); // Debug log
     
     const {
       rfpId,
@@ -176,28 +177,121 @@ const { searchParams } = new URL(request.url);
       );
     }
 
-    // Validate line item quotes
-    for (const item of lineItemQuotes) {
-      if (!item.lineItemId || !item.unitPrice || item.unitPrice <= 0) {
+    // Fixed validation logic for line item quotes
+    for (let i = 0; i < lineItemQuotes.length; i++) {
+      const item = lineItemQuotes[i];
+      console.log(`Validating line item ${i + 1}:`, item); // Debug log
+      
+      // Check if lineItemId exists (may be missing in your payload)
+      if (!item.lineItemId && !item.productName) {
         return NextResponse.json(
-          { error: "All line items must have valid unit prices" },
+          { error: `Line item ${i + 1} must have either a lineItemId or productName` },
+          { status: 400 }
+        );
+      }
+      
+      // Convert unitPrice to number and validate
+      const unitPrice = parseFloat(item.unitPrice);
+      
+      if (!item.unitPrice || isNaN(unitPrice) || unitPrice <= 0) {
+        console.log('Invalid unit price:', item.unitPrice, 'parsed as:', unitPrice); // Debug log
+        return NextResponse.json(
+          { 
+            error: `Invalid unit price for item "${item.productName || 'Item ' + (i + 1)}". Price must be a positive number.`,
+            details: `Received: "${item.unitPrice}", Parsed as: ${unitPrice}`
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate quantity
+      const quantity = parseInt(item.quantity);
+      if (!item.quantity || isNaN(quantity) || quantity <= 0) {
+        return NextResponse.json(
+          { 
+            error: `Invalid quantity for item "${item.productName || 'Item ' + (i + 1)}". Quantity must be a positive number.`,
+            details: `Received: "${item.quantity}", Parsed as: ${quantity}`
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate GST percentage
+      const gstPercentage = parseFloat(item.gstPercentage);
+      if (isNaN(gstPercentage) || gstPercentage < 0) {
+        return NextResponse.json(
+          { 
+            error: `Invalid GST percentage for item "${item.productName || 'Item ' + (i + 1)}". GST must be a non-negative number.`,
+            details: `Received: "${item.gstPercentage}", Parsed as: ${gstPercentage}`
+          },
           { status: 400 }
         );
       }
     }
 
-    // Calculate totals
-    const subtotal = lineItemQuotes.reduce((sum: number, item: any) => 
-      sum + (parseFloat(item.unitPrice) * parseInt(item.quantity)), 0
-    ) + (otherCharges?.reduce((sum: number, charge: any) => 
-      sum + parseFloat(charge.amount), 0) || 0);
+    // Validate other charges if present
+    if (otherCharges && Array.isArray(otherCharges)) {
+      for (let i = 0; i < otherCharges.length; i++) {
+        const charge = otherCharges[i];
+        console.log(`Validating other charge ${i + 1}:`, charge); // Debug log
+        
+        if (charge.amount) {
+          const amount = parseFloat(charge.amount);
+          if (isNaN(amount) || amount < 0) {
+            return NextResponse.json(
+              { 
+                error: `Invalid amount for charge "${charge.name || 'Charge ' + (i + 1)}". Amount must be a non-negative number.`,
+                details: `Received: "${charge.amount}", Parsed as: ${amount}`
+              },
+              { status: 400 }
+            );
+          }
+        }
 
-    const gstAmount = lineItemQuotes.reduce((sum: number, item: any) => 
-      sum + ((parseFloat(item.unitPrice) * parseInt(item.quantity)) * (parseFloat(item.gstPercentage) / 100)), 0
-    ) + (otherCharges?.reduce((sum: number, charge: any) => 
-      sum + (parseFloat(charge.amount) * (parseFloat(charge.gstPercentage || 0) / 100)), 0) || 0);
+        // Validate GST percentage for charges
+        if (charge.gstPercentage !== undefined) {
+          const gstPercentage = parseFloat(charge.gstPercentage);
+          if (isNaN(gstPercentage) || gstPercentage < 0) {
+            return NextResponse.json(
+              { 
+                error: `Invalid GST percentage for charge "${charge.name || 'Charge ' + (i + 1)}". GST must be a non-negative number.`,
+                details: `Received: "${charge.gstPercentage}", Parsed as: ${gstPercentage}`
+              },
+              { status: 400 }
+            );
+          }
+        }
+      }
+    }
+
+    // Calculate totals with proper number conversion
+    const subtotal = lineItemQuotes.reduce((sum: number, item: any) => {
+      const unitPrice = parseFloat(item.unitPrice) || 0;
+      const quantity = parseInt(item.quantity) || 0;
+      return sum + (unitPrice * quantity);
+    }, 0) + (otherCharges?.reduce((sum: number, charge: any) => {
+      const amount = parseFloat(charge.amount) || 0;
+      return sum + amount;
+    }, 0) || 0);
+
+    const gstAmount = lineItemQuotes.reduce((sum: number, item: any) => {
+      const unitPrice = parseFloat(item.unitPrice) || 0;
+      const quantity = parseInt(item.quantity) || 0;
+      const gstPercentage = parseFloat(item.gstPercentage) || 0;
+      return sum + ((unitPrice * quantity) * (gstPercentage / 100));
+    }, 0) + (otherCharges?.reduce((sum: number, charge: any) => {
+      const amount = parseFloat(charge.amount) || 0;
+      const gstPercentage = parseFloat(charge.gstPercentage || 0) || 0;
+      return sum + (amount * (gstPercentage / 100));
+    }, 0) || 0);
 
     const totalAmount = subtotal + gstAmount;
+
+    console.log('Calculated totals:', { 
+      subtotal: subtotal.toFixed(2), 
+      gstAmount: gstAmount.toFixed(2), 
+      totalAmount: totalAmount.toFixed(2) 
+    }); // Debug log
 
     // Process supporting documents (expecting direct URLs)
     const processedDocuments = (supportingDocuments || []).map((doc: any) => ({
@@ -207,6 +301,8 @@ const { searchParams } = new URL(request.url);
       mimeType: doc.mimeType || doc.type || 'application/octet-stream',
       uploadedAt: new Date().toISOString()
     }));
+
+    console.log('Processed documents:', processedDocuments.length); // Debug log
 
     // UPSERT: Check if quotation exists, then update or insert
     const existingQuotation = await db.query.QuotationTable.findFirst({
@@ -220,6 +316,8 @@ const { searchParams } = new URL(request.url);
     const currentTimestamp = new Date();
 
     if (existingQuotation) {
+      console.log('Updating existing quotation:', existingQuotation.id); // Debug log
+      
       // UPDATE existing quotation
       [quotation] = await db
         .update(QuotationTable)
@@ -227,9 +325,9 @@ const { searchParams } = new URL(request.url);
           quotationNumber: quotationNumber || existingQuotation.quotationNumber,
           lineItemQuotes,
           otherCharges: otherCharges || [],
-          subtotal,
-          gstAmount,
-          totalAmount,
+          subtotal: subtotal.toString(), // Convert to string for database
+          gstAmount: gstAmount.toString(),
+          totalAmount: totalAmount.toString(),
           supportingDocuments: processedDocuments,
           validTill: validTill ? new Date(validTill) : existingQuotation.validTill,
           deliveryTimeline: deliveryTimeline || existingQuotation.deliveryTimeline,
@@ -251,13 +349,22 @@ const { searchParams } = new URL(request.url);
         })
         .where(eq(RFPVendorInvitationTable.id, invitation.id));
 
+      console.log('Quotation updated successfully:', quotation.id); // Debug log
+
       return NextResponse.json({
         quotation,
         message: 'Quotation updated successfully',
-        action: 'updated'
+        action: 'updated',
+        totals: {
+          subtotal: subtotal.toFixed(2),
+          gstAmount: gstAmount.toFixed(2),
+          totalAmount: totalAmount.toFixed(2)
+        }
       });
 
     } else {
+      console.log('Creating new quotation for vendor:', vendorId); // Debug log
+      
       // INSERT new quotation
       [quotation] = await db
         .insert(QuotationTable)
@@ -267,9 +374,9 @@ const { searchParams } = new URL(request.url);
           quotationNumber: quotationNumber || `QUO-${vendorId.slice(-6)}-${Date.now()}`,
           lineItemQuotes,
           otherCharges: otherCharges || [],
-          subtotal,
-          gstAmount,
-          totalAmount,
+          subtotal: subtotal.toString(), // Convert to string for database
+          gstAmount: gstAmount.toString(),
+          totalAmount: totalAmount.toString(),
           supportingDocuments: processedDocuments,
           validTill: validTill ? new Date(validTill) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           deliveryTimeline,
@@ -290,19 +397,39 @@ const { searchParams } = new URL(request.url);
         })
         .where(eq(RFPVendorInvitationTable.id, invitation.id));
 
+      console.log('Quotation created successfully:', quotation.id); // Debug log
+
       return NextResponse.json({
         quotation,
         message: 'Quotation submitted successfully',
-        action: 'created'
+        action: 'created',
+        totals: {
+          subtotal: subtotal.toFixed(2),
+          gstAmount: gstAmount.toFixed(2),
+          totalAmount: totalAmount.toFixed(2)
+        }
       }, { status: 201 });
     }
 
   } catch (error) {
     console.error('Error creating/updating quotation:', error);
+    
+    // Enhanced error handling
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { 
+          error: 'Failed to process quotation',
+          details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to process quotation',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+        details: 'Unknown error occurred'
       },
       { status: 500 }
     );
