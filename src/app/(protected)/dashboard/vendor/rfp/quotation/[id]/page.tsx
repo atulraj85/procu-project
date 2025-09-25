@@ -95,6 +95,59 @@ const VendorQuotationForm = () => {
   const [notes, setNotes] = useState("");
   const [termsConditions, setTermsConditions] = useState("");
 
+  const [hasExistingQuotation, setHasExistingQuotation] = useState(false);
+  const [existingQuotationData, setExistingQuotationData] = useState(null);
+
+  // New useEffect to fetch existing quotation
+  useEffect(() => {
+    if (rfpDetails && user?.vendorId) {
+      fetchExistingQuotation();
+    }
+  }, [rfpDetails, user?.vendorId]);
+
+  const fetchExistingQuotation = async () => {
+    try {
+      const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}&rfpId=${rfpId}`);
+      const data = await response.json();
+      
+      if (data.hasExistingQuotation && data.quotation) {
+        console.log('Found existing quotation:', data.quotation);
+        
+        // Auto-fill form with existing data
+        setQuotationNumber(data.quotation.quotationNumber || `QUO-${Date.now()}`);
+        setLineItemQuotes(data.quotation.lineItemQuotes || []);
+        setOtherCharges(data.quotation.otherCharges || []);
+        setValidTill(data.quotation.validTill || validTill);
+        setDeliveryTimeline(data.quotation.deliveryTimeline || '');
+        setNotes(data.quotation.notes || '');
+        setTermsConditions(data.quotation.termsConditions || '');
+        
+        // Handle uploaded files
+        if (data.quotation.supportingDocuments?.length > 0) {
+          const existingFiles = data.quotation.supportingDocuments.map((doc: any) => ({
+            fileName: doc.fileName,
+            fileUrl: doc.fileUrl,
+            fileSize: doc.fileSize,
+            mimeType: doc.mimeType,
+            fileType: doc.mimeType?.startsWith('image/') ? 'image' : 'document',
+          }));
+          setUploadedFiles(existingFiles);
+        }
+        
+        setHasExistingQuotation(true);
+        setExistingQuotationData(data.originalQuotation);
+        
+        toast({
+          title: "Existing Quotation Loaded",
+          description: "Your previous quotation has been loaded for editing.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching existing quotation:", error);
+      // Don't show error toast - it's okay if there's no existing quotation
+    }
+  };
+
   useEffect(() => {
     fetchRFPDetails();
   }, [rfpId]);

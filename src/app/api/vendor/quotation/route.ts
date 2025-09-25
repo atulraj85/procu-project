@@ -4,20 +4,21 @@ import { QuotationTable, RFPTable, RFPVendorInvitationTable, VendorTable } from 
 import { db } from '@/lib/db';
 
 // GET vendor's quotations for an RFP
+// GET vendor's quotation for an RFP (updated)
 export async function GET(
   request: NextRequest
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const vendorId = searchParams.get('vendorId');
+    const rfpId = searchParams.get('rfpId');
+
     if (!vendorId) {
       return NextResponse.json(
         { error: "Vendor ID is required" },
         { status: 400 }
       );
     }
-
-    const rfpId = searchParams.get('rfpId');
 
     if (!rfpId) {
       return NextResponse.json(
@@ -58,23 +59,118 @@ export async function GET(
 
     const canEdit = rfp && new Date() < new Date(rfp.quotationCutoffDate) && rfp.status === 'SENT_TO_VENDORS';
 
+    // Format quotation data for the form if it exists
+    let formattedQuotation = null;
+    if (quotation) {
+      formattedQuotation = {
+        quotationNumber: quotation.quotationNumber,
+        lineItemQuotes: quotation.lineItemQuotes || [],
+        otherCharges: quotation.otherCharges || [],
+        validTill: quotation.validTill ? new Date(quotation.validTill).toISOString().split('T')[0] : '',
+        deliveryTimeline: quotation.deliveryTimeline || '',
+        notes: quotation.notes || '',
+        termsConditions: quotation.termsConditions || '',
+        supportingDocuments: quotation.supportingDocuments || [],
+        status: quotation.status,
+        submittedAt: quotation.submittedAt,
+        totals: {
+          subtotal: quotation.subtotal,
+          gstAmount: quotation.gstAmount,
+          totalAmount: quotation.totalAmount,
+        }
+      };
+    }
+
     return NextResponse.json({
-      quotation,
+      quotation: formattedQuotation,
       canEdit,
       rfpId,
       vendorId,
       rfpStatus: rfp?.status,
-      quotationCutoffDate: rfp?.quotationCutoffDate
+      quotationCutoffDate: rfp?.quotationCutoffDate,
+      hasExistingQuotation: !!quotation
     });
 
   } catch (error) {
-    console.error('Error fetching quotations:', error);
+    console.error('Error fetching quotation:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch quotations' },
+      { error: 'Failed to fetch quotation' },
       { status: 500 }
     );
   }
 }
+
+// export async function GET(
+//   request: NextRequest
+// ) {
+//   try {
+//     const { searchParams } = new URL(request.url);
+//     const vendorId = searchParams.get('vendorId');
+//     if (!vendorId) {
+//       return NextResponse.json(
+//         { error: "Vendor ID is required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     const rfpId = searchParams.get('rfpId');
+
+//     if (!rfpId) {
+//       return NextResponse.json(
+//         { error: "RFP ID is required" },
+//         { status: 400 }
+//       );
+//     }
+
+//     // Verify vendor exists
+//     const vendor = await db.query.VendorTable.findFirst({
+//       where: eq(VendorTable.id, vendorId),
+//       columns: { id: true, status: true }
+//     });
+
+//     if (!vendor) {
+//       return NextResponse.json(
+//         { error: "Vendor not found" },
+//         { status: 404 }
+//       );
+//     }
+
+//     // Get quotation for this RFP from this vendor (should be only one)
+//     const quotation = await db.query.QuotationTable.findFirst({
+//       where: and(
+//         eq(QuotationTable.rfpId, rfpId),
+//         eq(QuotationTable.vendorId, vendorId)
+//       ),
+//     });
+
+//     // Get RFP details to check cutoff date
+//     const rfp = await db.query.RFPTable.findFirst({
+//       where: eq(RFPTable.id, rfpId),
+//       columns: {
+//         quotationCutoffDate: true,
+//         status: true,
+//       }
+//     });
+
+//     const canEdit = rfp && new Date() < new Date(rfp.quotationCutoffDate) && rfp.status === 'SENT_TO_VENDORS';
+
+//     return NextResponse.json({
+//       quotation,
+//       canEdit,
+//       rfpId,
+//       vendorId,
+//       rfpStatus: rfp?.status,
+//       quotationCutoffDate: rfp?.quotationCutoffDate
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching quotations:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to fetch quotations' },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 // POST/PUT create or update quotation (UPSERT)
 export async function POST(
