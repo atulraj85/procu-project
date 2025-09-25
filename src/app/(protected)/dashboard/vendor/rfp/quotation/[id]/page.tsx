@@ -186,77 +186,151 @@ const VendorQuotationForm = () => {
     return { subtotal, gstAmount, total };
   };
 
-  const handleSubmit = async () => {
-    // Validation
-    if (!quotationNumber.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Quotation number is required",
-        variant: "destructive"
-      });
-      return;
-    }
+  // const handleSubmit = async () => {
+  //   // Validation
+  //   if (!quotationNumber.trim()) {
+  //     toast({
+  //       title: "Validation Error",
+  //       description: "Quotation number is required",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
-    if (hasInvalidLineItems) {
-      toast({
-        title: "Validation Error", 
-        description: "All line items must have valid unit prices",
-        variant: "destructive"
-      });
-      return;
-    }
+  //   const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
+  //   if (hasInvalidLineItems) {
+  //     toast({
+  //       title: "Validation Error", 
+  //       description: "All line items must have valid unit prices",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    setSubmitting(true);
+  //   setSubmitting(true);
 
-    try {
-      const formData = new FormData();
+  //   try {
+  //     const formData = new FormData();
       
-      const quotationData = {
-        rfpId,
-        quotationNumber,
-        lineItemQuotes,
-        otherCharges,
-        validTill,
-        deliveryTimeline,
-        notes,
-        termsConditions
-      };
+  //     const quotationData = {
+  //       rfpId,
+  //       quotationNumber,
+  //       lineItemQuotes,
+  //       otherCharges,
+  //       validTill,
+  //       deliveryTimeline,
+  //       notes,
+  //       termsConditions
+  //     };
 
-      formData.append('quotationData', JSON.stringify(quotationData));
+  //     formData.append('quotationData', JSON.stringify(quotationData));
 
-      // Append files
-      files.forEach((file, index) => {
-        formData.append(`file_${index}`, file);
-      });
+  //     // Append files
+  //     files.forEach((file, index) => {
+  //       formData.append(`file_${index}`, file);
+  //     });
 
-      const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
-        method: 'POST',
-        body: formData
-      });
+  //     const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
+  //       method: 'POST',
+  //       body: formData
+  //     });
 
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Quotation submitted successfully"
-        });
-        router.push('/dashboard/vendor/rfp');
-      } else {
-        const error = await response.json();
-        throw new Error(error.error);
-      }
+  //     if (response.ok) {
+  //       toast({
+  //         title: "Success",
+  //         description: "Quotation submitted successfully"
+  //       });
+  //       router.push('/dashboard/vendor/rfp');
+  //     } else {
+  //       const error = await response.json();
+  //       throw new Error(error.error);
+  //     }
 
-    } catch (error) {
-      console.error("Error submitting quotation:", error);
+  //   } catch (error) {
+  //     console.error("Error submitting quotation:", error);
+  //     toast({
+  //       title: "Error",
+  //       description: "Failed to submit quotation",
+  //       variant: "destructive"
+  //     });
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
+  const handleSubmit = async () => {
+  // Validation (keep as is)
+  if (!quotationNumber.trim()) {
+    toast({
+      title: "Validation Error",
+      description: "Quotation number is required",
+      variant: "destructive"
+    });
+    return;
+  }
+
+  const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
+  if (hasInvalidLineItems) {
+    toast({
+      title: "Validation Error", 
+      description: "All line items must have valid unit prices",
+      variant: "destructive"
+    });
+    return;
+  }
+
+  setSubmitting(true);
+
+  try {
+    // Prepare JSON payload (no FormData)
+    const quotationData = {
+      rfpId,
+      quotationNumber,
+      lineItemQuotes,
+      otherCharges,
+      validTill,
+      deliveryTimeline,
+      notes,
+      termsConditions,
+      supportingDocuments: files.map(file => ({
+        fileName: file.name,
+        fileUrl: file.url, // Assume you have pre-generated URLs (e.g., from S3 presigned URLs)
+        fileSize: file.size,
+        mimeType: file.type
+      })) // If no files, this will be empty array
+    };
+
+    // Send as JSON
+    const response = await fetch(`/api/vendor/quotation?vendorId=${user?.vendorId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json' // Crucial for server to parse as JSON
+      },
+      body: JSON.stringify(quotationData) // Stringify the object
+    });
+
+    if (response.ok) {
       toast({
-        title: "Error",
-        description: "Failed to submit quotation",
-        variant: "destructive"
+        title: "Success",
+        description: "Quotation submitted successfully"
       });
-    } finally {
-      setSubmitting(false);
+      router.push('/dashboard/vendor/rfp');
+    } else {
+      const error = await response.json();
+      throw new Error(error.error);
     }
-  };
+
+  } catch (error) {
+    console.error("Error submitting quotation:", error);
+    toast({
+      title: "Error",
+      description: "Failed to submit quotation",
+      variant: "destructive"
+    });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) {
     return (
