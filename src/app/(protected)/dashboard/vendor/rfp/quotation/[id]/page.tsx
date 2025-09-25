@@ -20,7 +20,7 @@ import {
 import { useCurrentUser } from "@/hooks/auth";
 
 interface LineItem {
-  id: string;
+  id: string; 
   productName: string;
   description: string;
   quantity: number;
@@ -32,7 +32,7 @@ interface LineItemQuote {
   productName: string;
   description: string;
   quantity: number;
-  unitPrice: number;
+  unitPrice: string; // Changed to string to allow empty input
   gstPercentage: number;
   totalPrice: number;
   brand?: string;
@@ -43,7 +43,7 @@ interface LineItemQuote {
 interface OtherCharge {
   id: string;
   name: string;
-  amount: number;
+  amount: string; // Changed to string to allow empty input
   gstPercentage: number;
   description?: string;
 }
@@ -98,7 +98,7 @@ const VendorQuotationForm = () => {
         productName: item.productName,
         description: item.description,
         quantity: item.quantity,
-        unitPrice: 0,
+        unitPrice: "", // Initialize as empty string
         gstPercentage: 18,
         totalPrice: 0,
         brand: "",
@@ -111,10 +111,21 @@ const VendorQuotationForm = () => {
       // Set default quotation number
       setQuotationNumber(`QUO-${Date.now()}`);
       
-      // Set default valid till (30 days)
-      const validDate = new Date();
-      validDate.setDate(validDate.getDate() + 30);
-      setValidTill(validDate.toISOString().split('T')[0]);
+      // Set valid till to quotationCutoffDate
+      if (data.quotationCutoffDate) {
+        setValidTill(new Date(data.quotationCutoffDate).toISOString().split('T')[0]);
+      } else {
+        console.error("quotationCutoffDate is missing in API response");
+        toast({
+          title: "Error",
+          description: "Invalid RFP data: Quotation cutoff date is missing",
+          variant: "destructive"
+        });
+        // Fallback: Set to 30 days from now
+        const validDate = new Date();
+        validDate.setDate(validDate.getDate() + 30);
+        setValidTill(validDate.toISOString().split('T')[0]);
+      }
 
     } catch (error) {
       console.error("Error fetching RFP details:", error);
@@ -134,7 +145,7 @@ const VendorQuotationForm = () => {
     
     // Recalculate total price
     if (field === 'unitPrice' || field === 'gstPercentage') {
-      const unitPrice = field === 'unitPrice' ? value : updated[index].unitPrice;
+      const unitPrice = field === 'unitPrice' ? parseFloat(value) || 0 : parseFloat(updated[index].unitPrice) || 0;
       const gstPercentage = field === 'gstPercentage' ? value : updated[index].gstPercentage;
       updated[index].totalPrice = unitPrice * updated[index].quantity * (1 + gstPercentage / 100);
     }
@@ -146,7 +157,7 @@ const VendorQuotationForm = () => {
     setOtherCharges([...otherCharges, {
       id: `charge_${Date.now()}`,
       name: "",
-      amount: 0,
+      amount: "", // Initialize as empty string
       gstPercentage: 18,
       description: ""
     }]);
@@ -173,11 +184,23 @@ const VendorQuotationForm = () => {
   };
 
   const calculateTotals = () => {
-    const lineItemSubtotal = lineItemQuotes.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
-    const lineItemGst = lineItemQuotes.reduce((sum, item) => sum + ((item.unitPrice * item.quantity) * (item.gstPercentage / 100)), 0);
+    const lineItemSubtotal = lineItemQuotes.reduce((sum, item) => {
+      const unitPrice = parseFloat(item.unitPrice) || 0;
+      return sum + (unitPrice * item.quantity);
+    }, 0);
+    const lineItemGst = lineItemQuotes.reduce((sum, item) => {
+      const unitPrice = parseFloat(item.unitPrice) || 0;
+      return sum + ((unitPrice * item.quantity) * (item.gstPercentage / 100));
+    }, 0);
     
-    const otherChargesSubtotal = otherCharges.reduce((sum, charge) => sum + charge.amount, 0);
-    const otherChargesGst = otherCharges.reduce((sum, charge) => sum + (charge.amount * (charge.gstPercentage / 100)), 0);
+    const otherChargesSubtotal = otherCharges.reduce((sum, charge) => {
+      const amount = parseFloat(charge.amount) || 0;
+      return sum + amount;
+    }, 0);
+    const otherChargesGst = otherCharges.reduce((sum, charge) => {
+      const amount = parseFloat(charge.amount) || 0;
+      return sum + (amount * (charge.gstPercentage / 100));
+    }, 0);
     
     const subtotal = lineItemSubtotal + otherChargesSubtotal;
     const gstAmount = lineItemGst + otherChargesGst;
@@ -197,11 +220,21 @@ const VendorQuotationForm = () => {
       return;
     }
 
-    const hasInvalidLineItems = lineItemQuotes.some(item => item.unitPrice <= 0);
+    const hasInvalidLineItems = lineItemQuotes.some(item => !item.unitPrice || parseFloat(item.unitPrice) <= 0);
     if (hasInvalidLineItems) {
       toast({
         title: "Validation Error", 
-        description: "All line items must have valid unit prices",
+        description: "All line items must have valid unit prices greater than 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const hasInvalidOtherCharges = otherCharges.some(charge => charge.amount && parseFloat(charge.amount) < 0);
+    if (hasInvalidOtherCharges) {
+      toast({
+        title: "Validation Error", 
+        description: "Additional charge amounts cannot be negative",
         variant: "destructive"
       });
       return;
@@ -215,8 +248,15 @@ const VendorQuotationForm = () => {
       const quotationData = {
         rfpId,
         quotationNumber,
-        lineItemQuotes,
-        otherCharges,
+        lineItemQuotes: lineItemQuotes.map(item => ({
+          ...item,
+          unitPrice: parseFloat(item.unitPrice), // Convert to number for backend
+          totalPrice: parseFloat(item.unitPrice) * item.quantity * (1 + item.gstPercentage / 100)
+        })),
+        otherCharges: otherCharges.map(charge => ({
+          ...charge,
+          amount: parseFloat(charge.amount) || 0 // Convert to number for backend
+        })),
         validTill,
         deliveryTimeline,
         notes,
@@ -362,9 +402,8 @@ const VendorQuotationForm = () => {
                   <Input
                     id="quotationNumber"
                     value={quotationNumber}
-                    onChange={(e) => setQuotationNumber(e.target.value)}
-                    placeholder="Enter quotation number"
-                    className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                    readOnly
+                    className="mt-1 border-emerald-300 bg-gray-100 cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -373,8 +412,8 @@ const VendorQuotationForm = () => {
                     id="validTill"
                     type="date"
                     value={validTill}
-                    onChange={(e) => setValidTill(e.target.value)}
-                    className="mt-1 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                    readOnly
+                    className="mt-1 border-emerald-300 bg-gray-100 cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -409,9 +448,11 @@ const VendorQuotationForm = () => {
                           <Input
                             type="number"
                             step="0.01"
+                            min="0"
                             value={item.unitPrice}
-                            onChange={(e) => updateLineItemQuote(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateLineItemQuote(index, 'unitPrice', e.target.value)}
                             className="w-24 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                            placeholder="0.00"
                           />
                         </TableCell>
                         <TableCell>
@@ -424,7 +465,7 @@ const VendorQuotationForm = () => {
                           />
                         </TableCell>
                         <TableCell className="text-gray-800 font-semibold">
-                          ₹{(item.unitPrice * item.quantity * (1 + item.gstPercentage / 100)).toFixed(2)}
+                          ₹{(parseFloat(item.unitPrice) * item.quantity * (1 + item.gstPercentage / 100) || 0).toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <Input
@@ -481,9 +522,11 @@ const VendorQuotationForm = () => {
                           <Input
                             type="number"
                             step="0.01"
+                            min="0"
                             value={charge.amount}
-                            onChange={(e) => updateOtherCharge(index, 'amount', parseFloat(e.target.value) || 0)}
+                            onChange={(e) => updateOtherCharge(index, 'amount', e.target.value)}
                             className="border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
+                            placeholder="0.00"
                           />
                         </TableCell>
                         <TableCell>
@@ -651,7 +694,7 @@ const VendorQuotationForm = () => {
               <Button 
                 onClick={handleSubmit} 
                 disabled={submitting}
-                className="bg-green-600 text-white shadow-lg px-8 hover:bg-green-800"
+                className="bg-green-600 text-white shadow-lg px-8 hover:bg-green-700"
               >
                 {submitting ? (
                   <>
